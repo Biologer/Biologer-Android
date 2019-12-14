@@ -160,4 +160,5 @@
     <string name="database">База</string>
     <string name="User">Корисник</string>
     <string name="stage_juvenile">Младунац</string>
+    <string name="upload">Пошаљи</string>
 </resources>

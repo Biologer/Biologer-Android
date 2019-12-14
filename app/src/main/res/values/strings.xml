@@ -38,6 +38,7 @@
     <string name="komentar">Comment</string>
     <string name="cancel">Cancel</string>
     <string name="sacuvaj">Save</string>
+    <string name="upload">Upload</string>
     <string name="title_activity_map">Map</string>
     <string name="entry_title">Data entry</string>
     <string name="taxa_mandatory">You must enter the valid taxon name.</string>

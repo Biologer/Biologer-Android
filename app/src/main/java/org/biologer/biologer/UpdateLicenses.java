@@ -2,14 +2,12 @@ package org.biologer.biologer;
 
 import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import org.biologer.biologer.model.RetrofitClient;

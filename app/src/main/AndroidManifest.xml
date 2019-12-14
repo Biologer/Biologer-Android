@@ -38,7 +38,7 @@
             android:value="AIzaSyDsLjNreiHg47Mif-CheIYB3uGtXQekTtY" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="org.biologer.biologer.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -92,7 +92,7 @@
         <service android:name="org.biologer.biologer.UpdateLicenses"/>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="org.biologer.biologer.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

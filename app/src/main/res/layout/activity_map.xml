@@ -33,7 +33,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"/>
 
-        <android.support.design.widget.FloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fbtn_mapType"
             android:layout_width="40dp"
             android:layout_height="40dp"

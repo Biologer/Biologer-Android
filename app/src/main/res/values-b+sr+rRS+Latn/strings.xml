@@ -160,4 +160,5 @@
     <string name="database">Baza</string>
     <string name="User">Korisnik</string>
     <string name="stage_juvenile">Mladunac</string>
+    <string name="upload">Pošalji</string>
 </resources>

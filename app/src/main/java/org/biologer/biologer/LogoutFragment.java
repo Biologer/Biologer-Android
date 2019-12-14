@@ -2,30 +2,20 @@ package org.biologer.biologer;
 
 import android.app.Activity;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.AppCompatButton;
-import android.util.Log;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
+import androidx.appcompat.widget.AppCompatButton;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.biologer.biologer.model.LoginResponse;
-import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.UserData;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LogoutFragment extends Fragment {
 

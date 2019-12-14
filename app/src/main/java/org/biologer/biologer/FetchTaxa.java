@@ -7,7 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;import android.util.Log;
+import androidx.core.app.NotificationCompat;import android.util.Log;
 
 import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.Stage;

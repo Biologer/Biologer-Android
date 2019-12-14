@@ -1,11 +1,10 @@
 package org.biologer.biologer;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
+
+import androidx.core.content.ContextCompat;
 import android.os.Bundle;
 
-import com.github.paolorotolo.appintro.AppIntro;
 import com.github.paolorotolo.appintro.AppIntro2;
 import com.github.paolorotolo.appintro.AppIntro2Fragment;
 

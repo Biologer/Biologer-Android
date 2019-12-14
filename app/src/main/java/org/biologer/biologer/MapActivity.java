@@ -2,13 +2,11 @@ package org.biologer.biologer;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,9 +24,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.UserData;
 import org.biologer.biologer.model.network.ElevationResponse;
-import org.biologer.biologer.model.network.UserDataResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,7 +36,6 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import freemarker.template.utility.StringUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

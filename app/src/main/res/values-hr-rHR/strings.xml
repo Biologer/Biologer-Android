@@ -159,4 +159,6 @@
     <string name="database">Baza podataka</string>
     <string name="User">Korisnik</string>
     <string name="stage_juvenile">Mladunac</string>
+    <string name="upload">Pošalji</string>
+    <string name="gallery">Galerija</string>
 </resources>

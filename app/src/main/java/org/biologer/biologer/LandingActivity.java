@@ -4,31 +4,27 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
-import android.support.design.widget.NavigationView;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.navigation.NavigationView;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceManager;
-import android.support.v7.widget.Toolbar;
+import androidx.preference.PreferenceManager;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,21 +34,16 @@ import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.model.Entry;
 import org.biologer.biologer.model.APIEntry;
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.Taxon;
-import org.biologer.biologer.model.TaxonLocalization;
-import org.biologer.biologer.model.TaxonLocalizationDao;
 import org.biologer.biologer.model.UploadFileResponse;
 import org.biologer.biologer.model.UserData;
 import org.biologer.biologer.model.network.APIEntryResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
 import org.biologer.biologer.model.network.UserDataResponse;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -76,7 +67,10 @@ public class LandingActivity extends AppCompatActivity
     private FrameLayout progressBar;
     private String last_updated;
 
-    android.support.v4.app.Fragment fragment = null;
+    Fragment fragment = null;
+
+    // Define upload menu so that we can hide it if recquired
+    Menu uploadMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,22 +113,26 @@ public class LandingActivity extends AppCompatActivity
         call.enqueue(new Callback<TaksoniResponse>() {
             @Override
             public void onResponse(Call<TaksoniResponse> call, Response<TaksoniResponse> response) {
-                // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                if(response.body().getMeta() != null) {
-                    last_updated = Long.toString(response.body().getMeta().getLastUpdatedAt());
-                    if (last_updated.equals(SettingsManager.getDatabaseVersion())) {
-                        Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
-                    } else {
-                        Log.i(TAG, "Taxa database on the server (version: " + last_updated + ") seems to be newer that your version (" + SettingsManager.getDatabaseVersion() + ").");
-                        if (SettingsManager.getDatabaseVersion().equals("0")) {
-                            // If the database was never updated...
-                            buildAlertMessageEmptyTaxaDb();
+                if (response.isSuccessful()) {
+                    // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                    TaksoniResponse taksoniResponse = response.body();
+                    if(taksoniResponse != null) {
+                        last_updated = Long.toString(taksoniResponse.getMeta().getLastUpdatedAt());
+                        if (last_updated.equals(SettingsManager.getDatabaseVersion())) {
+                            Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
                         } else {
-                            // If the online database is more recent...
-                            buildAlertMessageNewerTaxaDb();
+                            Log.i(TAG, "Taxa database on the server (version: " + last_updated + ") seems to be newer that your version (" + SettingsManager.getDatabaseVersion() + ").");
+                            if (SettingsManager.getDatabaseVersion().equals("0")) {
+                                // If the database was never updated...
+                                buildAlertMessageEmptyTaxaDb();
+                            } else {
+                                // If the online database is more recent...
+                                buildAlertMessageNewerTaxaDb();
+                            }
                         }
                     }
                 }
+
             }
             @Override
             public void onFailure(Call<TaksoniResponse> call, Throwable t) {
@@ -242,17 +240,19 @@ public class LandingActivity extends AppCompatActivity
         super.onResume();
     }
 
-    //desni meni  -- upload entries
+    // Right menu for uploading entries
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.upload_menu, menu);
+        uploadMenu = menu;
+        setUploadIconVisibility();
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_save:
+            case R.id.action_upload:
                 saveEntries();
                 return true;
             default:
@@ -273,6 +273,9 @@ public class LandingActivity extends AppCompatActivity
 
         if (entryList.size() == 0) {
             progressBar.setVisibility(View.GONE);
+            // Change the visibility of upload icon
+            uploadMenu.getItem(0).setEnabled(false);
+            uploadMenu.getItem(0).getIcon().setAlpha(100);
             App.get().getDaoSession().getEntryDao().deleteAll();
             return;
         }
@@ -387,12 +390,18 @@ public class LandingActivity extends AppCompatActivity
             @Override
             public void onResponse(Call<UploadFileResponse> call, Response<UploadFileResponse> response) {
 
-                slike.add(response.body().getFile());
-                m++;
-                if (m == n) {
-                    uploadEntry_step2();
+                if (response.isSuccessful()) {
+                    UploadFileResponse responseFile = response.body();
+
+                    if (responseFile != null) {
+                        slike.add(responseFile.getFile());
+                        m++;
+                        if (m == n) {
+                            uploadEntry_step2();
+                        }
+                        Log.d(TAG, "File: " + responseFile.getFile());
+                    }
                 }
-                Log.d(TAG, "File: " + response.body().getFile());
             }
 
             @Override
@@ -402,26 +411,26 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private void navDrawerFill() {
-        Call<UserDataResponse> serv = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
-        serv.enqueue(new Callback<UserDataResponse>() {
-            @Override
-            public void onResponse(Call<UserDataResponse> serv, Response<UserDataResponse> response) {
-                App.get().getDaoSession().getUserDataDao().deleteAll();
-                String email = response.body().getData().getEmail();
-                String name = response.body().getData().getFullName();
-                int data_license = response.body().getData().getSettings().getDataLicense();
-                int image_license = response.body().getData().getSettings().getImageLicense();
-                UserData uData = new UserData(null, email, name, data_license, image_license);
-                App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
-            }
-
-            @Override
-            public void onFailure(Call<UserDataResponse> call, Throwable t) {
-                String s = "ff";
-            }
-        });
-    }
+//    private void navDrawerFill() {
+//        Call<UserDataResponse> serv = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
+//        serv.enqueue(new Callback<UserDataResponse>() {
+//            @Override
+//            public void onResponse(Call<UserDataResponse> serv, Response<UserDataResponse> response) {
+//                App.get().getDaoSession().getUserDataDao().deleteAll();
+//                String email = response.body().getData().getEmail();
+//                String name = response.body().getData().getFullName();
+//                int data_license = response.body().getData().getSettings().getDataLicense();
+//                int image_license = response.body().getData().getSettings().getImageLicense();
+//                UserData uData = new UserData(null, email, name, data_license, image_license);
+//                App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<UserDataResponse> call, Throwable t) {
+//                String s = "ff";
+//            }
+//        });
+//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -434,6 +443,9 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
         }
+
+        // Change the visibility of the Upload Icon
+        setUploadIconVisibility();
     }
 
     protected void buildAlertMessageNewerTaxaDb() {
@@ -481,7 +493,7 @@ public class LandingActivity extends AppCompatActivity
         alert.show();
     }
 
-    private void cancelTaxaUpdate() {
+ /*   private void cancelTaxaUpdate() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(getString(R.string.should_cancel_taxa_update))
                 .setCancelable(false)
@@ -501,7 +513,7 @@ public class LandingActivity extends AppCompatActivity
         final AlertDialog alert = builder.create();
         alert.show();
     }
-
+*/
     // Get the data from GreenDao database
     private UserData getLoggedUser() {
         // Get the user data from a GreenDao database
@@ -567,6 +579,21 @@ public class LandingActivity extends AppCompatActivity
         NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+    private void setUploadIconVisibility() {
+        long numberOfItems = App.get().getDaoSession().getEntryDao().count();
+        if (numberOfItems == 0) {
+            // Disable the upload button
+            uploadMenu.getItem(0).setEnabled(false);
+            uploadMenu.getItem(0).getIcon().setAlpha(100);
+        } else {
+            // Disable the upload button
+            uploadMenu.getItem(0).setEnabled(true);
+            uploadMenu.getItem(0).getIcon().setAlpha(255);
+        }
+        Log.d(TAG, "There are " + String.valueOf(numberOfItems) + " items in the list.");
+    }
+
     private void userLogOut() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
         startActivity(intent);
