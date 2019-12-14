@@ -256,74 +256,77 @@ public class FetchTaxa extends Service {
         call.enqueue(new CallbackWithRetry<TaksoniResponse>(call) {
             @Override
             public void onResponse(Call<TaksoniResponse> call, Response<TaksoniResponse> response) {
-                // If user selected pause or cancel we will stop the script
-                if (stop_fetching.equals("pause")) {
-                    Log.d(TAG, "Fetching of taxa data is paused by the user!");
-                    notificationResumeFetchButton(progressStatus);
-                    stopSelf();
-                }
-                if (stop_fetching.equals("cancel")) {
-                    Log.d(TAG, "Fetching of taxa data is canceled by the user!");
-                    notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
-                    stopSelf();
-                }
-                // Else fetch the next page of data
-                if (stop_fetching.equals("no")) {
-                    if (1 == page) {
-                        if (response.body() != null) {
-                            totalPages = response.body().getMeta().getLastPage();
-                        }
+
+                if (response.isSuccessful()) {
+                    // If user selected pause or cancel we will stop the script
+                    if (stop_fetching.equals("pause")) {
+                        Log.d(TAG, "Fetching of taxa data is paused by the user!");
+                        notificationResumeFetchButton(progressStatus);
+                        stopSelf();
                     }
-
-                    if (response.body() != null) {
-                        List<Taxa> taxa = response.body().getData();
-
-                        // Variables used to update the Progress Bar status
-                        progressStatus = (page * 100 / totalPages);
-                        currentPage = page;
-                        notificationUpdateProgress(progressStatus);
-
-                        for (Taxa taxon : taxa) {
-                            App.get().getDaoSession().getTaxonDao().insertOrReplace(taxon.toTaxon());
-
-                            List<Stage6> stages = taxon.getStages();
-                            List<Translation> translations = taxon.getTranslations();
-
-                            for (Stage6 stage : stages) {
-                                App.get().getDaoSession().getStageDao().insert(new Stage(null, stage.getName(), stage.getId(), taxon.getId()));
+                    if (stop_fetching.equals("cancel")) {
+                        Log.d(TAG, "Fetching of taxa data is canceled by the user!");
+                        notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                        stopSelf();
+                    }
+                    // Else fetch the next page of data
+                    if (stop_fetching.equals("no")) {
+                        if (1 == page) {
+                            if (response.body() != null) {
+                                totalPages = response.body().getMeta().getLastPage();
                             }
+                        }
 
-                            for (Translation translation : translations) {
-                                String latin = taxon.getName();
-                                String nat = translation.getNativeName();
-                                if (nat != null) {
-                                    if (nat.equals("")) {
-                                        App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
+                        if (response.body() != null) {
+                            List<Taxa> taxa = response.body().getData();
+
+                            // Variables used to update the Progress Bar status
+                            progressStatus = (page * 100 / totalPages);
+                            currentPage = page;
+                            notificationUpdateProgress(progressStatus);
+
+                            for (Taxa taxon : taxa) {
+                                App.get().getDaoSession().getTaxonDao().insertOrReplace(taxon.toTaxon());
+
+                                List<Stage6> stages = taxon.getStages();
+                                List<Translation> translations = taxon.getTranslations();
+
+                                for (Stage6 stage : stages) {
+                                    App.get().getDaoSession().getStageDao().insert(new Stage(null, stage.getName(), stage.getId(), taxon.getId()));
+                                }
+
+                                for (Translation translation : translations) {
+                                    String latin = taxon.getName();
+                                    String nat = translation.getNativeName();
+                                    if (nat != null) {
+                                        if (nat.equals("")) {
+                                            App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
+                                        } else {
+                                            App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin + " (" + nat + ")"));
+                                        }
                                     } else {
-                                        App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin + " (" + nat + ")"));
+                                        App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
                                     }
-                                } else {
-                                    App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
                                 }
                             }
                         }
-                    }
 
-                    Log.i(TAG, "Fetching page No. " + String.valueOf(page) + " of total " + String.valueOf(totalPages) + " pages");
+                        Log.i(TAG, "Fetching page No. " + String.valueOf(page) + " of total " + String.valueOf(totalPages) + " pages");
 
-                    // If we just finished fetching taxa data for the last page, we can stop showing
-                    // loader. Otherwise we continue fetching taxa from the API on the next page.
-                    if (isLastPage(page)) {
-                        // Inform the user of success
-                        Log.i(TAG, "All taxa were successfully updated from the server!");
-                        // Stop the foreground service and update notification
-                        stopForeground(true);
-                        notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
-                        // Set the preference to know when the taxonomic data was updates
-                        SettingsManager.setDatabaseVersion(Long.toString(response.body().getMeta().getLastUpdatedAt()));
-                        stopSelf();
-                    } else {
-                        fetchAll(page + 1);
+                        // If we just finished fetching taxa data for the last page, we can stop showing
+                        // loader. Otherwise we continue fetching taxa from the API on the next page.
+                        if (isLastPage(page)) {
+                            // Inform the user of success
+                            Log.i(TAG, "All taxa were successfully updated from the server!");
+                            // Stop the foreground service and update notification
+                            stopForeground(true);
+                            notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
+                            // Set the preference to know when the taxonomic data was updates
+                            SettingsManager.setDatabaseVersion(Long.toString(response.body().getMeta().getLastUpdatedAt()));
+                            stopSelf();
+                        } else {
+                            fetchAll(page + 1);
+                        }
                     }
                 }
             }
