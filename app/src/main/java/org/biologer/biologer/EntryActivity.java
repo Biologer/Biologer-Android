@@ -1,6 +1,8 @@
 package org.biologer.biologer;
 
 import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,9 +17,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import com.google.android.material.textfield.TextInputLayout;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -61,6 +66,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,6 +76,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -78,7 +86,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1006;
     private static final int REQUEST_LOCATION = 1;
 
-    private String mCurrentPhotoPath;
+    private String currentPhotoPath;
+    private Uri currentPhotoUri;
     private LocationManager locationManager;
     private LocationListener locationListener;
     String latitude = "0", longitude = "0";
@@ -291,28 +300,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         startEntryActivity();
 
     }
-/*
-    // Start a thread to monitor taxa update and remove the progress bar when updated
-    Thread getTaxaForList = new Thread() {
-        @Override
-        public void run() {
-            try {
-                while (FetchTaxa.isInstanceCreated()) {
-                    // Do domething
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Set the view
-                    }
-                });
-            }
-        }
-    };
-*/
 
     /*
     /  If new entry just get the coordinates.
@@ -674,6 +661,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void takePhotoFromGallery() {
+        Log.i(TAG, "Taking photo from the Gallery.");
         Intent galleryIntent = new Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(galleryIntent, GALLERY);
@@ -681,6 +669,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     // Check for camera permission and run function to take photo
     private void takePhotoFromCamera() {
+        Log.i(TAG, "Taking photo from Camera.");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -714,7 +703,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (resultCode == this.RESULT_CANCELED) {
             return;
         }
-        
+
         if (requestCode == GALLERY) {
             if (data != null) {
                 contentURI = data.getData();
@@ -723,19 +712,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     copyFile(new File(getPath(data.getData())), file);
                     entryAddPic();
                     if (slika1 == null) {
-                        slika1 = resizeImage(mCurrentPhotoPath);
+                        slika1 = currentPhotoPath;
                         Glide.with(this)
                                 .load(slika1)
                                 .into(ib_pic1);
                         ib_pic1_frame.setVisibility(View.VISIBLE);
                     } else if (slika2 == null) {
-                        slika2 = resizeImage(mCurrentPhotoPath);
+                        slika2 = currentPhotoPath;
                         Glide.with(this)
                                 .load(slika2)
                                 .into(ib_pic2);
                         ib_pic2_frame.setVisibility(View.VISIBLE);
                     } else if (slika3 == null) {
-                        slika3 = resizeImage(mCurrentPhotoPath);
+                        slika3 = currentPhotoPath;
                         Glide.with(this)
                                 .load(slika3)
                                 .into(ib_pic3);
@@ -755,27 +744,26 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         } else if (requestCode == CAMERA) {
                     entryAddPic();
-                    if (slika1 == null) {
-                        slika1 = resizeImage(mCurrentPhotoPath);
-                        Glide.with(this)
-                                .load(slika1)
-                                .into(ib_pic1);
-                        ib_pic1_frame.setVisibility(View.VISIBLE);
-                    } else if (slika2 == null) {
-                        slika2 = resizeImage(mCurrentPhotoPath);
-                        Glide.with(this)
-                                .load(slika2)
-                                .into(ib_pic2);
-                        ib_pic2_frame.setVisibility(View.VISIBLE);
-                    } else if (slika3 == null) {
-                        slika3 = resizeImage(mCurrentPhotoPath);
-                        Glide.with(this)
-                                .load(slika3)
-                                .into(ib_pic3);
-                        ib_pic3_frame.setVisibility(View.VISIBLE);
-                        disablePhotoButtons(true);
-                    }
-
+                if (slika1 == null) {
+                    slika1 = String.valueOf(currentPhotoUri);
+                    Glide.with(this)
+                            .load(Uri.parse(slika1))
+                            .into(ib_pic1);
+                    ib_pic1_frame.setVisibility(View.VISIBLE);
+                } else if (slika2 == null) {
+                    slika2 = String.valueOf(currentPhotoUri);
+                    Glide.with(this)
+                            .load(Uri.parse(slika2))
+                            .into(ib_pic2);
+                    ib_pic2_frame.setVisibility(View.VISIBLE);
+                } else if (slika3 == null) {
+                    slika3 = String.valueOf(currentPhotoUri);
+                    Glide.with(this)
+                            .load(Uri.parse(slika3))
+                            .into(ib_pic3);
+                    ib_pic3_frame.setVisibility(View.VISIBLE);
+                    disablePhotoButtons(true);
+                }
             Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
         }
 
@@ -810,67 +798,89 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "biologer");
-
-        if (!mediaStorageDir.exists()) {
-            if (!mediaStorageDir.mkdirs()) {
-                return null;
-            }
-        }
-
-        File image = File.createTempFile(
-                imageFileName,
-                ".jpg",
-                mediaStorageDir
-        );
-
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
-
+    // Take the picture!
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            Log.i(TAG, "There is Camera software, all ready to take picture!");
+            // Ensure permissions to read Uri for new Android systems
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            Uri photoUri = getPhotoUri();
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            startActivityForResult(takePictureIntent, CAMERA);
+            // Update global variable to this URI
+            currentPhotoUri = photoUri;
+        }
+    }
+
+    private Uri getPhotoUri() {
+        Uri photoUri = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            String pictureName = getImageFileName();
+            String picturesDir = Environment.DIRECTORY_PICTURES + "/" + "Biologer";
+            Log.i(TAG, "Saving image: " + pictureName + " into a directory " + picturesDir);
+            ContentResolver resolver = getContentResolver();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, pictureName + ".jpg");
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
+            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, picturesDir);
+            currentPhotoUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+            photoUri = currentPhotoUri;
+            Log.i(TAG, "Image URI is: " + photoUri + ".");
+        } else {
             // Create the File where the photo should go
             File photoFile = null;
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
-                // Error occurred while creating the File
+                Log.e(TAG, "Could not create image file.");
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                /*Uri photoURI = Uri.fromFile(photoFile);*//* FileProvider.getUriForFile(this,
-                        "org.biologeruntill upload.biologer.fileprovider",
-                        photoFile)*//*;*/
-                Uri photoURI;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    photoURI = FileProvider.getUriForFile(EntryActivity.this, "org.biologer.biologer.fileprovider", photoFile);
-                    takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.fileprovider", photoFile);
                 } else {
-                    photoURI = Uri.fromFile(photoFile);
+                    photoUri = Uri.fromFile(photoFile);
                 }
+            }
+            Log.i(TAG, "Saving image into: " + photoUri.toString());
+        }
+        return photoUri;
+    }
 
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, CAMERA);
+    // This will create image on Android <= 9.0
+    private File createImageFile() throws IOException {
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "Biologer");
+
+        if (!mediaStorageDir.exists()) {
+            Log.d(TAG, "Media Storage directory does not exist");
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d(TAG, "Media Storage directory should be created now...");
+                return null;
             }
         }
+
+        return File.createTempFile(getImageFileName(),".jpg", mediaStorageDir);
+    }
+
+    // Set the filename for image taken through the Camera
+    private String getImageFileName() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        return "JPEG_" + timeStamp;
     }
 
     private void entryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(mCurrentPhotoPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
+        mediaScanIntent.setData(currentPhotoUri);
         this.sendBroadcast(mediaScanIntent);
     }
+
+    /*
 
     // Resize the picture and save it in biologer folder
     private String resizeImage(String path_to_image) {
@@ -887,7 +897,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "biologer");
+                Environment.DIRECTORY_PICTURES), "Biologer");
 
         String input_image_name = path_to_image.substring(path_to_image.lastIndexOf("/")+1);
         Log.d(TAG, "Input image name is " + String.valueOf(input_image_name));
@@ -912,6 +922,63 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.d(TAG, "Output image path is " + image.getPath());
         return image.getPath();
     }
+
+    // This uses MediaStore to resize images, which is forced in Android Q 
+    private String resizeImageNewMethod(Uri path_to_image) {
+        Bitmap input_image = null;
+        String output_path = null;
+        try {
+            input_image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), path_to_image);
+            Log.d(TAG, "Input image path is " + String.valueOf(path_to_image));
+            Bitmap output_image = resizeBitmap(input_image, 1024);
+            String pictureName = getImageFileName();
+            output_path = saveImage(output_image, pictureName + "_res");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return output_path;
+    }
+
+    public Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        double x;
+
+        if (width >= height && width > maxSize) {
+            x = width / height;
+            width = maxSize;
+            height = (int) (maxSize / x);
+        } else if (height >= width && height > maxSize) {
+            x = height / width;
+            height = maxSize;
+            width = (int) (maxSize / x);
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, false);
+    }
+
+    private String saveImage(Bitmap bitmap, @NonNull String name) throws IOException {
+        OutputStream fos;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentResolver resolver = getContentResolver();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, name + ".jpg");
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
+            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/" + "Biologer");
+            Uri imageUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+            fos = resolver.openOutputStream(Objects.requireNonNull(imageUri));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+            Objects.requireNonNull(fos).close();
+            return imageUri.toString();
+        } else {
+            String imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+            File image = new File(imagesDir, name + ".jpg");
+            fos = new FileOutputStream(image);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+            Objects.requireNonNull(fos).close();
+            return image.getAbsolutePath();
+        }
+    }
+     */
 
     public String getPath(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};
@@ -997,26 +1064,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         tv_latitude.setText(latitude);
         tv_longitude.setText(longitude);
     }
-
-    /*
-    protected void buildAlertMessageNoGps() {
-        final AlertDialog.Builder builder_gps = new AlertDialog.Builder(this);
-        builder_gps.setMessage(getString(R.string.enable_location))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.enable_location_yes), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                    }
-                })
-                .setNegativeButton(getString(R.string.enable_location_no), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        dialog.cancel();
-                    }
-                });
-        final AlertDialog alert = builder_gps.create();
-        alert.show();
-    }
-    */
 
     // Show the message if the taxon is not chosen from the taxonomic list
     protected void buildAlertMessageInvalidTaxon() {

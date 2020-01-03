@@ -1,14 +1,24 @@
 package org.biologer.biologer;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.google.android.gms.common.util.IOUtils;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
@@ -16,16 +26,25 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Environment;
+import android.os.FileUtils;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,12 +57,19 @@ import org.biologer.biologer.model.UploadFileResponse;
 import org.biologer.biologer.model.UserData;
 import org.biologer.biologer.model.network.APIEntryResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
-import org.biologer.biologer.model.network.UserDataResponse;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -253,20 +279,24 @@ public class LandingActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_upload:
-                saveEntries();
+                try {
+                    saveEntries();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void saveEntries() {
+    public void saveEntries() throws IOException {
         progressBar.setVisibility(View.VISIBLE);
         entryList = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
         uploadEntry_step1();
     }
 
-    private void uploadEntry_step1() {
+    private void uploadEntry_step1() throws IOException {
         n = 0;
         ArrayList<String> nizSlika = new ArrayList<>();
         slike.clear();
@@ -298,8 +328,10 @@ public class LandingActivity extends AppCompatActivity
             uploadEntry_step2();
         } else {
             for (int i = 0; i < n; i++) {
-                File file = new File(nizSlika.get(i));
-                uploadFile(file, i);
+                String image = new String(nizSlika.get(i));
+                uploadFile(image, i);
+                //File file = new File(nizSlika.get(i));
+                //uploadFile(file, i);
             }
         }
     }
@@ -366,7 +398,11 @@ public class LandingActivity extends AppCompatActivity
                     entryList.remove(0);
                     EventBus.getDefault().post(new DeleteEntryFromList());
                     m = 0;
-                    uploadEntry_step1();
+                    try {
+                        uploadEntry_step1();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Log.i(TAG, "Upload entry didn’t work or some reason. No internet?");
 
@@ -380,57 +416,107 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private void uploadFile(File file, final int i) {
-        RequestBody reqFile = RequestBody.create(MediaType.parse("image/*"), file);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), reqFile);
+    private void uploadFile(String image_path, final int i) throws IOException {
+        Log.i(TAG, "Opening image from the path: " + image_path + ".");
 
-        Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
+        String tmp_image_path = null;
+        Bitmap bitmap = resizeImage(image_path);
+        if (bitmap != null) {
+            tmp_image_path = saveTmpImage(bitmap);
 
-        call.enqueue(new Callback<UploadFileResponse>() {
-            @Override
-            public void onResponse(Call<UploadFileResponse> call, Response<UploadFileResponse> response) {
+            // Create temporary file
+            File imageFile = new File(tmp_image_path);
+            Log.d(TAG, "Uploading resized image to server, file path: " + tmp_image_path);
 
-                if (response.isSuccessful()) {
-                    UploadFileResponse responseFile = response.body();
+            RequestBody reqFile = RequestBody.create(MediaType.parse("image/*"), imageFile);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", imageFile.getName(), reqFile);
 
-                    if (responseFile != null) {
-                        slike.add(responseFile.getFile());
-                        m++;
-                        if (m == n) {
-                            uploadEntry_step2();
+            Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
+
+            call.enqueue(new Callback<UploadFileResponse>() {
+                @Override
+                public void onResponse(Call<UploadFileResponse> call, Response<UploadFileResponse> response) {
+
+                    if (response.isSuccessful()) {
+                        UploadFileResponse responseFile = response.body();
+
+                        if (responseFile != null) {
+                            slike.add(responseFile.getFile());
+                            m++;
+                            if (m == n) {
+                                uploadEntry_step2();
+                            }
+                            Log.d(TAG, "File: " + responseFile.getFile());
                         }
-                        Log.d(TAG, "File: " + responseFile.getFile());
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<UploadFileResponse> call, Throwable t) {
-                Log.d(TAG, t.getLocalizedMessage());
-            }
-        });
+                @Override
+                public void onFailure(Call<UploadFileResponse> call, Throwable t) {
+                    Log.d(TAG, t.getLocalizedMessage());
+                }
+            });
+        } else {
+            Toast.makeText(this, "Image file " + image_path + " does not exist!", Toast.LENGTH_LONG).show();
+        }
     }
 
-//    private void navDrawerFill() {
-//        Call<UserDataResponse> serv = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
-//        serv.enqueue(new Callback<UserDataResponse>() {
-//            @Override
-//            public void onResponse(Call<UserDataResponse> serv, Response<UserDataResponse> response) {
-//                App.get().getDaoSession().getUserDataDao().deleteAll();
-//                String email = response.body().getData().getEmail();
-//                String name = response.body().getData().getFullName();
-//                int data_license = response.body().getData().getSettings().getDataLicense();
-//                int image_license = response.body().getData().getSettings().getImageLicense();
-//                UserData uData = new UserData(null, email, name, data_license, image_license);
-//                App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<UserDataResponse> call, Throwable t) {
-//                String s = "ff";
-//            }
-//        });
-//    }
+    private String saveTmpImage(Bitmap resized_image) throws IOException {
+        File tmp_file = new File(getCacheDir(), "temporary_image.jpg");
+        Log.d(TAG,"Temporary file for resized images will be: " + tmp_file.getAbsolutePath());
+        try {
+            OutputStream fos = new FileOutputStream(tmp_file);
+            resized_image.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+            Objects.requireNonNull(fos).close();
+            Log.i(TAG, "Temporary file saved.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Log.i(TAG, "Temporary file NOT saved.");
+        }
+        return tmp_file.getAbsolutePath();
+    }
+
+    // This uses MediaStore to resize images, which is forced in Android Q
+    private Bitmap resizeImage(String path_to_image) {
+        Uri imageUri = Uri.parse(path_to_image);
+        Bitmap input_image = null;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ImageDecoder.Source source = ImageDecoder.createSource(this.getContentResolver(), imageUri);
+                input_image = ImageDecoder.decodeBitmap(source);
+            } else {
+                input_image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (input_image == null) {
+            Log.e(TAG, "It looks like input image does not exist!!!!");
+            return null;
+        } else {
+            return resizeBitmap(input_image, 1024);
+        }
+    }
+
+    public Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {
+        Log.i(TAG, "Resizing image to a maximum of " + String.valueOf(maxSize) + "px.");
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        double x;
+
+        if (height == width) {
+            height = maxSize;
+            width = maxSize;
+        } if (height < width) {
+            height = height * maxSize / width;
+            width = maxSize;
+        } else {
+            width = width * maxSize /height;
+            height = maxSize;
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, false);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -493,27 +579,6 @@ public class LandingActivity extends AppCompatActivity
         alert.show();
     }
 
- /*   private void cancelTaxaUpdate() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getString(R.string.should_cancel_taxa_update))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                        Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
-                        fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
-                        startService(fetchTaxa);
-                    }
-                })
-                .setNegativeButton(getString(R.string.continue_update), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        dialog.cancel();
-                    }
-                });
-        final AlertDialog alert = builder.create();
-        alert.show();
-    }
-*/
     // Get the data from GreenDao database
     private UserData getLoggedUser() {
         // Get the user data from a GreenDao database
