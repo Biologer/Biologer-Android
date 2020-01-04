@@ -1,6 +1,7 @@
 package org.biologer.biologer;
 
 import android.Manifest;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -664,7 +665,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("image/*");
-        // intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
@@ -720,32 +721,96 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         if (requestCode == GALLERY) {
             if (data != null) {
-                currentPhotoUri = data.getData();
+                // If a single image is selected we cen get it directly...
+                if (data.getData() != null) {
+                    currentPhotoUri = data.getData();
+                    Log.i(TAG, "You have selected this image from Gallery: " + String.valueOf(currentPhotoUri));
+                    entryAddPic();
+                    if (slika1 == null) {
+                        slika1 = String.valueOf(currentPhotoUri);
+                        Glide.with(this)
+                                .load(slika1)
+                                .into(ib_pic1);
+                        ib_pic1_frame.setVisibility(View.VISIBLE);
+                    } else if (slika2 == null) {
+                        slika2 = String.valueOf(currentPhotoUri);
+                        Glide.with(this)
+                                .load(slika2)
+                                .into(ib_pic2);
+                        ib_pic2_frame.setVisibility(View.VISIBLE);
+                    } else if (slika3 == null) {
+                        slika3 = String.valueOf(currentPhotoUri);
+                        Glide.with(this)
+                                .load(slika3)
+                                .into(ib_pic3);
+                        ib_pic3_frame.setVisibility(View.VISIBLE);
+                        iconTakePhotoGallery.setEnabled(false);
+                        iconTakePhotoGallery.setImageAlpha(20);
+                        iconTakePhotoCamera.setEnabled(false);
+                        iconTakePhotoCamera.setImageAlpha(20);
+                    }
+                } else {
+                    // If multiple images are selected we have a workaround...
+                    if (data.getClipData() != null) {
+                        ClipData clipData = data.getClipData();
+                        ArrayList<Uri> arrayUri = new ArrayList<Uri>();
+                        for (int i = 0; i < clipData.getItemCount(); i++) {
+                            ClipData.Item item = clipData.getItemAt(i);
+                            Uri uri = item.getUri();
+                            arrayUri.add(uri);
+                        }
+                        Log.i(TAG, "You have selected " + arrayUri.size() + " images from Gallery.");
 
-                Log.i(TAG, "This is the content from the Gallery: " + String.valueOf(currentPhotoUri));
-                entryAddPic();
-                if (slika1 == null) {
-                    slika1 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(slika1)
-                            .into(ib_pic1);
-                    ib_pic1_frame.setVisibility(View.VISIBLE);
-                } else if (slika2 == null) {
-                    slika2 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(slika2)
-                            .into(ib_pic2);
-                    ib_pic2_frame.setVisibility(View.VISIBLE);
-                } else if (slika3 == null) {
-                    slika3 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(slika3)
-                            .into(ib_pic3);
-                    ib_pic3_frame.setVisibility(View.VISIBLE);
-                    iconTakePhotoGallery.setEnabled(false);
-                    iconTakePhotoGallery.setImageAlpha(20);
-                    iconTakePhotoCamera.setEnabled(false);
-                    iconTakePhotoCamera.setImageAlpha(20);
+                        String[] slike = new String[3];
+                        slike[0] = slika1;
+                        slike[1] = slika2;
+                        slike[2] = slika3;
+
+                        int j = 0;
+                        for (int i = 0; i < 3; i++) {
+                            if (slike[i] == null) {
+                                Log.i(TAG, "Image " + String.valueOf(i+1) + " is null.");
+                                if (j < arrayUri.size()) {
+                                    String uri = arrayUri.get(j).toString();
+                                    j++;
+                                    slike[i] = uri;
+                                } else {
+                                    slike[i] = null;
+                                }
+                            } else {
+                                Log.i(TAG, "Image " + String.valueOf(i+1) + " is already set to: " + slike[i]);
+                            }
+                        }
+
+                        slika1 = slike[0];
+                        slika2 = slike[1];
+                        slika3 = slike[2];
+
+                        if (slika1 != null) {
+                            Glide.with(this)
+                                    .load(slika1)
+                                    .into(ib_pic1);
+                            ib_pic1_frame.setVisibility(View.VISIBLE);
+                        } if (slika2 != null) {
+                            Glide.with(this)
+                                    .load(slika2)
+                                    .into(ib_pic2);
+                            ib_pic2_frame.setVisibility(View.VISIBLE);
+                        } if (slika3 != null) {
+                            Glide.with(this)
+                                    .load(slika3)
+                                    .into(ib_pic3);
+                            ib_pic3_frame.setVisibility(View.VISIBLE);
+                        } if (slika1 != null && slika2 != null && slika3 != null) {
+                            iconTakePhotoGallery.setEnabled(false);
+                            iconTakePhotoGallery.setImageAlpha(20);
+                            iconTakePhotoCamera.setEnabled(false);
+                            iconTakePhotoCamera.setImageAlpha(20);
+                        }
+                    } else {
+                        Toast.makeText(this, "You haven't picked Image",
+                                Toast.LENGTH_LONG).show();
+                    }
                 }
             }
 
