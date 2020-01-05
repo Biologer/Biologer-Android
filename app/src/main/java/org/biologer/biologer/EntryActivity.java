@@ -759,7 +759,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             Uri uri = item.getUri();
                             arrayUri.add(uri);
                         }
-                        Log.i(TAG, "You have selected " + arrayUri.size() + " images from Gallery.");
 
                         String[] slike = new String[3];
                         slike[0] = slika1;
@@ -780,6 +779,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             } else {
                                 Log.i(TAG, "Image " + String.valueOf(i+1) + " is already set to: " + slike[i]);
                             }
+                        }
+
+                        // Send a message to the user if more than 3 photos are selected...
+                        Log.i(TAG, "You have selected " + arrayUri.size() + " images; " + String.valueOf(j) + " image place holder exist in the Entry.");
+                        if (j < arrayUri.size()) {
+                            int discarded = arrayUri.size() - j;
+                            Toast.makeText(this,
+                                    getString(R.string.limit_photo1) +
+                                    " " + String.valueOf(arrayUri.size()) + " " +
+                                    getString(R.string.limit_photo2) +
+                                    " " + String.valueOf(j) + " " +
+                                    getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                         }
 
                         slika1 = slike[0];
@@ -808,7 +819,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             iconTakePhotoCamera.setImageAlpha(20);
                         }
                     } else {
-                        Toast.makeText(this, "You haven't picked Image",
+                        Toast.makeText(this, getString(R.string.no_photo_selected),
                                 Toast.LENGTH_LONG).show();
                     }
                 }

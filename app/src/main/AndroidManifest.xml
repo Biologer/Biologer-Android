@@ -90,6 +90,9 @@
         <service android:name="org.biologer.biologer.FetchTaxa"
             android:enabled="true" />
 
+        <service android:name="org.biologer.biologer.UploadRecords"
+            android:enabled="true" />
+
         <service android:name="org.biologer.biologer.UpdateLicenses"/>
 
         <provider

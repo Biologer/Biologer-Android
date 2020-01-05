@@ -7,8 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +28,7 @@ import java.util.ArrayList;
 
 public class LandingFragment extends Fragment {
 
-    public static final int REQ_CODE_NEW_ENTRY = 1001;
+    private static final int REQ_CODE_NEW_ENTRY = 1001;
     private Adapter adapter;
     private ArrayList<Entry> entries;
     private SwipeMenuListView listView;
@@ -73,21 +71,17 @@ public class LandingFragment extends Fragment {
         listView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
-                switch (index) {
-                    case 0:
-                        // delete button
-                        App.get().getDaoSession().getEntryDao().deleteByKey(adapter.getItem(position).getId());
-                        entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
-                        if (entries == null) {
-                            entries = new ArrayList<>();
-                        }
-                        Activity activity = getActivity();
-                        if (activity!= null) {
-                            adapter = new Adapter(activity.getApplicationContext(), entries);
-                            listView.setAdapter(adapter);
-                        }
-                        break;
-
+                if (index == 0) {// delete button
+                    App.get().getDaoSession().getEntryDao().deleteByKey(adapter.getItem(position).getId());
+                    entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+                    if (entries == null) {
+                        entries = new ArrayList<>();
+                    }
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        adapter = new Adapter(activity.getApplicationContext(), entries);
+                        listView.setAdapter(adapter);
+                    }
                 }
                 // false : close the menu; true : not close the menu
                 return false;
@@ -109,7 +103,7 @@ public class LandingFragment extends Fragment {
             }
         });
 
-        FloatingActionButton fbtn_add = (FloatingActionButton) rootView.findViewById(R.id.fbtn_add);
+        FloatingActionButton fbtn_add = rootView.findViewById(R.id.fbtn_add);
         fbtn_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,7 +140,7 @@ public class LandingFragment extends Fragment {
         adapter.addAll(entries, true);
     }
 
-    public void updateData() {
+    void updateData() {
         entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
         if (entries == null) {
             entries = new ArrayList<>();

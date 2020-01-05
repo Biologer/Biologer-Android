@@ -51,8 +51,7 @@ public class FetchTaxa extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent != null)
-        {
+        if(intent != null) {
             String action = intent.getAction();
             if (action != null) {
                 switch (action) {

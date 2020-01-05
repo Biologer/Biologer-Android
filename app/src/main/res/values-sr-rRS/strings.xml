@@ -160,4 +160,19 @@
     <string name="database">База</string>
     <string name="User">Корисник</string>
     <string name="stage_juvenile">Младунац</string>
+    <string name="no_photo_selected">Није изабрана фотографија из Галерије.</string>
+    <string name="limit_photo1">Изабрали сте</string>
+    <string name="limit_photo2">фотографија, од којих ће</string>
+    <string name="limit_photo3">бити додате. Уз сваки налаз можете послати до три фотографије.</string>
+    <string name="channel_entries_description">Display notifications related to uploading field observations to server.</string>
+    <string name="channel_entries_name">Upload entries</string>
+    <string name="notify_title_entries">Uploading records</string>
+    <string name="notify_desc_entries">Uploading species observations to the server.</string>
+    <string name="notify_title_entries_uploaded">Records uploaded</string>
+    <string name="notify_desc_entries_uploaded">All observation records are sucessfully uploaded to the server.</string>
+    <string name="notify_title_upload_canceled">Upload canceled</string>
+    <string name="notify_desc_upload_canceled">Uploading data to a server is canceled by the user.</string>
+    <string name="notify_desc_uploading">Uploading</string>
+    <string name="notify_desc_uploading1">of</string>
+    <string name="notify_desc_uploading2">entries.</string>
 </resources>
