@@ -1,8 +1,10 @@
 package org.biologer.biologer;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -18,6 +20,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 
@@ -46,6 +50,7 @@ public class LandingActivity extends AppCompatActivity
     private DrawerLayout drawer;
     FrameLayout progressBar;
     private String last_updated;
+    BroadcastReceiver receiver;
 
     Fragment fragment = null;
 
@@ -85,6 +90,34 @@ public class LandingActivity extends AppCompatActivity
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
+
+        // Broadcast will watch if upload service is active
+        // and run the command when the upload is complete
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
+                // This will be executed after upload is completed
+                if (s != null) {
+                    Log.d(TAG, s);
+                    setUploadIconVisibility();
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
+                new IntentFilter(UploadRecords.TASK_COMPLETED)
+        );
+    }
+
+    @Override
+    protected void onStop() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        super.onStop();
     }
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.

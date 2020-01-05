@@ -16,6 +16,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,7 @@ public class UploadRecords extends Service {
 
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_CANCEL = "ACTION_CANCEL";
+    static final public String TASK_COMPLETED = "org.biologer.biologer.UploadRecordsService.TASK_COMPLETED";
 
     private static UploadRecords instance = null;
 
@@ -62,6 +64,7 @@ public class UploadRecords extends Service {
     ArrayList<String> slike = new ArrayList<>();
     List<APIEntry.Photo> photos = null;
     File image1, image2, image3;
+    LocalBroadcastManager broadcaster;
 
     int n = 0;
     int m = 0;
@@ -70,6 +73,7 @@ public class UploadRecords extends Service {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        broadcaster = LocalBroadcastManager.getInstance(this);
         Log.d(TAG, "Running onCreate()");
     }
 
@@ -77,6 +81,13 @@ public class UploadRecords extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        instance = null;
+        sendResult("Uploading task is completed, shutting down service.");
+        Log.d(TAG, "Running onDestroy().");
     }
 
     @Override
@@ -470,8 +481,10 @@ public class UploadRecords extends Service {
         }
     }
 
-    // to check if the service is still running
-    public static boolean isInstanceCreated() {
-        return instance != null;
+    public void sendResult(String message) {
+        Intent intent = new Intent(TASK_COMPLETED);
+        if(message != null)
+            intent.putExtra(TASK_COMPLETED, message);
+        broadcaster.sendBroadcast(intent);
     }
 }
