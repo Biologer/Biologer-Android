@@ -8,9 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,7 +15,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import com.google.android.material.textfield.TextInputLayout;
@@ -64,12 +60,7 @@ import org.biologer.biologer.model.TaxonLocalizationDao;
 import org.biologer.biologer.model.UserData;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,19 +83,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private LocationListener locationListener;
     String latitude = "0", longitude = "0";
     private double elev = 0.0;
-    private LatLng nLokacija = new LatLng(0.0, 0.0);
+    private LatLng currentLocation = new LatLng(0.0, 0.0);
     private Double acc = 0.0;
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
-    private TextView tvTakson, tv_gps, tvStage, tv_latitude, tv_longitude, select_sex;
-    private EditText et_razlogSmrti, et_komentar, et_brojJedinki, et_habitat;
+    private TextView tv_gps, tvStage, tv_latitude, tv_longitude, select_sex;
+    private EditText text_DeathComment, text_Comment, text_NumberOfSpecimens, et_Habitat;
     AutoCompleteTextView acTextView;
     FrameLayout ib_pic1_frame, ib_pic2_frame, ib_pic3_frame;
     ImageView ib_pic1, ib_pic1_del, ib_pic2, ib_pic2_del, ib_pic3, ib_pic3_del, iv_map, iconTakePhotoCamera, iconTakePhotoGallery;
     private CheckBox check_dead;
     LinearLayout detailedEntry;
     private boolean save_enabled = false;
-    private String slika1, slika2, slika3;
+    private String image1, image2, image3;
     private SwipeRefreshLayout swipe;
     private Entry currentItem;
     private String locale_script = "en";
@@ -120,7 +111,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_entry);
 
         // Add a toolbar to the Activity
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
@@ -141,37 +132,37 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         tv_gps = findViewById(R.id.tv_gps);
         tvStage = findViewById(R.id.text_view_stages);
         tvStage.setOnClickListener(this);
-        et_razlogSmrti = (EditText) findViewById(R.id.edit_text_death_comment);
-        et_komentar = (EditText) findViewById(R.id.et_komentar);
-        et_brojJedinki = (EditText) findViewById(R.id.et_brojJedinki);
-        et_habitat = (EditText) findViewById(R.id.et_habitat);
+        text_DeathComment = findViewById(R.id.edit_text_death_comment);
+        text_Comment = findViewById(R.id.et_komentar);
+        text_NumberOfSpecimens = findViewById(R.id.et_brojJedinki);
+        et_Habitat = findViewById(R.id.et_habitat);
         // In order not to use spinner to choose sex, we will put this into EditText
         select_sex = findViewById(R.id.text_view_sex);
         select_sex.setOnClickListener(this);
-        check_dead = (CheckBox) findViewById(R.id.dead_specimen);
+        check_dead = findViewById(R.id.dead_specimen);
         check_dead.setOnClickListener(this);
         // Buttons to add images
-        ib_pic1_frame = (FrameLayout) findViewById(R.id.ib_pic1_frame);
-        ib_pic1 = (ImageView) findViewById(R.id.ib_pic1);
-        ib_pic1_del = (ImageView) findViewById(R.id.ib_pic1_del);
+        ib_pic1_frame = findViewById(R.id.ib_pic1_frame);
+        ib_pic1 = findViewById(R.id.ib_pic1);
+        ib_pic1_del = findViewById(R.id.ib_pic1_del);
         ib_pic1_del.setOnClickListener(this);
-        ib_pic2_frame = (FrameLayout) findViewById(R.id.ib_pic2_frame);
-        ib_pic2 = (ImageView) findViewById(R.id.ib_pic2);
-        ib_pic2_del = (ImageView) findViewById(R.id.ib_pic2_del);
+        ib_pic2_frame = findViewById(R.id.ib_pic2_frame);
+        ib_pic2 = findViewById(R.id.ib_pic2);
+        ib_pic2_del = findViewById(R.id.ib_pic2_del);
         ib_pic2_del.setOnClickListener(this);
-        ib_pic3_frame = (FrameLayout) findViewById(R.id.ib_pic3_frame);
-        ib_pic3 = (ImageView) findViewById(R.id.ib_pic3);
-        ib_pic3_del = (ImageView) findViewById(R.id.ib_pic3_del);
+        ib_pic3_frame = findViewById(R.id.ib_pic3_frame);
+        ib_pic3 = findViewById(R.id.ib_pic3);
+        ib_pic3_del = findViewById(R.id.ib_pic3_del);
         ib_pic3_del.setOnClickListener(this);
-        iconTakePhotoCamera = (ImageView) findViewById(R.id.image_view_take_photo_camera);
+        iconTakePhotoCamera = findViewById(R.id.image_view_take_photo_camera);
         iconTakePhotoCamera.setOnClickListener(this);
-        iconTakePhotoGallery = (ImageView) findViewById(R.id.image_view_take_photo_gallery);
+        iconTakePhotoGallery = findViewById(R.id.image_view_take_photo_gallery);
         iconTakePhotoGallery.setOnClickListener(this);
         // Map icon
-        iv_map = (ImageView) findViewById(R.id.iv_map);
+        iv_map = findViewById(R.id.iv_map);
         iv_map.setOnClickListener(this);
         // Show advanced options for data entry if selected in preferences
-        detailedEntry = (LinearLayout) findViewById(R.id.detailed_entry);
+        detailedEntry = findViewById(R.id.detailed_entry);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
@@ -191,7 +182,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Fill in the drop down menu with list of taxa
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, new String[1]);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, new String[1]);
         acTextView = findViewById(R.id.textview_list_of_taxa);
         acTextView.setAdapter(adapter);
         acTextView.setThreshold(2);
@@ -216,7 +207,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         List<TaxonLocalization> taxaList = App.get().getDaoSession().getTaxonLocalizationDao()
                                 .queryBuilder()
                                 .where(TaxonLocalizationDao.Properties.Locale.eq(locale_script),
-                                        TaxonLocalizationDao.Properties.LatinAndNativeName.like("%" + String.valueOf(input_text) + "%"))
+                                        TaxonLocalizationDao.Properties.LatinAndNativeName.like("%" + input_text + "%"))
                                 .limit(10)
                                 .list();
                         String[] taxaNames = new String[taxaList.size()];
@@ -224,7 +215,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             // Get the latin names
                             taxaNames[i] = taxaList.get(i).getLatinAndNativeName();
                         }
-                        ArrayAdapter<String> adapter = new ArrayAdapter<String>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
+                        ArrayAdapter<String> adapter = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
                         acTextView.setAdapter(adapter);
                         adapter.notifyDataSetChanged();
 
@@ -266,16 +257,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         });
 
-        // Define locatonListener and locationManager in order to
+        // Define locationListener and locationManager in order to
         // to receive the Location.
         // Call the function updateLocation() to do all the magic...
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                nLokacija = new LatLng(location.getLatitude(), location.getLongitude());
+                currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                 setLocationValues(location.getLatitude(), location.getLongitude());
                 elev = location.getAltitude();
-                acc = Double.valueOf(location.getAccuracy());
+                acc = (double) location.getAccuracy();
                 tv_gps.setText(String.format(Locale.ENGLISH, "%.0f", acc));
             }
 
@@ -312,9 +303,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             getLocation(100, 2);
         } else {
             currentItem = App.get().getDaoSession().getEntryDao().load(existing_entry_id);
-            Log.i(TAG, "Opening existing entry with ID: " + String.valueOf(existing_entry_id) + ".");
+            Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
             // Get the latitude, longitude, coordinate precision and elevation...
-            nLokacija = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
+            currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
             elev = currentItem.getElevation();
             acc = currentItem.getAccuracy();
             tv_latitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLattitude()));
@@ -328,7 +319,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 String stageName = (App.get().getDaoSession().getStageDao().queryBuilder()
                         .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
                         .list().get(1).getName());
-                Long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
+                long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
                         .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
                         .list().get(1).getStageId());
                 Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
@@ -336,13 +327,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 tvStage.setText(stageName);
             }
             if (currentItem.getCauseOfDeath().length() != 0) {
-                et_razlogSmrti.setText(currentItem.getCauseOfDeath());
+                text_DeathComment.setText(currentItem.getCauseOfDeath());
             }
             if (currentItem.getComment().length() != 0) {
-                et_komentar.setText(currentItem.getComment());
+                text_Comment.setText(currentItem.getComment());
             }
             if (currentItem.getNumber() != null) {
-                et_brojJedinki.setText(String.valueOf(currentItem.getNumber()));
+                text_NumberOfSpecimens.setText(String.valueOf(currentItem.getNumber()));
             }
             // Get the selected sex. If not selected set spinner to default...
             Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
@@ -361,41 +352,42 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 check_dead.setChecked(true);
                 showDeadComment();
             }
-            slika1 = currentItem.getSlika1();
-            if (slika1 != null) {
+            image1 = currentItem.getSlika1();
+            if (image1 != null) {
                 Glide.with(this)
-                        .load(slika1)
+                        .load(image1)
                         .into(ib_pic1);
                 ib_pic1_frame.setVisibility(View.VISIBLE);
             }
-            slika2 = currentItem.getSlika2();
-            if (slika2 != null) {
+            image2 = currentItem.getSlika2();
+            if (image2 != null) {
                 Glide.with(this)
-                        .load(slika2)
+                        .load(image2)
                         .into(ib_pic2);
                 ib_pic2_frame.setVisibility(View.VISIBLE);
             }
-            slika3 = currentItem.getSlika3();
-            if (slika3 != null) {
+            image3 = currentItem.getSlika3();
+            if (image3 != null) {
                 Glide.with(this)
-                        .load(slika3)
+                        .load(image3)
                         .into(ib_pic3);
                 ib_pic3_frame.setVisibility(View.VISIBLE);
             }
 
-            if (slika1 == null || slika2 == null || slika3 == null) {
+            if (image1 == null || image2 == null || image3 == null) {
                 disablePhotoButtons(false);
             } else {
                 disablePhotoButtons(true);
             }
             if (currentItem.getHabitat() != null) {
-                et_habitat.setText(currentItem.getHabitat());
+                et_Habitat.setText(currentItem.getHabitat());
             }
         }
     }
 
     private Boolean isNewEntry() {
         String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
+        assert is_new_entry != null;
         return is_new_entry.equals("YES");
     }
 
@@ -453,17 +445,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case R.id.ib_pic1_del:
                 ib_pic1_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                slika1 = null;
+                image1 = null;
                 break;
             case R.id.ib_pic2_del:
                 ib_pic2_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                slika2 = null;
+                image2 = null;
                 break;
             case R.id.ib_pic3_del:
                 ib_pic3_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                slika3 = null;
+                image3 = null;
                 break;
             case R.id.dead_specimen:
                 showDeadComment();
@@ -492,17 +484,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         } else {
             // If the location is not loaded, warn the user and
             // don’t send crappy data into the online database!
-            if (nLokacija.latitude == 0) {
+            if (currentLocation.latitude == 0) {
                 buildAlertMessageNoCoordinates();
             } else {
                 // If the location is not precise ask the user to
                 // wait for a precise location, or to go for it anyhow...
-                if (nLokacija.latitude > 0 && acc >= 25) {
+                if (currentLocation.latitude > 0 && acc >= 25) {
                     buildAlertMessageUnpreciseCoordinates();
                 }
             }
 
-            if (nLokacija.latitude > 0 && (acc <= 25)) {
+            if (currentLocation.latitude > 0 && (acc <= 25)) {
                 // Save the taxon
                 Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
                         .where(TaxonDao.Properties.Id.eq(taxonID))
@@ -515,15 +507,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     //  Gather all the data into the Entry and wright it into the GreenDao database.
     private void entrySaver(final Taxon taxon) {
         Stage stage = (tvStage.getTag() != null) ? (Stage) tvStage.getTag() : null;
-        String komentar = (et_komentar.getText().toString() != null) ? et_komentar.getText().toString() : "";
-        Integer brojJedinki = (et_brojJedinki.getText().toString().trim().length() > 0) ? Integer.valueOf(et_brojJedinki.getText().toString()) : null;
+        String comment = text_Comment.getText().toString();
+        Integer numberOfSpecimens = (text_NumberOfSpecimens.getText().toString().trim().length() > 0) ? Integer.valueOf(text_NumberOfSpecimens.getText().toString()) : null;
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
-        String razlogSmrti = (et_razlogSmrti.getText() != null) ? et_razlogSmrti.getText().toString() : "";
-        String habitat = et_habitat.getText() != null ? et_habitat.getText().toString() : "";
+        String deathComment = (text_DeathComment.getText() != null) ? text_DeathComment.getText().toString() : "";
+        String habitat = et_Habitat.getText() != null ? et_Habitat.getText().toString() : "";
 
         if (isNewEntry()) {
             calendar = Calendar.getInstance();
-            simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
             String fullDate = simpleDateFormat.format(calendar.getTime());
             String day = fullDate.substring(0, 2);
             String month = fullDate.substring(3, 5);
@@ -535,8 +527,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Get the data structure and save it into a database Entry
             Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day,
-                    komentar, brojJedinki, maleFemale(), selectedStage, String.valueOf(!check_dead.isChecked()), razlogSmrti,
-                    nLokacija.latitude, nLokacija.longitude, acc, elev, "", slika1, slika2, slika3,
+                    comment, numberOfSpecimens, maleFemale(), selectedStage, String.valueOf(!check_dead.isChecked()), deathComment,
+                    currentLocation.latitude, currentLocation.longitude, acc, elev, "", image1, image2, image3,
                     project_name, "", String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time, habitat);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
@@ -546,20 +538,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         else { // if the entry exist already
             currentItem.setTaxonId(taxon.getId());
-            currentItem.setTaxonSuggestion(taxon.getName().toString());
-            currentItem.setComment(komentar);
-            currentItem.setNumber(brojJedinki);
+            currentItem.setTaxonSuggestion(taxon.getName());
+            currentItem.setComment(comment);
+            currentItem.setNumber(numberOfSpecimens);
             currentItem.setSex(maleFemale());
             currentItem.setStage(selectedStage);
             currentItem.setDeadOrAlive(String.valueOf(!check_dead.isChecked()));
-            currentItem.setCauseOfDeath(razlogSmrti);
-            currentItem.setLattitude(nLokacija.latitude);
-            currentItem.setLongitude(nLokacija.longitude);
+            currentItem.setCauseOfDeath(deathComment);
+            currentItem.setLattitude(currentLocation.latitude);
+            currentItem.setLongitude(currentLocation.longitude);
             currentItem.setElevation(elev);
             currentItem.setAccuracy(acc);
-            currentItem.setSlika1(slika1);
-            currentItem.setSlika2(slika2);
-            currentItem.setSlika3(slika3);
+            currentItem.setSlika1(image1);
+            currentItem.setSlika2(image2);
+            currentItem.setSlika3(image3);
             currentItem.setHabitat(habitat);
 
             // Now just update the database with new data...
@@ -592,7 +584,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
                 .where(TaxonDao.Properties.Name.eq(getLatinName()))
                 .unique();
-        stageList = (ArrayList<Stage>) App.get().getDaoSession().getStageDao().queryBuilder()
+        stageList = App.get().getDaoSession().getStageDao().queryBuilder()
                 .where(StageDao.Properties.TaxonId.eq(taxon.getId()))
                 .list();
         return stageList.size() != 0;
@@ -602,33 +594,33 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
                 .where(TaxonDao.Properties.Name.eq(getLatinName()))
                 .unique();
-        stageList = (ArrayList<Stage>) App.get().getDaoSession().getStageDao().queryBuilder()
+        stageList = App.get().getDaoSession().getStageDao().queryBuilder()
                 .where(StageDao.Properties.TaxonId.eq(taxon.getId()))
                 .list();
         if (stageList != null) {
-            final String[] stadijumi = new String[stageList.size()];
+            final String[] taxon_stages = new String[stageList.size()];
             for (int i = 0; i < stageList.size(); i++) {
-                stadijumi[i] = stageList.get(i).getName();
+                taxon_stages[i] = stageList.get(i).getName();
                 // Translate this to interface...
-                if (stadijumi[i].equals("egg")) {stadijumi[i] = getString(R.string.stage_egg);}
-                if (stadijumi[i].equals("larva")) {stadijumi[i] = getString(R.string.stage_larva);}
-                if (stadijumi[i].equals("pupa")) {stadijumi[i] = getString(R.string.stage_pupa);}
-                if (stadijumi[i].equals("adult")) {stadijumi[i] = getString(R.string.stage_adult);}
-                if (stadijumi[i].equals("juvenile")) {stadijumi[i] = getString(R.string.stage_juvenile);}
+                if (taxon_stages[i].equals("egg")) {taxon_stages[i] = getString(R.string.stage_egg);}
+                if (taxon_stages[i].equals("larva")) {taxon_stages[i] = getString(R.string.stage_larva);}
+                if (taxon_stages[i].equals("pupa")) {taxon_stages[i] = getString(R.string.stage_pupa);}
+                if (taxon_stages[i].equals("adult")) {taxon_stages[i] = getString(R.string.stage_adult);}
+                if (taxon_stages[i].equals("juvenile")) {taxon_stages[i] = getString(R.string.stage_juvenile);}
             }
-            if (stadijumi.length == 0) {
+            if (taxon_stages.length == 0) {
                 Log.d(TAG, "No stages are available for " + getLatinName() + ".");
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setItems(stadijumi, new DialogInterface.OnClickListener() {
+                builder.setItems(taxon_stages, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        tvStage.setText(stadijumi[i]);
+                        tvStage.setText(taxon_stages[i]);
                         tvStage.setTag(stageList.get(i));
                     }
                 });
                 builder.show();
-                Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(stadijumi));
+                Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
             }
         } else {
             tvStage.setEnabled(false);
@@ -656,7 +648,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void showMap() {
         Intent intent = new Intent(this, MapActivity.class);
-        intent.putExtra("latlong", nLokacija);
+        intent.putExtra("latlong", currentLocation);
         startActivityForResult(intent, MAP);
     }
 
@@ -715,7 +707,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
 
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == this.RESULT_CANCELED) {
+        if (resultCode == RESULT_CANCELED) {
             return;
         }
 
@@ -724,24 +716,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 // If a single image is selected we cen get it directly...
                 if (data.getData() != null) {
                     currentPhotoUri = data.getData();
-                    Log.i(TAG, "You have selected this image from Gallery: " + String.valueOf(currentPhotoUri));
+                    Log.i(TAG, "You have selected this image from Gallery: " + currentPhotoUri);
                     entryAddPic();
-                    if (slika1 == null) {
-                        slika1 = String.valueOf(currentPhotoUri);
+                    if (image1 == null) {
+                        image1 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
-                                .load(slika1)
+                                .load(image1)
                                 .into(ib_pic1);
                         ib_pic1_frame.setVisibility(View.VISIBLE);
-                    } else if (slika2 == null) {
-                        slika2 = String.valueOf(currentPhotoUri);
+                    } else if (image2 == null) {
+                        image2 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
-                                .load(slika2)
+                                .load(image2)
                                 .into(ib_pic2);
                         ib_pic2_frame.setVisibility(View.VISIBLE);
-                    } else if (slika3 == null) {
-                        slika3 = String.valueOf(currentPhotoUri);
+                    } else if (image3 == null) {
+                        image3 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
-                                .load(slika3)
+                                .load(image3)
                                 .into(ib_pic3);
                         ib_pic3_frame.setVisibility(View.VISIBLE);
                         iconTakePhotoGallery.setEnabled(false);
@@ -753,66 +745,63 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     // If multiple images are selected we have a workaround...
                     if (data.getClipData() != null) {
                         ClipData clipData = data.getClipData();
-                        ArrayList<Uri> arrayUri = new ArrayList<Uri>();
+                        ArrayList<Uri> arrayUri = new ArrayList<>();
                         for (int i = 0; i < clipData.getItemCount(); i++) {
                             ClipData.Item item = clipData.getItemAt(i);
                             Uri uri = item.getUri();
                             arrayUri.add(uri);
                         }
 
-                        String[] slike = new String[3];
-                        slike[0] = slika1;
-                        slike[1] = slika2;
-                        slike[2] = slika3;
+                        String[] images = new String[3];
+                        images[0] = image1;
+                        images[1] = image2;
+                        images[2] = image3;
 
                         int j = 0;
                         for (int i = 0; i < 3; i++) {
-                            if (slike[i] == null) {
-                                Log.i(TAG, "Image " + String.valueOf(i+1) + " is null.");
+                            if (images[i] == null) {
+                                Log.i(TAG, "Image " + i+1 + " is null.");
                                 if (j < arrayUri.size()) {
                                     String uri = arrayUri.get(j).toString();
                                     j++;
-                                    slike[i] = uri;
+                                    images[i] = uri;
                                 } else {
-                                    slike[i] = null;
+                                    images[i] = null;
                                 }
                             } else {
-                                Log.i(TAG, "Image " + String.valueOf(i+1) + " is already set to: " + slike[i]);
+                                Log.i(TAG, "Image " + i+1 + " is already set to: " + images[i]);
                             }
                         }
 
                         // Send a message to the user if more than 3 photos are selected...
-                        Log.i(TAG, "You have selected " + arrayUri.size() + " images; " + String.valueOf(j) + " image place holder exist in the Entry.");
+                        Log.i(TAG, "You have selected " + arrayUri.size() + " images; " + j + " image place holder exist in the Entry.");
                         if (j < arrayUri.size()) {
-                            int discarded = arrayUri.size() - j;
                             Toast.makeText(this,
-                                    getString(R.string.limit_photo1) +
-                                    " " + String.valueOf(arrayUri.size()) + " " +
-                                    getString(R.string.limit_photo2) +
-                                    " " + String.valueOf(j) + " " +
+                                    getString(R.string.limit_photo1) + " " + arrayUri.size() + " " +
+                                    getString(R.string.limit_photo2) + " " + j + " " +
                                     getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                         }
 
-                        slika1 = slike[0];
-                        slika2 = slike[1];
-                        slika3 = slike[2];
+                        image1 = images[0];
+                        image2 = images[1];
+                        image3 = images[2];
 
-                        if (slika1 != null) {
+                        if (image1 != null) {
                             Glide.with(this)
-                                    .load(slika1)
+                                    .load(image1)
                                     .into(ib_pic1);
                             ib_pic1_frame.setVisibility(View.VISIBLE);
-                        } if (slika2 != null) {
+                        } if (image2 != null) {
                             Glide.with(this)
-                                    .load(slika2)
+                                    .load(image2)
                                     .into(ib_pic2);
                             ib_pic2_frame.setVisibility(View.VISIBLE);
-                        } if (slika3 != null) {
+                        } if (image3 != null) {
                             Glide.with(this)
-                                    .load(slika3)
+                                    .load(image3)
                                     .into(ib_pic3);
                             ib_pic3_frame.setVisibility(View.VISIBLE);
-                        } if (slika1 != null && slika2 != null && slika3 != null) {
+                        } if (image1 != null && image2 != null && image3 != null) {
                             iconTakePhotoGallery.setEnabled(false);
                             iconTakePhotoGallery.setImageAlpha(20);
                             iconTakePhotoCamera.setEnabled(false);
@@ -827,22 +816,22 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         } else if (requestCode == CAMERA) {
                     entryAddPic();
-                if (slika1 == null) {
-                    slika1 = String.valueOf(currentPhotoUri);
+                if (image1 == null) {
+                    image1 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(slika1))
+                            .load(Uri.parse(image1))
                             .into(ib_pic1);
                     ib_pic1_frame.setVisibility(View.VISIBLE);
-                } else if (slika2 == null) {
-                    slika2 = String.valueOf(currentPhotoUri);
+                } else if (image2 == null) {
+                    image2 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(slika2))
+                            .load(Uri.parse(image2))
                             .into(ib_pic2);
                     ib_pic2_frame.setVisibility(View.VISIBLE);
-                } else if (slika3 == null) {
-                    slika3 = String.valueOf(currentPhotoUri);
+                } else if (image3 == null) {
+                    image3 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(slika3))
+                            .load(Uri.parse(image3))
                             .into(ib_pic3);
                     ib_pic3_frame.setVisibility(View.VISIBLE);
                     disablePhotoButtons(true);
@@ -854,12 +843,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (requestCode == MAP) {
             locationManager.removeUpdates(locationListener);
             if(data != null) {
-                nLokacija = data.getParcelableExtra("google_map_latlong");
-                setLocationValues(nLokacija.latitude, nLokacija.longitude);
-                acc = Double.valueOf(data.getExtras().getString("google_map_accuracy"));
-                elev = Double.valueOf(data.getExtras().getString("google_map_elevation"));
+                currentLocation = data.getParcelableExtra("google_map_latlong");
+                assert currentLocation != null;
+                setLocationValues(currentLocation.latitude, currentLocation.longitude);
+                acc = Double.valueOf(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
+                elev = Double.valueOf(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
             }
-            if (data.getExtras().getString("google_map_accuracy").equals("0.0")) {
+            assert data != null;
+            if (Objects.equals(data.getExtras().getString("google_map_accuracy"), "0.0")) {
                 tv_gps.setText(R.string.not_available);
             } else {
                 tv_gps.setText(String.format(Locale.ENGLISH, "%.0f", acc));
@@ -929,7 +920,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     photoUri = Uri.fromFile(photoFile);
                 }
             }
-            Log.i(TAG, "Saving image into: " + String.valueOf(photoUri));
+            Log.i(TAG, "Saving image into: " + photoUri);
         }
         return photoUri;
     }
@@ -965,14 +956,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     public void showDeadComment() {
         if (check_dead.isChecked()) {
-            et_razlogSmrti.setVisibility(View.VISIBLE);
+            text_DeathComment.setVisibility(View.VISIBLE);
         } else {
-            et_razlogSmrti.setVisibility(View.GONE);
+            text_DeathComment.setVisibility(View.GONE);
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL: {
                 // If request is cancelled, the result arrays are empty.
@@ -1000,7 +991,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(EntryActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-            // Sometimes there is a problem with first run of the program. So, request location again in 10 secounds...
+            // Sometimes there is a problem with first run of the program. So, request location again in 10 seconds...
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -1172,7 +1163,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 .where(TaxonDao.Properties.Name.eq(getLatinName()))
                 .unique();
         if (taxon != null) {
-            Log.d(TAG, "Selected taxon latin name is: " + taxon.getName() + ". Taxon ID: " + String.valueOf(taxon.getId()));
+            Log.d(TAG, "Selected taxon latin name is: " + taxon.getName() + ". Taxon ID: " + taxon.getId());
             return taxon.getId();
         } else {
             return null;
