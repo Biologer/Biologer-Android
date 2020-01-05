@@ -165,15 +165,15 @@
     <string name="limit_photo1">Изабрали сте</string>
     <string name="limit_photo2">фотографија, од којих ће</string>
     <string name="limit_photo3">бити додате. Уз сваки налаз можете послати до три фотографије.</string>
-    <string name="channel_entries_description">Display notifications related to uploading field observations to server.</string>
-    <string name="channel_entries_name">Upload entries</string>
-    <string name="notify_title_entries">Uploading records</string>
-    <string name="notify_desc_entries">Uploading species observations to the server.</string>
-    <string name="notify_title_entries_uploaded">Records uploaded</string>
-    <string name="notify_desc_entries_uploaded">All observation records are sucessfully uploaded to the server.</string>
-    <string name="notify_title_upload_canceled">Upload canceled</string>
-    <string name="notify_desc_upload_canceled">Uploading data to a server is canceled by the user.</string>
-    <string name="notify_desc_uploading">Uploading</string>
-    <string name="notify_desc_uploading1">of</string>
-    <string name="notify_desc_uploading2">entries.</string>
+    <string name="channel_entries_description">Приказује обавештења током слања података на сервер.</string>
+    <string name="channel_entries_name">Слање налаза</string>
+    <string name="notify_title_entries">Слање налаза</string>
+    <string name="notify_desc_entries">Шаљем забележене налазе на сервер.</string>
+    <string name="notify_title_entries_uploaded">Послато</string>
+    <string name="notify_desc_entries_uploaded">Сви налази су успешно послати на сервер!</string>
+    <string name="notify_title_upload_canceled">Отказано</string>
+    <string name="notify_desc_upload_canceled">Слање налаза на сервер је отказано.</string>
+    <string name="notify_desc_uploading">Слање ставке</string>
+    <string name="notify_desc_uploading1">од</string>
+    <string name="notify_desc_uploading2">.</string>
 </resources>

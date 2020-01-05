@@ -648,6 +648,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void showMap() {
         Intent intent = new Intent(this, MapActivity.class);
+        // If location is not loaded put some location on the map at the Balkan
+        if (currentLocation.latitude == 0) {
+            String database = SettingsManager.getDatabaseName();
+            if (database.equals("https://biologer.org")) {
+                currentLocation = new LatLng(44.0, 20.8);
+            } if (database.equals("https://dev.biologer.org")) {
+                currentLocation = new LatLng(44.0, 20.8);
+            } if (database.equals("https://biologer.hr")) {
+                currentLocation = new LatLng(45.5, 16.3);
+            }
+        }
         intent.putExtra("latlong", currentLocation);
         startActivityForResult(intent, MAP);
     }

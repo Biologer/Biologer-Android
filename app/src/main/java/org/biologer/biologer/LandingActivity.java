@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
@@ -125,7 +126,7 @@ public class LandingActivity extends AppCompatActivity
         Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxons(1, 1);
         call.enqueue(new Callback<TaksoniResponse>() {
             @Override
-            public void onResponse(Call<TaksoniResponse> call, Response<TaksoniResponse> response) {
+            public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
                 if (response.isSuccessful()) {
                     // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
                     TaksoniResponse taksoniResponse = response.body();
@@ -148,7 +149,7 @@ public class LandingActivity extends AppCompatActivity
 
             }
             @Override
-            public void onFailure(Call<TaksoniResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<TaksoniResponse> call, @NonNull Throwable t) {
                 // Inform the user on failure and write log message
                 //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
                 Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
@@ -167,7 +168,7 @@ public class LandingActivity extends AppCompatActivity
         int id = item.getItemId();
         Intent intent = null;
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
         switch (id) {
             case R.id.nav_about:
@@ -350,7 +351,7 @@ public class LandingActivity extends AppCompatActivity
             return userdata_list.get(0);
         }
     }
-
+/*
     public Long getUserID() {
         UserData userdata = getLoggedUser();
         if (userdata != null) {
@@ -377,6 +378,7 @@ public class LandingActivity extends AppCompatActivity
             return 0;
         }
     }
+ */
 
     private String getUserName() {
         UserData userdata = getLoggedUser();
@@ -398,6 +400,7 @@ public class LandingActivity extends AppCompatActivity
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        assert connectivitymanager != null;
         NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
@@ -413,7 +416,7 @@ public class LandingActivity extends AppCompatActivity
             uploadMenu.getItem(0).setEnabled(true);
             uploadMenu.getItem(0).getIcon().setAlpha(255);
         }
-        Log.d(TAG, "There are " + String.valueOf(numberOfItems) + " items in the list.");
+        Log.d(TAG, "There are " + numberOfItems + " items in the list.");
     }
 
     private void userLogOut() {

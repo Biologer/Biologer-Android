@@ -165,15 +165,15 @@
     <string name="limit_photo1">Izabrali ste</string>
     <string name="limit_photo2">fotografija, od kojih će</string>
     <string name="limit_photo3">biti dodate. Uz svaki nalaz možete poslati do tri fotografije.</string>
-    <string name="channel_entries_description">Display notifications related to uploading field observations to server.</string>
-    <string name="channel_entries_name">Upload entries</string>
-    <string name="notify_title_entries">Uploading records</string>
-    <string name="notify_desc_entries">Uploading species observations to the server.</string>
-    <string name="notify_title_entries_uploaded">Records uploaded</string>
-    <string name="notify_desc_entries_uploaded">All observation records are sucessfully uploaded to the server.</string>
-    <string name="notify_title_upload_canceled">Upload canceled</string>
-    <string name="notify_desc_upload_canceled">Uploading data to a server is canceled by the user.</string>
-    <string name="notify_desc_uploading">Uploading</string>
-    <string name="notify_desc_uploading1">of</string>
-    <string name="notify_desc_uploading2">entries.</string>
+    <string name="channel_entries_description">Prikazuje obaveštenja tokom slanja podataka na server.</string>
+    <string name="channel_entries_name">Slanje nalaza</string>
+    <string name="notify_title_entries">Slanje nalaza</string>
+    <string name="notify_desc_entries">Šaqem zabeležene nalaze na server.</string>
+    <string name="notify_title_entries_uploaded">Poslato</string>
+    <string name="notify_desc_entries_uploaded">Svi nalazi su uspešno poslati na server!</string>
+    <string name="notify_title_upload_canceled">Otkazano</string>
+    <string name="notify_desc_upload_canceled">Slanje nalaza na server je otkazano.</string>
+    <string name="notify_desc_uploading">Slanje stavke</string>
+    <string name="notify_desc_uploading1">od</string>
+    <string name="notify_desc_uploading2">.</string>
 </resources>
