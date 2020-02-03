@@ -41,8 +41,13 @@ greendao {
             // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
         }
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Set if code shrinking should be enabled
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile(
+                    'proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+
             // Add the key here if it needs to be access from .java files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
@@ -50,6 +55,8 @@ greendao {
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
+
+
         }
     }
 

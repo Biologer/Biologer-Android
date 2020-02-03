@@ -166,16 +166,12 @@ public class LandingActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        Intent intent = null;
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
         switch (id) {
             case R.id.nav_about:
                 fragment = new AboutFragment();
-                break;
-            case R.id.nav_list:
-                fragment = new LandingFragment();
                 break;
             case R.id.nav_logout:
                 fragment = new LogoutFragment();
@@ -197,14 +193,10 @@ public class LandingActivity extends AppCompatActivity
                 fragment = new LandingFragment();
         }
 
-        if (fragment != null) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.add(R.id.content_frame, fragment);
-            ft.addToBackStack("new fragment");
-            ft.commit();
-        } else {
-            startActivity(intent);
-        }
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.content_frame, fragment);
+        ft.addToBackStack("new fragment");
+        ft.commit();
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -394,7 +386,7 @@ public class LandingActivity extends AppCompatActivity
         if (userdata != null) {
             return userdata.getEmail();
         } else {
-            return "Couldn’t get email address.";
+            return "Could not get email address.";
         }
     }
 
