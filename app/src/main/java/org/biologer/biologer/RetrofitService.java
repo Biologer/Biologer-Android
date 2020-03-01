@@ -41,8 +41,9 @@ public interface RetrofitService {
                               @Field("password") String password);
 
     @GET("api/taxa")
-    Call<TaksoniResponse> getTaxons(@Query("page") int page_number,
-                                    @Query("per_page") int page_per_page);
+    Call<TaksoniResponse> getTaxa(@Query("page") int page_number,
+                                    @Query("per_page") int per_page,
+                                    @Query("updated_after") int updated_after);
 
     @Multipart
     @POST("api/uploads/photos")

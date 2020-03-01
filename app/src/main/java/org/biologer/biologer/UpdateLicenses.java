@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 import android.util.Log;
@@ -55,7 +56,7 @@ public class UpdateLicenses extends Service {
                 Call<UserDataResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
                 call.enqueue(new Callback<UserDataResponse>() {
                     @Override
-                    public void onResponse(Call<UserDataResponse> call, Response<UserDataResponse> response) {
+                    public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                         if (response.isSuccessful()) {
                             if (response.body().getData() != null) {
                                 UserDataSer user = response.body().getData();
@@ -72,13 +73,13 @@ public class UpdateLicenses extends Service {
                                 }
                                 // If only Data License should be retrieved from server
                                 if (data_license.equals("0") && !image_license.equals("0")) {
-                                    UserData uData = new UserData(getUserID(), email, name, server_data_license, Integer.valueOf(image_license));
+                                    UserData uData = new UserData(getUserID(), email, name, server_data_license, Integer.parseInt(image_license));
                                     App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                                     Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
                                 }
                                 // If only Image License should be retrieved from server
                                 if (!data_license.equals("0") && image_license.equals("0")) {
-                                    UserData uData = new UserData(getUserID(), email, name, Integer.valueOf(data_license), server_image_license);
+                                    UserData uData = new UserData(getUserID(), email, name, Integer.parseInt(data_license), server_image_license);
                                     App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                                     Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
                                 }
@@ -89,7 +90,7 @@ public class UpdateLicenses extends Service {
                     }
 
                     @Override
-                    public void onFailure(Call<UserDataResponse> call, Throwable t) {
+                    public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Application could not get user’s licences from the server.");
                         if (retryCount++ < TOTAL_RETRIES) {
                             Log.d(TAG, "Retrying request to get licences from server (" + retryCount + " out of " + TOTAL_RETRIES + ")");
@@ -100,7 +101,7 @@ public class UpdateLicenses extends Service {
             } else {
                 // If both data ind image license should be taken from preferences
                 Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
-                UserData uData = new UserData(getUserID(), getUserEmail(), getUserName(), Integer.valueOf(data_license), Integer.valueOf(image_license));
+                UserData uData = new UserData(getUserID(), getUserEmail(), getUserName(), Integer.parseInt(data_license), Integer.parseInt(image_license));
                 App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
             }
         }
@@ -139,9 +140,9 @@ public class UpdateLicenses extends Service {
         // Set the default preferences
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         preferences.edit().clear().apply();
-        SettingsManager.setDatabaseVersion("0");
+        SettingsManager.setTaxaDatabaseUpdated("0");
         SettingsManager.setProjectName(null);
-        SettingsManager.setTaxaLastPageUpdated("1");
+        SettingsManager.setTaxaLastPageFetched("1");
         // Maybe also to delete database...
         App.get().getDaoSession().getTaxonDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();

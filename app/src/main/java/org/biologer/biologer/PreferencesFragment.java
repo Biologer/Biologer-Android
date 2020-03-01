@@ -4,10 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
@@ -15,10 +16,8 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
 
-    Boolean should_resume = false;
-
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // This is a workaround in order to change background color of the fragment
         getListView().setBackgroundColor(Color.WHITE);
@@ -46,10 +45,12 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         final Preference button = findPreference("taxa_button");
         // If already fetching taxa disable the fetch taxa button
         if (FetchTaxa.isInstanceCreated()) {
+            assert button != null;
             button.setEnabled(false);
             button.setSummary(getString(R.string.updating_taxa_be_patient));
         }
 
+        assert button != null;
         button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
@@ -58,17 +59,11 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 button.setSummary(getString(R.string.updating_taxa_be_patient));
                 // Start the service for fetching taxa
                 final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
-                fetchTaxa.setAction(FetchTaxa.ACTION_START);
-                final Intent resumeFetchTaxa = new Intent(getActivity(), FetchTaxa.class);
-                resumeFetchTaxa.setAction(FetchTaxa.ACTION_RESUME);
+                fetchTaxa.setAction(FetchTaxa.ACTION_START_NEW);
                 Activity activity = getActivity();
                 if(activity != null) {
                     // If the fetching is paused we would prefer to resume the activity rather than fetching data from the first page.
-                    if (should_resume) {
-                        activity.startService(resumeFetchTaxa);
-                    } else {
-                        activity.startService(fetchTaxa);
-                    }
+                    activity.startService(fetchTaxa);
                 }
 
                 // Start a thread to monitor taxa update and set user interface after the update is finished
@@ -88,7 +83,6 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                                 activity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        should_resume = true;
                                         button.setEnabled(true);
                                         button.setSummary(getString(R.string.update_taxa_desc));
                                     }

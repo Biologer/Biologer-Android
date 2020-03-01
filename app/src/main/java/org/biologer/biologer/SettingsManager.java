@@ -12,7 +12,7 @@ public class SettingsManager {
     private static final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.get());
 
     public enum KEY {
-        token, FIRST_LAUNCH, DATABASE_NAME, DATABASE_VERSION, GOOGLE_MAP_TYPE, PROJECT_NAME, TAXA_LAST_PAGE_UPDATED
+        token, FIRST_LAUNCH, DATABASE_NAME, GOOGLE_MAP_TYPE, PROJECT_NAME, TAXA_LAST_PAGE_FETCHED, TAXA_DATABASE_UPDATED
     }
 
     public static boolean isFirstLaunch()
@@ -35,16 +35,6 @@ public class SettingsManager {
 
     public static String getDatabaseName() {
         return prefs.getString(KEY.DATABASE_NAME.toString(),"https://biologer.org");
-    }
-
-    public static void setDatabaseVersion(String databaseVersion) {
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(SettingsManager.KEY.DATABASE_VERSION.toString(), databaseVersion);
-        editor.apply();
-    }
-
-    public static String getDatabaseVersion() {
-        return prefs.getString(KEY.DATABASE_VERSION.toString(),"0");
     }
 
     public static void deleteToken(){
@@ -73,7 +63,7 @@ public class SettingsManager {
         return prefs.getString(KEY.GOOGLE_MAP_TYPE.toString(),"NORMAL");
     }
 
-    public static void setProjectName(String project_name) {
+    static void setProjectName(String project_name) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.PROJECT_NAME.toString(), project_name);
         editor.apply();
@@ -83,14 +73,24 @@ public class SettingsManager {
         return prefs.getString(KEY.PROJECT_NAME.toString(),null);
     }
 
-    public static void setTaxaLastPageUpdated(String last_page) {
+    public static void setTaxaDatabaseUpdated(String taxaDatabaseUpdated) {
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(KEY.TAXA_LAST_PAGE_UPDATED.toString(), last_page);
+        editor.putString(KEY.TAXA_DATABASE_UPDATED.toString(), taxaDatabaseUpdated);
         editor.apply();
     }
 
-    public static String getTaxaLastPageUpdated() {
-        return prefs.getString(KEY.TAXA_LAST_PAGE_UPDATED.toString(),"1");
+    static String getTaxaDatabaseUpdated() {
+        return prefs.getString(KEY.TAXA_DATABASE_UPDATED.toString(),"0");
+    }
+
+    public static void setTaxaLastPageFetched(String last_page) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.TAXA_LAST_PAGE_FETCHED.toString(), last_page);
+        editor.apply();
+    }
+
+    public static String getTaxaLastPageFetched() {
+        return prefs.getString(KEY.TAXA_LAST_PAGE_FETCHED.toString(),"1");
     }
 
 }

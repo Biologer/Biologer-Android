@@ -50,7 +50,9 @@ public class LandingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     FrameLayout progressBar;
-    private String last_updated;
+    private String last_updated_taxa;
+    private String totalSpeciesOnline;
+    private String totalSpeciesDao;
     BroadcastReceiver receiver;
 
     Fragment fragment = null;
@@ -123,7 +125,7 @@ public class LandingActivity extends AppCompatActivity
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
-        Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxons(1, 1);
+        Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(1, 1, 0);
         call.enqueue(new Callback<TaksoniResponse>() {
             @Override
             public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
@@ -131,16 +133,21 @@ public class LandingActivity extends AppCompatActivity
                     // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
                     TaksoniResponse taksoniResponse = response.body();
                     if(taksoniResponse != null) {
-                        last_updated = Long.toString(taksoniResponse.getMeta().getLastUpdatedAt());
-                        if (last_updated.equals(SettingsManager.getDatabaseVersion())) {
+                        last_updated_taxa = Long.toString(taksoniResponse.getMeta().getLastUpdatedAt());
+                        totalSpeciesOnline = Long.toString(taksoniResponse.getMeta().getLastPage());
+                        totalSpeciesDao = String.valueOf(App.get().getDaoSession().getTaxonDao().count());
+                        if (last_updated_taxa.equals(SettingsManager.getTaxaDatabaseUpdated())) {
                             Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
+                            Log.i(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
                         } else {
-                            Log.i(TAG, "Taxa database on the server (version: " + last_updated + ") seems to be newer that your version (" + SettingsManager.getDatabaseVersion() + ").");
-                            if (SettingsManager.getDatabaseVersion().equals("0")) {
+                            Log.i(TAG, "Taxa database on the server (version: " + last_updated_taxa + ") seems to be newer that your version (" + SettingsManager.getTaxaDatabaseUpdated() + ").");
+                            Log.i(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
+                            // If there is no database on the phone, ask user to update it!
+                            if (SettingsManager.getTaxaDatabaseUpdated().equals("0")) {
                                 // If the database was never updated...
                                 buildAlertMessageEmptyTaxaDb();
                             } else {
-                                // If the online database is more recent...
+                                // If the online database is more recent try to get only the new taxa.
                                 buildAlertMessageNewerTaxaDb();
                             }
                         }
@@ -278,7 +285,6 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
         }
-
         // Change the visibility of the Upload Icon
         setUploadIconVisibility();
     }
@@ -286,19 +292,23 @@ public class LandingActivity extends AppCompatActivity
     protected void buildAlertMessageNewerTaxaDb() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         // intent used to start service for fetching taxa
+
         final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
         fetchTaxa.setAction(FetchTaxa.ACTION_START);
+
         builder.setMessage(getString(R.string.new_database_available))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        startService(fetchTaxa);
+                        int toUpdate = Integer.parseInt(totalSpeciesOnline) - Integer.parseInt(totalSpeciesDao);
+                        Log.i(TAG, "There are " + toUpdate + " taxa to be updated.");
+                            startService(fetchTaxa);
                     }
                 })
                 .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         // If user don’t update just ignore updates until next session
-                        SettingsManager.setDatabaseVersion(last_updated);
+                        SettingsManager.setTaxaDatabaseUpdated(last_updated_taxa);
                         dialog.cancel();
                     }
                 });
@@ -343,34 +353,6 @@ public class LandingActivity extends AppCompatActivity
             return userdata_list.get(0);
         }
     }
-/*
-    public Long getUserID() {
-        UserData userdata = getLoggedUser();
-        if (userdata != null) {
-            return userdata.getId();
-        } else {
-            return null;
-        }
-    }
-
-    private int getUserDataLicense() {
-        UserData userdata = getLoggedUser();
-        if (userdata != null) {
-            return userdata.getData_license();
-        } else {
-            return 0;
-        }
-    }
-
-    private int getUserImageLicense() {
-        UserData userdata = getLoggedUser();
-        if (userdata != null) {
-            return userdata.getImage_license();
-        } else {
-            return 0;
-        }
-    }
- */
 
     private String getUserName() {
         UserData userdata = getLoggedUser();
@@ -422,9 +404,9 @@ public class LandingActivity extends AppCompatActivity
         // Set the default preferences
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         preferences.edit().clear().apply();
-        SettingsManager.setDatabaseVersion("0");
+        SettingsManager.setTaxaDatabaseUpdated("0");
         SettingsManager.setProjectName(null);
-        SettingsManager.setTaxaLastPageUpdated("1");
+        SettingsManager.setTaxaLastPageFetched("1");
         // Maybe also to delete database...
         App.get().getDaoSession().getTaxonDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();
