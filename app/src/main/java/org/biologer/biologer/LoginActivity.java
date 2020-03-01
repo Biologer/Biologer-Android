@@ -67,14 +67,14 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        et_username = (EditText) findViewById(R.id.et_username);
-        et_password = (EditText) findViewById(R.id.et_password);
-        tv_wrongPass = (TextView) findViewById(R.id.tv_wrongPass);
-        tv_wrongEmail = (TextView) findViewById(R.id.tv_wrongEmail);
-        tv_devDatabase = (TextView) findViewById(R.id.tv_devDatabase);
+        et_username = findViewById(R.id.et_username);
+        et_password = findViewById(R.id.et_password);
+        tv_wrongPass = findViewById(R.id.tv_wrongPass);
+        tv_wrongEmail = findViewById(R.id.tv_wrongEmail);
+        tv_devDatabase = findViewById(R.id.tv_devDatabase);
 
         // Fill in the data for database list
-        spinner = (Spinner) findViewById(R.id.spinner_databases);
+        spinner = findViewById(R.id.spinner_databases);
         String[] Databases = {
                 getString(R.string.database_serbia),
                 getString(R.string.database_croatia),
@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
         // Login button.
-        loginButton = (Button) findViewById(R.id.btn_login);
+        loginButton = findViewById(R.id.btn_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -99,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         // Register link.
-        TextView registerTextView = (TextView) findViewById(R.id.ctv_register);
+        TextView registerTextView = findViewById(R.id.ctv_register);
         registerTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         // Forgot password link.
-        TextView forgotPassTextView = (TextView) findViewById(R.id.ctv_forgotPass);
+        TextView forgotPassTextView = findViewById(R.id.ctv_forgotPass);
         forgotPassTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,22 +130,22 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-            return getImageForPosition(position, convertView, parent);
+            return getImageForPosition(position, parent);
         }
 
         @NonNull
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-            return getImageForPosition(position, convertView, parent);
+            return getImageForPosition(position, parent);
         }
 
-        private View getImageForPosition(int position, View convertView, ViewGroup parent) {
+        private View getImageForPosition(int position, ViewGroup parent) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             assert inflater != null;
             View row = inflater.inflate(R.layout.databases_and_icons, parent, false);
-            TextView textView = (TextView) row.findViewById(R.id.database_name);
+            TextView textView = row.findViewById(R.id.database_name);
             textView.setText(text[position]);
-            ImageView imageView = (ImageView) row.findViewById(R.id.database_icon);
+            ImageView imageView = row.findViewById(R.id.database_icon);
             imageView.setImageResource(images[position]);
             return row;
         }
@@ -223,8 +223,9 @@ public class LoginActivity extends AppCompatActivity {
         // Get the response from the call
         login.enqueue(new Callback<LoginResponse>() {
             @Override
-            public void onResponse(Call<LoginResponse> login, Response<LoginResponse> response) {
+            public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
                 if(response.isSuccessful()) {
+                    assert response.body() != null;
                     String token = response.body().getAccessToken();
                     Log.d(TAG, "Token value is: " + token);
                     SettingsManager.setToken(token);
@@ -238,7 +239,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
             @Override
-            public void onFailure(Call<LoginResponse> login, Throwable t) {
+            public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
                 loginButton.setEnabled(true);
                 progressDialog.dismiss();
@@ -250,10 +251,11 @@ public class LoginActivity extends AppCompatActivity {
 
     // Get email and name and store it
     private void fillUserData(){
-        Call<UserDataResponse> serv = RetrofitClient.getService(database_name).getUserData();
-        serv.enqueue(new Callback<UserDataResponse>() {
+        Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
+        service.enqueue(new Callback<UserDataResponse>() {
             @Override
-            public void onResponse(Call<UserDataResponse> serv, Response<UserDataResponse> response) {
+            public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
+                assert response.body() != null;
                 String email = response.body().getData().getEmail();
                 String name = response.body().getData().getFullName();
                 int data_license = response.body().getData().getSettings().getDataLicense();
@@ -264,7 +266,7 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
             }
             @Override
-            public void onFailure(Call<UserDataResponse> serv, Throwable t) {
+            public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, "Cannot get response from the server (userdata)", Toast.LENGTH_LONG).show();
                 Log.e(TAG, "Cannot get response from the server (userdata)");
             }
