@@ -3,7 +3,6 @@ package org.biologer.biologer.model.network;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.biologer.biologer.model.Taxon;
@@ -22,8 +21,6 @@ public class Taxa {
     private long rankLevel;
     @JsonProperty("author")
     private Object author;
-    @JsonProperty("ancestry")
-    private String ancestry;
     @JsonProperty("fe_old_id")
     private Object feOldId;
     @JsonProperty("fe_id")
@@ -112,16 +109,6 @@ public class Taxa {
     @JsonProperty("author")
     public void setAuthor(Object author) {
         this.author = author;
-    }
-
-    @JsonProperty("ancestry")
-    public String getAncestry() {
-        return ancestry;
-    }
-
-    @JsonProperty("ancestry")
-    public void setAncestry(String ancestry) {
-        this.ancestry = ancestry;
     }
 
     @JsonProperty("fe_old_id")

@@ -261,7 +261,7 @@ public class FetchTaxa extends Service {
     }
 
     public void fetchTaxa(final int page) {
-            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 500, updated_after);
+            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 250, updated_after);
             call.enqueue(new CallbackWithRetry<TaksoniResponse>(call) {
                 @Override
                 public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
@@ -284,29 +284,31 @@ public class FetchTaxa extends Service {
 
                             for (Taxa taxon : taxa) {
                                 App.get().getDaoSession().getTaxonDao().insertOrReplace(taxon.toTaxon());
-                                //Log.d(TAG, "Taxon name " + taxon.getName());
-                                //Log.d(TAG, "Taxon parent " + taxon.getParentId());
+                                // Log.d(TAG, "Taxon name " + taxon.getName());
+
+                                long taxon_id = taxon.getId();
+                                String taxon_latin_name = taxon.getName();
 
                                 List<Stage6> stages = taxon.getStages();
-                                List<Translation> translations = taxon.getTranslations();
-
-                                for (Stage6 stage : stages) {
-                                    App.get().getDaoSession().getStageDao().insert(new Stage(null, stage.getName(), stage.getId(), taxon.getId()));
+                                Stage[] final_stages = new Stage[stages.size()];
+                                for (int i = 0; i < stages.size(); i++) {
+                                    Stage6 stage = stages.get(i);
+                                    final_stages[i] = new Stage(null, stage.getName(), stage.getId(), taxon_id);
                                 }
+                                App.get().getDaoSession().getStageDao().insertInTx(final_stages);
 
-                                for (Translation translation : translations) {
-                                    String latin = taxon.getName();
-                                    String nat = translation.getNativeName();
-                                    if (nat != null) {
-                                        if (nat.equals("")) {
-                                            App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
-                                        } else {
-                                            App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin + " (" + nat + ")"));
-                                        }
+                                List<Translation> translations = taxon.getTranslations();
+                                TaxonLocalization[] final_translations = new TaxonLocalization[translations.size()];
+                                for (int i = 0; i < translations.size(); i++) {
+                                    Translation translation = translations.get(i);
+                                    String native_name = translation.getNativeName();
+                                    if (native_name != null && !native_name.isEmpty()) {
+                                        final_translations[i] = new TaxonLocalization(null, taxon_latin_name, taxon_id, translation.getId(), translation.getLocale(), native_name, taxon_latin_name + " (" + native_name + ")");
                                     } else {
-                                        App.get().getDaoSession().getTaxonLocalizationDao().insert(new TaxonLocalization(null, latin, taxon.getId(), translation.getId(), translation.getLocale(), nat, latin));
+                                        final_translations[i] = new TaxonLocalization(null, taxon_latin_name, taxon_id, translation.getId(), translation.getLocale(), native_name, taxon_latin_name);
                                     }
                                 }
+                                App.get().getDaoSession().getTaxonLocalizationDao().insertInTx(final_translations);
                             }
 
                             // If we just finished fetching taxa data for the last page, we can stop showing
