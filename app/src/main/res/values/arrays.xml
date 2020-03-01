@@ -3,6 +3,7 @@
     <string-array name="databases">
         <item>https://biologer.org</item>
         <item>https://biologer.hr</item>
+        <item>https://biologer.ba</item>
         <item>https://dev.biologer.org</item>
     </string-array>
 

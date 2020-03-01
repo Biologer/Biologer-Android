@@ -5,13 +5,13 @@
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="127dp"
-            android:src="@drawable/banner"
-            android:contentDescription="@string/Biologer"
-            android:layout_marginStart="50dp"
-            android:layout_marginEnd="50dp"/>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        android:contentDescription="@string/Biologer"
+        android:src="@drawable/banner" />
 
         <LinearLayout
             android:layout_width="280dp"
@@ -58,7 +58,7 @@
                 android:paddingStart="60dp"
                 android:paddingEnd="12dp"
                 android:text=""
-                android:textColor="@color/warningRed"/>
+                android:textColor="@color/colorPrimary"/>
         </LinearLayout>
 
         <LinearLayout

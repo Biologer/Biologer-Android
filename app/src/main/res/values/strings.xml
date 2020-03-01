@@ -198,4 +198,9 @@
     <string name="notify_desc_uploading">Uploading</string>
     <string name="notify_desc_uploading1">of</string>
     <string name="notify_desc_uploading2">entries.</string>
+    <string name="database_serbia">Serbia</string>
+    <string name="database_croatia">Croatia</string>
+    <string name="database_bih">Bosnia and Herzegovina</string>
+    <string name="database_dev_version">For developers</string>
+    <string name="URL_address">"URL: "</string>
 </resources>

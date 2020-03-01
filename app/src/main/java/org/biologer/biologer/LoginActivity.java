@@ -1,16 +1,22 @@
 package org.biologer.biologer;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,14 +75,18 @@ public class LoginActivity extends AppCompatActivity {
 
         // Fill in the data for database list
         spinner = (Spinner) findViewById(R.id.spinner_databases);
-        ArrayAdapter<CharSequence> ourDatabases = ArrayAdapter.createFromResource(this, R.array.databases, android.R.layout.simple_spinner_item);
-        ourDatabases.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        String[] Databases = {
+                getString(R.string.database_serbia),
+                getString(R.string.database_croatia),
+                getString(R.string.database_bih),
+                getString(R.string.database_dev_version)};
+        Integer[] Icons = {
+                R.drawable.flag_serbia,
+                R.drawable.flag_croatia,
+                R.drawable.flag_bih,
+                R.drawable.ic_hammer};
+        ImageArrayAdapter ourDatabases = new ImageArrayAdapter(this, Icons, Databases);
         spinner.setAdapter(ourDatabases);
-        int spinnerPosition = ourDatabases.getPosition(key_database_name);
-        spinner.setSelection(spinnerPosition);
-
-        // If item is chosen from the database list.
-        spinner = (Spinner) findViewById(R.id.spinner_databases);
         spinner.setOnItemSelectedListener(new getDatabaseURL());
 
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
@@ -106,17 +116,62 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    // Activity starting after user selects a Database from the list
+    public static class ImageArrayAdapter extends ArrayAdapter<Integer> {
+        private Integer[] images;
+        private String[] text;
+        private Context context;
+
+        ImageArrayAdapter(Context context, Integer[] images, String[] text) {
+            super(context, R.layout.databases_and_icons, images);
+            this.images = images;
+            this.text = text;
+            this.context = context;
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+            return getImageForPosition(position, convertView, parent);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            return getImageForPosition(position, convertView, parent);
+        }
+
+        private View getImageForPosition(int position, View convertView, ViewGroup parent) {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            assert inflater != null;
+            View row = inflater.inflate(R.layout.databases_and_icons, parent, false);
+            TextView textView = (TextView) row.findViewById(R.id.database_name);
+            textView.setText(text[position]);
+            ImageView imageView = (ImageView) row.findViewById(R.id.database_icon);
+            imageView.setImageResource(images[position]);
+            return row;
+        }
+    }
+
+        // Activity starting after user selects a Database from the list
     public class getDatabaseURL implements AdapterView.OnItemSelectedListener {
 
         public void onItemSelected(AdapterView<?> getdatabase, View view, int pos,long id) {
             // Change the preference according to the user selection
+            long database_id = getdatabase.getItemIdAtPosition(pos);
             database_name = getdatabase.getItemAtPosition(pos).toString();
+            if (database_id == 0) {database_name = "https://biologer.org";}
+            if (database_id == 1) {database_name = "https://biologer.hr";}
+            if (database_id == 2) {database_name = "https://biologer.ba";}
+            if (database_id == 3) {database_name = "https://dev.biologer.org";}
+
+            Log.i(TAG, "Database No. " + database_id + " selected: " + database_name);
+
             SettingsManager.setDatabaseName(database_name);
 
-            tv_devDatabase.setText("");
-            if (SettingsManager.getDatabaseName().equals("https://dev.biologer.org")) {
-                tv_devDatabase.setText(R.string.devDatabase);
+            String hint_text = getString(R.string.URL_address) + database_name;
+            tv_devDatabase.setText(hint_text);
+            tv_devDatabase.setTextColor(getResources().getColor(R.color.colorPrimary));
+            if (database_name.equals("https://dev.biologer.org")) {
+                tv_devDatabase.setTextColor(getResources().getColor(R.color.warningRed));
             }
         }
 

@@ -1,93 +1,116 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Биологер</string>
+
+    <!--  Login  -->
     <string name="username">Корисничко име (е-адреса)</string>
     <string name="password">Лозинка</string>
     <string name="login">Пријави ме</string>
     <string name="valid_email">Неисправна е-адреса</string>
     <string name="valid_pass">Унесите лозинку</string>
-    <string name="GPSaccuracy">"Прецизност координате:"</string>
-    <string name="latitude">Географска ширина:</string>
-    <string name="longitude">Географска дужина:</string>
-    <string name="unknown">недоступно</string>
-    <string name="version">"Издање: "</string>
-    <string name="help">Помоћ</string>
-    <string name="currently_logged_data">"Тренутно сте пријављени на базу података:"</string>
-    <string name="currently_logged_uname">"Као корисник:"</string>
-    <string name="realy">Да ли желите да се одјавите са ове Биологер базе података?</string>
-    <string name="pol">Пол</string>
-    <string name="M">Мужјак</string>
-    <string name="Z">Женка</string>
-    <string name="cancel">Откажи</string>
-    <string name="sacuvaj">Сачувај</string>
-    <string name="title_activity_map">Карта</string>
-    <string name="yes">Да</string>
-    <string name="no">Не</string>
-    <string name="logout_btn">Одјави ме</string>
-    <string name="setup">Подешавања</string>
-    <string name="about">О Биологеру</string>
-    <string name="list">Списак налаза</string>
-    <string name="pleaseSelect">Изаберите</string>
-    <string name="broj_jedinki">Број јединки</string>
-    <string name="taxon_hint">Почните да куцате…</string>
-    <string name="more">Још…</string>
-    <string name="naziv_taksona">Назив таксона</string>
-    <string name="razvojni_stadijum">Стадијум</string>
-    <string name="stage_hint">Развојни стадијум таксона</string>
-    <string name="jedinka_je">Јединка је нађена мртва?</string>
-    <string name="choose_picture">Изаберите фотографију</string>
-    <string name="confirmExit">Да ли желите да напустите апликацију?</string>
-    <string name="choose_picture_camera">Направи слику камером</string>
-    <string name="choose_picture_gallery">Изабери слику из галерије</string>
-    <string name="accurcy">Прецизност локације (m)</string>
     <string name="wrong_creds">Погрешна е-пошта или лозинка</string>
     <string name="nemas_nalog">Да ли имате налог?</string>
     <string name="napravi_nalog">Региструјте се</string>
     <string name="zaboravljena_lozinka">Заборавили сте лозинку?</string>
     <string name="email_wrong_format">Није исправан формат е-адресе</string>
+    <string name="devDatabase">Ово је само за програмере!</string>
+
+    <!--  Unos  -->
+    <string name="GPSaccuracy">"Прецизност координате:"</string>
+    <string name="latitude">Географска ширина:</string>
+    <string name="longitude">Географска дужина:</string>
+    <string name="not_available">непознато</string>
+    <string name="unknown">недоступно</string>
+    <string name="taxon_hint">Почните да куцате…</string>
+    <string name="more">Још…</string>
+    <string name="naziv_taksona">Назив таксона</string>
+    <string name="pleaseSelect">Изаберите</string>
+    <string name="broj_jedinki">Број јединки</string>
+    <string name="pol">Пол</string>
+    <string name="M">Мужјак</string>
+    <string name="Z">Женка</string>
+    <string name="razvojni_stadijum">Стадијум</string>
+    <string name="stage_hint">Развојни стадијум таксона</string>
+    <string name="jedinka_je">Јединка је нађена мртва?</string>
     <string name="ziva">жива</string>
     <string name="mrtva">мртва</string>
     <string name="razlog_smrti">Узрок смрти</string>
     <string name="habitat">Станиште</string>
     <string name="komentar">Белешка</string>
-    <string name="gps_update"><b>Упозорење:</b> Ова радња ће уписати нове податке о локацији уместо оригиналних података. Да ли сте сигурни да то желите?</string>
-    <string name="nav_open_drawer">Отвори навигациону површ</string>
-    <string name="nav_close_drawer">Затвори навигациону површ</string>
-    <string name="button_update">Ажурирај таксоне</string>
-    <string name="textAbout">Биологер је апликација коју покреће слободан софтвер, издат је под МИТ лиценцом и направљен како би прикупљао податке о биодиверзитету на подручју Источне Европе.</string>
-    <string name="Slide3_title">Почетни екран</string>
-    <string name="textAbout1">Биологер је развијен захваљујући средствима Рафорд фондације за мале грантове (пројекти бр. 20507-B и 24652-B) и МАВА фондације (пројекат бр. 15097).</string>
-    <string name="note">Одавде можете ажурирати списак таксона.</string>
-    <string name="hello_blank_fragment">Здраво фрагменте црни</string>
-    <string name="Slide1_title">Базе података</string>
-    <string name="first_slide">Биологер апликација се може повезати на више база података. Почните тако што ћете изабрати базу података и регистровати се на сајту.</string>
-    <string name="Slide2_title">Навигација је једноставна</string>
-    <string name="second_slide">Бочна површ садржи све пречице и подешавања која су вам потребна. Само превуците прстом преко екрана да би их приказали.</string>
-    <string name="third_slide">Из почетног екрана апликације можете уредити или обрисати налазе и послати податке на неки од наших сервера.</string>
-    <string name="Slide4_title">Нови налази</string>
-    <string name="fourth_slide">Додавање података је једноставно! Предложите врсту, додајте фотографије и Биологер ће остало одрадити сам. Додатне опције можете откључати из Подешавања.</string>
-    <string name="textAbout2">"За више информација о биологеру, посетите нашу веб страницу: "</string>
-    <string name="database_updated">База таскона је ажурирана.</string>
-    <string name="database_connect_error">Апликације није успела да се повеже са базом података!</string>
+    <string name="cancel">Откажи</string>
+    <string name="sacuvaj">Сачувај</string>
+    <string name="upload">Пошаљи</string>
+    <string name="title_activity_map">Карта</string>
     <string name="entry_title">Унос податка</string>
     <string name="taxa_mandatory">Морате унети исправан назив таксона.</string>
     <string name="please_select">Изаберите</string>
     <string name="enable_location">Праћење локације мора бити омогућено у подешавањима уређаја.</string>
     <string name="enable_location_yes">Омогући</string>
     <string name="enable_location_no">Откажи</string>
-    <string name="about_us">О нама</string>
     <string name="saved">Унос је сачуван.</string>
-    <string name="devDatabase">Ово је само за програмере!</string>
     <string name="location_is_zero">Још увек није пронађена ваша локација. Да ли желите да сачекате на локацију или да откажете овај унос?</string>
     <string name="wait">Сачекај</string>
-    <string name="unprecise_coordinates">The coordate precision is less than 25 m. Would you like to wait for precise location?</string>
-    <string name="save_anyway">Ипак сачувај</string>
+
+    <!--picture dialog-->
+    <string name="choose_picture">Изаберите фотографију</string>
+    <string name="choose_picture_gallery">Изабери слику из галерије</string>
+    <string name="choose_picture_camera">Направи слику камером</string>
+    <!--map-->
+    <string name="accurcy">Прецизност локације (m)</string>
+
+    <!--LandingActivity-->
+    <string name="confirmExit">Да ли желите да напустите апликацију?</string>
+    <string name="yes">Да</string>
+    <string name="no">Не</string>
     <string name="updating_database">Ажурирам базу таксона…</string>
     <string name="new_database_available">База таксона на серверу је новија од ваше. Можете је преузети сада или касније из Подешавања апликације. Да ли желите да ажурирате базу таксона?</string>
+
+    <!--Details-->
+    <string name="gps_update"><b>Упозорење:</b> Ова радња ће уписати нове податке о локацији уместо оригиналних података. Да ли сте сигурни да то желите?</string>
+
+    <!-- navigation drawer -->
+    <string name="logout_btn">Одјави ме</string>
+    <string name="setup">Подешавања</string>
+    <string name="about">О Биологеру</string>
+    <string name="about_us">О нама</string>
+    <string name="list">Списак налаза</string>
+    <string name="nav_open_drawer">Отвори навигациону површ</string>
+    <string name="nav_close_drawer">Затвори навигациону површ</string>
+    <string name="help">Помоћ</string>
+
+    <!--About-->
+    <string name="textAbout">Биологер је апликација коју покреће слободан софтвер, издат је под МИТ лиценцом и направљен како би прикупљао податке о биодиверзитету на подручју Источне Европе.</string>
+    <string name="textAbout1">Биологер је развијен захваљујући средствима Рафорд фондације за мале грантове (пројекти бр. 20507-B и 24652-B) и МАВА фондације (пројекат бр. 15097).</string>
+    <string name="version">"Издање: "</string>
+    <string name="textAbout2">"За више информација о биологеру, посетите нашу веб страницу: "</string>
+
+    <!--Logout-->
+    <string name="currently_logged_data">"Тренутно сте пријављени на базу података:"</string>
+    <string name="currently_logged_uname">"Као корисник:"</string>
+    <string name="realy">Да ли желите да се одјавите са ове Биологер базе података?</string>
+
+    <!--Setup-->
+    <string name="note">Одавде можете ажурирати списак таксона.</string>
+    <string name="button_update">Ажурирај таксоне</string>
+    <string name="database_updated">База таскона је ажурирана.</string>
+    <string name="database_connect_error">Апликације није успела да се повеже са базом података!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Здраво фрагменте црни</string>
+
+    <!--First time run-->
+    <string name="Slide1_title">Базе података</string>
+    <string name="first_slide">Биологер апликација се може повезати на више база података. Почните тако што ћете изабрати базу података и регистровати се на сајту.</string>
+    <string name="Slide2_title">Навигација је једноставна</string>
+    <string name="second_slide">Бочна површ садржи све пречице и подешавања која су вам потребна. Само превуците прстом преко екрана да би их приказали.</string>
+    <string name="Slide3_title">Почетни екран</string>
+    <string name="third_slide">Из почетног екрана апликације можете уредити или обрисати налазе и послати податке на неки од наших сервера.</string>
+    <string name="Slide4_title">Нови налази</string>
+    <string name="fourth_slide">Додавање података је једноставно! Предложите врсту, додајте фотографије и Биологер ће остало одрадити сам. Додатне опције можете откључати из Подешавања.</string>
+    <string name="unprecise_coordinates">The coordate precision is less than 25 m. Would you like to wait for precise location?</string>
+    <string name="save_anyway">Ипак сачувај</string>
     <string name="database_empty">Биологер још није преузео базу таксона са сервера. Уверите се да имате стабилан интернет како би наставили ову радњу.</string>
     <string name="contin">Настави</string>
     <string name="skip">Други пут</string>
-    <string name="not_available">непознато</string>
     <string name="google_maps_title">Google карта</string>
     <string name="select_map_type">Изаберите врсту мапе</string>
     <string name="you_are_here">Налазите се овде</string>
@@ -175,4 +198,9 @@
     <string name="notify_desc_uploading">Слање ставке</string>
     <string name="notify_desc_uploading1">од</string>
     <string name="notify_desc_uploading2">.</string>
+    <string name="database_serbia">Србија</string>
+    <string name="database_croatia">Хрватска</string>
+    <string name="database_bih">Босна и Херцеговина</string>
+    <string name="database_dev_version">Верзија за програмере</string>
+    <string name="URL_address">Адреса: </string>
 </resources>
