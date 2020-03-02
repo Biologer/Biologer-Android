@@ -225,8 +225,9 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
                 if(response.isSuccessful()) {
-                    assert response.body() != null;
-                    String token = response.body().getAccessToken();
+                    LoginResponse login_data = response.body();
+                    assert login_data != null;
+                    String token = login_data.getAccessToken();
                     Log.d(TAG, "Token value is: " + token);
                     SettingsManager.setToken(token);
                     fillUserData();

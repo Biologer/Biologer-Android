@@ -2,7 +2,6 @@ package org.biologer.biologer;
 
 import android.content.Context;
 
-import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import org.biologer.biologer.model.DaoMaster;
@@ -12,7 +11,7 @@ import static org.biologer.biologer.model.DaoMaster.dropAllTables;
 
 public class GreenDaoInitialization extends DaoMaster.DevOpenHelper {
 
-    public GreenDaoInitialization(Context context, String name) {
+    GreenDaoInitialization(Context context, String name) {
         super(context, name);
     }
 
