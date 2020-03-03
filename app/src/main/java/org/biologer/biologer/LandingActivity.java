@@ -102,8 +102,12 @@ public class LandingActivity extends AppCompatActivity
                 String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
                 // This will be executed after upload is completed
                 if (s != null) {
-                    Log.d(TAG, s);
+                    Log.d(TAG, "Uploading records returned the code: " + s);
                     setUploadIconVisibility();
+
+                    if (s.equals("no image")) {
+                        alertOKButton(getString(R.string.no_image_on_storage));
+                    }
                 }
             }
         };
@@ -265,7 +269,7 @@ public class LandingActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
             if (item.getItemId() == R.id.action_upload) {
-                    Log.i(TAG, "Upload records button clicked.");
+                    Log.d(TAG, "Upload records button clicked.");
                     final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
                     uploadRecords.setAction(UploadRecords.ACTION_START);
                     startService(uploadRecords);
@@ -331,6 +335,20 @@ public class LandingActivity extends AppCompatActivity
                 .setNegativeButton(getString(R.string.skip), new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
                         // If user don’t update just ignore updates until next session
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    protected void alertOKButton(String message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // intent used to start service for fetching taxa
+        builder.setMessage(message)
+                .setCancelable(false)
+                .setNeutralButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
                         dialog.cancel();
                     }
                 });

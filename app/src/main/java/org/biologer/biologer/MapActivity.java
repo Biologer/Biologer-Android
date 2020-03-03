@@ -3,6 +3,8 @@ package org.biologer.biologer;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,7 +50,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private String acc = "0.0";
     private String elevation = "0.0";
     ImageView fbtn_mapType;
-    private EditText text_imput_acc;
+    private EditText text_input_acc;
     private LatLng latlong;
     String google_map_type = SettingsManager.getGoogleMapType();
     private static final int cTimeOutMs = 30 * 1000;
@@ -69,7 +71,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             actionbar.setTitle(R.string.google_maps_title);
         }
 
-        text_imput_acc = findViewById(R.id.et_setAccuracy);
+        text_input_acc = findViewById(R.id.et_setAccuracy);
 
         Bundle bundle = getIntent().getExtras();
         latlong = bundle.getParcelable("latlong");
@@ -234,8 +236,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
         if (id == R.id.action_save) {
             // Get the accuracy value from the text field
-            if (text_imput_acc.getText().toString().length() != 0) {
-                setAcc(text_imput_acc.getText().toString());
+            if (text_input_acc.getText().toString().length() != 0) {
+                setAcc(text_input_acc.getText().toString());
             }
 
             // Get elevation from biologer server, save all data and exit
@@ -315,7 +317,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
         call.enqueue(new Callback<ElevationResponse>() {
             @Override
-            public void onResponse(Call<ElevationResponse> call, Response<ElevationResponse> response) {
+            public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
                 if (response.body() != null) {
                     elevation = String.valueOf(response.body().getElevation());
                     Log.d(TAG, "Elevation for this point is " + String.valueOf(elevation) + ".");
@@ -327,7 +329,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
 
             @Override
-            public void onFailure(Call<ElevationResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<ElevationResponse> call, @NonNull Throwable t) {
                 Log.d(TAG, "No elevation returned from server...");
                 elevation = "0.0";
 

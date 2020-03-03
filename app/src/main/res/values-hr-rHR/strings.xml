@@ -176,11 +176,9 @@
     <string name="notify_desc_uploading">Slanje stavke</string>
     <string name="notify_desc_uploading1">od</string>
     <string name="notify_desc_uploading2">.</string>
-    <string name="Serbia" />
     <string name="database_serbia">Serbia</string>
     <string name="database_croatia">Croatia</string>
     <string name="database_bih">Bosnia and Herzegovina</string>
     <string name="database_dev_version">Developemental version</string>
-    <string name="address">"Address: "</string>
     <string name="URL_address">"Database URL: "</string>
 </resources>

@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -61,7 +62,7 @@ public class UploadRecords extends Service {
     ArrayList<Entry> entryList;
     int totalEntries = 0;
     int remainingEntries = 0;
-    ArrayList<String> slike = new ArrayList<>();
+    ArrayList<String> images_array = new ArrayList<>();
     List<APIEntry.Photo> photos = null;
     File image1, image2, image3;
     LocalBroadcastManager broadcaster;
@@ -153,9 +154,10 @@ public class UploadRecords extends Service {
     // If there are upload photos first.
     // If no photos/or after the photos are uploaded upload the data.
     private void uploadStep1() throws IOException {
+        // n is a number of images from 1 to 3
         n = 0;
-        ArrayList<String> nizSlika = new ArrayList<>();
-        slike.clear();
+        ArrayList<String> listOfImages = new ArrayList<>();
+        images_array.clear();
 
         if (entryList.size() == 0) {
             App.get().getDaoSession().getEntryDao().deleteAll();
@@ -180,15 +182,15 @@ public class UploadRecords extends Service {
         Entry entry = entryList.get(0);
         if (entry.getSlika1() != null) {
             n++;
-            nizSlika.add(entry.getSlika1());
+            listOfImages.add(entry.getSlika1());
         }
         if (entry.getSlika2() != null) {
             n++;
-            nizSlika.add(entry.getSlika2());
+            listOfImages.add(entry.getSlika2());
         }
         if (entry.getSlika3() != null) {
             n++;
-            nizSlika.add(entry.getSlika3());
+            listOfImages.add(entry.getSlika3());
         }
 
        // If no photos upload the data
@@ -201,41 +203,38 @@ public class UploadRecords extends Service {
             deleteCache();
 
             for (int i = 0; i < n; i++) {
-                String image = nizSlika.get(i);
+                String image = listOfImages.get(i);
                 int image_number = i+1;
                 Log.d(TAG, "Resizing image " + image_number + ": " + image);
                 String tmp_image_path;
                 Bitmap bitmap = resizeImage(image);
-                if (bitmap != null) {
+
+                if (bitmap == null) {
+                    stopSelf();
+                    Log.e(TAG, "Stopping the service, there is no image on the storage!");
+                    sendResult("no image");
+                } else {
                     if (i == 0) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image1 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        uploadPhoto(image1);
                     }
                     if (i == 1) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image2 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        uploadPhoto(image2);
                     }
                     if (i == 2) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image3 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        uploadPhoto(image3);
                     }
                 }
             }
-
-            for (int i = 0; i < n; i++) {
-                int image_number = i+1;
-                Log.d(TAG, "Uploading image " + image_number + " to a server.");
-                if (i == 0) {
-                    uploadPhoto(image1, i);
-                }
-                if (i == 1) {
-                    uploadPhoto(image2, i);
-                }
-                if (i == 2) {
-                    uploadPhoto(image3, i);
-                }
-                }
-            }
+        }
     }
 
     // Upload the entries, one by one Record
@@ -277,7 +276,7 @@ public class UploadRecords extends Service {
         }
         for (int i = 0; i < n; i++) {
             APIEntry.Photo p = new APIEntry.Photo();
-            p.setPath(slike.get(i));
+            p.setPath(images_array.get(i));
             p.setLicense(entry.getImage_licence());
             photos.add(p);
         }
@@ -295,7 +294,7 @@ public class UploadRecords extends Service {
         Call<APIEntryResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
         call.enqueue(new Callback<APIEntryResponse>() {
             @Override
-            public void onResponse(Call<APIEntryResponse> call, Response<APIEntryResponse> response) {
+            public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
                 if (response.isSuccessful()) {
                     if (keep_going) {
                         App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
@@ -308,19 +307,19 @@ public class UploadRecords extends Service {
                             e.printStackTrace();
                         }
                     } else {
-                        Log.i(TAG, "Upload entry didn’t work for some reason. No internet?");
+                        Log.i(TAG, "Upload entry did not work for some reason. No internet?");
                     }
                 }
             }
 
             @Override
-            public void onFailure(Call<APIEntryResponse> call, Throwable t) {
-                Log.i(TAG, t.getLocalizedMessage());
+            public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
+                Log.i(TAG, Objects.requireNonNull(t.getLocalizedMessage()));
             }
         });
     }
 
-    private void uploadPhoto(File image, final int i) throws IOException {
+    private void uploadPhoto(File image) {
         Log.i(TAG, "Opening image from the path: " + image.getAbsolutePath() + ".");
 
         RequestBody reqFile = RequestBody.create(MediaType.parse("image/*"), image);
@@ -330,14 +329,14 @@ public class UploadRecords extends Service {
 
         call.enqueue(new Callback<UploadFileResponse>() {
             @Override
-            public void onResponse(Call<UploadFileResponse> call, Response<UploadFileResponse> response) {
+            public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
                 if (response.isSuccessful()) {
                     if (keep_going) {
                         UploadFileResponse responseFile = response.body();
 
                         if (responseFile != null) {
-                            slike.add(responseFile.getFile());
+                            images_array.add(responseFile.getFile());
                             m++;
                             if (m == n) {
                                 uploadStep2();
@@ -349,7 +348,7 @@ public class UploadRecords extends Service {
             }
 
             @Override
-            public void onFailure(Call<UploadFileResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, t.getLocalizedMessage());
                 }
@@ -391,7 +390,7 @@ public class UploadRecords extends Service {
             e.printStackTrace();
         }
         if (input_image == null) {
-            Log.e(TAG, "It looks like input image does not exist!!!!");
+            Log.e(TAG, "It looks like input image does not exist!");
             return null;
         } else {
             return resizeBitmap(input_image, 1024);
@@ -402,7 +401,6 @@ public class UploadRecords extends Service {
         Log.i(TAG, "Resizing image to a maximum of " + maxSize + "px.");
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        double x;
 
         if (height == width) {
             height = maxSize;
@@ -445,6 +443,7 @@ public class UploadRecords extends Service {
         Notification notification = mBuilder.build();
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
         mNotificationManager.notify(1, notification);
     }
 
@@ -468,6 +467,7 @@ public class UploadRecords extends Service {
         Notification notification = mBuilder.build();
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
         mNotificationManager.notify(1, notification);
     }
 
