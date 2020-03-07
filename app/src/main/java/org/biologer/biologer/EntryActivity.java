@@ -143,14 +143,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Buttons to add images
         ib_pic1_frame = findViewById(R.id.ib_pic1_frame);
         ib_pic1 = findViewById(R.id.ib_pic1);
+        ib_pic1.setOnClickListener(this);
         ib_pic1_del = findViewById(R.id.ib_pic1_del);
         ib_pic1_del.setOnClickListener(this);
         ib_pic2_frame = findViewById(R.id.ib_pic2_frame);
         ib_pic2 = findViewById(R.id.ib_pic2);
+        ib_pic2.setOnClickListener(this);
         ib_pic2_del = findViewById(R.id.ib_pic2_del);
         ib_pic2_del.setOnClickListener(this);
         ib_pic3_frame = findViewById(R.id.ib_pic3_frame);
         ib_pic3 = findViewById(R.id.ib_pic3);
+        ib_pic3.setOnClickListener(this);
         ib_pic3_del = findViewById(R.id.ib_pic3_del);
         ib_pic3_del.setOnClickListener(this);
         iconTakePhotoCamera = findViewById(R.id.image_view_take_photo_camera);
@@ -439,19 +442,32 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 getSexForList();
                 break;
             case R.id.ib_pic1_del:
+                Log.i(TAG, "Deleting image 1.");
                 ib_pic1_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image1 = null;
+                break;
+            case R.id.ib_pic1:
+                Log.i(TAG, "Image 1 clicked. URL: " + image1);
+                openInGallery(image1);
                 break;
             case R.id.ib_pic2_del:
                 ib_pic2_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image2 = null;
                 break;
+            case R.id.ib_pic2:
+                Log.i(TAG, "Image 2 clicked. URL: " + image2);
+                openInGallery(image2);
+                break;
             case R.id.ib_pic3_del:
                 ib_pic3_frame.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image3 = null;
+                break;
+            case R.id.ib_pic3:
+                Log.i(TAG, "Image 3 clicked. URL: " + image3);
+                openInGallery(image3);
                 break;
             case R.id.dead_specimen:
                 showDeadComment();
@@ -466,6 +482,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 takePhotoFromGallery();
                 break;
         }
+    }
+
+    private void openInGallery(String image) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(image));
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivity(intent);
+            } else {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse(image), "image/*");
+                startActivity(intent);
+            }
     }
 
     /*
@@ -647,6 +678,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 currentLocation = new LatLng(44.0, 20.8);
             } if (database.equals("https://biologer.hr")) {
                 currentLocation = new LatLng(45.5, 16.3);
+            } if (database.equals("https://biologer.ba")) {
+                currentLocation = new LatLng(44.3, 17.9);
             }
         }
         intent.putExtra("latlong", currentLocation);
@@ -655,7 +688,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     public void takePhotoFromGallery() {
         Log.i(TAG, "Taking photo from the Gallery.");
-
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("image/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
@@ -687,7 +719,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void takePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            dispatchTakePictureIntent();
+            Log.i(TAG, "There is Camera software installed. All ready to take picture!");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+            Uri photoUri = getPhotoUri();
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            startActivityForResult(takePictureIntent, CAMERA);
+            // Update global variable to this URI
+            currentPhotoUri = photoUri;
         } else {
             Log.d(TAG, "Take picture intent could not start for some reason.");
         }
@@ -695,7 +735,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
 
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_CANCELED) {
@@ -861,24 +900,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    // Take the picture!
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            Log.i(TAG, "There is Camera software, all ready to take picture!");
-            // Ensure permissions to read Uri for new Android systems
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-            Uri photoUri = getPhotoUri();
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-            startActivityForResult(takePictureIntent, CAMERA);
-            // Update global variable to this URI
-            currentPhotoUri = photoUri;
-        }
-    }
-
     private Uri getPhotoUri() {
         Uri photoUri = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -904,7 +925,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.fileprovider", photoFile);
+                    photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.files", photoFile);
                 } else {
                     photoUri = Uri.fromFile(photoFile);
                 }
@@ -918,7 +939,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private File createImageFile() throws IOException {
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "Biologer");
+                Environment.DIRECTORY_DCIM), "Biologer");
 
         if (!mediaStorageDir.exists()) {
             Log.d(TAG, "Media Storage directory does not exist");
