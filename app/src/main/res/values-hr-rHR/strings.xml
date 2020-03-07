@@ -13,7 +13,7 @@
     <string name="version">"Izdanje: "</string>
     <string name="help">Pomoć</string>
     <string name="currently_logged_data">"Trenutno ste prijavljeni u bazu podataka:"</string>
-    <string name="currently_logged_uname">"Kao korisnik:"</string>
+    <string name="currently_logged_user_name">"Kao korisnik:"</string>
     <string name="realy">Želite li se odjaviti s Biologer baze podataka?</string>
     <string name="pol">spol</string>
     <string name="M">Mužjak</string>

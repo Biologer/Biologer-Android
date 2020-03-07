@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -198,51 +197,48 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                 final String input_text = String.valueOf(s);
 
-                runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        /*
-                        Get the list of taxa from the GreenDao database
-                         */
-                        List<TaxonLocalization> taxaList = App.get().getDaoSession().getTaxonLocalizationDao()
-                                .queryBuilder()
-                                .where(TaxonLocalizationDao.Properties.Locale.eq(locale_script),
-                                        TaxonLocalizationDao.Properties.LatinAndNativeName.like("%" + input_text + "%"))
-                                .limit(10)
-                                .list();
-                        String[] taxaNames = new String[taxaList.size()];
-                        for (int i = 0; i < taxaList.size(); i++) {
-                            // Get the latin names
-                            taxaNames[i] = taxaList.get(i).getLatinAndNativeName();
-                        }
-                        ArrayAdapter<String> adapter = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
-                        acTextView.setAdapter(adapter);
-                        adapter.notifyDataSetChanged();
+                runnable = () -> {
+                    /*
+                    Get the list of taxa from the GreenDao database
+                     */
+                    List<TaxonLocalization> taxaList = App.get().getDaoSession().getTaxonLocalizationDao()
+                            .queryBuilder()
+                            .where(TaxonLocalizationDao.Properties.Locale.eq(locale_script),
+                                    TaxonLocalizationDao.Properties.LatinAndNativeName.like("%" + input_text + "%"))
+                            .limit(10)
+                            .list();
+                    String[] taxaNames = new String[taxaList.size()];
+                    for (int i = 0; i < taxaList.size(); i++) {
+                        // Get the latin names
+                        taxaNames[i] = taxaList.get(i).getLatinAndNativeName();
+                    }
+                    ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
+                    acTextView.setAdapter(adapter1);
+                    adapter1.notifyDataSetChanged();
 
-                        /*
-                        Update the UI elements
-                         */
-                        // Enable stage entry
-                        if (getSelectedTaxonId() != null) {
-                            // Check if the taxon has stages. If not hide the stages dialog.
-                            if (isStageAvailable()) {
-                                stages.setVisibility(View.VISIBLE);
-                            }
-                            Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
-                        } else {
-                            stages.setVisibility(View.GONE);
-                            Log.d(TAG, "Taxon is not selected from the list. Disabling Stages for this taxon.");
+                    /*
+                    Update the UI elements
+                     */
+                    // Enable stage entry
+                    if (getSelectedTaxonId() != null) {
+                        // Check if the taxon has stages. If not hide the stages dialog.
+                        if (isStageAvailable()) {
+                            stages.setVisibility(View.VISIBLE);
                         }
-                        // Enable/disable Save button in Toolbar
-                        if (acTextView.getText().toString().length() > 1) {
-                            save_enabled = true;
-                            Log.d(TAG, "Taxon is set to: " + acTextView.getText());
-                            invalidateOptionsMenu();
-                        } else {
-                            save_enabled = false;
-                            Log.d(TAG, "Taxon entry field is empty.");
-                            invalidateOptionsMenu();
-                        }
+                        Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
+                    } else {
+                        stages.setVisibility(View.GONE);
+                        Log.d(TAG, "Taxon is not selected from the list. Disabling Stages for this taxon.");
+                    }
+                    // Enable/disable Save button in Toolbar
+                    if (acTextView.getText().toString().length() > 1) {
+                        save_enabled = true;
+                        Log.d(TAG, "Taxon is set to: " + acTextView.getText());
+                        invalidateOptionsMenu();
+                    } else {
+                        save_enabled = false;
+                        Log.d(TAG, "Taxon entry field is empty.");
+                        invalidateOptionsMenu();
                     }
                 };
                 handler.postDelayed(runnable, 600);
@@ -612,12 +608,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 Log.d(TAG, "No stages are available for " + getLatinName() + ".");
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setItems(taxon_stages, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        tvStage.setText(taxon_stages[i]);
-                        tvStage.setTag(stageList.get(i));
-                    }
+                builder.setItems(taxon_stages, (dialogInterface, i) -> {
+                    tvStage.setText(taxon_stages[i]);
+                    tvStage.setTag(stageList.get(i));
                 });
                 builder.show();
                 Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
@@ -631,16 +624,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void getSexForList() {
         final String[] sex = {getString(R.string.unknown_sex), getString(R.string.is_male), getString(R.string.is_female)};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(sex, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (sex[i].equals(getString(R.string.unknown_sex))) {
-                    select_sex.setText(null);
-                    Log.d(TAG, "No sex is selected.");
-                } else {
-                    select_sex.setText(sex[i]);
-                    Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
-                }
+        builder.setItems(sex, (dialogInterface, i) -> {
+            if (sex[i].equals(getString(R.string.unknown_sex))) {
+                select_sex.setText(null);
+                Log.d(TAG, "No sex is selected.");
+            } else {
+                select_sex.setText(sex[i]);
+                Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
             }
         });
         builder.show();
@@ -673,15 +663,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         }
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
-
-
-/*
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(galleryIntent, GALLERY);
-
-
- */
     }
 
     // Check for camera permission and run function to take photo
@@ -706,7 +687,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void takePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // startActivityForResult(takePictureIntent, CAMERA);
             dispatchTakePictureIntent();
         } else {
             Log.d(TAG, "Take picture intent could not start for some reason.");
@@ -776,8 +756,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     String uri = arrayUri.get(j).toString();
                                     j++;
                                     images[i] = uri;
-                                } else {
-                                    images[i] = null;
                                 }
                             } else {
                                 Log.i(TAG, "Image " + i+1 + " is already set to: " + images[i]);
@@ -857,8 +835,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 currentLocation = data.getParcelableExtra("google_map_latlong");
                 assert currentLocation != null;
                 setLocationValues(currentLocation.latitude, currentLocation.longitude);
-                acc = Double.valueOf(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
-                elev = Double.valueOf(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
+                acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
+                elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
             }
             assert data != null;
             if (Objects.equals(data.getExtras().getString("google_map_accuracy"), "0.0")) {
@@ -1003,12 +981,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(EntryActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
             // Sometimes there is a problem with first run of the program. So, request location again in 10 seconds...
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    getLocation(100, 2);
-                }
-            }, 10000);
+            new Handler().postDelayed(() -> getLocation(100, 2), 10000);
         } else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, locationListener);
         }
@@ -1026,19 +999,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(EntryActivity.this);
         builder_taxon.setMessage(getString(R.string.invalid_taxon_name))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.save_anyway), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        // Save custom taxon with no ID
-                        Taxon taxon = new Taxon(null, acTextView.getText().toString());
-                        entrySaver(taxon);
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(getString(R.string.save_anyway), (dialog, id) -> {
+                    // Save custom taxon with no ID
+                    Taxon taxon = new Taxon(null, acTextView.getText().toString());
+                    entrySaver(taxon);
+                    dialog.dismiss();
                 })
-                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        finish();
-                    }
-                });
+                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
         final AlertDialog alert = builder_taxon.create();
         alert.show();
     }
@@ -1048,17 +1015,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         final AlertDialog.Builder builder_no_coords = new AlertDialog.Builder(this);
         builder_no_coords.setMessage(getString(R.string.location_is_zero))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.wait), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        getLocation(0, 0);
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(getString(R.string.wait), (dialog, id) -> {
+                    getLocation(0, 0);
+                    dialog.dismiss();
                 })
-                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        finish();
-                    }
-                });
+                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
         final AlertDialog alert = builder_no_coords.create();
         alert.show();
     }
@@ -1067,20 +1028,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         final AlertDialog.Builder builder_unprecise_coords = new AlertDialog.Builder(this);
         builder_unprecise_coords.setMessage(getString(R.string.unprecise_coordinates))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.wait), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        getLocation(0, 0);
-                        dialog.dismiss();
-                    }
+                .setPositiveButton(getString(R.string.wait), (dialog, id) -> {
+                    getLocation(0, 0);
+                    dialog.dismiss();
                 })
-                .setNegativeButton(getString(R.string.save_anyway), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        // Save the taxon
-                        Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                                .where(TaxonDao.Properties.Id.eq(getSelectedTaxonId()))
-                                .unique();
-                        entrySaver(taxon);
-                    }
+                .setNegativeButton(getString(R.string.save_anyway), (dialog, id) -> {
+                    // Save the taxon
+                    Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
+                            .where(TaxonDao.Properties.Id.eq(getSelectedTaxonId()))
+                            .unique();
+                    entrySaver(taxon);
                 });
         final AlertDialog alert = builder_unprecise_coords.create();
         alert.show();
@@ -1097,18 +1054,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(getString(R.string.gps_update))
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                        public void onClick(final DialogInterface dialog, final int id) {
-                            swipe.setRefreshing(true);
-                            getLocation(0, 0);
-                            swipe.setRefreshing(false);
-                        }
+                    .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                        swipe.setRefreshing(true);
+                        getLocation(0, 0);
+                        swipe.setRefreshing(false);
                     })
-                    .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                        public void onClick(final DialogInterface dialog, final int id) {
-                            dialog.cancel();
-                            swipe.setRefreshing(false);
-                        }
+                    .setNegativeButton(getString(R.string.no), (dialog, id) -> {
+                        dialog.cancel();
+                        swipe.setRefreshing(false);
                     });
             final AlertDialog alert = builder.create();
             alert.show();

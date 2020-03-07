@@ -1,0 +1,127 @@
+<resources>
+    <string name="app_name">Biologer</string>
+
+    <!--  Login  -->
+    <string name="username">Felhasználónév (email)</string>
+    <string name="password">Jelszó</string>
+    <string name="login">Bejelentkezés</string>
+    <string name="valid_email">Érvénytelen vagy elírt jelszó</string>
+    <string name="valid_pass">Jelszó megadása</string>
+    <string name="wrong_creds">Rossz emailcím vagy jelszó</string>
+    <string name="nemas_nalog">Nincs bejelentkezve?</string>
+    <string name="napravi_nalog">Regisztrálj</string>
+    <string name="zaboravljena_lozinka">Elfelejtett jelszó?</string>
+    <string name="email_wrong_format">Rosszul megadott emailcím</string>
+    <string name="devDatabase">Fejlesztőknek fenntartott terület!</string>
+
+    <!--  Unos  -->
+    <string name="GPSaccuracy">Koordináta pontosság:</string>
+    <string name="latitude">Földr. szélesség:</string>
+    <string name="longitude">Földr. hosszúság:</string>
+    <string name="not_available">ismeretlen</string>
+    <string name="unknown">nem elérhető</string>
+    <string name="taxon_hint">Gépelés megkezdése…</string>
+    <string name="more">Tovább…</string>
+    <string name="naziv_taksona">Fajnév</string>
+    <string name="pleaseSelect">Kiválasztás</string>
+    <string name="broj_jedinki">Egyedszám</string>
+    <string name="pol">Nem</string>
+    <string name="M">Hím egyed</string>
+    <string name="Z">Női egyed</string>
+    <string name="razvojni_stadijum">Kor</string>
+    <string name="jedinka_je">Elpusztult egyed?</string>
+    <string name="ziva">élő</string>
+    <string name="mrtva">holt</string>
+    <string name="razlog_smrti">Pusztulás oka</string>
+    <string name="habitat">Élőhely</string>
+    <string name="komentar">Megjegyzés</string>
+    <string name="cancel">Visszavonás</string>
+    <string name="sacuvaj">Mentés</string>
+    <string name="upload">Feltöltés</string>
+    <string name="title_activity_map">Térkép</string>
+    <string name="entry_title">Adatbevitel</string>
+    <string name="taxa_mandatory">Érvénytelen fajnév!</string>
+    <string name="please_select">Kiválasztás</string>
+    <string name="enable_location">A készülék lokáció beállítása nem aktív!</string>
+    <string name="enable_location_yes">Bekapcsol</string>
+    <string name="enable_location_no">Visszavon</string>
+    <string name="saved">A bevitel elmentve.</string>
+    <string name="wait">Várakozz</string>
+
+    <!--picture dialog-->
+    <string name="choose_picture">Kép kiválasztása</string>
+    <string name="choose_picture_gallery">Válassz a telefongalériából?</string>
+    <string name="choose_picture_camera">Fotó készítése</string>
+    <!--map-->
+    <string name="accurcy">Helyszínpontosság (m)</string>
+
+    <!--LandingActivity-->
+    <string name="confirmExit">Kilép?</string>
+    <string name="yes">Igen</string>
+    <string name="no">Nem</string>
+    <string name="updating_database">Rendszertan-adatbázis frissítése</string>
+    <string name="new_database_available"><b>Elérhető a rendszertani adatbázis frissített változata.</b> Letölthető azonnal, vagy a Beállítások menüpontból később. Frissít most? <b>Figyelem:</b> a folyamathoz élő internet kapcsolat szükséges.</string>
+
+    <!--Details-->
+    <string name="gps_update"><b>Vigyázat:</b> A művelet a jelenlegi GPS lokációval helyettesíti, vagyis eltörli, felülírja az eredeti helynevet!</string>
+
+    <!-- navigation drawer -->
+    <string name="logout_btn">Kilépés</string>
+    <string name="setup">Beállítások</string>
+    <string name="about">Többet a programról</string>
+    <string name="about_us">Többet rólunk</string>
+    <string name="list">Eddigi bejegyzések</string>
+    <string name="nav_open_drawer">Navigációs fiók megnyitása</string>
+    <string name="nav_close_drawer">Navigációs fiók zárása</string>
+    <string name="help">Segítség</string>
+
+    <!--About-->
+    <string name="textAbout">A Biologer nyitott kódrendszerű, MIT licens szerint regisztrált, biodiverzitás-adatok begyűjtésére kifejlesztett szoftver.</string>
+    <string name="textAbout1">A Biologer fejlesztését az angliai Rufford Small Grants alapítvány támogatta (project Nos. 20507-B and 24652-B) és MAVA (project No. 15097).</string>
+    <string name="version">Verzió:</string>
+    <string name="textAbout2">Még több információ az internetes oldalunk címén érhető el:</string>
+
+    <!--Logout-->
+    <string name="currently_logged_data">Bejelentkezve az adatbázisba:</string>
+    <string name="realy">Kilép?</string>
+
+    <!--Setup-->
+    <string name="note">A fajok rendszertani adatbázisa itt frissíthető.</string>
+    <string name="button_update">Rendszertan és fajnevek frissítése</string>
+    <string name="database_updated">A fajnevek és rendszertanuk frissítése befejeződött.</string>
+    <string name="database_connect_error">Hiba az online bázis elérésében! Újracsatlakozás?</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Helló üres fragmentum</string>
+
+    <!--First time run-->
+    <string name="Slide1_title">Adatbázis opciók beállítása</string>
+    <string name="Slide2_title">A navigálás egyszerű</string>
+    <string name="second_slide">Az oldalsó panellből minden művelet és beállítás elérhető. A panell megnyitásához húzzúk jobbra a képernyőt.</string>
+    <string name="Slide3_title">A fő képernyőmező</string>
+    <string name="third_slide">A fő képernyő mezejében adhatjuk hozzá az új megfigyelési adatokat, módosíthatjuk, illetve szükség esetén törölhetjük őket és innen kerülnek továbbításra az adataink.</string>
+    <string name="Slide4_title">Új megfigyelések</string>
+    <string name="fourth_slide">Az adatok bevitele rendkívül könnyű! Csak becsüljük fel a fajt, adjunk mellé fotót és hagyjuk, hogy a Biologer elvégezze a többit. Amennyiben több részletre vagyunk kívácsiak, aktiváljuk a Beállítások menüpontból a \'haladó\' opciót.</string>
+    <string name="save_anyway">Adatmentés így</string>
+    <string name="contin">Letöltés folyamatban</string>
+    <string name="skip">Később</string>
+    <string name="google_maps_title">Google térkép</string>
+    <string name="select_map_type">Térkép típusa</string>
+    <string name="you_are_here">Itt vagyunk!</string>
+    <string name="normal">Alap</string>
+    <string name="hybrid">Kombinált</string>
+    <string name="terrain">Topográfia</string>
+    <string name="sattelite">Műholdkép</string>
+    <string name="title_setup_activity">Biologer Beállításai</string>
+    <string name="license10">Szabad</string>
+    <string name="license_default">A szerverről</string>
+    <string name="license40">Bezárt</string>
+    <string name="setup_title">Biologer beállítások</string>
+    <string name="notify_title_entries_uploaded">Bejegyzés feltöltve</string>
+    <string name="notify_desc_entries_uploaded">A megfigyelések feltöltése befejeződött!</string>
+    <string name="notify_title_upload_canceled">Feltöltés visszavonása</string>
+    <string name="notify_desc_uploading">Feltöltés</string>
+    <string name="database_serbia">Szerbia</string>
+    <string name="database_croatia">Horvátország</string>
+    <string name="database_bih">Bosznia-Hercegovina</string>
+    </resources>

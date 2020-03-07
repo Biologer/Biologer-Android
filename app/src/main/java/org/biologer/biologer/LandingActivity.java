@@ -2,7 +2,6 @@ package org.biologer.biologer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -223,18 +222,12 @@ public class LandingActivity extends AppCompatActivity
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setMessage(getString(R.string.confirmExit))
                         .setCancelable(false)
-                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, final int id) {
-                                //finish();
-                                finishAffinity();
-                                System.exit(0);
-                            }
+                        .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                            //finish();
+                            finishAffinity();
+                            System.exit(0);
                         })
-                        .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                            public void onClick(final DialogInterface dialog, final int id) {
-                                dialog.cancel();
-                            }
-                        });
+                        .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
                 final AlertDialog alert = builder.create();
                 alert.show();
             } else {
@@ -302,19 +295,15 @@ public class LandingActivity extends AppCompatActivity
 
         builder.setMessage(getString(R.string.new_database_available))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        int toUpdate = Integer.parseInt(totalSpeciesOnline) - Integer.parseInt(totalSpeciesDao);
-                        Log.i(TAG, "There are " + toUpdate + " taxa to be updated.");
-                            startService(fetchTaxa);
-                    }
+                .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                    int toUpdate = Integer.parseInt(totalSpeciesOnline) - Integer.parseInt(totalSpeciesDao);
+                    Log.i(TAG, "There are " + toUpdate + " taxa to be updated.");
+                        startService(fetchTaxa);
                 })
-                .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        // If user don’t update just ignore updates until next session
-                        SettingsManager.setTaxaDatabaseUpdated(last_updated_taxa);
-                        dialog.cancel();
-                    }
+                .setNegativeButton(getString(R.string.no), (dialog, id) -> {
+                    // If user don’t update just ignore updates until next session
+                    SettingsManager.setTaxaDatabaseUpdated(last_updated_taxa);
+                    dialog.cancel();
                 });
         final AlertDialog alert = builder.create();
         alert.show();
@@ -327,16 +316,10 @@ public class LandingActivity extends AppCompatActivity
         fetchTaxa.setAction(FetchTaxa.ACTION_START);
         builder.setMessage(getString(R.string.database_empty))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.contin), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        startService(fetchTaxa);
-                    }
-                })
-                .setNegativeButton(getString(R.string.skip), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        // If user don’t update just ignore updates until next session
-                        dialog.cancel();
-                    }
+                .setPositiveButton(getString(R.string.contin), (dialog, id) -> startService(fetchTaxa))
+                .setNegativeButton(getString(R.string.skip), (dialog, id) -> {
+                    // If user don’t update just ignore updates until next session
+                    dialog.cancel();
                 });
         final AlertDialog alert = builder.create();
         alert.show();
@@ -347,11 +330,7 @@ public class LandingActivity extends AppCompatActivity
         // intent used to start service for fetching taxa
         builder.setMessage(message)
                 .setCancelable(false)
-                .setNeutralButton(getString(R.string.OK), new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        dialog.cancel();
-                    }
-                });
+                .setNeutralButton(getString(R.string.OK), (dialog, id) -> dialog.cancel());
         final AlertDialog alert = builder.create();
         alert.show();
     }

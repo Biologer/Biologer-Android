@@ -85,7 +85,7 @@
 
     <!--Logout-->
     <string name="currently_logged_data">"Тренутно сте пријављени на базу података:"</string>
-    <string name="currently_logged_uname">"Као корисник:"</string>
+    <string name="currently_logged_user_name">Као корисник:</string>
     <string name="realy">Да ли желите да се одјавите са ове Биологер базе података?</string>
 
     <!--Setup-->
@@ -106,7 +106,7 @@
     <string name="third_slide">Из почетног екрана апликације можете уредити или обрисати налазе и послати податке на неки од наших сервера.</string>
     <string name="Slide4_title">Нови налази</string>
     <string name="fourth_slide">Додавање података је једноставно! Предложите врсту, додајте фотографије и Биологер ће остало одрадити сам. Додатне опције можете откључати из Подешавања.</string>
-    <string name="unprecise_coordinates">The coordate precision is less than 25 m. Would you like to wait for precise location?</string>
+    <string name="unprecise_coordinates">Прецизност координата је мања од 25 метара. Да ли желите да сачекате на прецизнију локацију?</string>
     <string name="save_anyway">Ипак сачувај</string>
     <string name="database_empty">Биологер још није преузео базу таксона са сервера. Уверите се да имате стабилан интернет како би наставили ову радњу.</string>
     <string name="contin">Настави</string>
@@ -153,10 +153,10 @@
     <string name="data_license">Лиценца за податке</string>
     <string name="data_sharing">Дељење података</string>
     <string name="image_license">Лиценца за слике</string>
-    <string name="retry_licence_from_server">Биологер није успео да преузме изабране лиценце података и слика са сервера. Уколико имате стабилан интернет можете поновити преузимање података или можете подесити произвољне лиценце из Подешавања Биологера.</string>
+    <string name="retry_licence_from_server">Биологер није успео да преузме изабране лиценце података и слика са сервера. Уколико имате стабилан интернет можете поновити преузимање података или подесити произвољне лиценце из Подешавања Биологера.</string>
     <string name="go_to_preferences">Иди у подешавања</string>
-    <string name="update_taxa">Ажурирање таксона</string>
-    <string name="update_taxa_desc">Освежава таксономско стабло преузимањем података са Биологеровог сервера.</string>
+    <string name="update_taxa">Преузми базу таксона</string>
+    <string name="update_taxa_desc">Преузима целокупно таксономско стабло у апликацији са Биологеровог сервера.</string>
     <string name="data_synchronisation">Усаглашавање података</string>
     <string name="additional_options">Додатне опције</string>
     <string name="updating_taxa_be_patient">Сачекајте док се не заврши преузимање таксономске базе са сервера.</string>
@@ -201,6 +201,7 @@
     <string name="database_serbia">Србија</string>
     <string name="database_croatia">Хрватска</string>
     <string name="database_bih">Босна и Херцеговина</string>
-    <string name="database_dev_version">Верзија за програмере</string>
+    <string name="database_dev_version">За програмере</string>
     <string name="URL_address">Адреса: </string>
+    <string name="no_image_on_storage">Изгледа да је слика обрисана са вашег уређаја! Погледајте последњи унос и обришите или замените слику пре него што наставите са слањем података.</string>
 </resources>

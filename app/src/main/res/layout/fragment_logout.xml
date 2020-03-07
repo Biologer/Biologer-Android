@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="16sp"
-            android:text="@string/currently_logged_uname"/>
+            android:text="@string/currently_logged_user_name"/>
 
         <TextView
             android:id="@+id/tv_currentlyLogged_email"
