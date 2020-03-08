@@ -9,7 +9,6 @@ import org.biologer.biologer.SettingsManager;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -30,7 +29,7 @@ public class RetrofitClient {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .readTimeout(15, TimeUnit.SECONDS)

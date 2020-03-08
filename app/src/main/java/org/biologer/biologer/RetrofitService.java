@@ -5,6 +5,7 @@ import org.biologer.biologer.model.LoginResponse;
 import org.biologer.biologer.model.UploadFileResponse;
 import org.biologer.biologer.model.network.APIEntryResponse;
 import org.biologer.biologer.model.network.ElevationResponse;
+import org.biologer.biologer.model.network.ObservationTypesResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
 import org.biologer.biologer.model.network.UserDataResponse;
 
@@ -56,6 +57,9 @@ public interface RetrofitService {
 
     @GET("/api/my/profile")
     Call<UserDataResponse> getUserData();
+
+    @GET("/api/observation-types")
+    Call<ObservationTypesResponse> getObservationTypes();
 
     @POST("/api/elevation")
     Call<ElevationResponse> getElevation(@Query("latitude") double latitude,

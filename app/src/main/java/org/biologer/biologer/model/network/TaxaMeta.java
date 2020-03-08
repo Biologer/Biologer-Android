@@ -7,25 +7,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TaxaMeta {
     @JsonProperty("current_page")
     private int currentPage;
-
     @JsonProperty("from")
     private int from;
-
     @JsonProperty("last_page")
     private int lastPage;
-
     @JsonProperty("last_updated_at")
     private long lastUpdatedAt;
-
     @JsonProperty("path")
     private String path;
-
     @JsonProperty("per_page")
     private int perPage;
-
     @JsonProperty("to")
     private int to;
-
     @JsonProperty("total")
     private long total;
 

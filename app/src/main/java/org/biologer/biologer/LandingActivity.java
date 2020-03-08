@@ -34,6 +34,8 @@ import android.widget.TextView;
 
 import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.UserData;
+import org.biologer.biologer.model.network.ObservationTypes;
+import org.biologer.biologer.model.network.ObservationTypesResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
 
 import java.util.List;
@@ -89,6 +91,7 @@ public class LandingActivity extends AppCompatActivity
         if (isNetworkAvailable()) {
             updateTaxa();
             updateLicenses();
+            updateObservationTypes();
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
@@ -171,6 +174,24 @@ public class LandingActivity extends AppCompatActivity
         // Check if the licence has changed on the server and update if needed
         final Intent update_licenses = new Intent(LandingActivity.this, UpdateLicenses.class);
         startService(update_licenses);
+    }
+
+    private void updateObservationTypes() {
+        Call<ObservationTypesResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getObservationTypes();
+        call.enqueue(new Callback<ObservationTypesResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
+                ObservationTypesResponse observations = response.body();
+                assert observations != null;
+                String slug = observations.getData().getSlug();
+                Log.d(TAG, "Observation types " + slug);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ObservationTypesResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Observation types could not be retrieved from server: " + t.getLocalizedMessage());
+            }
+        });
     }
 
     @Override
