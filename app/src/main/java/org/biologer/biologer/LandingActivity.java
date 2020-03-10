@@ -38,6 +38,7 @@ import org.biologer.biologer.model.network.ObservationTypes;
 import org.biologer.biologer.model.network.ObservationTypesResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
 
+import java.lang.reflect.Array;
 import java.util.List;
 
 import retrofit2.Call;
@@ -183,8 +184,11 @@ public class LandingActivity extends AppCompatActivity
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
                 ObservationTypesResponse observations = response.body();
                 assert observations != null;
-                String slug = observations.getData().getSlug();
-                Log.d(TAG, "Observation types " + slug);
+                ObservationTypes[] obs = observations.getData();
+                int len = obs.length;
+                for (int i = 0; i < len; i++) {
+                    Log.d(TAG, "Observation types " + observations.getData()[i].getSlug());
+                }
             }
 
             @Override
