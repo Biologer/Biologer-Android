@@ -38,7 +38,6 @@ import org.biologer.biologer.model.network.ObservationTypes;
 import org.biologer.biologer.model.network.ObservationTypesResponse;
 import org.biologer.biologer.model.network.TaksoniResponse;
 
-import java.lang.reflect.Array;
 import java.util.List;
 
 import retrofit2.Call;

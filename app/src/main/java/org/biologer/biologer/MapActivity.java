@@ -54,6 +54,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private LatLng latlong;
     String google_map_type = SettingsManager.getGoogleMapType();
     private static final int cTimeOutMs = 30 * 1000;
+    String database_name = SettingsManager.getDatabaseName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,23 +119,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (mMap != null) {
             // Add marker at the GPS position on the map
             if (latlong.latitude == 0.0) {
-                if (SettingsManager.getDatabaseName().equals("https://biologer.hr")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(16.377937, 16.377937)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(16.377937, 16.377937), 7));
+                if (database_name.equals("https://biologer.hr")) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(45.5, 16.3)).title(getString(R.string.you_are_here)).draggable(true));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(45.5, 16.3), 7));
                     mMap.animateCamera(CameraUpdateFactory.zoomIn());
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
                 }
 
-                if (SettingsManager.getDatabaseName().equals("https://biologer.org")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.150681, 20.725708)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.150681, 20.725708), 7));
+                if (database_name.equals("https://biologer.ba")) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.3, 17.9)).title(getString(R.string.you_are_here)).draggable(true));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.3, 17.9), 7));
                     mMap.animateCamera(CameraUpdateFactory.zoomIn());
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
                 }
 
-                if (SettingsManager.getDatabaseName().equals("https://dev.biologer.org")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.150681, 20.725708)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.150681, 20.725708), 7));
+                if (database_name.equals("https://biologer.org")) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.1, 20.7)).title(getString(R.string.you_are_here)).draggable(true));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.1, 20.7), 7));
+                    mMap.animateCamera(CameraUpdateFactory.zoomIn());
+                    mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
+                }
+
+                if (database_name.equals("https://dev.biologer.org")) {
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.1, 20.7)).title(getString(R.string.you_are_here)).draggable(true));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.1, 20.7), 7));
                     mMap.animateCamera(CameraUpdateFactory.zoomIn());
                     mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
                 }

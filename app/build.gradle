@@ -40,6 +40,7 @@ greendao {
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
+            buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
@@ -56,6 +57,7 @@ greendao {
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
+            buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
@@ -94,7 +96,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
     implementation 'com.google.firebase:firebase-core:17.2.3'
-    implementation 'com.google.firebase:firebase-iid:20.1.0'
+    implementation 'com.google.firebase:firebase-iid:20.1.1'
     implementation 'com.squareup.retrofit2:retrofit:2.7.2'
     implementation 'com.squareup.retrofit2:converter-jackson:2.7.2'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.4.0'

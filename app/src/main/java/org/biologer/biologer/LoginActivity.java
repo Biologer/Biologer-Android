@@ -54,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
       */
     String rsKey = BuildConfig.BiologerRS_Key;
     String hrKey = BuildConfig.BiologerHR_Key;
+    String baKey = BuildConfig.BiologerBA_Key;
 
     Call <LoginResponse> login;
 
@@ -92,28 +93,13 @@ public class LoginActivity extends AppCompatActivity {
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
         // Login button.
         loginButton = findViewById(R.id.btn_login);
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onLogin(v);
-            }
-        });
+        loginButton.setOnClickListener(v -> onLogin(v));
         // Register link.
         TextView registerTextView = findViewById(R.id.ctv_register);
-        registerTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onRegister(v);
-            }
-        });
+        registerTextView.setOnClickListener(v -> onRegister(v));
         // Forgot password link.
         TextView forgotPassTextView = findViewById(R.id.ctv_forgotPass);
-        forgotPassTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onForgotPass(v);
-            }
-        });
+        forgotPassTextView.setOnClickListener(v -> onForgotPass(v));
     }
 
     public static class ImageArrayAdapter extends ArrayAdapter<Integer> {
@@ -215,7 +201,11 @@ public class LoginActivity extends AppCompatActivity {
         // Change the call according to the database selected
         if (database_name.equals("https://biologer.hr")) {
             login = RetrofitClient.getService(database_name).login("password", "2", hrKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        } else {
+        }
+        if (database_name.equals("https://biologer.ba")) {
+            login = RetrofitClient.getService(database_name).login("password", "2", baKey, "*", et_username.getText().toString(), et_password.getText().toString());
+        }
+        else {
             login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
         Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
