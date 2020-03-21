@@ -1,5 +1,7 @@
 package org.biologer.biologer;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.net.NetworkInfo;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
@@ -19,6 +22,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -94,6 +98,28 @@ public class LandingActivity extends AppCompatActivity
             updateObservationTypes();
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
+        }
+
+        // Check if notifications are enabled, if not warn the user!
+        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            Log.d(TAG, "Global notifications are enabled. Good to know! :-)");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationManager notificationmanager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+                assert notificationmanager != null;
+                NotificationChannel nc1 = notificationmanager.getNotificationChannel("biologer_taxa");
+                NotificationChannel nc2 = notificationmanager.getNotificationChannel("biologer_entries");
+                if (nc1.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                    Log.d(TAG, "Notification channel biologer_taxa is disabled. Warn the user about this!");
+                    alertOKButton(getString(R.string.notifications_disabled1));
+                }
+                if (nc2.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                    Log.d(TAG, "Notification channel biologer_entries is disabled. Warn the user about this!");
+                    alertOKButton(getString(R.string.notifications_disabled2));
+                }
+            }
+        } else {
+            Log.d(TAG, "Global notifications are disabled. Warning the user about this!");
+            alertOKButton(getString(R.string.notifications_disabled));
         }
 
         // Broadcast will watch if upload service is active
