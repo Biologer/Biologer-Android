@@ -171,17 +171,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Get the system locale to translate names of the taxa
-        final Locale locale = getCurrentLocale();
-        // Workaround to get the taxon names for Serbian Latin locale
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
-                locale_script = "sr-Latn";
-            } else {
-                locale_script = locale.getLanguage();
-            }
-        } else {
-            locale_script = locale.getLanguage();
-        }
+        locale_script = getLocaleScript();
 
         // Restore images on screen rotation...
         if(savedInstanceState != null) {
@@ -1178,6 +1168,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Locale locale = getResources().getConfiguration().locale;
             Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
             return locale;
+        }
+    }
+
+    private String getLocaleScript() {
+        Locale locale = getCurrentLocale();
+        // Workaround for Serbian Latin script
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
+                return "sr-Latn";
+            } else {
+                return locale.getLanguage();
+            }
+        } else {
+            return locale.getLanguage();
         }
     }
 

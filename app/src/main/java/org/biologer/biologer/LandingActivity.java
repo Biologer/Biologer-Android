@@ -45,7 +45,6 @@ import org.biologer.biologer.model.network.ObservationTypesTranslations;
 import org.biologer.biologer.model.network.TaksoniResponse;
 
 import java.util.List;
-import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -62,7 +61,6 @@ public class LandingActivity extends AppCompatActivity
     private String totalSpeciesOnline;
     private String totalSpeciesDao;
     BroadcastReceiver receiver;
-    private String langugae;
 
     Fragment fragment = null;
 
@@ -75,8 +73,6 @@ public class LandingActivity extends AppCompatActivity
         setContentView(R.layout.activity_landing);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        langugae = getLocaleScript();
 
         progressBar = findViewById(R.id.progress);
 
@@ -479,34 +475,6 @@ public class LandingActivity extends AppCompatActivity
         App.get().getDaoSession().getStageDao().deleteAll();
         App.get().getDaoSession().getUserDataDao().deleteAll();
         App.get().getDaoSession().getTaxonLocalizationDao().deleteAll();
-    }
-
-
-
-    private Locale getCurrentLocale(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-            Locale locale = getResources().getConfiguration().getLocales().get(0);
-            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
-            return locale;
-        } else{
-            Locale locale = getResources().getConfiguration().locale;
-            Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
-            return locale;
-        }
-    }
-
-    private String getLocaleScript() {
-        Locale locale = getCurrentLocale();
-        // Workaround for Serbian Latin script
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
-                return "sr-Latn";
-            } else {
-                return locale.getLanguage();
-            }
-        } else {
-            return locale.getLanguage();
-        }
     }
 
     private void showLandingFragment() {
