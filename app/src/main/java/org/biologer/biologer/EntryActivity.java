@@ -183,6 +183,32 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             locale_script = locale.getLanguage();
         }
 
+        // Restore images on screen rotation...
+        if(savedInstanceState != null) {
+            image1 = savedInstanceState.getString("image1");
+            image2 = savedInstanceState.getString("image2");
+            image3 = savedInstanceState.getString("image3");
+            if (image1 != null) {
+                Glide.with(this)
+                        .load(image1)
+                        .into(ib_pic1);
+                ib_pic1_frame.setVisibility(View.VISIBLE);
+            }
+            if (image2 != null) {
+                Glide.with(this)
+                        .load(image2)
+                        .into(ib_pic2);
+                ib_pic2_frame.setVisibility(View.VISIBLE);
+            }
+            if (image3 != null) {
+                Glide.with(this)
+                        .load(image3)
+                        .into(ib_pic3);
+                ib_pic3_frame.setVisibility(View.VISIBLE);
+            }
+        }
+
+
         // Fill in the drop down menu with list of taxa
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, new String[1]);
         acTextView = findViewById(R.id.textview_list_of_taxa);
@@ -847,19 +873,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 if (image1 == null) {
                     image1 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(image1))
+                            .load(image1)
                             .into(ib_pic1);
                     ib_pic1_frame.setVisibility(View.VISIBLE);
                 } else if (image2 == null) {
                     image2 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(image2))
+                            .load(image2)
                             .into(ib_pic2);
                     ib_pic2_frame.setVisibility(View.VISIBLE);
                 } else if (image3 == null) {
                     image3 = String.valueOf(currentPhotoUri);
                     Glide.with(this)
-                            .load(Uri.parse(image3))
+                            .load(image3)
                             .into(ib_pic3);
                     ib_pic3_frame.setVisibility(View.VISIBLE);
                     disablePhotoButtons(true);
@@ -1158,5 +1184,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private String getLatinName() {
         String entered_taxon_name = acTextView.getText().toString();
         return entered_taxon_name.split(" \\(")[0];
+    }
+
+    // When screen is rotated activity is destroyed, thus images should be saved and opened again!
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("image1", image1);
+        outState.putString("image2", image2);
+        outState.putString("image3", image3);
+        super.onSaveInstanceState(outState);
     }
 }

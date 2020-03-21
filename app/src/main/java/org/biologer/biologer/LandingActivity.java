@@ -402,16 +402,20 @@ public class LandingActivity extends AppCompatActivity
 
     private void setUploadIconVisibility() {
         long numberOfItems = App.get().getDaoSession().getEntryDao().count();
+        Log.d(TAG, "There are " + numberOfItems + " items in the list.");
         if (numberOfItems == 0) {
             // Disable the upload button
-            uploadMenu.getItem(0).setEnabled(false);
-            uploadMenu.getItem(0).getIcon().setAlpha(100);
+            if (uploadMenu != null) {
+                uploadMenu.getItem(0).setEnabled(false);
+                uploadMenu.getItem(0).getIcon().setAlpha(100);
+            }
         } else {
             // Disable the upload button
-            uploadMenu.getItem(0).setEnabled(true);
-            uploadMenu.getItem(0).getIcon().setAlpha(255);
+            if (uploadMenu != null) {
+                uploadMenu.getItem(0).setEnabled(true);
+                uploadMenu.getItem(0).getIcon().setAlpha(255);
+            }
         }
-        Log.d(TAG, "There are " + numberOfItems + " items in the list.");
     }
 
     private void userLogOut() {
