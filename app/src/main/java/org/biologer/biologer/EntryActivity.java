@@ -185,6 +185,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Restore images on screen rotation...
         if(savedInstanceState != null) {
+            Log.d(TAG,"Restoring saved state of captured images in the EntryActivity.");
             image1 = savedInstanceState.getString("image1");
             image2 = savedInstanceState.getString("image2");
             image3 = savedInstanceState.getString("image3");
@@ -1192,6 +1193,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         outState.putString("image1", image1);
         outState.putString("image2", image2);
         outState.putString("image3", image3);
+        Log.d(TAG, "Activity will be recreated. Saving the state!");
         super.onSaveInstanceState(outState);
     }
 }
