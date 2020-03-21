@@ -1,6 +1,5 @@
 package org.biologer.biologer;
 
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,13 +35,17 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import org.biologer.biologer.model.ObservationType;
+import org.biologer.biologer.model.ObservationTypeLocalization;
 import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.UserData;
 import org.biologer.biologer.model.network.ObservationTypes;
 import org.biologer.biologer.model.network.ObservationTypesResponse;
+import org.biologer.biologer.model.network.ObservationTypesTranslations;
 import org.biologer.biologer.model.network.TaksoniResponse;
 
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -59,6 +62,7 @@ public class LandingActivity extends AppCompatActivity
     private String totalSpeciesOnline;
     private String totalSpeciesDao;
     BroadcastReceiver receiver;
+    private String langugae;
 
     Fragment fragment = null;
 
@@ -71,6 +75,8 @@ public class LandingActivity extends AppCompatActivity
         setContentView(R.layout.activity_landing);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        langugae = getLocaleScript();
 
         progressBar = findViewById(R.id.progress);
 
@@ -106,19 +112,14 @@ public class LandingActivity extends AppCompatActivity
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 NotificationManager notificationmanager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
                 assert notificationmanager != null;
-                NotificationChannel nc1 = notificationmanager.getNotificationChannel("biologer_taxa");
-                NotificationChannel nc2 = notificationmanager.getNotificationChannel("biologer_entries");
-                if (nc1.getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    Log.d(TAG, "Notification channel biologer_taxa is disabled. Warn the user about this!");
+                if (notificationmanager.getNotificationChannel("biologer_taxa").getImportance() == NotificationManager.IMPORTANCE_NONE) {
                     alertOKButton(getString(R.string.notifications_disabled1));
                 }
-                if (nc2.getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    Log.d(TAG, "Notification channel biologer_entries is disabled. Warn the user about this!");
+                if (notificationmanager.getNotificationChannel("biologer_entries").getImportance() == NotificationManager.IMPORTANCE_NONE) {
                     alertOKButton(getString(R.string.notifications_disabled2));
                 }
             }
         } else {
-            Log.d(TAG, "Global notifications are disabled. Warning the user about this!");
             alertOKButton(getString(R.string.notifications_disabled));
         }
 
@@ -211,9 +212,24 @@ public class LandingActivity extends AppCompatActivity
                 assert observations != null;
                 ObservationTypes[] obs = observations.getData();
                 int len = obs.length;
+                ObservationType[] obs_dao = new ObservationType[obs.length];
                 for (int i = 0; i < len; i++) {
-                    Log.d(TAG, "Observation types " + observations.getData()[i].getSlug());
+                    ObservationType ot = obs[i].toObservationType();
+                    Log.d(TAG, "Observation type ID: " + ot.getId() + "; Slug: " + ot.getSlug());
+                    obs_dao[i] = ot;
+
+                    // Save translations in a separate table...
+                    List<ObservationTypesTranslations> observation_translations = obs[i].getTranslations();
+                    ObservationTypeLocalization[] localizations = new ObservationTypeLocalization[observation_translations.size()];
+                    for (int j = 0; j < observation_translations.size(); j++) {
+                        localizations[j] = observation_translations.get(j).toObservationTypeLocalization();
+                    }
+                    App.get().getDaoSession().getObservationTypeLocalizationDao().insertOrReplaceInTx(localizations);
+
                 }
+                App.get().getDaoSession().getObservationTypeDao().insertOrReplaceInTx(obs_dao);
+                Log.d(TAG, "Observation types written to the database, there are " + App.get().getDaoSession().getObservationTypeDao().count() + " records");
+                Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypeLocalizationDao().count() + " records");
             }
 
             @Override
@@ -463,6 +479,34 @@ public class LandingActivity extends AppCompatActivity
         App.get().getDaoSession().getStageDao().deleteAll();
         App.get().getDaoSession().getUserDataDao().deleteAll();
         App.get().getDaoSession().getTaxonLocalizationDao().deleteAll();
+    }
+
+
+
+    private Locale getCurrentLocale(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            Locale locale = getResources().getConfiguration().getLocales().get(0);
+            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
+            return locale;
+        } else{
+            Locale locale = getResources().getConfiguration().locale;
+            Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
+            return locale;
+        }
+    }
+
+    private String getLocaleScript() {
+        Locale locale = getCurrentLocale();
+        // Workaround for Serbian Latin script
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
+                return "sr-Latn";
+            } else {
+                return locale.getLanguage();
+            }
+        } else {
+            return locale.getLanguage();
+        }
     }
 
     private void showLandingFragment() {

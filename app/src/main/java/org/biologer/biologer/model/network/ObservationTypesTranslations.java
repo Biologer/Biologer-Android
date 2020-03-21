@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import org.biologer.biologer.model.ObservationType;
+import org.biologer.biologer.model.ObservationTypeLocalization;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "id",
@@ -18,6 +21,10 @@ public class ObservationTypesTranslations {
     private String locale;
     @JsonProperty("name")
     private String name;
+
+    public ObservationTypeLocalization toObservationTypeLocalization(){
+        return new ObservationTypeLocalization(id, locale, name);
+    }
 
     public long getId() {
         return id;

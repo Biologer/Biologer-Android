@@ -53,29 +53,29 @@ public class TaxonLocalization {
     public long getTranslationId() {
         return this.translationID;
     }
-    public void setTranslaitonId(long translationID) {
+    public void setTranslationId(long translationID) {
         this.translationID = translationID;
     }
-    public String getLocale() { return this.locale; }
-    public void setLocale(String locale) {
+    String getLocale() { return this.locale; }
+    void setLocale(String locale) {
         this.locale = locale;
     }
-    public long getTranslationID() {
+    long getTranslationID() {
         return this.translationID;
     }
-    public void setTranslationID(long translationID) {
+    void setTranslationID(long translationID) {
         this.translationID = translationID;
     }
-    public String getNativeName() {
+    String getNativeName() {
         return this.nativeName;
     }
-    public void setNativeName(String nativeName) {
+    void setNativeName(String nativeName) {
         this.nativeName = nativeName;
     }
     public String getLatinAndNativeName() {
         return this.latinAndNativeName;
     }
-    public void setLatinAndNativeName(String latinAndNativeName) {
+    void setLatinAndNativeName(String latinAndNativeName) {
         this.latinAndNativeName = latinAndNativeName;
     }
     }

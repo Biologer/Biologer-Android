@@ -1172,11 +1172,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     Locale getCurrentLocale(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             Locale locale = getResources().getConfiguration().getLocales().get(0);
-            Log.i(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
+            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
             return locale;
         } else{
             Locale locale = getResources().getConfiguration().locale;
-            Log.i(TAG, "Current System locale is set to " + locale.getLanguage());
+            Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
             return locale;
         }
     }

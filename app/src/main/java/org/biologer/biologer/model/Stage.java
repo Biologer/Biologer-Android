@@ -40,7 +40,7 @@ public class Stage {
     public long getStageId() {
         return this.stageId;
     }
-    public void setStageId(long stageId) {
+    void setStageId(long stageId) {
         this.stageId = stageId;
     }
     public long getTaxonId() {

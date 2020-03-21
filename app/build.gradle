@@ -27,7 +27,7 @@ android {
     }
 
 greendao {
-        schemaVersion 121
+        schemaVersion 126
     }
 
     applicationVariants.all { variant ->
