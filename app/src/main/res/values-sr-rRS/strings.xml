@@ -94,9 +94,6 @@
     <string name="database_updated">База таскона је ажурирана.</string>
     <string name="database_connect_error">Апликације није успела да се повеже са базом података!</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Здраво фрагменте црни</string>
-
     <!--First time run-->
     <string name="Slide1_title">Базе података</string>
     <string name="first_slide">Биологер апликација се може повезати на више база података. Почните тако што ћете изабрати базу података и регистровати се на сајту.</string>

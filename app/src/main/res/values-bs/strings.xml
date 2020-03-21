@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">Biologer</string>
 
     <!--  Login  -->
@@ -28,20 +28,20 @@
     <string name="pol">Pol</string>
     <string name="M">Mužjak</string>
     <string name="Z">Ženka</string>
-    <string name="razvojni_stadijum">Stadijum</string>
-    <string name="stage_hint">Razvojni stadijum taksona</string>
+    <string name="razvojni_stadijum">Stadij</string>
+    <string name="stage_hint">Razvojni stadij taksona</string>
     <string name="jedinka_je">Jedinka je nađena mrtva?</string>
     <string name="ziva">živa</string>
     <string name="mrtva">mrtva</string>
     <string name="razlog_smrti">Uzrok smrti</string>
     <string name="habitat">Stanište</string>
-    <string name="komentar">Beleška</string>
+    <string name="komentar">Bilješka</string>
     <string name="cancel">Otkaži</string>
     <string name="sacuvaj">Sačuvaj</string>
     <string name="upload">Pošalji</string>
     <string name="title_activity_map">Karta</string>
     <string name="entry_title">Unos podatka</string>
-    <string name="taxa_mandatory">Morate uneti ispravan naziv taksona.</string>
+    <string name="taxa_mandatory">Morate unijeti ispravan naziv taksona.</string>
     <string name="please_select">Izaberite</string>
     <string name="enable_location">Praćenje lokacije mora biti omogućeno u podešavanjima uređaja.</string>
     <string name="enable_location_yes">Omogući</string>
@@ -65,7 +65,7 @@
     <string name="new_database_available">Baza taksona na serveru je novija od vaše. Možete je preuzeti sada ili kasnije iz Podešavanja aplikacije. Da li želite da ažurirate bazu taksona?</string>
 
     <!--Details-->
-    <string name="gps_update"><b>Upozorenje:</b> Ova radnja će upisati nove podatke o lokaciji umesto originalnih podataka. Da li ste sigurni da to želite?</string>
+    <string name="gps_update"><b>Upozorenje:</b> Ova radnja će upisati nove podatke o lokaciji umjesto originalnih podataka. Da li ste sigurni da to želite?</string>
 
     <!-- navigation drawer -->
     <string name="logout_btn">Odjavi me</string>
@@ -73,15 +73,15 @@
     <string name="about">O Biologeru</string>
     <string name="about_us">O nama</string>
     <string name="list">Spisak nalaza</string>
-    <string name="nav_open_drawer">Otvori navigacionu površ</string>
-    <string name="nav_close_drawer">Zatvori navigacionu površ</string>
+    <string name="nav_open_drawer">Otvori navigacionu površinu</string>
+    <string name="nav_close_drawer">Zatvori navigacionu površinu</string>
     <string name="help">Pomoć</string>
 
     <!--About-->
     <string name="textAbout">Biologer je aplikacija koju pokreće slobodan softver, izdat je pod MIT licencom i napravljen kako bi prikupljao podatke o biodiverzitetu na području Istočne Evrope.</string>
     <string name="textAbout1">Biologer je razvijen zahvaljujući sredstvima Raford fondacije za male grantove (projekti br. 20507-B i 24652-B) i MAVA fondacije (projekat br. 15097).</string>
     <string name="version">"Izdanje: "</string>
-    <string name="textAbout2">"Za više informacija o biologeru, posetite našu veb stranicu: "</string>
+    <string name="textAbout2">Za više informacija o biologeru, posetite našu web stranicu: </string>
 
     <!--Logout-->
     <string name="currently_logged_data">"Trenutno ste prijavljeni na bazu podataka:"</string>
@@ -98,19 +98,19 @@
     <string name="Slide1_title">Baze podataka</string>
     <string name="first_slide">Biologer aplikacija se može povezati na više baza podataka. Počnite tako što ćete izabrati bazu podataka i registrovati se na sajtu.</string>
     <string name="Slide2_title">Navigacija je jednostavna</string>
-    <string name="second_slide">Bočna površ sadrži sve prečice i podešavanja koja su vam potrebna. Samo prevucite prstom preko ekrana da bi ih prikazali.</string>
+    <string name="second_slide">Bočna površina sadrži sve prečice i podešavanja koja su vam potrebna. Samo prevucite prstom preko ekrana da bi ih prikazali.</string>
     <string name="Slide3_title">Početni ekran</string>
     <string name="third_slide">Iz početnog ekrana aplikacije možete urediti ili obrisati nalaze i poslati podatke na neki od naših servera.</string>
     <string name="Slide4_title">Novi nalazi</string>
     <string name="fourth_slide">Dodavanje podataka je jednostavno! Predložite vrstu, dodajte fotografije i Biologer će ostalo odraditi sam. Dodatne opcije možete otključati iz Podešavanja.</string>
     <string name="unprecise_coordinates">Preciznost koordinata je manja od 25 metara. Da li želite da sačekate na precizniju lokaciju?</string>
     <string name="save_anyway">Ipak sačuvaj</string>
-    <string name="database_empty">Biologer još nije preuzeo bazu taksona sa servera. Uverite se da imate stabilan internet kako bi nastavili ovu radnju.</string>
+    <string name="database_empty">Biologer još nije preuzeo bazu taksona sa servera. Uvjerite se da imate stabilan internet kako bi nastavili ovu radnju.</string>
     <string name="contin">Nastavi</string>
     <string name="skip">Drugi put</string>
     <string name="google_maps_title">Google karta</string>
     <string name="select_map_type">Izaberite vrstu mape</string>
-    <string name="you_are_here">Nalazite se ovde</string>
+    <string name="you_are_here">Nalazite se ovdje</string>
     <string name="normal">Uobičajena</string>
     <string name="hybrid">Hibridna</string>
     <string name="terrain">Prikaz terena</string>
@@ -119,7 +119,7 @@
     <string name="license10">Slobodna</string>
     <string name="license_default">Preuzmi sa servera</string>
     <string name="license20">Slobodna, nekomercijalna</string>
-    <string name="license30">Delimično otvorena</string>
+    <string name="license30">Djelimično otvorena</string>
     <string name="license40">Zatvorena</string>
     <string name="setup_title">Podešavanja biologera</string>
     <string name="choose_dlicense">Omogućava izbor drugačije licence za podatke koje prikupljate iz Biologer aplikacije.</string>
@@ -128,32 +128,32 @@
     <string name="project_name">Naziv projekta</string>
     <string name="license_public">Odmah objavi</string>
     <string name="license_timed">Objavi za 3 godine</string>
-    <string name="channel_description">Prikazuje obaveštenja vezana za taksonomske izmene.</string>
+    <string name="channel_description">Prikazuje obavještenja vezana za taksonomske izmjene.</string>
     <string name="channel_name">Ažuriranje taksona</string>
     <string name="notify_title_taxa">Ažuriranje taksona</string>
     <string name="notify_desc_taxa">Preuzimam novu verziju baze taksona.</string>
-    <string name="notify_title_taxa_updated">Ažurno</string>
-    <string name="notify_desc_taxa_updated">Taksonomska baza podatake je nadograđena.</string>
-    <string name="notify_title_taxa_failed">Neuspelo ažuriranje</string>
-    <string name="notify_desc_taxa_failed">Takosnomska baza nije ažurirana sa servera. Uverite se da imate stabilan internet i pokušajte ponovo.</string>
+    <string name="notify_title_taxa_updated">Ažurirano</string>
+    <string name="notify_desc_taxa_updated">Taksonomska baza podataka je nadograđena.</string>
+    <string name="notify_title_taxa_failed">Neuspjelo ažuriranje</string>
+    <string name="notify_desc_taxa_failed">Takosnomska baza nije ažurirana sa servera. Uvjerite se da imate stabilan internet i pokušajte ponovo.</string>
     <string name="retry">Pokušaj ponovo</string>
     <string name="OK">U redu</string>
     <string name="exit_application">Nakon što se odjavite sa Biologera možete ponovo pokrenuti aplikaciju i prijaviti se na neku drugu bazu podataka.</string>
-    <string name="user_is_logged_out">Izgleda da nijedan korisnik nije prijavljen. Biologeć će izaći omogućivši vam da ponovo pokrenete aplikaciju i da se prijavite.</string>
+    <string name="user_is_logged_out">Izgleda da nijedan korisnik nije prijavljen. Biologer će izaći omogućivši vam da ponovo pokrenete aplikaciju i da se prijavite.</string>
     <string name="should_cancel_taxa_update">Biologer trenutno ažurira bazu podataka za taksone. Da li želite da otkažete ažuriranje?</string>
     <string name="continue_update">Nastavi</string>
-    <string name="notify_title_taxa_partially_updated">Taksoni su delimično ažurirani</string>
-    <string name="notify_desc_taxa_partially_updated">Taksonomsko stablo je delimično ažurirano. Morate ažurirati taksone u Podešavanjima Biologera kako bi iskoristili sve mogućnosti ove aplikacije.</string>
+    <string name="notify_title_taxa_partially_updated">Taksoni su djelimično ažurirani</string>
+    <string name="notify_desc_taxa_partially_updated">Taksonomsko stablo je djelimično ažurirano. Morate ažurirati taksone u Podešavanjima Biologera kako bi iskoristili sve mogućnosti ove aplikacije.</string>
     <string name="stop_action">Zaustavi</string>
     <string name="resume_action">Nastavi</string>
     <string name="cancel_update">Otkaži ažuriranje</string>
     <string name="data_license">Licenca za podatke</string>
-    <string name="data_sharing">Deljenje podataka</string>
+    <string name="data_sharing">Dijeljenje podataka</string>
     <string name="image_license">Licenca za slike</string>
-    <string name="retry_licence_from_server">Biologer nije uspeo da preuzme izabrane licence podataka i slika sa servera. Ukoliko imate stabilan internet možete ponoviti preuzimanje podataka ili podesiti proizvoljne licence iz Podešavanja Biologera.</string>
+    <string name="retry_licence_from_server">Biologer nije uspio da preuzme izabrane licence podataka i slika sa servera. Ukoliko imate stabilan internet možete ponoviti preuzimanje podataka ili podesiti proizvoljne licence iz Podešavanja Biologera.</string>
     <string name="go_to_preferences">Idi u podešavanja</string>
     <string name="update_taxa">Preuzmi bazu taksona</string>
-    <string name="update_taxa_desc">Preuzima celokupno taksonomsko stablo u aplikaciji sa Biologerovog servera.</string>
+    <string name="update_taxa_desc">Preuzima cjelokupno taksonomsko stablo u aplikaciji sa Biologerovog servera.</string>
     <string name="data_synchronisation">Usaglašavanje podataka</string>
     <string name="additional_options">Dodatne opcije</string>
     <string name="updating_taxa_be_patient">Sačekajte dok se ne završi preuzimanje taksonomske baze sa servera.</string>
@@ -162,13 +162,13 @@
     <string name="notify_desc_taxa_paused">Preuzimanje novog taksonomskog stabla sa servera je pauzirano.</string>
     <string name="notify_title_taxa_canceled">Ažuriranje je otkazano</string>
     <string name="notify_desc_taxa_canceled">Preuzimanje novog taksonomskog stabla sa servera je otkazano.</string>
-    <string name="invalid_taxon_name">Izgleda da ste uneli nepoznati takson. Da li želite da ga ipak sačuvate u Biologer?</string>
+    <string name="invalid_taxon_name">Izgleda da ste unijeli nepoznati takson. Da li želite da ga ipak sačuvate u Biologer?</string>
     <string name="image_frame">Okvir slike</string>
     <string name="camera">Foto-aparat</string>
     <string name="gallery">Galerija</string>
     <string name="map">Karta</string>
     <string name="advanced_entry">Detaljniji unos nalaza</string>
-    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što su broj jedinki, razvojni stadijum ili pol.</string>
+    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što su broj jedinki, razvojni stadij ili pol.</string>
     <string name="select_sex">Pol jedinke</string>
     <string name="stage_egg">Jaje</string>
     <string name="stage_larva">Larva</string>
@@ -176,7 +176,7 @@
     <string name="stage_adult">Odrasli</string>
     <string name="Biologer">Biologer</string>
     <string name="logging_in">Prijavljujem se…</string>
-    <string name="cannot_connect_token">Ne mogu da dobijem odgovor (token) sa servera. Proverite internet vezu.</string>
+    <string name="cannot_connect_token">Ne mogu da dobijem odgovor (token) sa servera. Provjerite internet vezu.</string>
     <string name="database">Baza</string>
     <string name="User">Korisnik</string>
     <string name="stage_juvenile">Mladunac</string>
@@ -187,7 +187,7 @@
     <string name="channel_entries_description">Prikazuje obaveštenja tokom slanja podataka na server.</string>
     <string name="channel_entries_name">Slanje nalaza</string>
     <string name="notify_title_entries">Slanje nalaza</string>
-    <string name="notify_desc_entries">Šaljem zabeležene nalaze na server.</string>
+    <string name="notify_desc_entries">Šaljem zabilježene nalaze na server.</string>
     <string name="notify_title_entries_uploaded">Poslato</string>
     <string name="notify_desc_entries_uploaded">Svi nalazi su uspešno poslati na server!</string>
     <string name="notify_title_upload_canceled">Otkazano</string>
@@ -200,5 +200,5 @@
     <string name="database_bih">Bosna i Hercegovina</string>
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">Adresa: </string>
-    <string name="no_image_on_storage">Izgleda da je slika obrisana sa vašeg uređaja! Pogledajte poslednji unos i obrišite ili zamenite sliku pre nego što nastavite sa slanjem podataka.</string>
+    <string name="no_image_on_storage">Izgleda da je slika obrisana sa vašeg uređaja! Pogledajte posljednji unos i obrišite ili zamijenite sliku prije nego što nastavite sa slanjem podataka.</string>
 </resources>

@@ -209,7 +209,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         }
 
-
         // Fill in the drop down menu with list of taxa
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, new String[1]);
         acTextView = findViewById(R.id.textview_list_of_taxa);
@@ -534,24 +533,36 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Insure that the taxon is entered correctly
         Long taxonID = getSelectedTaxonId();
         if (taxonID == null) {
+            Log.d(TAG, "The taxon does not exist in GreenDao database. Asking user to save it as is.");
             buildAlertMessageInvalidTaxon();
         } else {
-            // If the location is not loaded, warn the user and
-            // don’t send crappy data into the online database!
-            if (currentLocation.latitude == 0) {
-                buildAlertMessageNoCoordinates();
-            } else {
-                // If the location is not precise ask the user to
-                // wait for a precise location, or to go for it anyhow...
-                if (currentLocation.latitude > 0 && acc >= 25) {
-                    buildAlertMessageUnpreciseCoordinates();
-                }
-            }
+            Log.d(TAG, "The taxon with ID " + taxonID + " selected. Checking coordinates and saving the entry!");
+            entryChecker(taxonID);
+        }
+    }
 
-            if (currentLocation.latitude > 0 && (acc <= 25)) {
-                // Save the taxon
+    private void entryChecker(Long taxon_id) {
+        // If the location is not loaded, warn the user and
+        // don’t send crappy data into the online database!
+        if (currentLocation.latitude == 0) {
+            buildAlertMessageNoCoordinates();
+        } else {
+            // If the location is not precise ask the user to
+            // wait for a precise location, or to go for it anyhow...
+            if (currentLocation.latitude > 0 && acc >= 25) {
+                buildAlertMessageImpreciseCoordinates();
+            }
+        }
+
+        if (currentLocation.latitude > 0 && (acc <= 25)) {
+            if (taxon_id == null) {
+                Log.d(TAG, "Saving taxon with unknown ID as simple text.");
+                Taxon taxon = new Taxon(null, acTextView.getText().toString());
+                entrySaver(taxon);
+            } else {
+                Log.d(TAG, "Saving taxon with known ID.");
                 Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                        .where(TaxonDao.Properties.Id.eq(taxonID))
+                        .where(TaxonDao.Properties.Id.eq(taxon_id))
                         .unique();
                 entrySaver(taxon);
             }
@@ -1048,9 +1059,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         builder_taxon.setMessage(getString(R.string.invalid_taxon_name))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.save_anyway), (dialog, id) -> {
-                    // Save custom taxon with no ID
-                    Taxon taxon = new Taxon(null, acTextView.getText().toString());
-                    entrySaver(taxon);
+                    // Save custom taxon with no ID.
+                    // Just send null ID and do the rest in entryChecker.
+                    entryChecker(null);
                     dialog.dismiss();
                 })
                 .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
@@ -1060,21 +1071,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     // Show the message if the location is not loaded
     protected void buildAlertMessageNoCoordinates() {
-        final AlertDialog.Builder builder_no_coords = new AlertDialog.Builder(this);
-        builder_no_coords.setMessage(getString(R.string.location_is_zero))
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getString(R.string.location_is_zero))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.wait), (dialog, id) -> {
                     getLocation(0, 0);
                     dialog.dismiss();
                 })
                 .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
-        final AlertDialog alert = builder_no_coords.create();
+        final AlertDialog alert = builder.create();
         alert.show();
     }
 
-    protected void buildAlertMessageUnpreciseCoordinates() {
-        final AlertDialog.Builder builder_unprecise_coords = new AlertDialog.Builder(this);
-        builder_unprecise_coords.setMessage(getString(R.string.unprecise_coordinates))
+    protected void buildAlertMessageImpreciseCoordinates() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getString(R.string.unprecise_coordinates))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.wait), (dialog, id) -> {
                     getLocation(0, 0);
@@ -1087,7 +1098,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             .unique();
                     entrySaver(taxon);
                 });
-        final AlertDialog alert = builder_unprecise_coords.create();
+        final AlertDialog alert = builder.create();
         alert.show();
     }
 

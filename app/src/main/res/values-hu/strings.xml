@@ -94,9 +94,6 @@
     <string name="database_updated">A fajnevek és rendszertanuk frissítése befejeződött.</string>
     <string name="database_connect_error">Hiba az online bázis elérésében! Újracsatlakozás?</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Helló üres fragmentum</string>
-
     <!--First time run-->
     <string name="Slide1_title">Adatbázis opciók beállítása</string>
     <string name="first_slide">A Biologer több adatbázishoz is csatlakozhat. A kezdéshez célszerű a legtöbbet használt, preferált bázist kiválasztani – a művelethez online regisztrálás szükséges.</string>

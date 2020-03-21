@@ -55,7 +55,6 @@
     <string name="textAbout">Biologer je aplikacija koju pokreće slobodan softver, izdan je pod MIT licencom i napravljen kako bi prikupljao podatke o bioraznolikosti na području Istočne Europe.</string>
     <string name="Slide3_title">Početni zaslon</string>
     <string name="textAbout1">Biologer je razvijen zahvaljujući sredstvima Rufford fondacije za male grantove (projekti br. 20507-B i 24652-B) i MAVA fondacije (projekat br. 15097).</string>
-    <string name="hello_blank_fragment">Pozdrav</string>
     <string name="Slide2_title">Navigacija je jednostavna</string>
     <string name="third_slide">Sa početnog zaslona možete urediti ili obrisati vaše nalaze i poslati podatke na neki od naših server.</string>
     <string name="Slide4_title">Novi nalazi</string>
@@ -181,4 +180,5 @@
     <string name="database_bih">Bosnia and Herzegovina</string>
     <string name="database_dev_version">Developemental version</string>
     <string name="URL_address">"Database URL: "</string>
+    <string name="no_image_on_storage">It looks like the image was deleted from your device! Please review the topmost entry and delete or replace the image before proceeding to the upload.</string>
 </resources>

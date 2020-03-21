@@ -47,7 +47,7 @@
     <string name="enable_location_yes">Enable</string>
     <string name="enable_location_no">Cancel</string>
     <string name="saved">The entry is saved.</string>
-    <string name="location_is_zero">Location is not retried yet. Would you like to wait for location or cancel this entry?</string>
+    <string name="location_is_zero">Location is not retrieved yet. Would you like to wait for location or cancel this entry?</string>
     <string name="wait">Wait</string>
 
     <!--picture dialog-->
@@ -93,9 +93,6 @@
     <string name="button_update">Update taxa</string>
     <string name="database_updated">Taxon database is updated.</string>
     <string name="database_connect_error">Application was unable to connect with database!</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <!--First time run-->
     <string name="Slide1_title">Database options</string>
@@ -165,7 +162,7 @@
     <string name="notify_desc_taxa_paused">Downloading new taxonomic database from the server is paused.</string>
     <string name="notify_title_taxa_canceled">Update canceled</string>
     <string name="notify_desc_taxa_canceled">Downloading new taxonomic database is canceled by the user.</string>
-    <string name="invalid_taxon_name">It looks like you selected an unknown taxon. Do you wont biologer to save this taxon anyway?</string>
+    <string name="invalid_taxon_name">It looks like you selected an unknown taxon. Do you want to save it anyway?</string>
     <string name="image_frame">Image frame</string>
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
