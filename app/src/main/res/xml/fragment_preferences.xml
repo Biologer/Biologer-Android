@@ -15,6 +15,12 @@
         app:iconSpaceReserved="false"
         android:defaultValue="false"/>
     <ListPreference
+        android:key="auto_download"
+        android:title="@string/auto_download"
+        android:summary="@string/auto_download_desc"
+        app:iconSpaceReserved="false"
+        android:defaultValue="wifi"/>
+    <ListPreference
         android:key="data_license"
         android:title="@string/data_license"
         android:summary="@string/choose_dlicense"

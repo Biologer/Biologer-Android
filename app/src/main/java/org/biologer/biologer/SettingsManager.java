@@ -12,7 +12,9 @@ public class SettingsManager {
     private static final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.get());
 
     public enum KEY {
-        token, FIRST_LAUNCH, DATABASE_NAME, GOOGLE_MAP_TYPE, PROJECT_NAME, TAXA_LAST_PAGE_FETCHED, TAXA_DATABASE_UPDATED
+        token, FIRST_LAUNCH, DATABASE_NAME, GOOGLE_MAP_TYPE, PROJECT_NAME,
+        TAXA_LAST_PAGE_FETCHED, TAXA_DATABASE_UPDATED, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
+        OBSERVATION_TYPES_UPDATED_AT
     }
 
     public static boolean isFirstLaunch()
@@ -73,7 +75,7 @@ public class SettingsManager {
         return prefs.getString(KEY.PROJECT_NAME.toString(),null);
     }
 
-    public static void setTaxaDatabaseUpdated(String taxaDatabaseUpdated) {
+    static void setTaxaDatabaseUpdated(String taxaDatabaseUpdated) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_DATABASE_UPDATED.toString(), taxaDatabaseUpdated);
         editor.apply();
@@ -83,7 +85,27 @@ public class SettingsManager {
         return prefs.getString(KEY.TAXA_DATABASE_UPDATED.toString(),"0");
     }
 
-    public static void setTaxaLastPageFetched(String last_page) {
+    static void setSkipTaxaDatabaseUpdate(String taxaDatabaseUpdate) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString(), taxaDatabaseUpdate);
+        editor.apply();
+    }
+
+    static String getSkipTaxaDatabaseUpdate() {
+        return prefs.getString(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString(),"0");
+    }
+
+    static void setObservationTypesUpdated(String observation_types_updated) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(), observation_types_updated);
+        editor.apply();
+    }
+
+    static String getObservationTypesUpdated() {
+        return prefs.getString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(),"0");
+    }
+
+    static void setTaxaLastPageFetched(String last_page) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_LAST_PAGE_FETCHED.toString(), last_page);
         editor.apply();

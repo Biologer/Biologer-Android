@@ -204,4 +204,9 @@
     <string name="notifications_disabled1">Important notice! Notifications are not enabled for channel \"biologer_taxa\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
     <string name="notifications_disabled2">Important notice! Notifications are not enabled for channel \"biologer_entries\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
     <string name="notifications_disabled">Important notice: notifications are not enabled! This meand that Biologer will not be able to receive species list or upload your records online. Enabling notifications is required for most of application core functionalities.</string>
+    <string name="auto_download">Auto download and upload</string>
+    <string name="auto_download_desc">Allows data to be automatically downloaded and uploaded withought user intervention.</string>
+    <string name="only_wifi">Only on WiFi networks</string>
+    <string name="any_network">On any network</string>
+    <string name="always_ask">Always ask user</string>
 </resources>

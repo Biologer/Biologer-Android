@@ -19,7 +19,7 @@ public class TaksoniResponse {
     private List<Taxa> data = null;
 
     @JsonProperty("meta")
-    public TaxaMeta meta = null;
+    private TaxaMeta meta = null;
 
     @JsonProperty("data")
     public List<Taxa> getData() {

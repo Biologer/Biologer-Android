@@ -35,10 +35,15 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
 
         ListPreference dataLicense = (ListPreference) findPreference("data_license");
         ListPreference imageLicense = (ListPreference) findPreference("image_license");
+        ListPreference autoDownload = (ListPreference) findPreference("auto_download");
 
         if (dataLicense != null || imageLicense != null) {
             getLicences(dataLicense);
             getLicences(imageLicense);
+        }
+
+        if (autoDownload != null) {
+            getAutoDownload(autoDownload);
         }
 
         // Add button fot taxa sync process
@@ -74,6 +79,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                             sleep(2000);
                             while (FetchTaxa.isInstanceCreated()) {
                                 // Run this loop on every 2 seconds while updating taxa
+                                Log.d(TAG, "Running the empty loop until taxa updated...");
                             }
                         } catch (InterruptedException e) {
                             e.printStackTrace();
@@ -118,6 +124,25 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 }
             });
         }
+
+        if (autoDownload != null) {
+            autoDownload.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    Log.d(TAG, "Data license changed to: " + newValue);
+                    updateLicense();
+                    return true;
+                }
+            });
+        }
+    }
+
+    private void getAutoDownload(ListPreference listPreference) {
+        CharSequence[] entries = {getString(R.string.only_wifi), getString(R.string.any_network), getString(R.string.always_ask)};
+        CharSequence[] entryValues = {"wifi", "all", "ask"};
+        listPreference.setEntries(entries);
+        listPreference.setDefaultValue("0");
+        listPreference.setEntryValues(entryValues);
     }
 
     private void getLicences(ListPreference listpreference) {

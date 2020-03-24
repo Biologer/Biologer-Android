@@ -61,6 +61,7 @@ public class LandingActivity extends AppCompatActivity
     private String totalSpeciesOnline;
     private String totalSpeciesDao;
     BroadcastReceiver receiver;
+    String how_to_use_network;
 
     Fragment fragment = null;
 
@@ -92,31 +93,33 @@ public class LandingActivity extends AppCompatActivity
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
+        // Get the user settings from preferences
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+        how_to_use_network = preferences.getString("auto_download", "wifi");
+
         showLandingFragment();
 
-        if (isNetworkAvailable()) {
-            updateTaxa();
-            updateLicenses();
-            updateObservationTypes();
-        } else {
-            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
-        }
-
         // Check if notifications are enabled, if not warn the user!
-        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            Log.d(TAG, "Global notifications are enabled. Good to know! :-)");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationManager notificationmanager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-                assert notificationmanager != null;
-                if (notificationmanager.getNotificationChannel("biologer_taxa").getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    alertOKButton(getString(R.string.notifications_disabled1));
-                }
-                if (notificationmanager.getNotificationChannel("biologer_entries").getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    alertOKButton(getString(R.string.notifications_disabled2));
+        areNotificationsEnabled();
+
+        // Check if there is network available and run the commands...
+        String network_type = isNetworkAvailable();
+        if (network_type.equals("connected") || network_type.equals("wifi")) {
+            updateTaxa(network_type);
+            updateLicenses();
+            // updateObservationTypes();
+
+            // Upload entries if there are some! And if the right preferences are selected...
+            if (App.get().getDaoSession().getEntryDao().count() != 0) {
+                if (how_to_use_network.equals("all")) {
+                    uploadRecords();
+                } if (how_to_use_network.equals("wifi") && network_type.equals("wifi")) {
+                    uploadRecords();
                 }
             }
+
         } else {
-            alertOKButton(getString(R.string.notifications_disabled));
+            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
 
         // Broadcast will watch if upload service is active
@@ -138,6 +141,24 @@ public class LandingActivity extends AppCompatActivity
         };
     }
 
+    private void areNotificationsEnabled() {
+        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            Log.d(TAG, "Global notifications are enabled. Good to know! :-)");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationManager notificationmanager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+                assert notificationmanager != null;
+                if (notificationmanager.getNotificationChannel("biologer_taxa").getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                    alertOKButton(getString(R.string.notifications_disabled1));
+                }
+                if (notificationmanager.getNotificationChannel("biologer_entries").getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                    alertOKButton(getString(R.string.notifications_disabled2));
+                }
+            }
+        } else {
+            alertOKButton(getString(R.string.notifications_disabled));
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -153,7 +174,7 @@ public class LandingActivity extends AppCompatActivity
     }
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
-    private void updateTaxa() {
+    private void updateTaxa(String connection_type) {
         Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(1, 1, 0);
         call.enqueue(new Callback<TaksoniResponse>() {
             @Override
@@ -163,26 +184,43 @@ public class LandingActivity extends AppCompatActivity
                     TaksoniResponse taksoniResponse = response.body();
                     if(taksoniResponse != null) {
                         last_updated_taxa = Long.toString(taksoniResponse.getMeta().getLastUpdatedAt());
+                        String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
                         totalSpeciesOnline = Long.toString(taksoniResponse.getMeta().getLastPage());
                         totalSpeciesDao = String.valueOf(App.get().getDaoSession().getTaxonDao().count());
                         if (last_updated_taxa.equals(SettingsManager.getTaxaDatabaseUpdated())) {
                             Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
-                            Log.i(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
-                        } else {
+                            Log.d(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
+                        }
+                        if (!skip_this.equals("0") && last_updated_taxa.equals(skip_this)) {
+                            Log.i(TAG,"User chooses to skip updating this version of taxonomic database. Nothing to do here!");
+                        }
+                        else {
                             Log.i(TAG, "Taxa database on the server (version: " + last_updated_taxa + ") seems to be newer that your version (" + SettingsManager.getTaxaDatabaseUpdated() + ").");
-                            Log.i(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
-                            // If there is no database on the phone, ask user to update it!
-                            if (SettingsManager.getTaxaDatabaseUpdated().equals("0")) {
-                                // If the database was never updated...
-                                buildAlertMessageEmptyTaxaDb();
+                            Log.d(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
+
+                            // If user choose to update data on any network, just do it!
+                            if (how_to_use_network.equals("all")) {
+                                Log.d(TAG, "The user chooses to update taxa on any network, fetching taxa started automatically.");
+                                startFetchingTaxa();
+                            }
+                            // If user choose to update only on wifi
+                            if (how_to_use_network.equals("wifi") && connection_type.equals("wifi")) {
+                                Log.d(TAG, "There is WiFi network available, fetching taxa started automatically.");
+                                startFetchingTaxa();
                             } else {
-                                // If the online database is more recent try to get only the new taxa.
-                                buildAlertMessageNewerTaxaDb();
+                                Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
+                                if (SettingsManager.getTaxaDatabaseUpdated().equals("0")) {
+                                    // If the online database is empty and user skips updating ask him on the next program startup
+                                    buildAlertUpdateTaxa(getString(R.string.database_empty), getString(R.string.contin), getString(R.string.skip));
+                                } else {
+                                    // If the online database is more recent and user skips updating don’t ask him again
+                                    buildAlertUpdateTaxa(getString(R.string.new_database_available), getString(R.string.yes), getString(R.string.no));
+                                    SettingsManager.setSkipTaxaDatabaseUpdate(last_updated_taxa);
+                                }
                             }
                         }
                     }
                 }
-
             }
             @Override
             public void onFailure(@NonNull Call<TaksoniResponse> call, @NonNull Throwable t) {
@@ -207,6 +245,7 @@ public class LandingActivity extends AppCompatActivity
                 ObservationTypesResponse observations = response.body();
                 assert observations != null;
                 ObservationTypes[] obs = observations.getData();
+                Log.d(TAG, "Observation types online are at the version: " + observations.getMeta());
                 int len = obs.length;
                 ObservationType[] obs_dao = new ObservationType[obs.length];
                 for (int i = 0; i < len; i++) {
@@ -280,21 +319,8 @@ public class LandingActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(getString(R.string.confirmExit))
-                        .setCancelable(false)
-                        .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                            //finish();
-                            finishAffinity();
-                            System.exit(0);
-                        })
-                        .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
-                final AlertDialog alert = builder.create();
-                alert.show();
-            } else {
-                super.onBackPressed();
-            }
+            moveTaskToBack(true);
+            //super.onBackPressed();
         }
     }
 
@@ -325,12 +351,16 @@ public class LandingActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
             if (item.getItemId() == R.id.action_upload) {
                     Log.d(TAG, "Upload records button clicked.");
-                    final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
-                    uploadRecords.setAction(UploadRecords.ACTION_START);
-                    startService(uploadRecords);
+                    uploadRecords();
                     return true;
             }
             return super.onOptionsItemSelected(item);
+    }
+
+    private void uploadRecords() {
+        final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
+        uploadRecords.setAction(UploadRecords.ACTION_START);
+        startService(uploadRecords);
     }
 
     @Override
@@ -348,43 +378,26 @@ public class LandingActivity extends AppCompatActivity
         setUploadIconVisibility();
     }
 
-    protected void buildAlertMessageNewerTaxaDb() {
+    protected void buildAlertUpdateTaxa(String message, String yes, String no) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // intent used to start service for fetching taxa
-
-        final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
-        fetchTaxa.setAction(FetchTaxa.ACTION_START);
-
         builder.setMessage(getString(R.string.new_database_available))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
                     int toUpdate = Integer.parseInt(totalSpeciesOnline) - Integer.parseInt(totalSpeciesDao);
                     Log.i(TAG, "There are " + toUpdate + " taxa to be updated.");
-                        startService(fetchTaxa);
+                    startFetchingTaxa();
                 })
                 .setNegativeButton(getString(R.string.no), (dialog, id) -> {
-                    // If user don’t update just ignore updates until next session
-                    SettingsManager.setTaxaDatabaseUpdated(last_updated_taxa);
                     dialog.cancel();
                 });
         final AlertDialog alert = builder.create();
         alert.show();
     }
 
-    protected void buildAlertMessageEmptyTaxaDb() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        // intent used to start service for fetching taxa
-        final Intent fetchTaxa = new Intent(this, FetchTaxa.class);
+    private void startFetchingTaxa() {
+        final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
         fetchTaxa.setAction(FetchTaxa.ACTION_START);
-        builder.setMessage(getString(R.string.database_empty))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.contin), (dialog, id) -> startService(fetchTaxa))
-                .setNegativeButton(getString(R.string.skip), (dialog, id) -> {
-                    // If user don’t update just ignore updates until next session
-                    dialog.cancel();
-                });
-        final AlertDialog alert = builder.create();
-        alert.show();
+        startService(fetchTaxa);
     }
 
     protected void alertOKButton(String message) {
@@ -431,11 +444,21 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    private boolean isNetworkAvailable() {
+    private String isNetworkAvailable() {
         ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connectivitymanager != null;
         NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+            NetworkInfo wifiNetworkInfo = connectivitymanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (wifiNetworkInfo != null && wifiNetworkInfo.isConnected()) {
+                Log.d(TAG, "You are connected to the WiFi network.");
+                return "wifi";
+            }
+            Log.d(TAG, "You are connected to the mobile network.");
+            return "connected";
+        }
+        Log.d(TAG, "You are not connected to the network.");
+        return "not_connected";
     }
 
     private void setUploadIconVisibility() {
