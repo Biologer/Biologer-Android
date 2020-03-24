@@ -107,7 +107,7 @@ public class LandingActivity extends AppCompatActivity
         if (network_type.equals("connected") || network_type.equals("wifi")) {
             updateTaxa(network_type);
             updateLicenses();
-            // updateObservationTypes();
+            updateObservationTypes();
 
             // Upload entries if there are some! And if the right preferences are selected...
             if (App.get().getDaoSession().getEntryDao().count() != 0) {
@@ -233,7 +233,7 @@ public class LandingActivity extends AppCompatActivity
 
     private void updateLicenses() {
         // Check if the licence has changed on the server and update if needed
-        final Intent update_licenses = new Intent(LandingActivity.this, UpdateLicenses.class);
+        final Intent update_licenses = new Intent(this, UpdateLicenses.class);
         startService(update_licenses);
     }
 
@@ -245,7 +245,6 @@ public class LandingActivity extends AppCompatActivity
                 ObservationTypesResponse observations = response.body();
                 assert observations != null;
                 ObservationTypes[] obs = observations.getData();
-                Log.d(TAG, "Observation types online are at the version: " + observations.getMeta());
                 int len = obs.length;
                 ObservationType[] obs_dao = new ObservationType[obs.length];
                 for (int i = 0; i < len; i++) {
@@ -257,7 +256,12 @@ public class LandingActivity extends AppCompatActivity
                     List<ObservationTypesTranslations> observation_translations = obs[i].getTranslations();
                     ObservationTypeLocalization[] localizations = new ObservationTypeLocalization[observation_translations.size()];
                     for (int j = 0; j < observation_translations.size(); j++) {
-                        localizations[j] = observation_translations.get(j).toObservationTypeLocalization();
+                        ObservationTypeLocalization localization = new ObservationTypeLocalization();
+                        localization.setObservationId(ot.getId());
+                        localization.setId(observation_translations.get(j).getId());
+                        localization.setLocale(observation_translations.get(j).getLocale());
+                        localization.setName(observation_translations.get(j).getName());
+                        localizations[j] = localization;
                     }
                     App.get().getDaoSession().getObservationTypeLocalizationDao().insertOrReplaceInTx(localizations);
 

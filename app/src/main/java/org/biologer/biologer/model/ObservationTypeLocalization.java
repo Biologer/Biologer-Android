@@ -8,12 +8,14 @@ import org.greenrobot.greendao.annotation.Id;
 public class ObservationTypeLocalization {
     @Id
     private Long id;
+    private Long observationId;
     private String locale;
     private String name;
 
-    @Generated(hash = 1639112326)
-    public ObservationTypeLocalization(Long id, String locale, String name) {
+    @Generated(hash = 1838822320)
+    public ObservationTypeLocalization(Long id, Long observationId, String locale, String name) {
         this.id = id;
+        this.observationId = observationId;
         this.locale = locale;
         this.name = name;
     }
@@ -42,5 +44,13 @@ public class ObservationTypeLocalization {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getObservationId() {
+        return observationId;
+    }
+
+    public void setObservationId(Long observationId) {
+        this.observationId = observationId;
     }
 }

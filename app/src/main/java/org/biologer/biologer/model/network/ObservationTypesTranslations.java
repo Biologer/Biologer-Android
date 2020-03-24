@@ -22,10 +22,6 @@ public class ObservationTypesTranslations {
     @JsonProperty("name")
     private String name;
 
-    public ObservationTypeLocalization toObservationTypeLocalization(){
-        return new ObservationTypeLocalization(id, locale, name);
-    }
-
     public long getId() {
         return id;
     }

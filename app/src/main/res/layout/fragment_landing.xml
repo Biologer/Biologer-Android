@@ -23,6 +23,7 @@
         android:layout_width="56dp"
         android:layout_height="56dp"
         app:fabCustomSize="56dp"
+        app:tint="@color/white"
         android:src="@drawable/ic_add_black_24dp"
         android:scaleType="center"
         android:layout_gravity="end|bottom"

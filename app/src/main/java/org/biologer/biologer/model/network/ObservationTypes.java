@@ -23,8 +23,6 @@ public class ObservationTypes {
     private String slug;
     @JsonProperty("translations")
     private List<ObservationTypesTranslations> translations;
-    @JsonProperty("updated_after")
-    private Long updated_after;
 
     public ObservationType toObservationType(){
         return new ObservationType(Long.valueOf(id), slug);

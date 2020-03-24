@@ -29,6 +29,9 @@ import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.UploadFileResponse;
 import org.biologer.biologer.model.network.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -46,6 +49,8 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static org.json.JSONArray.*;
 
 public class UploadRecords extends Service {
 
@@ -267,13 +272,7 @@ public class UploadRecords extends Service {
         apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
         apiEntry.setDataLicense(entry.getData_licence());
         apiEntry.setTime(entry.getTime());
-        if (entry.getSlika1() != null || entry.getSlika2() != null || entry.getSlika3() != null) {
-            int[] has_image = {1 ,2};
-            apiEntry.setTypes(has_image);
-        } else {
-            int[] has_image = {1};
-            apiEntry.setTypes(has_image);
-        }
+        apiEntry.setTypes(getArrayFromText(entry.getObservation_type_ids()));
         for (int i = 0; i < n; i++) {
             APIEntry.Photo p = new APIEntry.Photo();
             p.setPath(images_array.get(i));
@@ -317,6 +316,15 @@ public class UploadRecords extends Service {
                 Log.i(TAG, Objects.requireNonNull(t.getLocalizedMessage()));
             }
         });
+    }
+
+    private int[] getArrayFromText(String observation_type_ids) {
+        String[] strings = observation_type_ids.replace("[", "").replace("]", "").split(", ");
+        int[] new_array = new int[strings.length];
+        for (int i = 0; i < strings.length; i++) {
+            new_array[i] = Integer.parseInt(strings[i]);
+        }
+        return new_array;
     }
 
     private void uploadPhoto(File image) {

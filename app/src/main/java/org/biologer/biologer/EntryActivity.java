@@ -16,8 +16,14 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.Settings;
+
+import com.google.android.gms.common.util.ArrayUtils;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipDrawable;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -50,6 +56,8 @@ import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.biologer.biologer.model.Entry;
+import org.biologer.biologer.model.ObservationTypeDao;
+import org.biologer.biologer.model.ObservationTypeLocalizationDao;
 import org.biologer.biologer.model.Stage;
 import org.biologer.biologer.model.StageDao;
 import org.biologer.biologer.model.Taxon;
@@ -64,6 +72,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -92,6 +101,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     FrameLayout ib_pic1_frame, ib_pic2_frame, ib_pic3_frame;
     ImageView ib_pic1, ib_pic1_del, ib_pic2, ib_pic2_del, ib_pic3, ib_pic3_del, iv_map, iconTakePhotoCamera, iconTakePhotoGallery;
     private CheckBox check_dead;
+    ChipGroup observation_types;
     LinearLayout detailedEntry;
     private boolean save_enabled = false;
     private String image1, image2, image3;
@@ -103,6 +113,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Get the data from the GreenDao database
     List<UserData> userDataList = App.get().getDaoSession().getUserDataDao().loadAll();
     List<Stage> stageList = App.get().getDaoSession().getStageDao().loadAll();
+    String observation_type_ids_string;
+    int[] observation_type_ids = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +132,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         checkWriteStoragePermission();
+
+        // Get the system locale to translate names of the taxa
+        locale_script = getLocaleScript();
 
         /*
          * Get the view...
@@ -163,6 +178,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Map icon
         iv_map = findViewById(R.id.iv_map);
         iv_map.setOnClickListener(this);
+        // Tag cloud for observation types
+        observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
         detailedEntry = findViewById(R.id.detailed_entry);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -170,12 +187,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             detailedEntry.setVisibility(View.VISIBLE);
         }
 
-        // Get the system locale to translate names of the taxa
-        locale_script = getLocaleScript();
-
         // Restore images on screen rotation...
-        if(savedInstanceState != null) {
-            Log.d(TAG,"Restoring saved state of captured images in the EntryActivity.");
+        if (savedInstanceState != null) {
+            Log.d(TAG, "Restoring saved state of captured images in the EntryActivity.");
             image1 = savedInstanceState.getString("image1");
             image2 = savedInstanceState.getString("image2");
             image3 = savedInstanceState.getString("image3");
@@ -210,6 +224,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         acTextView.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler();
             Runnable runnable;
+
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 handler.removeCallbacks(runnable);
@@ -304,7 +319,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Finally to start the gathering of data...
         startEntryActivity();
-
+        fillObservationTypes();
     }
 
     /*
@@ -316,6 +331,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (isNewEntry()) {
             Log.i(TAG, "Starting new entry.");
             getLocation(100, 2);
+            int id_for_observed_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
+                    .where(ObservationTypeDao.Properties.Slug.eq("observed"))
+                    .list().get(0).getId().intValue();
+            Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
+            observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
         } else {
             currentItem = App.get().getDaoSession().getEntryDao().load(existing_entry_id);
             Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
@@ -355,7 +375,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (currentItem.getSex().equals("male")) {
                 Log.d(TAG, "Setting spinner selected item to male.");
                 select_sex.setText(getString(R.string.is_male));
-            } if (currentItem.getSex().equals("female")) {
+            }
+            if (currentItem.getSex().equals("female")) {
                 Log.d(TAG, "Setting spinner selected item to female.");
                 select_sex.setText(getString(R.string.is_female));
             }
@@ -396,6 +417,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
             if (currentItem.getHabitat() != null) {
                 et_Habitat.setText(currentItem.getHabitat());
+            }
+            // Load observation types and delete tag for photographed.
+            observation_type_ids_string = currentItem.getObservation_type_ids();
+            Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
+            observation_type_ids = getArrayFromText(observation_type_ids_string);
+            if (image1 != null || image2 != null || image3 != null) {
+                Log.d(TAG, "Removing image tag just in case images got deleted.");
+                int id_photo_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
+                        .where(ObservationTypeDao.Properties.Slug.eq("photographed"))
+                        .list().get(0).getId().intValue();
+                observation_type_ids = removeFromArray(observation_type_ids, id_photo_tag);
             }
         }
     }
@@ -438,7 +470,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             return true;
         }
         if (id == R.id.action_save) {
-                saveEntry();
+            saveEntry();
         }
         return true;
     }
@@ -501,18 +533,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void openInGallery(String image) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(image));
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                startActivity(intent);
-            } else {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse(image), "image/*");
-                startActivity(intent);
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(image));
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setDataAndType(Uri.parse(image), "image/*");
+            startActivity(intent);
+        }
     }
 
     /*
@@ -579,19 +611,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Long taxon_id = taxon.getId();
             String taxon_name = taxon.getName();
             String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
+            getPhotoTag();
+            observation_type_ids_string = Arrays.toString(observation_type_ids);
+            Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
             Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day,
                     comment, numberOfSpecimens, maleFemale(), selectedStage, String.valueOf(!check_dead.isChecked()), deathComment,
                     currentLocation.latitude, currentLocation.longitude, acc, elev, "", image1, image2, image3,
-                    project_name, "", String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time, habitat);
+                    project_name, "", String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
             finish();
-        }
-
-        else { // if the entry exist already
+        } else { // if the entry exist already
             currentItem.setTaxonId(taxon.getId());
             currentItem.setTaxonSuggestion(taxon.getName());
             currentItem.setComment(comment);
@@ -608,6 +641,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.setSlika2(image2);
             currentItem.setSlika3(image3);
             currentItem.setHabitat(habitat);
+            getPhotoTag();
+            currentItem.setObservation_type_ids(Arrays.toString(observation_type_ids));
 
             // Now just update the database with new data...
             App.get().getDaoSession().getEntryDao().updateInTx(currentItem);
@@ -617,6 +652,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             setResult(RESULT_OK);
             finish();
+        }
+    }
+
+    private void getPhotoTag() {
+        if (image1 != null || image2 != null || image3 != null) {
+            int id_photo_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
+                    .where(ObservationTypeDao.Properties.Slug.eq("photographed"))
+                    .list().get(0).getId().intValue();
+            Log.d(TAG, "Photographed tag has ID: " + id_photo_tag);
+            observation_type_ids = insertIntoArray(observation_type_ids, id_photo_tag);
         }
     }
 
@@ -657,11 +702,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             for (int i = 0; i < stageList.size(); i++) {
                 taxon_stages[i] = stageList.get(i).getName();
                 // Translate this to interface...
-                if (taxon_stages[i].equals("egg")) {taxon_stages[i] = getString(R.string.stage_egg);}
-                if (taxon_stages[i].equals("larva")) {taxon_stages[i] = getString(R.string.stage_larva);}
-                if (taxon_stages[i].equals("pupa")) {taxon_stages[i] = getString(R.string.stage_pupa);}
-                if (taxon_stages[i].equals("adult")) {taxon_stages[i] = getString(R.string.stage_adult);}
-                if (taxon_stages[i].equals("juvenile")) {taxon_stages[i] = getString(R.string.stage_juvenile);}
+                if (taxon_stages[i].equals("egg")) {
+                    taxon_stages[i] = getString(R.string.stage_egg);
+                }
+                if (taxon_stages[i].equals("larva")) {
+                    taxon_stages[i] = getString(R.string.stage_larva);
+                }
+                if (taxon_stages[i].equals("pupa")) {
+                    taxon_stages[i] = getString(R.string.stage_pupa);
+                }
+                if (taxon_stages[i].equals("adult")) {
+                    taxon_stages[i] = getString(R.string.stage_adult);
+                }
+                if (taxon_stages[i].equals("juvenile")) {
+                    taxon_stages[i] = getString(R.string.stage_juvenile);
+                }
             }
             if (taxon_stages.length == 0) {
                 Log.d(TAG, "No stages are available for " + getLatinName() + ".");
@@ -702,11 +757,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             String database = SettingsManager.getDatabaseName();
             if (database.equals("https://biologer.org")) {
                 currentLocation = new LatLng(44.0, 20.8);
-            } if (database.equals("https://dev.biologer.org")) {
+            }
+            if (database.equals("https://dev.biologer.org")) {
                 currentLocation = new LatLng(44.0, 20.8);
-            } if (database.equals("https://biologer.hr")) {
+            }
+            if (database.equals("https://biologer.hr")) {
                 currentLocation = new LatLng(45.5, 16.3);
-            } if (database.equals("https://biologer.ba")) {
+            }
+            if (database.equals("https://biologer.ba")) {
                 currentLocation = new LatLng(44.3, 17.9);
             }
         }
@@ -818,14 +876,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         int j = 0;
                         for (int i = 0; i < 3; i++) {
                             if (images[i] == null) {
-                                Log.i(TAG, "Image " + i+1 + " is null.");
+                                Log.i(TAG, "Image " + i + 1 + " is null.");
                                 if (j < arrayUri.size()) {
                                     String uri = arrayUri.get(j).toString();
                                     j++;
                                     images[i] = uri;
                                 }
                             } else {
-                                Log.i(TAG, "Image " + i+1 + " is already set to: " + images[i]);
+                                Log.i(TAG, "Image " + i + 1 + " is already set to: " + images[i]);
                             }
                         }
 
@@ -834,8 +892,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (j < arrayUri.size()) {
                             Toast.makeText(this,
                                     getString(R.string.limit_photo1) + " " + arrayUri.size() + " " +
-                                    getString(R.string.limit_photo2) + " " + j + " " +
-                                    getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
+                                            getString(R.string.limit_photo2) + " " + j + " " +
+                                            getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                         }
 
                         image1 = images[0];
@@ -847,17 +905,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     .load(image1)
                                     .into(ib_pic1);
                             ib_pic1_frame.setVisibility(View.VISIBLE);
-                        } if (image2 != null) {
+                        }
+                        if (image2 != null) {
                             Glide.with(this)
                                     .load(image2)
                                     .into(ib_pic2);
                             ib_pic2_frame.setVisibility(View.VISIBLE);
-                        } if (image3 != null) {
+                        }
+                        if (image3 != null) {
                             Glide.with(this)
                                     .load(image3)
                                     .into(ib_pic3);
                             ib_pic3_frame.setVisibility(View.VISIBLE);
-                        } if (image1 != null && image2 != null && image3 != null) {
+                        }
+                        if (image1 != null && image2 != null && image3 != null) {
                             iconTakePhotoGallery.setEnabled(false);
                             iconTakePhotoGallery.setImageAlpha(20);
                             iconTakePhotoCamera.setEnabled(false);
@@ -871,34 +932,34 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
 
         } else if (requestCode == CAMERA) {
-                    entryAddPic();
-                if (image1 == null) {
-                    image1 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(image1)
-                            .into(ib_pic1);
-                    ib_pic1_frame.setVisibility(View.VISIBLE);
-                } else if (image2 == null) {
-                    image2 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(image2)
-                            .into(ib_pic2);
-                    ib_pic2_frame.setVisibility(View.VISIBLE);
-                } else if (image3 == null) {
-                    image3 = String.valueOf(currentPhotoUri);
-                    Glide.with(this)
-                            .load(image3)
-                            .into(ib_pic3);
-                    ib_pic3_frame.setVisibility(View.VISIBLE);
-                    disablePhotoButtons(true);
-                }
+            entryAddPic();
+            if (image1 == null) {
+                image1 = String.valueOf(currentPhotoUri);
+                Glide.with(this)
+                        .load(image1)
+                        .into(ib_pic1);
+                ib_pic1_frame.setVisibility(View.VISIBLE);
+            } else if (image2 == null) {
+                image2 = String.valueOf(currentPhotoUri);
+                Glide.with(this)
+                        .load(image2)
+                        .into(ib_pic2);
+                ib_pic2_frame.setVisibility(View.VISIBLE);
+            } else if (image3 == null) {
+                image3 = String.valueOf(currentPhotoUri);
+                Glide.with(this)
+                        .load(image3)
+                        .into(ib_pic3);
+                ib_pic3_frame.setVisibility(View.VISIBLE);
+                disablePhotoButtons(true);
+            }
             Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
         }
 
         // Get data from Google MapActivity.java and save it as local variables
         if (requestCode == MAP) {
             locationManager.removeUpdates(locationListener);
-            if(data != null) {
+            if (data != null) {
                 currentLocation = data.getParcelableExtra("google_map_latlong");
                 assert currentLocation != null;
                 setLocationValues(currentLocation.latitude, currentLocation.longitude);
@@ -977,7 +1038,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         }
 
-        return File.createTempFile(getImageFileName(),".jpg", mediaStorageDir);
+        return File.createTempFile(getImageFileName(), ".jpg", mediaStorageDir);
     }
 
     // Set the filename for image taken through the Camera
@@ -1140,8 +1201,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private int getGreenDaoDataLicense() {
-        if(userDataList !=null) {
-            if(!userDataList.isEmpty()) {
+        if (userDataList != null) {
+            if (!userDataList.isEmpty()) {
                 return userDataList.get(0).getData_license();
             }
             return 0;
@@ -1150,7 +1211,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private int getGreenDaoImageLicense() {
-        if(userDataList != null) {
+        if (userDataList != null) {
             if (!userDataList.isEmpty()) {
                 return userDataList.get(0).getImage_license();
             }
@@ -1159,12 +1220,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         return 0;
     }
 
-    Locale getCurrentLocale(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+    Locale getCurrentLocale() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Locale locale = getResources().getConfiguration().getLocales().get(0);
             Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
             return locale;
-        } else{
+        } else {
             Locale locale = getResources().getConfiguration().locale;
             Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
             return locale;
@@ -1210,5 +1271,98 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         outState.putString("image3", image3);
         Log.d(TAG, "Activity will be recreated. Saving the state!");
         super.onSaveInstanceState(outState);
+    }
+
+    private void fillObservationTypes() {
+
+        long number_of_observation_types = App.get().getDaoSession().getObservationTypeDao().queryBuilder().count();
+        Log.d(TAG, "Filling types of observations with " + locale_script + " script names. Total of " + number_of_observation_types + " entries.");
+
+        for (int i = 0; i < number_of_observation_types; i++) {
+            String observation_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
+                    .list().get(i).getSlug();
+
+            Long observation_id = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
+                    .list().get(i).getId();
+            if (observation_tag.equals("observed") || observation_tag.equals("photographed")) {
+                Log.d(TAG, "Ignoring Chip for " + observation_tag + " with ID " + observation_id);
+            } else {
+                Log.d(TAG, "Adding Chip for " + observation_tag + " with ID " + observation_id);
+                Chip chip = new Chip(this);
+                // This selects the type of Chip to add. We are adding Filter Chips that are checkable.
+                ChipDrawable chipDrawable = ChipDrawable.createFromAttributes(this, null, 0, R.style.Widget_MaterialComponents_Chip_Filter);
+                chip.setChipDrawable(chipDrawable);
+                chip.setId(observation_id.intValue());
+                chip.setTag(observation_tag);
+                String observation_text = App.get().getDaoSession().getObservationTypeLocalizationDao().queryBuilder()
+                        .where(ObservationTypeLocalizationDao.Properties.ObservationId.eq(observation_id))
+                        .where(ObservationTypeLocalizationDao.Properties.Locale.eq(locale_script))
+                        .list().get(0).getName();
+                chip.setText(observation_text);
+                if (arrayContainsNumber(observation_type_ids, observation_id.intValue())) {
+                    chip.setChecked(true);
+                } else {
+                    chip.setChecked(false);
+                }
+                chip.setOnCheckedChangeListener((compoundButton, b) -> {
+                    String text = (String) compoundButton.getTag();
+                    int id = compoundButton.getId();
+                    if (compoundButton.isChecked()) {
+                        Log.d(TAG, "Chip button \"" + text + "\" selected, ID: " + id);
+                        observation_type_ids = insertIntoArray(observation_type_ids, id);
+                    } else {
+                        Log.d(TAG, "Chip button \"" + text + "\" deselected, ID: " + id);
+                        observation_type_ids = removeFromArray(observation_type_ids, id);
+                    }
+                });
+                observation_types.addView(chip);
+            }
+
+        }
+    }
+
+    public boolean arrayContainsNumber(final int[] array, final int key) {
+        boolean value = ArrayUtils.contains(array, key);
+        Log.d(TAG, "Array " + Arrays.toString(array) + " is compared against number " + key + " and returned " + value);
+        return value;
+    }
+
+    private int[] insertIntoArray(int[] observation_type_ids, int new_id) {
+        if (observation_type_ids == null) {
+            int[] new_array = {new_id};
+            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
+            return new_array;
+        } else {
+            int len = observation_type_ids.length;
+            int[] new_array = new int[len + 1];
+            System.arraycopy(observation_type_ids, 0, new_array, 0, len);
+            new_array[len] = new_id;
+            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
+            return new_array;
+        }
+    }
+
+    private int[] removeFromArray(int[] observation_type_ids, int id) {
+        int len = observation_type_ids.length;
+        List<Integer> new_list = new ArrayList<>(len - 1);
+        for (int observation_type_id : observation_type_ids) {
+            if (observation_type_id != id) {
+                new_list.add(observation_type_id);
+            }
+        }
+        int[] new_array = new int[len - 1];
+        for (int i = 0; i < len - 1; i++) {
+            new_array[i] = new_list.get(i);
+        }
+        return new_array;
+    }
+
+    private int[] getArrayFromText(String string) {
+        String[] strings = string.replace("[", "").replace("]", "").split(", ");
+        int[] new_array = new int[strings.length];
+        for (int i = 0; i < strings.length; i++) {
+            new_array[i] = Integer.parseInt(strings[i]);
+        }
+        return new_array;
     }
 }

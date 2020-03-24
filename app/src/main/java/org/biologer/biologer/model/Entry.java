@@ -38,14 +38,15 @@ public class Entry {
     private int image_licence;
     private String time;
     private String habitat;
+    private String observation_type_ids;
 
-    @Generated(hash = 1632895889)
+    @Generated(hash = 1642965041)
     public Entry(Long id, Long taxonId, String taxonSuggestion, String year, String month,
             String day, String comment, Integer number, String sex, Long stage,
             String deadOrAlive, String causeOfDeath, double lattitude, double longitude,
             Double accuracy, double elevation, String location, String slika1, String slika2,
             String slika3, String projectId, String foundOn, String data_licence,
-            int image_licence, String time, String habitat) {
+            int image_licence, String time, String habitat, String observation_type_ids) {
         this.id = id;
         this.taxonId = taxonId;
         this.taxonSuggestion = taxonSuggestion;
@@ -72,6 +73,7 @@ public class Entry {
         this.image_licence = image_licence;
         this.time = time;
         this.habitat = habitat;
+        this.observation_type_ids = observation_type_ids;
     }
     @Generated(hash = 1759844922)
     public Entry() {
@@ -231,5 +233,13 @@ public class Entry {
     }
     public void setHabitat(String habitat) {
         this.habitat = habitat;
+    }
+
+    public String getObservation_type_ids() {
+        return observation_type_ids;
+    }
+
+    public void setObservation_type_ids(String observation_type_ids) {
+        this.observation_type_ids = observation_type_ids;
     }
 }
