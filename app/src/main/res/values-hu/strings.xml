@@ -211,4 +211,5 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="only_wifi">Only on WiFi networks</string>
     <string name="any_network">On any network</string>
     <string name="always_ask">Always ask user</string>
+    <string name="found_on">Found on</string>
 </resources>

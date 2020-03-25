@@ -64,7 +64,6 @@ import org.biologer.biologer.model.greendao.TaxonDao;
 import org.biologer.biologer.model.greendao.TaxonLocalization;
 import org.biologer.biologer.model.greendao.TaxonLocalizationDao;
 import org.biologer.biologer.model.greendao.UserData;
-import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,7 +94,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
     private TextView tv_gps, tvStage, tv_latitude, tv_longitude, select_sex;
-    private EditText text_DeathComment, text_Comment, text_NumberOfSpecimens, et_Habitat;
+    private EditText text_DeathComment, text_Comment, text_NumberOfSpecimens, et_Habitat, et_FoundOn;
     AutoCompleteTextView acTextView;
     FrameLayout ib_pic1_frame, ib_pic2_frame, ib_pic3_frame;
     ImageView ib_pic1, ib_pic1_del, ib_pic2, ib_pic2_del, ib_pic3, ib_pic3_del, iv_map, iconTakePhotoCamera, iconTakePhotoGallery;
@@ -149,6 +148,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         text_Comment = findViewById(R.id.et_komentar);
         text_NumberOfSpecimens = findViewById(R.id.et_brojJedinki);
         et_Habitat = findViewById(R.id.et_habitat);
+        et_FoundOn = findViewById(R.id.et_found_on);
         // In order not to use spinner to choose sex, we will put this into EditText
         select_sex = findViewById(R.id.text_view_sex);
         select_sex.setOnClickListener(this);
@@ -417,6 +417,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (currentItem.getHabitat() != null) {
                 et_Habitat.setText(currentItem.getHabitat());
             }
+            if (currentItem.getFoundOn() != null) {
+                et_FoundOn.setText(currentItem.getFoundOn());
+            }
             // Load observation types and delete tag for photographed.
             observation_type_ids_string = currentItem.getObservation_type_ids();
             Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
@@ -598,6 +601,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
         String deathComment = (text_DeathComment.getText() != null) ? text_DeathComment.getText().toString() : "";
         String habitat = et_Habitat.getText() != null ? et_Habitat.getText().toString() : "";
+        String foundOn = et_FoundOn.getText() != null ? et_FoundOn.getText().toString() : "";
 
         if (isNewEntry()) {
             calendar = Calendar.getInstance();
@@ -618,7 +622,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day,
                     comment, numberOfSpecimens, maleFemale(), selectedStage, String.valueOf(!check_dead.isChecked()), deathComment,
                     currentLocation.latitude, currentLocation.longitude, acc, elev, "", image1, image2, image3,
-                    project_name, "", String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
+                    project_name, foundOn, String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time,
+                    habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
