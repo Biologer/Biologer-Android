@@ -59,7 +59,7 @@ public interface RetrofitService {
     Call<UserDataResponse> getUserData();
 
     @GET("/api/observation-types")
-    Call<ObservationTypesResponse> getObservationTypes();
+    Call<ObservationTypesResponse> getObservationTypes(@Query("updated_after") int updated_after);
 
     @POST("/api/elevation")
     Call<ElevationResponse> getElevation(@Query("latitude") double latitude,

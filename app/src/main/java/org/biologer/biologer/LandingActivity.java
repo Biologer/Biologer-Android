@@ -238,7 +238,9 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void updateObservationTypes() {
-        Call<ObservationTypesResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getObservationTypes();
+        String updated_at = SettingsManager.getObservationTypesUpdated();
+        String system_time = String.valueOf(System.currentTimeMillis()/1000);
+        Call<ObservationTypesResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
         call.enqueue(new Callback<ObservationTypesResponse>() {
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
@@ -269,6 +271,8 @@ public class LandingActivity extends AppCompatActivity
                 App.get().getDaoSession().getObservationTypeDao().insertOrReplaceInTx(obs_dao);
                 Log.d(TAG, "Observation types written to the database, there are " + App.get().getDaoSession().getObservationTypeDao().count() + " records");
                 Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypeLocalizationDao().count() + " records");
+                SettingsManager.setObservationTypesUpdated(system_time);
+                Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
             }
 
             @Override
