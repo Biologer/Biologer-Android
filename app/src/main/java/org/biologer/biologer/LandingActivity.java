@@ -319,10 +319,17 @@ public class LandingActivity extends AppCompatActivity
 
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
-            moveTaskToBack(true);
-            //super.onBackPressed();
+            return;
         }
+
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+            Log.d(TAG, "Back button pressed, while LandingFragment is active.");
+            getSupportFragmentManager().popBackStack();
+            super.onBackPressed();
+            return;
+        }
+
+        super.onBackPressed();
     }
 
     @Override
