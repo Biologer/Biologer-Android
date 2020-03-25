@@ -47,7 +47,7 @@
     <string name="enable_location_yes">Омогући</string>
     <string name="enable_location_no">Откажи</string>
     <string name="saved">Унос је сачуван.</string>
-    <string name="location_is_zero">Још увек није пронађена ваша локација. Да ли желите да сачекате на локацију или да откажете овај унос?</string>
+    <string name="location_is_zero">Још увек не знамо где сте. Да ли желите да сачекате на локацију или да откажете овај унос?</string>
     <string name="wait">Сачекај</string>
 
     <!--picture dialog-->
@@ -162,7 +162,7 @@
     <string name="notify_desc_taxa_paused">Преузимање новог таксономског стабла са сервера је паузирано.</string>
     <string name="notify_title_taxa_canceled">Ажурирање је отказано</string>
     <string name="notify_desc_taxa_canceled">Преузимање новог таксономског стабла са сервера је отказано.</string>
-    <string name="invalid_taxon_name">Изгледа да сте унели непознати таксон. Да ли желите да га ипак сачувате у Биологер?</string>
+    <string name="invalid_taxon_name">Изгледа да сте унели непознати таксон. Да ли желите да га ипак сачувате?</string>
     <string name="image_frame">Оквир слике</string>
     <string name="camera">Фото-апарат</string>
     <string name="gallery">Галерија</string>
@@ -201,13 +201,14 @@
     <string name="database_dev_version">За програмере</string>
     <string name="URL_address">Адреса: </string>
     <string name="no_image_on_storage">Изгледа да је слика обрисана са вашег уређаја! Погледајте последњи унос и обришите или замените слику пре него што наставите са слањем података.</string>
-    <string name="notifications_disabled1">Important notice! Notifications are not enabled for channel \"biologer_taxa\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled2">Important notice! Notifications are not enabled for channel \"biologer_entries\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled">Important notice: notifications are not enabled! This meand that Biologer will not be able to receive species list or upload your records online. Enabling notifications is required for most of application core functionalities.</string>
-    <string name="auto_download">Auto download and upload</string>
-    <string name="auto_download_desc">Allows data to be automatically downloaded and uploaded withought user intervention.</string>
-    <string name="only_wifi">Only on WiFi networks</string>
-    <string name="any_network">On any network</string>
-    <string name="always_ask">Always ask user</string>
-    <string name="found_on">Found on</string>
+    <string name="notifications_disabled1">Важна напомена! Обавештења су онемогућена на каналу „biologer_taxa“. Биологер неће моћи да преузме списак врста са мреже, што је неопходно да би програм исправно уписивао називе врста уз ваше теренске налазе.</string>
+    <string name="notifications_disabled2">Важна напомена! Обавештења су онемогућена на каналу „biologer_entries“. Биологер неће моћи да шаље ваше теренске налазе на сервер, што је једна од кључних могућности ове апликације.</string>
+    <string name="notifications_disabled">Важна напомена! Обавештења су онемогућена! То значи да Биологер неће моћи да преузима списак врста, нити да шаље ваше налазе на сервер. За већину основних могућности овог програма морате да омогућите обавештења у подешавањима вашег Андроид уређаја.</string>
+    <string name="auto_download">Сам пошаљи и преузми</string>
+    <string name="auto_download_desc">Дозвољава програму да сам преузима и шаље податке без помоћи корисника. Подразумевано се подаци шаљу када је доступна бежична мрежа.</string>
+    <string name="only_wifi">Само на бежичној мрежи (WiFi)</string>
+    <string name="any_network">На било којој мрежи</string>
+    <string name="always_ask">Увек питај корисника</string>
+    <string name="found_on">Нађено на</string>
+
 </resources>

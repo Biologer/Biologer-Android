@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">Biologer</string>
 
     <!--  Login  -->
@@ -47,7 +47,7 @@
     <string name="enable_location_yes">Omogući</string>
     <string name="enable_location_no">Otkaži</string>
     <string name="saved">Unos je sačuvan.</string>
-    <string name="location_is_zero">Još uvek nije pronađena vaša lokacija. Da li želite da sačekate na lokaciju ili da otkažete ovaj unos?</string>
+    <string name="location_is_zero">Još uvek ne znamo gde ste. Da li želite da sačekate na lokaciju ili da otkažete ovaj unos?</string>
     <string name="wait">Sačekaj</string>
 
     <!--picture dialog-->
@@ -162,7 +162,7 @@
     <string name="notify_desc_taxa_paused">Preuzimanje novog taksonomskog stabla sa servera je pauzirano.</string>
     <string name="notify_title_taxa_canceled">Ažuriranje je otkazano</string>
     <string name="notify_desc_taxa_canceled">Preuzimanje novog taksonomskog stabla sa servera je otkazano.</string>
-    <string name="invalid_taxon_name">Izgleda da ste uneli nepoznati takson. Da li želite da ga ipak sačuvate u Biologer?</string>
+    <string name="invalid_taxon_name">Izgleda da ste uneli nepoznati takson. Da li želite da ga ipak sačuvate?</string>
     <string name="image_frame">Okvir slike</string>
     <string name="camera">Foto-aparat</string>
     <string name="gallery">Galerija</string>
@@ -201,13 +201,14 @@
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">Adresa: </string>
     <string name="no_image_on_storage">Izgleda da je slika obrisana sa vašeg uređaja! Pogledajte poslednji unos i obrišite ili zamenite sliku pre nego što nastavite sa slanjem podataka.</string>
-    <string name="notifications_disabled1">Important notice! Notifications are not enabled for channel \"biologer_taxa\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled2">Important notice! Notifications are not enabled for channel \"biologer_entries\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled">Important notice: notifications are not enabled! This meand that Biologer will not be able to receive species list or upload your records online. Enabling notifications is required for most of application core functionalities.</string>
-    <string name="auto_download">Auto download and upload</string>
-    <string name="auto_download_desc">Allows data to be automatically downloaded and uploaded withought user intervention.</string>
-    <string name="only_wifi">Only on WiFi networks</string>
-    <string name="any_network">On any network</string>
-    <string name="always_ask">Always ask user</string>
-    <string name="found_on">Found on</string>
+    <string name="notifications_disabled1">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_taxa“. Biologer neće moći da preuzme spisak vrsta sa mreže, što je neophodno da bi program ispravno upisivao nazive vrsta uz vaše terenske nalaze.</string>
+    <string name="notifications_disabled2">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_entries“. Biologer neće moći da šalje vaše terenske nalaze na server, što je jedna od ključnih mogućnosti ove aplikacije.</string>
+    <string name="notifications_disabled">Važna napomena! Obaveštenja su onemogućena! To znači da Biologer neće moći da preuzima spisak vrsta, niti da šalje vaše nalaze na server. Za većinu osnovnih mogućnosti ovog programa morate da omogućite obaveštenja u podešavanjima vašeg Android uređaja.</string>
+    <string name="auto_download">Sam pošalji i preuzmi</string>
+    <string name="auto_download_desc">Dozvoljava programu da sam preuzima i šalje podatke bez pomoći korisnika. Podrazumevano se podaci šalju kada je dostupna bežična mreža.</string>
+    <string name="only_wifi">Samo na bežičnoj mreži (WiFi)</string>
+    <string name="any_network">Na bilo kojoj mreži</string>
+    <string name="always_ask">Uvek pitaj korisnika</string>
+    <string name="found_on">Nađeno na</string>
+
 </resources>
