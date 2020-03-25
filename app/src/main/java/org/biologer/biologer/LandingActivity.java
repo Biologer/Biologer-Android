@@ -55,7 +55,6 @@ public class LandingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     FrameLayout progressBar;
-    private String last_updated_taxa;
     private String totalSpeciesOnline;
     private String totalSpeciesDao;
     BroadcastReceiver receiver;
@@ -103,19 +102,16 @@ public class LandingActivity extends AppCompatActivity
         // Check if there is network available and run the commands...
         String network_type = isNetworkAvailable();
         if (network_type.equals("connected") || network_type.equals("wifi")) {
-            updateTaxa(network_type);
             updateLicenses();
             updateObservationTypes();
-
-            // Upload entries if there are some! And if the right preferences are selected...
-            if (App.get().getDaoSession().getEntryDao().count() != 0) {
-                if (how_to_use_network.equals("all")) {
+            // AUTO upload/download if the right preferences are selected...
+            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                     uploadRecords();
-                } if (how_to_use_network.equals("wifi") && network_type.equals("wifi")) {
-                    uploadRecords();
-                }
+                    updateTaxa("keep going");
+            } else {
+                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                updateTaxa("ask");
             }
-
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
@@ -172,8 +168,9 @@ public class LandingActivity extends AppCompatActivity
     }
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
-    private void updateTaxa(String connection_type) {
-        Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(1, 1, 0);
+    private void updateTaxa(String should_ask) {
+        int updated_at = Integer.parseInt(SettingsManager.getTaxaDatabaseUpdated());
+        Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(1, 1, updated_at);
         call.enqueue(new Callback<TaksoniResponse>() {
             @Override
             public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
@@ -181,39 +178,30 @@ public class LandingActivity extends AppCompatActivity
                     // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
                     TaksoniResponse taksoniResponse = response.body();
                     if(taksoniResponse != null) {
-                        last_updated_taxa = Long.toString(taksoniResponse.getMeta().getLastUpdatedAt());
+                        int server_updated_at = (int) taksoniResponse.getMeta().getLastUpdatedAt();
                         String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
-                        totalSpeciesOnline = Long.toString(taksoniResponse.getMeta().getLastPage());
-                        totalSpeciesDao = String.valueOf(App.get().getDaoSession().getTaxonDao().count());
-                        if (last_updated_taxa.equals(SettingsManager.getTaxaDatabaseUpdated())) {
+                        if (server_updated_at <= updated_at) {
                             Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
-                            Log.d(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
-                        }
-                        if (!skip_this.equals("0") && last_updated_taxa.equals(skip_this)) {
-                            Log.i(TAG,"User chooses to skip updating this version of taxonomic database. Nothing to do here!");
-                        }
-                        else {
-                            Log.i(TAG, "Taxa database on the server (version: " + last_updated_taxa + ") seems to be newer that your version (" + SettingsManager.getTaxaDatabaseUpdated() + ").");
-                            Log.d(TAG, "There are total of " + totalSpeciesOnline + " taxa online and a total of " + totalSpeciesDao + " entries in the database.");
-
-                            // If user choose to update data on any network, just do it!
-                            if (how_to_use_network.equals("all")) {
-                                Log.d(TAG, "The user chooses to update taxa on any network, fetching taxa started automatically.");
-                                startFetchingTaxa();
-                            }
-                            // If user choose to update only on wifi
-                            if (how_to_use_network.equals("wifi") && connection_type.equals("wifi")) {
-                                Log.d(TAG, "There is WiFi network available, fetching taxa started automatically.");
-                                startFetchingTaxa();
+                        } else {
+                            if (!skip_this.equals("0") && server_updated_at == Integer.parseInt(skip_this)) {
+                                Log.i(TAG, "User chooses to skip updating this version of taxonomic database. Nothing to do here!");
                             } else {
-                                Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
-                                if (SettingsManager.getTaxaDatabaseUpdated().equals("0")) {
-                                    // If the online database is empty and user skips updating ask him on the next program startup
-                                    buildAlertUpdateTaxa(getString(R.string.database_empty), getString(R.string.contin), getString(R.string.skip));
+                                Log.i(TAG, "Taxa database on the server (version: " + server_updated_at + ") seems to be newer that your version (" + updated_at + ").");
+
+                                // If user choose to update data on any network, just do it!
+                                if (should_ask.equals("keep going")) {
+                                    Log.d(TAG, "The user chooses to update taxa on any network, fetching automatically.");
+                                    startFetchingTaxa();
                                 } else {
-                                    // If the online database is more recent and user skips updating don’t ask him again
-                                    buildAlertUpdateTaxa(getString(R.string.new_database_available), getString(R.string.yes), getString(R.string.no));
-                                    SettingsManager.setSkipTaxaDatabaseUpdate(last_updated_taxa);
+                                    Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
+                                    if (updated_at == 0) {
+                                        // If the online database is empty and user skips updating ask him on the next program startup
+                                        buildAlertUpdateTaxa(getString(R.string.database_empty), getString(R.string.contin), getString(R.string.skip));
+                                    } else {
+                                        // If the online database is more recent and user skips updating don’t ask him again
+                                        buildAlertUpdateTaxa(getString(R.string.new_database_available), getString(R.string.yes), getString(R.string.no));
+                                        SettingsManager.setSkipTaxaDatabaseUpdate(String.valueOf(server_updated_at));
+                                    }
                                 }
                             }
                         }
@@ -366,9 +354,14 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void uploadRecords() {
-        final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
-        uploadRecords.setAction(UploadRecords.ACTION_START);
-        startService(uploadRecords);
+        if (App.get().getDaoSession().getEntryDao().count() != 0) {
+            Log.d(TAG, "Uploading entries to the online database.");
+            final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
+            uploadRecords.setAction(UploadRecords.ACTION_START);
+            startService(uploadRecords);
+        } else {
+            Log.d(TAG, "No entries to upload to the online database.");
+        }
     }
 
     @Override
