@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import org.biologer.biologer.model.ObservationType;
-import org.biologer.biologer.model.Taxon;
-
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,10 +20,6 @@ public class ObservationTypes {
     private String slug;
     @JsonProperty("translations")
     private List<ObservationTypesTranslations> translations;
-
-    public ObservationType toObservationType(){
-        return new ObservationType(Long.valueOf(id), slug);
-    }
 
     public Integer getId() {
         return id;

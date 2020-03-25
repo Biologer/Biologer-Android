@@ -24,14 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.model.APIEntry;
-import org.biologer.biologer.model.Entry;
+import org.biologer.biologer.model.greendao.Entry;
 import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.UploadFileResponse;
 import org.biologer.biologer.model.network.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,8 +46,6 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static org.json.JSONArray.*;
 
 public class UploadRecords extends Service {
 

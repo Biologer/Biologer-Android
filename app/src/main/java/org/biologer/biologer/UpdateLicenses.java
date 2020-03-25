@@ -7,12 +7,11 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 import android.util.Log;
 
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.UserData;
+import org.biologer.biologer.model.greendao.UserData;
 import org.biologer.biologer.model.network.UserDataResponse;
 import org.biologer.biologer.model.network.UserDataSer;
 

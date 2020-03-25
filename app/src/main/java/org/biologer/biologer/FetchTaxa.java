@@ -12,8 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;import android.util.Log;
 
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.Stage;
-import org.biologer.biologer.model.TaxonLocalization;
+import org.biologer.biologer.model.greendao.Stage;
+import org.biologer.biologer.model.greendao.TaxonLocalization;
 import org.biologer.biologer.model.network.Stage6;
 import org.biologer.biologer.model.network.TaksoniResponse;
 import org.biologer.biologer.model.network.Taxa;

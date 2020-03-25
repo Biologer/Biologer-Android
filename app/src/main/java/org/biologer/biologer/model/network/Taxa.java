@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.biologer.biologer.model.Taxon;
+import org.biologer.biologer.model.greendao.Taxon;
 
 public class Taxa {
 

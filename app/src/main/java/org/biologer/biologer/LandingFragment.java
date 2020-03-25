@@ -19,7 +19,7 @@ import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 import org.biologer.biologer.adapters.Adapter;
 import org.biologer.biologer.bus.DeleteEntryFromList;
-import org.biologer.biologer.model.Entry;
+import org.biologer.biologer.model.greendao.Entry;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;

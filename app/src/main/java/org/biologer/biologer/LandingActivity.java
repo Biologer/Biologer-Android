@@ -35,11 +35,9 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import org.biologer.biologer.model.ObservationType;
-import org.biologer.biologer.model.ObservationTypeLocalization;
+import org.biologer.biologer.model.greendao.ObservationTypesData;
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.UserData;
-import org.biologer.biologer.model.network.ObservationTypes;
+import org.biologer.biologer.model.greendao.UserData;
 import org.biologer.biologer.model.network.ObservationTypesResponse;
 import org.biologer.biologer.model.network.ObservationTypesTranslations;
 import org.biologer.biologer.model.network.TaksoniResponse;
@@ -244,33 +242,28 @@ public class LandingActivity extends AppCompatActivity
         call.enqueue(new Callback<ObservationTypesResponse>() {
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
-                ObservationTypesResponse observations = response.body();
-                assert observations != null;
-                ObservationTypes[] obs = observations.getData();
-                int len = obs.length;
-                ObservationType[] obs_dao = new ObservationType[obs.length];
-                for (int i = 0; i < len; i++) {
-                    ObservationType ot = obs[i].toObservationType();
-                    Log.d(TAG, "Observation type ID: " + ot.getId() + "; Slug: " + ot.getSlug());
-                    obs_dao[i] = ot;
+                ObservationTypesResponse observationsResponse = response.body();
+                assert observationsResponse != null;
+                org.biologer.biologer.model.network.ObservationTypes[] obs = observationsResponse.getData();
+                for (int i = 0; i < obs.length; i++) {
+                    Log.d(TAG, "Observation type ID: " + obs[i].getId() + "; Slug: " + obs[i].getSlug());
 
                     // Save translations in a separate table...
                     List<ObservationTypesTranslations> observation_translations = obs[i].getTranslations();
-                    ObservationTypeLocalization[] localizations = new ObservationTypeLocalization[observation_translations.size()];
+                    ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
                     for (int j = 0; j < observation_translations.size(); j++) {
-                        ObservationTypeLocalization localization = new ObservationTypeLocalization();
-                        localization.setObservationId(ot.getId());
-                        localization.setId(observation_translations.get(j).getId());
+                        ObservationTypesData localization = new ObservationTypesData();
+                        localization.setObservationId(obs[i].getId().longValue());
+                        localization.setSlug(obs[i].getSlug());
+                        localization.setLocaleId(observation_translations.get(j).getId());
                         localization.setLocale(observation_translations.get(j).getLocale());
                         localization.setName(observation_translations.get(j).getName());
                         localizations[j] = localization;
                     }
-                    App.get().getDaoSession().getObservationTypeLocalizationDao().insertOrReplaceInTx(localizations);
+                    App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
 
                 }
-                App.get().getDaoSession().getObservationTypeDao().insertOrReplaceInTx(obs_dao);
-                Log.d(TAG, "Observation types written to the database, there are " + App.get().getDaoSession().getObservationTypeDao().count() + " records");
-                Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypeLocalizationDao().count() + " records");
+                Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
                 SettingsManager.setObservationTypesUpdated(system_time);
                 Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
             }
@@ -499,6 +492,7 @@ public class LandingActivity extends AppCompatActivity
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         preferences.edit().clear().apply();
         SettingsManager.setTaxaDatabaseUpdated("0");
+        SettingsManager.setObservationTypesUpdated("0");
         SettingsManager.setProjectName(null);
         SettingsManager.setTaxaLastPageFetched("1");
         // Maybe also to delete database...

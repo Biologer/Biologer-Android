@@ -1,4 +1,4 @@
-package org.biologer.biologer.model;
+package org.biologer.biologer.model.greendao;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
@@ -40,7 +40,7 @@ public class Stage {
     public long getStageId() {
         return this.stageId;
     }
-    void setStageId(long stageId) {
+    public void setStageId(long stageId) {
         this.stageId = stageId;
     }
     public long getTaxonId() {

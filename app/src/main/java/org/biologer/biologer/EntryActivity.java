@@ -23,7 +23,6 @@ import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
-import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -55,16 +54,17 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
 
-import org.biologer.biologer.model.Entry;
-import org.biologer.biologer.model.ObservationTypeDao;
-import org.biologer.biologer.model.ObservationTypeLocalizationDao;
-import org.biologer.biologer.model.Stage;
-import org.biologer.biologer.model.StageDao;
-import org.biologer.biologer.model.Taxon;
-import org.biologer.biologer.model.TaxonDao;
-import org.biologer.biologer.model.TaxonLocalization;
-import org.biologer.biologer.model.TaxonLocalizationDao;
-import org.biologer.biologer.model.UserData;
+import org.biologer.biologer.model.greendao.Entry;
+import org.biologer.biologer.model.greendao.ObservationTypesData;
+import org.biologer.biologer.model.greendao.ObservationTypesDataDao;
+import org.biologer.biologer.model.greendao.Stage;
+import org.biologer.biologer.model.greendao.StageDao;
+import org.biologer.biologer.model.greendao.Taxon;
+import org.biologer.biologer.model.greendao.TaxonDao;
+import org.biologer.biologer.model.greendao.TaxonLocalization;
+import org.biologer.biologer.model.greendao.TaxonLocalizationDao;
+import org.biologer.biologer.model.greendao.UserData;
+import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +72,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -331,9 +330,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (isNewEntry()) {
             Log.i(TAG, "Starting new entry.");
             getLocation(100, 2);
-            int id_for_observed_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
-                    .where(ObservationTypeDao.Properties.Slug.eq("observed"))
-                    .list().get(0).getId().intValue();
+            int id_for_observed_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                    .where(ObservationTypesDataDao.Properties.Slug.eq("observed"))
+                    .list().get(0).getObservationId().intValue();
             Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
             observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
         } else {
@@ -424,9 +423,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             observation_type_ids = getArrayFromText(observation_type_ids_string);
             if (image1 != null || image2 != null || image3 != null) {
                 Log.d(TAG, "Removing image tag just in case images got deleted.");
-                int id_photo_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
-                        .where(ObservationTypeDao.Properties.Slug.eq("photographed"))
-                        .list().get(0).getId().intValue();
+                int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                        .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
+                        .list().get(0).getObservationId().intValue();
                 observation_type_ids = removeFromArray(observation_type_ids, id_photo_tag);
             }
         }
@@ -657,9 +656,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
-            int id_photo_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
-                    .where(ObservationTypeDao.Properties.Slug.eq("photographed"))
-                    .list().get(0).getId().intValue();
+            int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                    .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
+                    .list().get(0).getObservationId().intValue();
             Log.d(TAG, "Photographed tag has ID: " + id_photo_tag);
             observation_type_ids = insertIntoArray(observation_type_ids, id_photo_tag);
         }
@@ -1275,31 +1274,31 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void fillObservationTypes() {
 
-        long number_of_observation_types = App.get().getDaoSession().getObservationTypeDao().queryBuilder().count();
+        long number_of_observation_types = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                .where(ObservationTypesDataDao.Properties.Locale.eq(locale_script))
+                .count();
+
         Log.d(TAG, "Filling types of observations with " + locale_script + " script names. Total of " + number_of_observation_types + " entries.");
 
         for (int i = 0; i < number_of_observation_types; i++) {
-            String observation_tag = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
-                    .list().get(i).getSlug();
+            ObservationTypesData observation_type = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                    .where(ObservationTypesDataDao.Properties.Locale.eq(locale_script))
+                    .list().get(i);
+            String slug = observation_type.getSlug();
+            int observation_id = observation_type.getObservationId().intValue();
 
-            Long observation_id = App.get().getDaoSession().getObservationTypeDao().queryBuilder()
-                    .list().get(i).getId();
-            if (observation_tag.equals("observed") || observation_tag.equals("photographed")) {
-                Log.d(TAG, "Ignoring Chip for " + observation_tag + " with ID " + observation_id);
+            if (slug.equals("observed") || slug.equals("photographed")) {
+                Log.d(TAG, "Ignoring Chip for " + slug + " with ID " + observation_type.getObservationId());
             } else {
-                Log.d(TAG, "Adding Chip for " + observation_tag + " with ID " + observation_id);
+                Log.d(TAG, "Adding Chip for " + slug + " with ID " + observation_type.getObservationId());
                 Chip chip = new Chip(this);
                 // This selects the type of Chip to add. We are adding Filter Chips that are checkable.
                 ChipDrawable chipDrawable = ChipDrawable.createFromAttributes(this, null, 0, R.style.Widget_MaterialComponents_Chip_Filter);
                 chip.setChipDrawable(chipDrawable);
-                chip.setId(observation_id.intValue());
-                chip.setTag(observation_tag);
-                String observation_text = App.get().getDaoSession().getObservationTypeLocalizationDao().queryBuilder()
-                        .where(ObservationTypeLocalizationDao.Properties.ObservationId.eq(observation_id))
-                        .where(ObservationTypeLocalizationDao.Properties.Locale.eq(locale_script))
-                        .list().get(0).getName();
-                chip.setText(observation_text);
-                if (arrayContainsNumber(observation_type_ids, observation_id.intValue())) {
+                chip.setId(observation_id);
+                chip.setTag(slug);
+                chip.setText(observation_type.getName());
+                if (arrayContainsNumber(observation_type_ids, observation_id)) {
                     chip.setChecked(true);
                 } else {
                     chip.setChecked(false);

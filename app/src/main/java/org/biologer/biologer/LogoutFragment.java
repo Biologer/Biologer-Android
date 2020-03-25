@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.biologer.biologer.model.UserData;
+import org.biologer.biologer.model.greendao.UserData;
 
 import java.util.List;
 import java.util.Objects;

@@ -13,10 +13,9 @@ import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.model.Entry;
-import org.biologer.biologer.model.Stage;
-import org.biologer.biologer.model.StageDao;
-import org.biologer.biologer.model.Taxon;
+import org.biologer.biologer.model.greendao.Entry;
+import org.biologer.biologer.model.greendao.Stage;
+import org.biologer.biologer.model.greendao.StageDao;
 
 import java.util.ArrayList;
 import java.util.List;

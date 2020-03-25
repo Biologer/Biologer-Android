@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 import org.biologer.biologer.model.LoginResponse;
 import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.UserData;
+import org.biologer.biologer.model.greendao.UserData;
 import org.biologer.biologer.model.network.UserDataResponse;
 
 import java.util.regex.Matcher;

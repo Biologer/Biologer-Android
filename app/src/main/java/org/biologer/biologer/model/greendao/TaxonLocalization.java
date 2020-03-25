@@ -1,4 +1,4 @@
-package org.biologer.biologer.model;
+package org.biologer.biologer.model.greendao;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -56,26 +56,26 @@ public class TaxonLocalization {
     public void setTranslationId(long translationID) {
         this.translationID = translationID;
     }
-    String getLocale() { return this.locale; }
-    void setLocale(String locale) {
+    public String getLocale() { return this.locale; }
+    public void setLocale(String locale) {
         this.locale = locale;
     }
-    long getTranslationID() {
+    public long getTranslationID() {
         return this.translationID;
     }
-    void setTranslationID(long translationID) {
+    public void setTranslationID(long translationID) {
         this.translationID = translationID;
     }
-    String getNativeName() {
+    public String getNativeName() {
         return this.nativeName;
     }
-    void setNativeName(String nativeName) {
+    public void setNativeName(String nativeName) {
         this.nativeName = nativeName;
     }
     public String getLatinAndNativeName() {
         return this.latinAndNativeName;
     }
-    void setLatinAndNativeName(String latinAndNativeName) {
+    public void setLatinAndNativeName(String latinAndNativeName) {
         this.latinAndNativeName = latinAndNativeName;
     }
     }

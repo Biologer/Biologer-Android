@@ -1,4 +1,4 @@
-package org.biologer.biologer.model;
+package org.biologer.biologer.model.greendao;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;

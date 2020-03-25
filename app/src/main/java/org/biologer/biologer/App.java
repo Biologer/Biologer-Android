@@ -5,8 +5,8 @@ import android.app.NotificationManager;
 import android.os.Build;
 import androidx.multidex.MultiDexApplication;
 
-import org.biologer.biologer.model.DaoMaster;
-import org.biologer.biologer.model.DaoSession;
+import org.biologer.biologer.model.greendao.DaoMaster;
+import org.biologer.biologer.model.greendao.DaoSession;
 import org.greenrobot.greendao.database.Database;
 
 /**
