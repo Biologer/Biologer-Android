@@ -57,7 +57,7 @@ public class Parent {
     @JsonProperty("description")
     private Object description;
     @JsonProperty("translations")
-    private List<Translation_> translations = null;
+    private List<TaxaTranslations> taxaTranslations = null;
 
     @JsonProperty("id")
     public long getId() {
@@ -210,13 +210,13 @@ public class Parent {
     }
 
     @JsonProperty("translations")
-    public List<Translation_> getTranslations() {
-        return translations;
+    public List<TaxaTranslations> getTaxaTranslations() {
+        return taxaTranslations;
     }
 
     @JsonProperty("translations")
-    public void setTranslations(List<Translation_> translations) {
-        this.translations = translations;
+    public void setTaxaTranslations(List<TaxaTranslations> taxaTranslations) {
+        this.taxaTranslations = taxaTranslations;
     }
 
 }

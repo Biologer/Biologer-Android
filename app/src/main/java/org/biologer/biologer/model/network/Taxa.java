@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.biologer.biologer.model.greendao.Taxon;
-
 public class Taxa {
 
     @JsonProperty("id")
@@ -31,6 +29,10 @@ public class Taxa {
     private boolean allochthonous;
     @JsonProperty("invasive")
     private boolean invasive;
+    @JsonProperty("can_edit")
+    private boolean can_edit;
+    @JsonProperty("can_delete")
+    private boolean can_delete;
     @JsonProperty("rank_translation")
     private String rankTranslation;
     @JsonProperty("native_name")
@@ -38,17 +40,13 @@ public class Taxa {
     @JsonProperty("description")
     private Object description;
     @JsonProperty("translations")
-    private List<Translation> translations = null;
+    private List<TaxaTranslations> taxaTranslations = null;
     @JsonProperty("parent")
     private Parent parent;
     @JsonProperty("stages")
     private List<Stage6> stages = null;
     @JsonProperty("activity")
     private List<Object> activity = null;
-
-    public Taxon toTaxon(){
-        return new Taxon(id, name);
-    }
 
     @JsonProperty("id")
     public long getId() {
@@ -191,13 +189,13 @@ public class Taxa {
     }
 
     @JsonProperty("translations")
-    public List<Translation> getTranslations() {
-        return translations;
+    public List<TaxaTranslations> getTaxaTranslations() {
+        return taxaTranslations;
     }
 
     @JsonProperty("translations")
-    public void setTranslations(List<Translation> translations) {
-        this.translations = translations;
+    public void setTaxaTranslations(List<TaxaTranslations> taxaTranslations) {
+        this.taxaTranslations = taxaTranslations;
     }
 
     @JsonProperty("parent")
@@ -230,4 +228,19 @@ public class Taxa {
         this.activity = activity;
     }
 
+    public boolean isCan_edit() {
+        return can_edit;
+    }
+
+    public void setCan_edit(boolean can_edit) {
+        this.can_edit = can_edit;
+    }
+
+    public boolean isCan_delete() {
+        return can_delete;
+    }
+
+    public void setCan_delete(boolean can_delete) {
+        this.can_delete = can_delete;
+    }
 }

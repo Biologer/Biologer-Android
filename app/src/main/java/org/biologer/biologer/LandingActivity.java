@@ -231,16 +231,16 @@ public class LandingActivity extends AppCompatActivity
                 ObservationTypesResponse observationsResponse = response.body();
                 assert observationsResponse != null;
                 org.biologer.biologer.model.network.ObservationTypes[] obs = observationsResponse.getData();
-                for (int i = 0; i < obs.length; i++) {
-                    Log.d(TAG, "Observation type ID: " + obs[i].getId() + "; Slug: " + obs[i].getSlug());
+                for (org.biologer.biologer.model.network.ObservationTypes ob : obs) {
+                    Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
 
                     // Save translations in a separate table...
-                    List<ObservationTypesTranslations> observation_translations = obs[i].getTranslations();
+                    List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
                     ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
                     for (int j = 0; j < observation_translations.size(); j++) {
                         ObservationTypesData localization = new ObservationTypesData();
-                        localization.setObservationId(obs[i].getId().longValue());
-                        localization.setSlug(obs[i].getSlug());
+                        localization.setObservationId(ob.getId().longValue());
+                        localization.setSlug(ob.getSlug());
                         localization.setLocaleId(observation_translations.get(j).getId());
                         localization.setLocale(observation_translations.get(j).getLocale());
                         localization.setName(observation_translations.get(j).getName());
@@ -377,16 +377,12 @@ public class LandingActivity extends AppCompatActivity
         setUploadIconVisibility();
     }
 
-    protected void buildAlertUpdateTaxa(String message, String yes, String no) {
+    protected void buildAlertUpdateTaxa(String message, String yes_string, String no_string) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(getString(R.string.new_database_available))
+        builder.setMessage(message)
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                    startFetchingTaxa();
-                })
-                .setNegativeButton(getString(R.string.no), (dialog, id) -> {
-                    dialog.cancel();
-                });
+                .setPositiveButton(yes_string, (dialog, id) -> startFetchingTaxa())
+                .setNegativeButton(no_string, (dialog, id) -> dialog.cancel());
         final AlertDialog alert = builder.create();
         alert.show();
     }
@@ -492,10 +488,11 @@ public class LandingActivity extends AppCompatActivity
         SettingsManager.setProjectName(null);
         SettingsManager.setTaxaLastPageFetched("1");
         // Maybe also to delete database...
-        App.get().getDaoSession().getTaxonDao().deleteAll();
+        App.get().getDaoSession().getEntryDao().deleteAll();
+        App.get().getDaoSession().getObservationTypesDataDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();
+        App.get().getDaoSession().getTaxonDataDao().deleteAll();
         App.get().getDaoSession().getUserDataDao().deleteAll();
-        App.get().getDaoSession().getTaxonLocalizationDao().deleteAll();
     }
 
     private void showLandingFragment() {

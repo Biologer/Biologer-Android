@@ -143,7 +143,7 @@ public class UpdateLicenses extends Service {
         SettingsManager.setProjectName(null);
         SettingsManager.setTaxaLastPageFetched("1");
         // Maybe also to delete database...
-        App.get().getDaoSession().getTaxonDao().deleteAll();
+        App.get().getDaoSession().getTaxonDataDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();
         App.get().getDaoSession().getUserDataDao().deleteAll();
     }

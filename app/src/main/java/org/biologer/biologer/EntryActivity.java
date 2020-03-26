@@ -59,11 +59,10 @@ import org.biologer.biologer.model.greendao.ObservationTypesData;
 import org.biologer.biologer.model.greendao.ObservationTypesDataDao;
 import org.biologer.biologer.model.greendao.Stage;
 import org.biologer.biologer.model.greendao.StageDao;
-import org.biologer.biologer.model.greendao.Taxon;
-import org.biologer.biologer.model.greendao.TaxonDao;
-import org.biologer.biologer.model.greendao.TaxonLocalization;
-import org.biologer.biologer.model.greendao.TaxonLocalizationDao;
+import org.biologer.biologer.model.greendao.TaxonData;
+import org.biologer.biologer.model.greendao.TaxonDataDao;
 import org.biologer.biologer.model.greendao.UserData;
+import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -228,22 +227,26 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 handler.removeCallbacks(runnable);
 
-                final String input_text = String.valueOf(s);
+                final String typed_name = String.valueOf(s);
 
                 runnable = () -> {
                     /*
                     Get the list of taxa from the GreenDao database
                      */
-                    List<TaxonLocalization> taxaList = App.get().getDaoSession().getTaxonLocalizationDao()
-                            .queryBuilder()
-                            .where(TaxonLocalizationDao.Properties.Locale.eq(locale_script),
-                                    TaxonLocalizationDao.Properties.LatinAndNativeName.like("%" + input_text + "%"))
-                            .limit(10)
-                            .list();
+
+                    QueryBuilder<TaxonData> query = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                    query.where(
+                            query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                    TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                            query.or(TaxonDataDao.Properties.Locale.eq(locale_script),
+                                    TaxonDataDao.Properties.Locale.eq("en")));
+                    query.limit(10);
+                    List<TaxonData> taxaList = query.list();
+
                     String[] taxaNames = new String[taxaList.size()];
                     for (int i = 0; i < taxaList.size(); i++) {
                         // Get the latin names
-                        taxaNames[i] = taxaList.get(i).getLatinAndNativeName();
+                        taxaNames[i] = taxaList.get(i).getLatinNativeNames();
                     }
                     ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
                     acTextView.setAdapter(adapter1);
@@ -253,9 +256,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Update the UI elements
                      */
                     // Enable stage entry
-                    if (getSelectedTaxonId() != null) {
+                    TaxonData taxonData = getSelectedTaxon();
+                    if (taxonData != null) {
                         // Check if the taxon has stages. If not hide the stages dialog.
-                        if (isStageAvailable()) {
+                        if (isStageAvailable(taxonData)) {
                             stages.setVisibility(View.VISIBLE);
                         }
                         Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
@@ -472,7 +476,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             return true;
         }
         if (id == R.id.action_save) {
-            saveEntry();
+            saveEntry1();
         }
         return true;
     }
@@ -550,22 +554,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     /*
-    /  This calls other functions to get the values, check the validity of
-    /  the data and to finally save it into the entry
+    /  PART 1: Check if taxon exist in GreenDao database
     */
-    private void saveEntry() {
+    private void saveEntry1() {
         // Insure that the taxon is entered correctly
-        Long taxonID = getSelectedTaxonId();
-        if (taxonID == null) {
+        TaxonData taxon = getSelectedTaxon();
+        if (taxon == null) {
             Log.d(TAG, "The taxon does not exist in GreenDao database. Asking user to save it as is.");
             buildAlertMessageInvalidTaxon();
         } else {
-            Log.d(TAG, "The taxon with ID " + taxonID + " selected. Checking coordinates and saving the entry!");
-            entryChecker(taxonID);
+            Log.d(TAG, "The taxon with ID " + taxon.getTaxonId() + " selected. Checking coordinates and saving the entry!");
+            saveEntry2(taxon);
         }
     }
 
-    private void entryChecker(Long taxon_id) {
+    /*
+    /  PART 2: Check if the coordinates are OK
+    */
+    private void saveEntry2(TaxonData taxon) {
         // If the location is not loaded, warn the user and
         // don’t send crappy data into the online database!
         if (currentLocation.latitude == 0) {
@@ -579,22 +585,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         if (currentLocation.latitude > 0 && (acc <= 25)) {
-            if (taxon_id == null) {
+            if (taxon == null) {
                 Log.d(TAG, "Saving taxon with unknown ID as simple text.");
-                Taxon taxon = new Taxon(null, acTextView.getText().toString());
-                entrySaver(taxon);
+                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(), null, null);
+                entrySaver(taxon_noId);
             } else {
-                Log.d(TAG, "Saving taxon with known ID.");
-                Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                        .where(TaxonDao.Properties.Id.eq(taxon_id))
-                        .unique();
+                Log.d(TAG, "Saving taxon with known ID: " + taxon.getTaxonId());
                 entrySaver(taxon);
             }
         }
     }
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
-    private void entrySaver(final Taxon taxon) {
+    private void entrySaver(final TaxonData taxon) {
         Stage stage = (tvStage.getTag() != null) ? (Stage) tvStage.getTag() : null;
         String comment = text_Comment.getText().toString();
         Integer numberOfSpecimens = (text_NumberOfSpecimens.getText().toString().trim().length() > 0) ? Integer.valueOf(text_NumberOfSpecimens.getText().toString()) : null;
@@ -611,8 +614,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             String month = fullDate.substring(3, 5);
             String year = fullDate.substring(6, 10);
             String time = fullDate.substring(11, 16);
-            Long taxon_id = taxon.getId();
-            String taxon_name = taxon.getName();
+            Long taxon_id = taxon.getTaxonId();
+            String taxon_name = taxon.getLatinName();
             String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
             getPhotoTag();
             observation_type_ids_string = Arrays.toString(observation_type_ids);
@@ -630,7 +633,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             finish();
         } else { // if the entry exist already
             currentItem.setTaxonId(taxon.getId());
-            currentItem.setTaxonSuggestion(taxon.getName());
+            currentItem.setTaxonSuggestion(taxon.getLatinName());
             currentItem.setComment(comment);
             currentItem.setNumber(numberOfSpecimens);
             currentItem.setSex(maleFemale());
@@ -684,22 +687,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         return return_sex;
     }
 
-    private Boolean isStageAvailable() {
-        Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                .where(TaxonDao.Properties.Name.eq(getLatinName()))
-                .unique();
+    private Boolean isStageAvailable(TaxonData taxonData) {
         stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                .where(StageDao.Properties.TaxonId.eq(taxon.getId()))
+                .where(StageDao.Properties.TaxonId.eq(taxonData.getTaxonId()))
                 .list();
         return stageList.size() != 0;
     }
 
     private void getStageForTaxon() {
-        Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                .where(TaxonDao.Properties.Name.eq(getLatinName()))
+        TaxonData taxon = App.get().getDaoSession().getTaxonDataDao().queryBuilder()
+                .where(TaxonDataDao.Properties.LatinName.eq(getLatinName()))
+                .limit(1)
                 .unique();
         stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                .where(StageDao.Properties.TaxonId.eq(taxon.getId()))
+                .where(StageDao.Properties.TaxonId.eq(taxon.getTaxonId()))
                 .list();
         if (stageList != null) {
             final String[] taxon_stages = new String[stageList.size()];
@@ -1116,7 +1117,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 .setPositiveButton(getString(R.string.save_anyway), (dialog, id) -> {
                     // Save custom taxon with no ID.
                     // Just send null ID and do the rest in entryChecker.
-                    entryChecker(null);
+                    saveEntry2(null);
                     dialog.dismiss();
                 })
                 .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
@@ -1148,10 +1149,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 })
                 .setNegativeButton(getString(R.string.save_anyway), (dialog, id) -> {
                     // Save the taxon
-                    Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                            .where(TaxonDao.Properties.Id.eq(getSelectedTaxonId()))
-                            .unique();
-                    entrySaver(taxon);
+                    entrySaver(getSelectedTaxon());
                 });
         final AlertDialog alert = builder.create();
         alert.show();
@@ -1250,13 +1248,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private Long getSelectedTaxonId() {
-        Taxon taxon = App.get().getDaoSession().getTaxonDao().queryBuilder()
-                .where(TaxonDao.Properties.Name.eq(getLatinName()))
+    private TaxonData getSelectedTaxon() {
+        TaxonData taxon = App.get().getDaoSession().getTaxonDataDao().queryBuilder()
+                .where(TaxonDataDao.Properties.LatinName.eq(getLatinName()))
+                .limit(1)
                 .unique();
         if (taxon != null) {
-            Log.d(TAG, "Selected taxon latin name is: " + taxon.getName() + ". Taxon ID: " + taxon.getId());
-            return taxon.getId();
+            Log.d(TAG, "Selected taxon latin name is: " + taxon.getLatinName() + ". Taxon ID: " + taxon.getId());
+            return taxon;
         } else {
             return null;
         }

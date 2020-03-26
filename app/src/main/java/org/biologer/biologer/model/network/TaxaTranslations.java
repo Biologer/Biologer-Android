@@ -1,4 +1,3 @@
-
 package org.biologer.biologer.model.network;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "native_name",
     "description"
 })
-public class Translation_ {
+public class TaxaTranslations {
 
     @JsonProperty("id")
     private long id;

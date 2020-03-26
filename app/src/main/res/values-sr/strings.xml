@@ -210,5 +210,8 @@
     <string name="any_network">На било којој мрежи</string>
     <string name="always_ask">Увек питај корисника</string>
     <string name="found_on">Нађено на</string>
+    <string name="is_male">Мужјак</string>
+    <string name="is_female">Женка</string>
+    <string name="unknown_sex">Непознат пол</string>
 
 </resources>

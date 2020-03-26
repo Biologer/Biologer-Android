@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="unknown_sex">Nepoznat spol</string>
-    <string name="is_male">Mužjak</string>
-    <string name="is_female">Ženka</string>
-</resources>

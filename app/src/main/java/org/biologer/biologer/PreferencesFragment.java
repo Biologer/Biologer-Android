@@ -76,8 +76,8 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                     @Override
                     public void run() {
                         try {
-                            sleep(2000);
                             while (FetchTaxa.isInstanceCreated()) {
+                                sleep(5000);
                                 // Run this loop on every 2 seconds while updating taxa
                                 Log.d(TAG, "Running the empty loop until taxa updated...");
                             }

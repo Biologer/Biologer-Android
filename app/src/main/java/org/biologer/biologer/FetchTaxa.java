@@ -13,11 +13,11 @@ import androidx.core.app.NotificationCompat;import android.util.Log;
 
 import org.biologer.biologer.model.RetrofitClient;
 import org.biologer.biologer.model.greendao.Stage;
-import org.biologer.biologer.model.greendao.TaxonLocalization;
+import org.biologer.biologer.model.greendao.TaxonData;
 import org.biologer.biologer.model.network.Stage6;
 import org.biologer.biologer.model.network.TaksoniResponse;
 import org.biologer.biologer.model.network.Taxa;
-import org.biologer.biologer.model.network.Translation;
+import org.biologer.biologer.model.network.TaxaTranslations;
 
 import java.util.List;
 
@@ -118,9 +118,8 @@ public class FetchTaxa extends Service {
         updated_after = 0;
         last_page = 1;
         SettingsManager.setTaxaLastPageFetched("1");
-        App.get().getDaoSession().getTaxonDao().deleteAll();
+        App.get().getDaoSession().getTaxonDataDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();
-        App.get().getDaoSession().getTaxonLocalizationDao().deleteAll();
     }
 
     private void notificationInitiate() {
@@ -154,7 +153,7 @@ public class FetchTaxa extends Service {
             Log.d(TAG, "Fetching taxa from the page 1.");
         } else {
             fetchTaxa(last_page + 1);
-            Log.d(TAG, "Fetching taxa from the page " + String.valueOf(last_page + 1));
+            Log.d(TAG, "Fetching taxa from the page " + (last_page + 1));
         }
     }
 
@@ -261,7 +260,7 @@ public class FetchTaxa extends Service {
     }
 
     public void fetchTaxa(final int page) {
-            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 250, updated_after);
+            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 100, updated_after);
             call.enqueue(new CallbackWithRetry<TaksoniResponse>(call) {
                 @Override
                 public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
@@ -280,14 +279,12 @@ public class FetchTaxa extends Service {
                             last_page = page;
                             notificationUpdateProgress(progressStatus);
 
-                            Log.i(TAG, "Fetching page " + page + " of " + String.valueOf(totalPages) + " total pages");
+                            Log.i(TAG, "Fetching page " + page + " of " + totalPages + " total pages");
 
                             for (Taxa taxon : taxa) {
-                                App.get().getDaoSession().getTaxonDao().insertOrReplace(taxon.toTaxon());
-                                // Log.d(TAG, "Taxon name " + taxon.getName());
-
-                                long taxon_id = taxon.getId();
+                                Long taxon_id = taxon.getId();
                                 String taxon_latin_name = taxon.getName();
+                                // Log.d(TAG, "Adding taxon " + taxon_name + " with ID: " + taxon_id);
 
                                 List<Stage6> stages = taxon.getStages();
                                 Stage[] final_stages = new Stage[stages.size()];
@@ -297,18 +294,19 @@ public class FetchTaxa extends Service {
                                 }
                                 App.get().getDaoSession().getStageDao().insertInTx(final_stages);
 
-                                List<Translation> translations = taxon.getTranslations();
-                                TaxonLocalization[] final_translations = new TaxonLocalization[translations.size()];
-                                for (int i = 0; i < translations.size(); i++) {
-                                    Translation translation = translations.get(i);
-                                    String native_name = translation.getNativeName();
-                                    if (native_name != null && !native_name.isEmpty()) {
-                                        final_translations[i] = new TaxonLocalization(null, taxon_latin_name, taxon_id, translation.getId(), translation.getLocale(), native_name, taxon_latin_name + " (" + native_name + ")");
-                                    } else {
-                                        final_translations[i] = new TaxonLocalization(null, taxon_latin_name, taxon_id, translation.getId(), translation.getLocale(), native_name, taxon_latin_name);
-                                    }
+                                List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
+                                TaxonData[] final_translations = new TaxonData[taxaTranslations.size()];
+                                for (int i = 0; i < taxaTranslations.size(); i++) {
+                                    TaxaTranslations taxaTranslation = taxaTranslations.get(i);
+                                    final_translations[i] = new TaxonData(
+                                            null,
+                                            taxon_id,
+                                            taxon_latin_name,
+                                            taxaTranslation.getLocale(),
+                                            taxaTranslation.getNativeName());
+                                    Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
                                 }
-                                App.get().getDaoSession().getTaxonLocalizationDao().insertInTx(final_translations);
+                                App.get().getDaoSession().getTaxonDataDao().insertInTx(final_translations);
                             }
 
                             // If we just finished fetching taxa data for the last page, we can stop showing

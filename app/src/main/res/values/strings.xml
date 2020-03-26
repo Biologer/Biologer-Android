@@ -210,5 +210,8 @@
     <string name="any_network">On any network</string>
     <string name="always_ask">Always ask user</string>
     <string name="found_on">Found on</string>
+    <string name="is_male">Male</string>
+    <string name="is_female">Female</string>
+    <string name="unknown_sex">Unknown sex</string>
 
 </resources>
