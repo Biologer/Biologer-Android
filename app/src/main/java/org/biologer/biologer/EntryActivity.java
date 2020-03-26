@@ -787,7 +787,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
     }
 
-    // Check for camera permission and run function to take photo
+    // Check for camera permission and run function takePhoto()
     private void takePhotoFromCamera() {
         Log.i(TAG, "Taking photo from Camera.");
         if (ContextCompat.checkSelfPermission(this,

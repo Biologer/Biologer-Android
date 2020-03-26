@@ -55,8 +55,6 @@ public class LandingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     FrameLayout progressBar;
-    private String totalSpeciesOnline;
-    private String totalSpeciesDao;
     BroadcastReceiver receiver;
     String how_to_use_network;
 
@@ -384,8 +382,6 @@ public class LandingActivity extends AppCompatActivity
         builder.setMessage(getString(R.string.new_database_available))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                    int toUpdate = Integer.parseInt(totalSpeciesOnline) - Integer.parseInt(totalSpeciesDao);
-                    Log.i(TAG, "There are " + toUpdate + " taxa to be updated.");
                     startFetchingTaxa();
                 })
                 .setNegativeButton(getString(R.string.no), (dialog, id) -> {
