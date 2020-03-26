@@ -3,55 +3,61 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!--
     <PreferenceCategory
-        android:title="@string/data_synchronisation"
+        android:title="@string/preferences_data_entry"
         app:iconSpaceReserved="false">
-        -->
-    <CheckBoxPreference
-        android:key="advanced_interface"
-        android:title="@string/advanced_entry"
-        android:summary="@string/advanced_entry_desc"
-        app:iconSpaceReserved="false"
-        android:defaultValue="false"/>
-    <ListPreference
-        android:key="auto_download"
-        android:title="@string/auto_download"
-        android:summary="@string/auto_download_desc"
-        app:iconSpaceReserved="false"
-        android:defaultValue="wifi"/>
-    <ListPreference
-        android:key="data_license"
-        android:title="@string/data_license"
-        android:summary="@string/choose_dlicense"
-        app:iconSpaceReserved="false"
-        android:defaultValue="0"/>
-    <ListPreference
-        android:key="image_license"
-        android:title="@string/image_license"
-        android:summary="@string/choose_ilicense"
-        app:iconSpaceReserved="false"
-        android:defaultValue="0" />
-    <Preference
-        android:title="@string/update_taxa"
-        android:key="taxa_button"
-        android:summary="@string/update_taxa_desc"
-        app:iconSpaceReserved="false"/>
-    <!--
-    </PreferenceCategory>-->
-    <!--
-        <PreferenceCategory
-            android:title="@string/additional_options"
+        <CheckBoxPreference
+            android:key="advanced_interface"
+            android:title="@string/advanced_entry"
+            android:summary="@string/advanced_entry_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"/>
+        <CheckBoxPreference
+            android:key="english_names"
+            android:title="@string/allow_english_names"
+            android:summary="@string/allow_english_names_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/preferences_user_settings"
+        app:iconSpaceReserved="false">
+        <EditTextPreference
+            android:key="project_name"
+            android:title="@string/project_name"
+            android:dialogTitle="@string/project_name"
+            android:summary="@string/choose_project"
+            app:iconSpaceReserved="false"
+            android:defaultValue="" />
+        <ListPreference
+            android:key="data_license"
+            android:title="@string/data_license"
+            android:summary="@string/choose_dlicense"
+            app:iconSpaceReserved="false"
+            android:defaultValue="0"/>
+        <ListPreference
+            android:key="image_license"
+            android:title="@string/image_license"
+            android:summary="@string/choose_ilicense"
+            app:iconSpaceReserved="false"
+            android:defaultValue="0" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+            android:title="@string/preferences_other"
             app:iconSpaceReserved="false">
-            -->
-    <EditTextPreference
-        android:key="project_name"
-        android:title="@string/project_name"
-        android:dialogTitle="@string/project_name"
-        android:summary="@string/choose_project"
-        app:iconSpaceReserved="false"
-        android:defaultValue="" />
-    <!--
-    </PreferenceCategory>-->
+        <ListPreference
+            android:key="auto_download"
+            android:title="@string/auto_download"
+            android:summary="@string/auto_download_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="wifi"/>
+        <Preference
+            android:title="@string/update_taxa"
+            android:key="taxa_button"
+            android:summary="@string/update_taxa_desc"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

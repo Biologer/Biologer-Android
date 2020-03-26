@@ -215,4 +215,9 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="is_male">Male</string>
     <string name="is_female">Female</string>
     <string name="unknown_sex">Unknown sex</string>
+    <string name="preferences_data_entry">Data entry</string>
+    <string name="allow_english_names">Always list english names</string>
+    <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
+    <string name="preferences_user_settings">User account</string>
+    <string name="preferences_other">Other settings</string>
 </resources>

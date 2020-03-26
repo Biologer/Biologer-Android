@@ -233,13 +233,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     /*
                     Get the list of taxa from the GreenDao database
                      */
-
                     QueryBuilder<TaxonData> query = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                    query.where(
-                            query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                    TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
-                            query.or(TaxonDataDao.Properties.Locale.eq(locale_script),
-                                    TaxonDataDao.Properties.Locale.eq("en")));
+                    if (preferences.getBoolean("english_names", false)) {
+                        query.where(
+                                query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                        TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                query.or(TaxonDataDao.Properties.Locale.eq(locale_script),
+                                        TaxonDataDao.Properties.Locale.eq("en")));
+                    } else {
+                        query.where(
+                                query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                        TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                TaxonDataDao.Properties.Locale.eq(locale_script));
+                    }
                     query.limit(10);
                     List<TaxonData> taxaList = query.list();
 
