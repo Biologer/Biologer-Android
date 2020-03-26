@@ -259,7 +259,7 @@ public class UploadRecords extends Service {
         apiEntry.setElevation((int) entry.getElevation());
         apiEntry.setNote(entry.getComment());
         apiEntry.setSex(entry.getSex());
-        apiEntry.setNumber(entry.getNumber());
+        apiEntry.setNumber(entry.getNoSpecimens());
         apiEntry.setProject(entry.getProjectId());
         apiEntry.setFoundOn(entry.getFoundOn());
         apiEntry.setStageId(entry.getStage());

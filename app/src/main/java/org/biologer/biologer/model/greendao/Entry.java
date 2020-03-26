@@ -19,7 +19,7 @@ public class Entry {
     private String month;
     private String day;
     private String comment;
-    private Integer number;
+    private Integer noSpecimens;
     private String sex;
     private Long stage;
     private String deadOrAlive;
@@ -40,13 +40,13 @@ public class Entry {
     private String habitat;
     private String observation_type_ids;
 
-    @Generated(hash = 1642965041)
-    public Entry(Long id, Long taxonId, String taxonSuggestion, String year, String month,
-            String day, String comment, Integer number, String sex, Long stage,
-            String deadOrAlive, String causeOfDeath, double lattitude, double longitude,
-            Double accuracy, double elevation, String location, String slika1, String slika2,
-            String slika3, String projectId, String foundOn, String data_licence,
-            int image_licence, String time, String habitat, String observation_type_ids) {
+    @Generated(hash = 335098683)
+    public Entry(Long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
+            String comment, Integer noSpecimens, String sex, Long stage, String deadOrAlive,
+            String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
+            String location, String slika1, String slika2, String slika3, String projectId,
+            String foundOn, String data_licence, int image_licence, String time, String habitat,
+            String observation_type_ids) {
         this.id = id;
         this.taxonId = taxonId;
         this.taxonSuggestion = taxonSuggestion;
@@ -54,7 +54,7 @@ public class Entry {
         this.month = month;
         this.day = day;
         this.comment = comment;
-        this.number = number;
+        this.noSpecimens = noSpecimens;
         this.sex = sex;
         this.stage = stage;
         this.deadOrAlive = deadOrAlive;
@@ -108,11 +108,11 @@ public class Entry {
     public void setComment(String comment) {
         this.comment = comment;
     }
-    public Integer getNumber() {
-        return this.number;
+    public Integer getNoSpecimens() {
+        return this.noSpecimens;
     }
-    public void setNumber(Integer number) {
-        this.number = number;
+    public void setNoSpecimens(Integer noSpecimens) {
+        this.noSpecimens = noSpecimens;
     }
     public String getSex() {
         return this.sex;

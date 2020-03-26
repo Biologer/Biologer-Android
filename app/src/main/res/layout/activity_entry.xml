@@ -217,6 +217,53 @@
 
                             </RelativeLayout>
 
+                            <RelativeLayout
+                                android:id="@+id/both_sexes_no"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:visibility="gone">
+
+                                <View android:id="@+id/central_line1"
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:layout_centerHorizontal="true"/>
+
+                                <com.google.android.material.textfield.TextInputLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignEnd="@id/central_line1"
+                                    app:boxBackgroundColor="@color/white"
+                                    android:layout_alignParentStart="true">
+                                    <com.google.android.material.textfield.TextInputEditText
+                                        android:id="@+id/et_number_of_males"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_marginStart="6dp"
+                                        android:hint="@string/number_of_males"
+                                        android:maxLength="10"
+                                        android:layout_marginEnd="6dp"
+                                        android:inputType="number" />
+                                </com.google.android.material.textfield.TextInputLayout>
+
+                                <com.google.android.material.textfield.TextInputLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignStart="@id/central_line1"
+                                    app:boxBackgroundColor="@color/white"
+                                    android:layout_alignParentEnd="true">
+                                    <com.google.android.material.textfield.TextInputEditText
+                                        android:id="@+id/et_number_of_females"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_marginStart="6dp"
+                                        android:hint="@string/number_of_females"
+                                        android:maxLength="10"
+                                        android:layout_marginEnd="6dp"
+                                        android:inputType="number" />
+                                </com.google.android.material.textfield.TextInputLayout>
+
+                            </RelativeLayout>
+
                             <com.google.android.material.chip.ChipGroup
                                 android:id="@+id/observation_types"
                                 android:layout_width="wrap_content"

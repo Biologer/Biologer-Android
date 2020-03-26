@@ -210,13 +210,18 @@
     <string name="any_network">На било којој мрежи</string>
     <string name="always_ask">Увек питај корисника</string>
     <string name="found_on">Нађено на</string>
-    <string name="is_male">Мужјак</string>
-    <string name="is_female">Женка</string>
+    <string name="is_male">Мушки</string>
+    <string name="is_female">Женски</string>
     <string name="unknown_sex">Непознат пол</string>
-    <string name="preferences_data_entry">Data entry</string>
-    <string name="allow_english_names">Always list english names</string>
-    <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
-    <string name="preferences_user_settings">User account</string>
-    <string name="preferences_other">Other settings</string>
+    <string name="preferences_data_entry">Унос података</string>
+    <string name="allow_english_names">Претражуј и називе на енглеском</string>
+    <string name="allow_english_names_desc">Дозвољава Биологеру да приказује и називе врста на енглеском чак и када је другачије подешен језик телефона</string>
+    <string name="preferences_user_settings">Кориснички налог</string>
+    <string name="preferences_other">Остала подешавања</string>
+    <string name="number_of_males">Број мужјака</string>
+    <string name="number_of_females">Број женки</string>
+    <string name="both_sexes">Оба пола</string>
+    <string name="both">Оба</string>
+    <string name="unknown_sex_short">Непознат</string>
 
 </resources>

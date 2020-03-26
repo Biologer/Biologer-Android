@@ -48,6 +48,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,13 +94,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
     private TextView tv_gps, tvStage, tv_latitude, tv_longitude, select_sex;
-    private EditText text_DeathComment, text_Comment, text_NumberOfSpecimens, et_Habitat, et_FoundOn;
+    private EditText text_DeathComment, text_Comment, et_NoSpecimens, et_NoMales, et_NoFemales, et_Habitat, et_FoundOn;
     AutoCompleteTextView acTextView;
     FrameLayout ib_pic1_frame, ib_pic2_frame, ib_pic3_frame;
     ImageView ib_pic1, ib_pic1_del, ib_pic2, ib_pic2_del, ib_pic3, ib_pic3_del, iv_map, iconTakePhotoCamera, iconTakePhotoGallery;
     private CheckBox check_dead;
     ChipGroup observation_types;
     LinearLayout detailedEntry;
+    RelativeLayout numberMalesFemales;
     private boolean save_enabled = false;
     private String image1, image2, image3;
     private SwipeRefreshLayout swipe;
@@ -145,7 +147,50 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         tvStage.setOnClickListener(this);
         text_DeathComment = findViewById(R.id.edit_text_death_comment);
         text_Comment = findViewById(R.id.et_komentar);
-        text_NumberOfSpecimens = findViewById(R.id.et_brojJedinki);
+        et_NoSpecimens = findViewById(R.id.et_brojJedinki);
+        et_NoSpecimens.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d(TAG, "Text for number of individuals changed.");
+                if (getSex().equals("both")) {
+                    numberMalesFemales.setVisibility(View.GONE);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+        et_NoMales = findViewById(R.id.et_number_of_males);
+        et_NoMales.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d(TAG, "Text for number of males changed.");
+                    et_NoSpecimens.setVisibility(View.GONE);
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+        et_NoFemales = findViewById(R.id.et_number_of_females);
+        et_NoFemales.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d(TAG, "Text for number of females changed.");
+                et_NoSpecimens.setVisibility(View.GONE);
+            }
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
         et_Habitat = findViewById(R.id.et_habitat);
         et_FoundOn = findViewById(R.id.et_found_on);
         // In order not to use spinner to choose sex, we will put this into EditText
@@ -180,6 +225,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
         detailedEntry = findViewById(R.id.detailed_entry);
+        numberMalesFemales = findViewById(R.id.both_sexes_no);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
@@ -376,8 +422,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (currentItem.getComment().length() != 0) {
                 text_Comment.setText(currentItem.getComment());
             }
-            if (currentItem.getNumber() != null) {
-                text_NumberOfSpecimens.setText(String.valueOf(currentItem.getNumber()));
+            if (currentItem.getNoSpecimens() != null) {
+                et_NoSpecimens.setText(String.valueOf(currentItem.getNoSpecimens()));
             }
             // Get the selected sex. If not selected set spinner to default...
             Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
@@ -594,19 +640,60 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (taxon == null) {
                 Log.d(TAG, "Saving taxon with unknown ID as simple text.");
                 TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(), null, null);
-                entrySaver(taxon_noId);
+                saveEntry3(taxon_noId);
             } else {
                 Log.d(TAG, "Saving taxon with known ID: " + taxon.getTaxonId());
-                entrySaver(taxon);
+                saveEntry3(taxon);
+            }
+        }
+    }
+
+    /*
+    /  PART 3: Check if both male and female entries should be created
+    */
+    private void saveEntry3(TaxonData taxon) {
+        String all_specimens_number = et_NoSpecimens.getText().toString();
+        String males_number = et_NoMales.getText().toString();
+        String females_number = et_NoFemales.getText().toString();
+        if (getSex().equals("male")) {
+            Log.d(TAG, "Only male individuals selected.");
+            entrySaver(taxon, all_specimens_number, "male");
+        }
+        if (getSex().equals("female")) {
+            Log.d(TAG, "Only female individuals selected.");
+            entrySaver(taxon, all_specimens_number, "female");
+        }
+        if (getSex().equals("")) {
+            Log.d(TAG, "No sex of individuals selected.");
+            entrySaver(taxon, all_specimens_number, "");
+        }
+        if (getSex().equals("both")) {
+            Log.d(TAG, "Both male and female individuals selected.");
+            if (!males_number.equals("") && !females_number.equals("")) {
+                Log.d(TAG, "Creating two entries, since both males and females are selected.");
+                entrySaver(taxon, males_number, "male");
+                entrySaver(taxon, females_number, "female");
+            }
+            if (!males_number.equals("") && females_number.equals("")) {
+                Log.d(TAG, "Creating one entry, since only " + males_number + " males selected.");
+                entrySaver(taxon, males_number, "male");
+            }
+            if (males_number.equals("") && !females_number.equals("")) {
+                Log.d(TAG, "Creating one entry, since only " + females_number + " females selected.");
+                entrySaver(taxon, females_number, "female");
+            }
+            else {
+                // TODO Implement both sexes tag when implemented online
+                entrySaver(taxon, all_specimens_number, "");
             }
         }
     }
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
-    private void entrySaver(final TaxonData taxon) {
+    private void entrySaver(TaxonData taxon, String specimens, String sex) {
         Stage stage = (tvStage.getTag() != null) ? (Stage) tvStage.getTag() : null;
         String comment = text_Comment.getText().toString();
-        Integer numberOfSpecimens = (text_NumberOfSpecimens.getText().toString().trim().length() > 0) ? Integer.valueOf(text_NumberOfSpecimens.getText().toString()) : null;
+        Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
         String deathComment = (text_DeathComment.getText() != null) ? text_DeathComment.getText().toString() : "";
         String habitat = et_Habitat.getText() != null ? et_Habitat.getText().toString() : "";
@@ -628,11 +715,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
-            Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day,
-                    comment, numberOfSpecimens, maleFemale(), selectedStage, String.valueOf(!check_dead.isChecked()), deathComment,
-                    currentLocation.latitude, currentLocation.longitude, acc, elev, "", image1, image2, image3,
-                    project_name, foundOn, String.valueOf(getGreenDaoDataLicense()), getGreenDaoImageLicense(), time,
-                    habitat, observation_type_ids_string);
+            Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage,
+                    String.valueOf(!check_dead.isChecked()), deathComment, currentLocation.latitude, currentLocation.longitude, acc,
+                    elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
+                    getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
             setResult(RESULT_OK);
@@ -641,8 +727,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.setTaxonId(taxon.getId());
             currentItem.setTaxonSuggestion(taxon.getLatinName());
             currentItem.setComment(comment);
-            currentItem.setNumber(numberOfSpecimens);
-            currentItem.setSex(maleFemale());
+            currentItem.setNoSpecimens(numberOfSpecimens);
+            currentItem.setSex(sex);
             currentItem.setStage(selectedStage);
             currentItem.setDeadOrAlive(String.valueOf(!check_dead.isChecked()));
             currentItem.setCauseOfDeath(deathComment);
@@ -678,19 +764,26 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private String maleFemale() {
-        String return_sex = "";
-        String[] sex = {getString(R.string.unknown_sex), getString(R.string.is_male), getString(R.string.is_female)};
+    private String getSex() {
+        String selected_sex = "";
+        String[] sex = {getString(R.string.unknown_sex_short), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both)};
         String sex_is = select_sex.getText().toString();
         int sex_id = Arrays.asList(sex).indexOf(sex_is);
         if (sex_id == 1) {
             Log.d(TAG, "Sex from spinner index 1 selected with value " + sex_is);
-            return_sex = "male";
-        } else if (sex_id == 2) {
-            Log.d(TAG, "Sex from spinner index 2 selected with value " + sex_is);
-            return_sex = "female";
+            return "male";
         }
-        return return_sex;
+        if (sex_id == 2) {
+            Log.d(TAG, "Sex from spinner index 2 selected with value " + sex_is);
+            return "female";
+        }
+        if (sex_id == 3) {
+            Log.d(TAG, "Sex from spinner index 3 selected with value " + sex_is);
+            return "both";
+        }
+        else {
+            return "";
+        }
     }
 
     private Boolean isStageAvailable(TaxonData taxonData) {
@@ -747,15 +840,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void getSexForList() {
-        final String[] sex = {getString(R.string.unknown_sex), getString(R.string.is_male), getString(R.string.is_female)};
+        final String[] sex = {getString(R.string.unknown_sex), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both_sexes)};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(sex, (dialogInterface, i) -> {
             if (sex[i].equals(getString(R.string.unknown_sex))) {
-                select_sex.setText(null);
+                select_sex.setText(getString(R.string.unknown_sex_short));
                 Log.d(TAG, "No sex is selected.");
-            } else {
+                numberMalesFemales.setVisibility(View.GONE);
+                et_NoSpecimens.setVisibility(View.VISIBLE);
+            } if (sex[i].equals(getString(R.string.both_sexes))) {
+                select_sex.setText(getString(R.string.both));
+                Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
+                numberMalesFemales.setVisibility(View.VISIBLE);
+            }
+            else {
                 select_sex.setText(sex[i]);
                 Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
+                numberMalesFemales.setVisibility(View.GONE);
+                et_NoSpecimens.setVisibility(View.VISIBLE);
             }
         });
         builder.show();
@@ -1155,7 +1257,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 })
                 .setNegativeButton(getString(R.string.save_anyway), (dialog, id) -> {
                     // Save the taxon
-                    entrySaver(getSelectedTaxon());
+                    saveEntry3(getSelectedTaxon());
                 });
         final AlertDialog alert = builder.create();
         alert.show();

@@ -220,4 +220,9 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
     <string name="preferences_user_settings">User account</string>
     <string name="preferences_other">Other settings</string>
+    <string name="number_of_males">Number of males</string>
+    <string name="number_of_females">Number of females</string>
+    <string name="both_sexes">Both sexes</string>
+    <string name="both">Both</string>
+    <string name="unknown_sex_short">Unknown</string>
 </resources>
