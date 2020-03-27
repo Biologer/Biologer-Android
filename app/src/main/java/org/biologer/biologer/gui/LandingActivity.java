@@ -396,9 +396,11 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void startFetchingTaxa() {
-        final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
-        fetchTaxa.setAction(FetchTaxa.ACTION_START);
-        startService(fetchTaxa);
+        if (!FetchTaxa.isInstanceCreated()) {
+            final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
+            fetchTaxa.setAction(FetchTaxa.ACTION_START);
+            startService(fetchTaxa);
+        }
     }
 
     protected void alertOKButton(String message) {

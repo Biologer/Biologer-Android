@@ -22,6 +22,7 @@ import org.biologer.biologer.network.JSON.TaxaTranslations;
 
 import java.util.List;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,6 +38,9 @@ public class FetchTaxa extends Service {
     public static final String ACTION_RESUME = "ACTION_RESUME";
     private String stop_fetching = "no";
     private static FetchTaxa instance = null;
+    static final String TASK_COMPLETED = "org.biologer.biologer.FetchTaxa.TASK_COMPLETED";
+
+    LocalBroadcastManager broadcaster;
 
     private int totalPages = 0;
     private static int updated_after = Integer.parseInt(SettingsManager.getTaxaDatabaseUpdated());
@@ -47,6 +51,7 @@ public class FetchTaxa extends Service {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        broadcaster = LocalBroadcastManager.getInstance(this);
         Log.d(TAG, "Running onCreate()");
     }
 
@@ -316,6 +321,7 @@ public class FetchTaxa extends Service {
                             if (isLastPage(page)) {
                                 // Inform the user of success
                                 Log.i(TAG, "All taxa were successfully updated from the server!");
+                                sendResult("success");
                                 // Stop the foreground service and update notification
                                 stopForeground(true);
                                 notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
@@ -359,12 +365,16 @@ public class FetchTaxa extends Service {
         return page == totalPages;
     }
 
-    public static int getProgressStatus() {
-        return progressStatus;
-    }
-
     // to check if the service is still running
     public static boolean isInstanceCreated() {
         return instance != null;
+    }
+
+    public void sendResult(String message) {
+        Log.d(TAG, "Sending the result to broadcaster! Message: " + message + ".");
+        Intent intent = new Intent(TASK_COMPLETED);
+        if(message != null)
+            intent.putExtra(TASK_COMPLETED, message);
+        broadcaster.sendBroadcast(intent);
     }
 }

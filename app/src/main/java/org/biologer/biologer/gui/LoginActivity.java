@@ -2,6 +2,7 @@ package org.biologer.biologer.gui;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 
@@ -47,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
     TextView tv_wrongEmail;
     TextView tv_devDatabase;
     Button loginButton;
-    // Get the old value for database from settings
     String database_name;
     ProgressDialog progressDialog;
 
@@ -110,12 +110,16 @@ public class LoginActivity extends AppCompatActivity {
         forgotPassTextView.setOnClickListener(this::onForgotPass);
 
         progressDialog = new ProgressDialog(LoginActivity.this);
+
+        et_username.setOnClickListener(view -> tv_devDatabase.setText(""));
+
+        et_password.setOnClickListener(view -> tv_devDatabase.setText(""));
     }
 
     private int getSpinnerIdFromUrl(String url) {
-        if (url.equals("https://biologer.org")) {return 0;};
-        if (url.equals("https://biologer.hr")) {return 1;};
-        if (url.equals("https://biologer.ba")) {return 2;};
+        if (url.equals("https://biologer.org")) {return 0;}
+        if (url.equals("https://biologer.hr")) {return 1;}
+        if (url.equals("https://biologer.ba")) {return 2;}
         return 3;
     }
 
@@ -154,7 +158,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-        // Activity starting after user selects a Database from the list
+    // Activity starting after user selects a Database from the list
     public class getDatabaseURL implements AdapterView.OnItemSelectedListener {
 
         public void onItemSelected(AdapterView<?> database, View view, int pos,long id) {
@@ -170,11 +174,12 @@ public class LoginActivity extends AppCompatActivity {
 
             SettingsManager.setDatabaseName(database_name);
 
-            String hint_text = getString(R.string.URL_address) + database_name;
+            String hint_text = getString(R.string.URL_address) + " " + database_name;
             tv_devDatabase.setText(hint_text);
-            tv_devDatabase.setTextColor(getResources().getColor(R.color.colorPrimary));
             if (database_name.equals("https://dev.biologer.org")) {
                 tv_devDatabase.setTextColor(getResources().getColor(R.color.warningRed));
+            } else {
+                tv_devDatabase.setTextColor(getResources().getColor(R.color.colorPrimary));
             }
         }
 

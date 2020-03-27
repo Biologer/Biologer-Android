@@ -1,11 +1,15 @@
 package org.biologer.biologer;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -15,6 +19,24 @@ import android.view.View;
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
+    private Preference preferenceButton;
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null) {
+                String message = intent.getStringExtra("org.biologer.biologer.FetchTaxa.TASK_COMPLETED");
+                if (message != null) {
+                    Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
+                    if (message.equals("success")) {
+                        Log.d(TAG, "Re-enabling preferences entry for fetching taxa.");
+                        preferenceButton.setEnabled(true);
+                        preferenceButton.setSummary(getString(R.string.update_taxa_desc));
+                    }
+                }
+            }
+        }
+    };
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -33,9 +55,9 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         }
         Log.d(TAG, "Loading preferences fragment");
 
-        ListPreference dataLicense = (ListPreference) findPreference("data_license");
-        ListPreference imageLicense = (ListPreference) findPreference("image_license");
-        ListPreference autoDownload = (ListPreference) findPreference("auto_download");
+        ListPreference dataLicense = findPreference("data_license");
+        ListPreference imageLicense = findPreference("image_license");
+        ListPreference autoDownload = findPreference("auto_download");
 
         if (dataLicense != null || imageLicense != null) {
             getLicences(dataLicense);
@@ -47,93 +69,57 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         }
 
         // Add button fot taxa sync process
-        final Preference button = findPreference("taxa_button");
-        // If already fetching taxa disable the fetch taxa button
-        if (FetchTaxa.isInstanceCreated()) {
-            assert button != null;
-            button.setEnabled(false);
-            button.setSummary(getString(R.string.updating_taxa_be_patient));
-        }
+        preferenceButton = findPreference("taxa_button");
 
-        assert button != null;
-        button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                // Disable the button first
-                button.setEnabled(false);
-                button.setSummary(getString(R.string.updating_taxa_be_patient));
-                // Start the service for fetching taxa
-                final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
-                fetchTaxa.setAction(FetchTaxa.ACTION_START_NEW);
-                Activity activity = getActivity();
-                if(activity != null) {
-                    // If the fetching is paused we would prefer to resume the activity rather than fetching data from the first page.
-                    activity.startService(fetchTaxa);
-                }
+        toggleFetchTaxaButton(preferenceButton);
 
-                // Start a thread to monitor taxa update and set user interface after the update is finished
-                Thread waitForTaxaUpdate = new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            while (FetchTaxa.isInstanceCreated()) {
-                                sleep(5000);
-                                // Run this loop on every 2 seconds while updating taxa
-                                Log.d(TAG, "Running the empty loop until taxa updated...");
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        } finally {
-                            Activity activity = getActivity();
-                            if(activity != null) {
-                                activity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        button.setEnabled(true);
-                                        button.setSummary(getString(R.string.update_taxa_desc));
-                                    }
-                                });
-                            }
-                        }
-                    }
-                };
-                waitForTaxaUpdate.start();
-
-                return true;
-            }
+        preferenceButton.setOnPreferenceClickListener(preference -> {
+            // Disable the button first
+            preferenceButton.setEnabled(false);
+            preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient));
+            // Start the service for fetching taxa
+            final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
+            fetchTaxa.setAction(FetchTaxa.ACTION_START_NEW);
+            Activity activity = getActivity();
+            assert activity != null;
+            activity.startService(fetchTaxa);
+            return true;
         });
 
         if (dataLicense != null) {
-            dataLicense.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Log.d(TAG, "Data license changed to: " + newValue);
-                    updateLicense();
-                    return true;
-                }
+            dataLicense.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d(TAG, "Data license changed to: " + newValue);
+                updateLicense();
+                return true;
             });
         }
 
         if (imageLicense != null) {
-            imageLicense.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Log.d(TAG, "Data license changed to: " + newValue);
-                    updateLicense();
-                    return true;
-                }
+            imageLicense.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d(TAG, "Data license changed to: " + newValue);
+                updateLicense();
+                return true;
             });
         }
 
         if (autoDownload != null) {
-            autoDownload.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object newValue) {
-                    Log.d(TAG, "Data license changed to: " + newValue);
-                    updateLicense();
-                    return true;
-                }
+            autoDownload.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d(TAG, "Data license changed to: " + newValue);
+                updateLicense();
+                return true;
             });
+        }
+    }
+
+    private void toggleFetchTaxaButton(Preference preference) {
+        // If already fetching taxa disable the fetch taxa button
+        assert preference != null;
+        if (FetchTaxa.isInstanceCreated()) {
+            preference.setEnabled(false);
+            preference.setSummary(getString(R.string.updating_taxa_be_patient));
+        } else {
+            preference.setEnabled(true);
+            preference.setSummary(getString(R.string.update_taxa_desc));
         }
     }
 
@@ -168,4 +154,25 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
             activity.startService(update_licences);
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() != null) {
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
+                    new IntentFilter("org.biologer.biologer.FetchTaxa.TASK_COMPLETED"));
+        }
+        Log.d(TAG, "Resuming Preferences Fragment.");
+        toggleFetchTaxaButton(preferenceButton);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getActivity() != null) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+        }
+        Log.d(TAG, "Pausing Preferences Fragment.");
+    }
+
 }
