@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 
@@ -220,15 +219,23 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         // Change the call according to the database selected
+        if (database_name.equals("https://biologer.org")) {
+            Log.d(TAG, "Serbian database selected.");
+            login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
+        }
         if (database_name.equals("https://biologer.hr")) {
+            Log.d(TAG, "Croatian database selected.");
             login = RetrofitClient.getService(database_name).login("password", "2", hrKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
         if (database_name.equals("https://biologer.ba")) {
+            Log.d(TAG, "Bosnian database selected.");
             login = RetrofitClient.getService(database_name).login("password", "2", baKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
-        else {
+        if (database_name.equals("https://dev.biologer.org")) {
+            Log.d(TAG, "Developmental database selected.");
             login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
+
         Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
 
         // Get the response from the call
@@ -248,7 +255,7 @@ public class LoginActivity extends AppCompatActivity {
                     tv_wrongPass.setText(R.string.wrong_creds);
                     loginButton.setEnabled(true);
                     progressDialog.dismiss();
-                    Log.d(TAG, String.valueOf(response.body()));
+                    Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
                 }
             }
             @Override

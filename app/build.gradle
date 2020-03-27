@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'org.greenrobot.greendao'
 
 repositories {
+    google()
     mavenCentral()
-    maven { url 'https://maven.google.com' }
     maven { url 'https://jitpack.io' }
     jcenter()
 }
@@ -16,8 +16,8 @@ android {
         // API level 19 = Android 4.4
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 51
-        versionName "1.9.17"
+        versionCode 52
+        versionName "1.9.18"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
