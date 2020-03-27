@@ -11,17 +11,19 @@ import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;import android.util.Log;
 
-import org.biologer.biologer.model.RetrofitClient;
+import org.biologer.biologer.gui.SplashActivity;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.model.greendao.Stage;
 import org.biologer.biologer.model.greendao.TaxonData;
-import org.biologer.biologer.model.network.Stage6;
-import org.biologer.biologer.model.network.TaksoniResponse;
-import org.biologer.biologer.model.network.Taxa;
-import org.biologer.biologer.model.network.TaxaTranslations;
+import org.biologer.biologer.network.JSON.Stage6;
+import org.biologer.biologer.network.JSON.TaksoniResponse;
+import org.biologer.biologer.network.JSON.Taxa;
+import org.biologer.biologer.network.JSON.TaxaTranslations;
 
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FetchTaxa extends Service {
@@ -260,8 +262,8 @@ public class FetchTaxa extends Service {
     }
 
     public void fetchTaxa(final int page) {
-            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 100, updated_after);
-            call.enqueue(new CallbackWithRetry<TaksoniResponse>(call) {
+            Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(page, 150, updated_after);
+            call.enqueue(new Callback<TaksoniResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
                     if (response.isSuccessful()) {
@@ -282,7 +284,7 @@ public class FetchTaxa extends Service {
                             Log.i(TAG, "Fetching page " + page + " of " + totalPages + " total pages");
 
                             for (Taxa taxon : taxa) {
-                                Long taxon_id = taxon.getId();
+                                long taxon_id = taxon.getId();
                                 String taxon_latin_name = taxon.getName();
                                 // Log.d(TAG, "Adding taxon " + taxon_name + " with ID: " + taxon_id);
 
@@ -304,7 +306,7 @@ public class FetchTaxa extends Service {
                                             taxon_latin_name,
                                             taxaTranslation.getLocale(),
                                             taxaTranslation.getNativeName());
-                                    Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
+                                    //Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
                                 }
                                 App.get().getDaoSession().getTaxonDataDao().insertInTx(final_translations);
                             }

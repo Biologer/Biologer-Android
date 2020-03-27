@@ -10,10 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 import android.util.Log;
 
-import org.biologer.biologer.model.RetrofitClient;
+import org.biologer.biologer.gui.LoginActivity;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.model.greendao.UserData;
-import org.biologer.biologer.model.network.UserDataResponse;
-import org.biologer.biologer.model.network.UserDataSer;
+import org.biologer.biologer.network.JSON.UserDataResponse;
+import org.biologer.biologer.network.JSON.UserDataSer;
 
 import java.util.List;
 

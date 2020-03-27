@@ -32,7 +32,7 @@ public class SettingsManager {
     public static void setDatabaseName(String databaseName) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(SettingsManager.KEY.DATABASE_NAME.toString(), databaseName);
-        editor.commit();
+        editor.apply();
     }
 
     public static String getDatabaseName() {
@@ -42,7 +42,7 @@ public class SettingsManager {
     public static void deleteToken(){
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.token.toString(), null);
-        editor.commit();
+        editor.apply();
     }
 
     public static void setToken(String token){
@@ -65,7 +65,7 @@ public class SettingsManager {
         return prefs.getString(KEY.GOOGLE_MAP_TYPE.toString(),"NORMAL");
     }
 
-    static void setProjectName(String project_name) {
+    public static void setProjectName(String project_name) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.PROJECT_NAME.toString(), project_name);
         editor.apply();
@@ -75,37 +75,37 @@ public class SettingsManager {
         return prefs.getString(KEY.PROJECT_NAME.toString(),null);
     }
 
-    static void setTaxaDatabaseUpdated(String taxaDatabaseUpdated) {
+    public static void setTaxaDatabaseUpdated(String taxaDatabaseUpdated) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_DATABASE_UPDATED.toString(), taxaDatabaseUpdated);
         editor.apply();
     }
 
-    static String getTaxaDatabaseUpdated() {
+    public static String getTaxaDatabaseUpdated() {
         return prefs.getString(KEY.TAXA_DATABASE_UPDATED.toString(),"0");
     }
 
-    static void setSkipTaxaDatabaseUpdate(String taxaDatabaseUpdate) {
+    public static void setSkipTaxaDatabaseUpdate(String taxaDatabaseUpdate) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString(), taxaDatabaseUpdate);
         editor.apply();
     }
 
-    static String getSkipTaxaDatabaseUpdate() {
+    public static String getSkipTaxaDatabaseUpdate() {
         return prefs.getString(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString(),"0");
     }
 
-    static void setObservationTypesUpdated(String observation_types_updated) {
+    public static void setObservationTypesUpdated(String observation_types_updated) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(), observation_types_updated);
         editor.apply();
     }
 
-    static String getObservationTypesUpdated() {
+    public static String getObservationTypesUpdated() {
         return prefs.getString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(),"0");
     }
 
-    static void setTaxaLastPageFetched(String last_page) {
+    public static void setTaxaLastPageFetched(String last_page) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_LAST_PAGE_FETCHED.toString(), last_page);
         editor.apply();

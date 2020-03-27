@@ -49,30 +49,31 @@
         </provider>
 
         <activity
-            android:name=".MapActivity"
+            android:name=".gui.MapActivity"
             android:label="@string/title_activity_map">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.EntryActivity" />
+                android:value="org.biologer.biologer.gui.EntryActivity" />
         </activity>
         <activity
-            android:name=".EntryActivity"
+            android:name=".gui.EntryActivity"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.LandingActivity" />
+                android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-        <activity android:name=".SplashActivity">
+        <activity android:name=".gui.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
+            android:name=".gui.LoginActivity"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustResize"
+            android:noHistory="true"/>
         <activity
-            android:name=".LandingActivity"
+            android:name=".gui.LandingActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -85,7 +86,7 @@
                     android:host="biologer.org" />
             </intent-filter>
         </activity>
-        <activity android:name=".IntroActivity" />
+        <activity android:name=".gui.IntroActivity" />
 
         <service android:name="org.biologer.biologer.FetchTaxa"
             android:enabled="true" />

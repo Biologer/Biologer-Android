@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context="org.biologer.biologer.AboutFragment">
+    tools:context="org.biologer.biologer.gui.AboutFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
@@ -21,7 +21,8 @@
             android:layout_marginLeft="40dp"
             android:layout_marginRight="40dp"
             android:layout_marginBottom="10dp"
-            android:src="@drawable/banner" />
+            android:src="@drawable/banner"
+            android:contentDescription="@string/Biologer" />
 
         <TextView
             android:layout_width="match_parent"

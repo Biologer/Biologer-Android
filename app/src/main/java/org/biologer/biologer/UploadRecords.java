@@ -23,11 +23,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.biologer.biologer.bus.DeleteEntryFromList;
-import org.biologer.biologer.model.APIEntry;
+import org.biologer.biologer.gui.SplashActivity;
+import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.model.greendao.Entry;
-import org.biologer.biologer.model.RetrofitClient;
-import org.biologer.biologer.model.UploadFileResponse;
-import org.biologer.biologer.model.network.APIEntryResponse;
+import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.JSON.UploadFileResponse;
+import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;

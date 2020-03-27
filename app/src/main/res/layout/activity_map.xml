@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="org.biologer.biologer.EntryActivity">
+    tools:context="org.biologer.biologer.gui.EntryActivity">
 
     <include
         layout="@layout/toolbar_main"
@@ -18,7 +18,7 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="org.biologer.biologer.MapActivity">
+        tools:context="org.biologer.biologer.gui.MapActivity">
 
         <EditText
             android:id="@+id/et_setAccuracy"
