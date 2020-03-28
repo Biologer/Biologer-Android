@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatButton;
 
 import android.util.Log;
@@ -61,7 +60,12 @@ public class LogoutFragment extends Fragment {
     }
 
     private void loginActivity() {
-        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        Activity activity = getActivity();
+        Intent intent = new Intent(activity, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        // But also close previous activity!
+        assert activity != null;
+        activity.finish();
     }
 }

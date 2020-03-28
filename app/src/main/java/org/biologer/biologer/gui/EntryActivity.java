@@ -660,40 +660,40 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         String females_number = et_NoFemales.getText().toString();
         if (getSex().equals("male")) {
             Log.d(TAG, "Only male individuals selected.");
-            entrySaver(taxon, all_specimens_number, "male");
+            entrySaver(taxon, all_specimens_number, "male", 1);
         }
         if (getSex().equals("female")) {
             Log.d(TAG, "Only female individuals selected.");
-            entrySaver(taxon, all_specimens_number, "female");
+            entrySaver(taxon, all_specimens_number, "female", 1);
         }
         if (getSex().equals("")) {
             Log.d(TAG, "No sex of individuals selected.");
-            entrySaver(taxon, all_specimens_number, "");
+            entrySaver(taxon, all_specimens_number, "", 1);
         }
         if (getSex().equals("both")) {
             Log.d(TAG, "Both male and female individuals selected.");
             if (!males_number.equals("") && !females_number.equals("")) {
                 Log.d(TAG, "Creating two entries, since both males and females are selected.");
-                entrySaver(taxon, males_number, "male");
-                entrySaver(taxon, females_number, "female");
+                entrySaver(taxon, males_number, "male", 1);
+                entrySaver(taxon, females_number, "female", 2);
             }
             if (!males_number.equals("") && females_number.equals("")) {
                 Log.d(TAG, "Creating one entry, since only " + males_number + " males selected.");
-                entrySaver(taxon, males_number, "male");
+                entrySaver(taxon, males_number, "male", 1);
             }
             if (males_number.equals("") && !females_number.equals("")) {
                 Log.d(TAG, "Creating one entry, since only " + females_number + " females selected.");
-                entrySaver(taxon, females_number, "female");
+                entrySaver(taxon, females_number, "female", 1);
             }
-            else {
-                // TODO Implement both sexes tag when implemented online
-                entrySaver(taxon, all_specimens_number, "");
+            if (males_number.equals("") && females_number.equals("")) {
+                Log.d(TAG, "No males and females number selected, saving a single entry.");
+                entrySaver(taxon, all_specimens_number, "", 1);
             }
         }
     }
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
-    private void entrySaver(TaxonData taxon, String specimens, String sex) {
+    private void entrySaver(TaxonData taxon, String specimens, String sex, int entry_id) {
         Stage stage = (tvStage.getTag() != null) ? (Stage) tvStage.getTag() : null;
         String comment = text_Comment.getText().toString();
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
@@ -702,7 +702,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         String habitat = et_Habitat.getText() != null ? et_Habitat.getText().toString() : "";
         String foundOn = et_FoundOn.getText() != null ? et_FoundOn.getText().toString() : "";
 
-        if (isNewEntry()) {
+        if (entry_id != 1 || isNewEntry()) {
             calendar = Calendar.getInstance();
             simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
             String fullDate = simpleDateFormat.format(calendar.getTime());
@@ -749,8 +749,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // Now just update the database with new data...
             App.get().getDaoSession().getEntryDao().updateInTx(currentItem);
             Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
-            //Intent intent1 = new Intent(this, LandingActivity.class);
-            //startActivity(intent1);
 
             setResult(RESULT_OK);
             finish();
