@@ -37,7 +37,6 @@ import android.widget.TextView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.FetchTaxa;
-import org.biologer.biologer.PreferencesFragment;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;

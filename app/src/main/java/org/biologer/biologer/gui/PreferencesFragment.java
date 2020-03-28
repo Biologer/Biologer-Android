@@ -1,4 +1,4 @@
-package org.biologer.biologer;
+package org.biologer.biologer.gui;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -16,6 +16,11 @@ import androidx.preference.PreferenceFragmentCompat;
 import android.util.Log;
 import android.view.View;
 
+import org.biologer.biologer.FetchTaxa;
+import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.UpdateLicenses;
+
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
@@ -28,7 +33,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 String message = intent.getStringExtra("org.biologer.biologer.FetchTaxa.TASK_COMPLETED");
                 if (message != null) {
                     Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
-                    if (message.equals("success")) {
+                    if (message.equals("fetched") || message.equals("paused") || message.equals("canceled")) {
                         Log.d(TAG, "Re-enabling preferences entry for fetching taxa.");
                         preferenceButton.setEnabled(true);
                         preferenceButton.setSummary(getString(R.string.update_taxa_desc));

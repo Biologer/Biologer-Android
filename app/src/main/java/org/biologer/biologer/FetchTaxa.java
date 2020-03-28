@@ -321,7 +321,7 @@ public class FetchTaxa extends Service {
                             if (isLastPage(page)) {
                                 // Inform the user of success
                                 Log.i(TAG, "All taxa were successfully updated from the server!");
-                                sendResult("success");
+                                sendResult("fetched");
                                 // Stop the foreground service and update notification
                                 stopForeground(true);
                                 notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
@@ -337,12 +337,14 @@ public class FetchTaxa extends Service {
                         // If user selected pause or cancel we will stop the script
                         if (stop_fetching.equals("pause")) {
                             Log.d(TAG, "Fetching of taxa data is paused by the user!");
+                            sendResult("paused");
                             notificationResumeFetchButton(progressStatus);
                             stopSelf();
                         }
 
                         if (stop_fetching.equals("cancel")) {
                             Log.d(TAG, "Fetching of taxa data is canceled by the user!");
+                            sendResult("canceled");
                             notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
                             stopSelf();
                         }
