@@ -105,7 +105,7 @@ public class LandingActivity extends AppCompatActivity
         areNotificationsEnabled();
 
         // Check if there is network available and run the commands...
-        String network_type = isNetworkAvailable();
+        String network_type = networkType();
         if (network_type.equals("connected") || network_type.equals("wifi")) {
             updateLicenses();
             updateObservationTypes();
@@ -504,7 +504,7 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    private String isNetworkAvailable() {
+    private String networkType() {
         ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connectivitymanager != null;
         NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
