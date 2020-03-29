@@ -156,7 +156,7 @@ public class FetchTaxa extends Service {
                 break;
             case "keep_going":
                 Call<TaksoniResponse> call = RetrofitClient.getService(
-                        SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at);
+                        SettingsManager.getDatabaseName()).getTaxa(current_page, 200, updated_at);
                 call.enqueue(new Callback<TaksoniResponse>() {
 
                     @Override

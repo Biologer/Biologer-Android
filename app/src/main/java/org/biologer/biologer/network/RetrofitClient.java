@@ -29,24 +29,20 @@ public class RetrofitClient {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .readTimeout(15, TimeUnit.SECONDS)
                     .connectTimeout(60, TimeUnit.SECONDS)
                     .writeTimeout(5, TimeUnit.MINUTES)
                     .addInterceptor(
-                            new Interceptor() {
-                                @NotNull
-                                @Override
-                                public Response intercept(@NotNull Chain chain) throws IOException {
-                                    Request request = chain.request();
-                                    Request.Builder builder = request.newBuilder()
-                                            .header("Authorization", "Bearer " + SettingsManager.getToken());
-                                    request = builder.build();
+                            chain -> {
+                                Request request = chain.request();
+                                Request.Builder builder = request.newBuilder()
+                                        .header("Authorization", "Bearer " + SettingsManager.getToken());
+                                request = builder.build();
 
-                                    return chain.proceed(request);
-                                }
+                                return chain.proceed(request);
                             }
                     )
                     .addInterceptor(logging)

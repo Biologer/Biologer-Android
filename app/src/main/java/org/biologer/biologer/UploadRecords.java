@@ -57,8 +57,6 @@ public class UploadRecords extends Service {
     public static final String ACTION_CANCEL = "ACTION_CANCEL";
     static final public String TASK_COMPLETED = "org.biologer.biologer.UploadRecordsService.TASK_COMPLETED";
 
-    private static UploadRecords instance = null;
-
     boolean keep_going = true;
 
     ArrayList<Entry> entryList;
@@ -75,7 +73,6 @@ public class UploadRecords extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        instance = this;
         broadcaster = LocalBroadcastManager.getInstance(this);
         Log.d(TAG, "Running onCreate()");
     }
@@ -88,7 +85,6 @@ public class UploadRecords extends Service {
 
     public void onDestroy() {
         super.onDestroy();
-        instance = null;
         sendResult("Uploading task is completed, shutting down service.");
         Log.d(TAG, "Running onDestroy().");
     }
@@ -205,8 +201,6 @@ public class UploadRecords extends Service {
         }
         // If there are photos resize them and send them first
         else {
-
-            deleteCache();
 
             for (int i = 0; i < n; i++) {
                 String image = listOfImages.get(i);
@@ -492,7 +486,7 @@ public class UploadRecords extends Service {
                 for (File file : files)
                     if (file.delete()) {
                         Log.d(TAG, "Deleting cache file " + file.getName());
-                    };
+                    }
             }
         }
     }
