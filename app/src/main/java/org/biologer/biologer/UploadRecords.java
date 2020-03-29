@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
-import org.biologer.biologer.model.greendao.Entry;
+import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
@@ -36,6 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -112,7 +113,11 @@ public class UploadRecords extends Service {
                         keep_going = false;
                         stopForeground(true);
                         notificationUpdateText(getString(R.string.notify_title_upload_canceled), getString(R.string.notify_desc_upload_canceled));
-                        deleteCache();
+                        try {
+                            deleteCache();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         stopSelf();
                         break;
                 }
@@ -326,7 +331,7 @@ public class UploadRecords extends Service {
     private void uploadPhoto(File image) {
         Log.i(TAG, "Opening image from the path: " + image.getAbsolutePath() + ".");
 
-        RequestBody reqFile = RequestBody.create(MediaType.parse("image/*"), image);
+        RequestBody reqFile = RequestBody.create(image, MediaType.parse("image/*"));
         MultipartBody.Part body = MultipartBody.Part.createFormData("file", image.getName(), reqFile);
 
         Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
@@ -475,13 +480,20 @@ public class UploadRecords extends Service {
         mNotificationManager.notify(1, notification);
     }
 
-    private void deleteCache () {
+    private void deleteCache () throws IOException {
         File cacheDir = getCacheDir();
-        File[] files = cacheDir.listFiles();
-        if (files != null) {
-            Log.d(TAG, "Deleting cache. There are " + files.length + " files in a cache directory.");
-            for (File file : files)
-                file.delete();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d(TAG, "Deleting cache.");
+            Files.delete(cacheDir.toPath());
+        } else {
+            File[] files = cacheDir.listFiles();
+            if (files != null) {
+                Log.d(TAG, "Deleting cache. There are " + files.length + " files in a cache directory.");
+                for (File file : files)
+                    if (file.delete()) {
+                        Log.d(TAG, "Deleting cache file " + file.getName());
+                    };
+            }
         }
     }
 

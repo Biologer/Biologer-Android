@@ -11,8 +11,6 @@ public class TaxaMeta {
     private int from;
     @JsonProperty("last_page")
     private int lastPage;
-    @JsonProperty("last_updated_at")
-    private long lastUpdatedAt;
     @JsonProperty("path")
     private String path;
     @JsonProperty("per_page")
@@ -52,16 +50,6 @@ public class TaxaMeta {
         this.lastPage = lastPage;
     }
 
-    @JsonProperty("last_updated_at")
-    public long getLastUpdatedAt() {
-        return lastUpdatedAt;
-    }
-
-    @JsonProperty("last_updated_at")
-    public void setLastUpdatedAt(long lastUpdatedAt) {
-        this.lastUpdatedAt = lastUpdatedAt;
-    }
-
     @JsonProperty("path")
     public String getPath() {
         return path;
@@ -75,7 +63,7 @@ public class TaxaMeta {
     @JsonProperty("per_page")
     public int getPerPage() {
         return perPage;
-    };
+    }
 
     @JsonProperty("per_page")
     public void setPerPage(int perPage) {

@@ -13,9 +13,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.ClearUserData;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.model.greendao.UserData;
+import org.biologer.biologer.sql.UserData;
 
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +52,8 @@ public class LogoutFragment extends Fragment {
             btn_logout.setOnClickListener(v -> {
                 Activity activity = getActivity();
                 if(activity != null) {
-                    LandingActivity.clearUserData(activity);
+                    Log.d(TAG, "Deleting all user data upon logout.");
+                    ClearUserData.deleteAll(activity);
                 }
                 // Kill the app on logout, since new login request does not work on normal logout... :/
                 loginActivity();

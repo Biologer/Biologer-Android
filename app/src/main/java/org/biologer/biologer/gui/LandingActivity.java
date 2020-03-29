@@ -32,22 +32,23 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.ClearUserData;
 import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.network.JSON.ObservationTypes;
-import org.biologer.biologer.model.greendao.ObservationTypesData;
+import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.model.greendao.UserData;
+import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
 import org.biologer.biologer.network.JSON.TaksoniResponse;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -61,9 +62,9 @@ public class LandingActivity extends AppCompatActivity
     private static final String TAG = "Biologer.Landing";
 
     private DrawerLayout drawer;
-    FrameLayout progressBar;
     BroadcastReceiver receiver;
     String how_to_use_network;
+    String should_ask;
 
     Fragment fragment = null;
 
@@ -74,10 +75,9 @@ public class LandingActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        progressBar = findViewById(R.id.progress);
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.nav_open_drawer, R.string.nav_close_drawer);
@@ -112,10 +112,12 @@ public class LandingActivity extends AppCompatActivity
             // AUTO upload/download if the right preferences are selected...
             if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                     uploadRecords();
-                    updateTaxa("keep going");
+                    should_ask = "download";
+                    updateTaxa();
             } else {
                 Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                updateTaxa("ask");
+                should_ask = "ask";
+                updateTaxa();
             }
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
@@ -173,41 +175,31 @@ public class LandingActivity extends AppCompatActivity
     }
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
-    private void updateTaxa(String should_ask) {
-        int updated_at = Integer.parseInt(SettingsManager.getTaxaDatabaseUpdated());
-        Call<TaksoniResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxa(1, 1, updated_at);
+    private void updateTaxa() {
+        String updated_at = SettingsManager.getTaxaUpdatedAt();
+
+        Call<TaksoniResponse> call = RetrofitClient.getService(
+                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(updated_at));
         call.enqueue(new Callback<TaksoniResponse>() {
+
             @Override
             public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
                 if (response.isSuccessful()) {
                     // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
                     TaksoniResponse taksoniResponse = response.body();
-                    if(taksoniResponse != null) {
-                        int server_updated_at = (int) taksoniResponse.getMeta().getLastUpdatedAt();
-                        String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
-                        if (server_updated_at <= updated_at) {
-                            Log.i(TAG,"It looks like this taxonomic database is already up to date. Nothing to do here!");
+                    if (taksoniResponse != null) {
+                        if (taksoniResponse.getData().isEmpty()) {
+                            Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
                         } else {
-                            if (!skip_this.equals("0") && server_updated_at == Integer.parseInt(skip_this)) {
-                                Log.i(TAG, "User chooses to skip updating this version of taxonomic database. Nothing to do here!");
-                            } else {
-                                Log.i(TAG, "Taxa database on the server (version: " + server_updated_at + ") seems to be newer that your version (" + updated_at + ").");
+                            Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                            String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
 
-                                // If user choose to update data on any network, just do it!
-                                if (should_ask.equals("keep going")) {
-                                    Log.d(TAG, "The user chooses to update taxa on any network, fetching automatically.");
-                                    startFetchingTaxa();
-                                } else {
-                                    Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
-                                    if (updated_at == 0) {
-                                        // If the online database is empty and user skips updating ask him on the next program startup
-                                        buildAlertUpdateTaxa(getString(R.string.database_empty), getString(R.string.contin), getString(R.string.skip));
-                                    } else {
-                                        // If the online database is more recent and user skips updating don’t ask him again
-                                        buildAlertUpdateTaxa(getString(R.string.new_database_available), getString(R.string.yes), getString(R.string.no));
-                                        SettingsManager.setSkipTaxaDatabaseUpdate(String.valueOf(server_updated_at));
-                                    }
-                                }
+                            // Workaround to skip the update if user chooses so...
+                            if (!skip_this.equals("0")) {
+                                updateTaxaOnSkip(skip_this);
+                            }
+                            else {
+                                updateTaxa2();
                             }
                         }
                     }
@@ -222,6 +214,60 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
+    private void updateTaxaOnSkip(String skip_this) {
+
+        Log.i(TAG, "User chooses to skip updating taxonomic database on timestamp: " + skip_this);
+
+        Call<TaksoniResponse> call = RetrofitClient.getService(
+                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(skip_this));
+        call.enqueue(new Callback<TaksoniResponse>() {
+
+            @Override
+            public void onResponse(@NotNull Call<TaksoniResponse> call, @NotNull Response<TaksoniResponse> response) {
+                if (response.isSuccessful()) {
+                    TaksoniResponse taksoniResponse = response.body();
+                    if (taksoniResponse != null) {
+                        if (taksoniResponse.getData().isEmpty()) {
+                            Log.i(TAG, "No new taxonomic database since the last time you skipped an update. Nothing to do here!");
+                        } else {
+                            updateTaxa2();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NotNull Call<TaksoniResponse> call, @NotNull Throwable t) {
+                Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
+            }
+        });
+    }
+
+    private void updateTaxa2 () {
+        int updated_at = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
+
+        // If user choose to update data on any network, just do it!
+        if (should_ask.equals("download")) {
+            Log.d(TAG, "The user chooses to update taxa without asking. Fetching automatically.");
+            startFetchingTaxa();
+        } else {
+            Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
+            if (updated_at == 0) {
+                // If the online database is empty and user skips updating ask him on the next program startup
+                buildAlertUpdateTaxa(getString(R.string.database_empty),
+                        getString(R.string.contin),
+                        getString(R.string.skip),
+                        0);
+            } else {
+                // If the online database is more recent and user skips updating don’t ask him again for this version
+                buildAlertUpdateTaxa(getString(R.string.new_database_available),
+                        getString(R.string.yes),
+                        getString(R.string.no),
+                        1);
+            }
+        }
+    }
+
     private void updateLicenses() {
         // Check if the licence has changed on the server and update if needed
         final Intent update_licenses = new Intent(this, UpdateLicenses.class);
@@ -229,36 +275,43 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void updateObservationTypes() {
-        String updated_at = SettingsManager.getObservationTypesUpdated();
         String system_time = String.valueOf(System.currentTimeMillis()/1000);
-        Call<ObservationTypesResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
+        String updated_at = SettingsManager.getObservationTypesUpdated();
+
+        Call<ObservationTypesResponse> call = RetrofitClient.getService(
+                SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
         call.enqueue(new Callback<ObservationTypesResponse>() {
+
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
                 ObservationTypesResponse observationsResponse = response.body();
                 assert observationsResponse != null;
-                ObservationTypes[] obs = observationsResponse.getData();
-                for (ObservationTypes ob : obs) {
-                    Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
+                if (observationsResponse.getData().length == 0) {
+                    Log.d(TAG, "Recent observation types are already downloaded from server.");
+                } else {
+                    ObservationTypes[] obs = observationsResponse.getData();
+                    for (ObservationTypes ob : obs) {
+                        Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
 
-                    // Save translations in a separate table...
-                    List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
-                    ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
-                    for (int j = 0; j < observation_translations.size(); j++) {
-                        ObservationTypesData localization = new ObservationTypesData();
-                        localization.setObservationId(ob.getId().longValue());
-                        localization.setSlug(ob.getSlug());
-                        localization.setLocaleId(observation_translations.get(j).getId());
-                        localization.setLocale(observation_translations.get(j).getLocale());
-                        localization.setName(observation_translations.get(j).getName());
-                        localizations[j] = localization;
+                        // Save translations in a separate table...
+                        List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
+                        ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
+                        for (int j = 0; j < observation_translations.size(); j++) {
+                            ObservationTypesData localization = new ObservationTypesData();
+                            localization.setObservationId(ob.getId().longValue());
+                            localization.setSlug(ob.getSlug());
+                            localization.setLocaleId(observation_translations.get(j).getId());
+                            localization.setLocale(observation_translations.get(j).getLocale());
+                            localization.setName(observation_translations.get(j).getName());
+                            localizations[j] = localization;
+                        }
+                        App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
+
                     }
-                    App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
-
+                    Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
+                    SettingsManager.setObservationTypesUpdated(system_time);
+                    Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                 }
-                Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
-                SettingsManager.setObservationTypesUpdated(system_time);
-                Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
             }
 
             @Override
@@ -384,12 +437,17 @@ public class LandingActivity extends AppCompatActivity
         setUploadIconVisibility();
     }
 
-    protected void buildAlertUpdateTaxa(String message, String yes_string, String no_string) {
+    protected void buildAlertUpdateTaxa(String message, String yes_string, String no_string, int should_skip_next) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton(yes_string, (dialog, id) -> startFetchingTaxa())
-                .setNegativeButton(no_string, (dialog, id) -> dialog.cancel());
+                .setNegativeButton(no_string, (dialog, id) -> {
+                    if (should_skip_next == 1) {
+                        SettingsManager.setSkipTaxaDatabaseUpdate(String.valueOf(System.currentTimeMillis()/1000));
+                    }
+                    dialog.cancel();
+                });
         final AlertDialog alert = builder.create();
         alert.show();
     }
@@ -419,7 +477,7 @@ public class LandingActivity extends AppCompatActivity
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             // Delete user data
-            clearUserData(this);
+            ClearUserData.deleteAll(this);
             // Go to login screen
             userLogOut();
             return null;
@@ -484,30 +542,6 @@ public class LandingActivity extends AppCompatActivity
     private void userLogOut() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
         startActivity(intent);
-    }
-
-    public static void clearUserData(Context context) {
-        // Set the default preferences
-        //SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        //preferences.edit().clear().apply();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("data_license", "0");
-        editor.putString("image_license", "0");
-        editor.apply();
-
-        SettingsManager.deleteToken();
-        SettingsManager.setTaxaDatabaseUpdated("0");
-        SettingsManager.setObservationTypesUpdated("0");
-        SettingsManager.setProjectName(null);
-        SettingsManager.setTaxaLastPageFetched("1");
-
-        // Maybe also to delete database...
-        App.get().getDaoSession().getEntryDao().deleteAll();
-        App.get().getDaoSession().getObservationTypesDataDao().deleteAll();
-        App.get().getDaoSession().getStageDao().deleteAll();
-        App.get().getDaoSession().getTaxonDataDao().deleteAll();
-        App.get().getDaoSession().getUserDataDao().deleteAll();
     }
 
     private void showLandingFragment() {

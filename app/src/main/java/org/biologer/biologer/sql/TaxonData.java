@@ -1,4 +1,4 @@
-package org.biologer.biologer.model.greendao;
+package org.biologer.biologer.sql;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -37,17 +37,17 @@ public class TaxonData {
     public String getLatinName() {
         return this.latinName;
     }
-    void setLatinName(String latinName) {
+    public void setLatinName(String latinName) {
         this.latinName = latinName;
     }
-    String getLocale() { return this.locale; }
-    void setLocale(String locale) {
+    public String getLocale() { return this.locale; }
+    public void setLocale(String locale) {
         this.locale = locale;
     }
-    String getNativeName() {
+    public String getNativeName() {
         return this.nativeName;
     }
-    void setNativeName(String nativeName) {
+    public void setNativeName(String nativeName) {
         this.nativeName = nativeName;
     }
 

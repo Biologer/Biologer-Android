@@ -27,7 +27,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.model.greendao.UserData;
+import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 
 import java.util.regex.Matcher;

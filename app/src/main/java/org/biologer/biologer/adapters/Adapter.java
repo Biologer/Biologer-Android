@@ -13,8 +13,8 @@ import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.model.greendao.Entry;
-import org.biologer.biologer.model.greendao.Stage;
+import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.model.greendao.StageDao;
 
 import java.util.ArrayList;
@@ -69,10 +69,9 @@ public class Adapter extends BaseAdapter {
 
             convertView = inflater.inflate(R.layout.list_item, parent, false);
 
-            viewHolder.taxon = (TextView) convertView.findViewById(R.id.taxon_name);
-            viewHolder.stage = (TextView) convertView.findViewById(R.id.stage);
-//            viewHolder.entryId = (TextView) convertView.findViewById(R.id.entryId);
-            viewHolder.slika = (ImageView) convertView.findViewById(slika);
+            viewHolder.taxon = convertView.findViewById(R.id.taxon_name);
+            viewHolder.stage = convertView.findViewById(R.id.stage);
+            viewHolder.slika = convertView.findViewById(slika);
 
             convertView.setTag(viewHolder);
 

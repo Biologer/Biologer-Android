@@ -12,7 +12,7 @@ import android.util.Log;
 
 import org.biologer.biologer.gui.LoginActivity;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.model.greendao.UserData;
+import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;
 
@@ -58,6 +58,7 @@ public class UpdateLicenses extends Service {
                     @Override
                     public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                         if (response.isSuccessful()) {
+                            assert response.body() != null;
                             if (response.body().getData() != null) {
                                 UserDataSer user = response.body().getData();
                                 final String email = user.getEmail();
@@ -111,7 +112,7 @@ public class UpdateLicenses extends Service {
     // Get the data from GreenDao database
     private UserData getLoggedUser() {
         if (userdata_list.isEmpty()) {
-            clearUserData(this);
+            ClearUserData.deleteAll(this);
             userLoggedOut();
         }
         return userdata_list.get(0);
@@ -134,18 +135,4 @@ public class UpdateLicenses extends Service {
         startActivity(intent);
     }
 
-    public static void clearUserData(Context context) {
-        // Delete user token
-        SettingsManager.deleteToken();
-        // Set the default preferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        preferences.edit().clear().apply();
-        SettingsManager.setTaxaDatabaseUpdated("0");
-        SettingsManager.setProjectName(null);
-        SettingsManager.setTaxaLastPageFetched("1");
-        // Maybe also to delete database...
-        App.get().getDaoSession().getTaxonDataDao().deleteAll();
-        App.get().getDaoSession().getStageDao().deleteAll();
-        App.get().getDaoSession().getUserDataDao().deleteAll();
-    }
 }
