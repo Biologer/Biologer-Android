@@ -5,12 +5,12 @@
     <string name="username">Felhasználónév (email)</string>
     <string name="password">Jelszó</string>
     <string name="login">Bejelentkezés</string>
-    <string name="valid_email">Érvénytelen vagy elírt jelszó</string>
-    <string name="valid_pass">Jelszó megadása</string>
+    <string name="valid_email">Érvénytelen vagy téves jelszó</string>
+    <string name="valid_pass">Nincs megadva a jelszó</string>
     <string name="wrong_creds">Rossz emailcím vagy jelszó</string>
-    <string name="nemas_nalog">Nincs bejelentkezve?</string>
+    <string name="nemas_nalog">Nincs még fiókja?</string>
     <string name="napravi_nalog">Regisztrálj</string>
-    <string name="zaboravljena_lozinka">Elfelejtett jelszó?</string>
+    <string name="zaboravljena_lozinka">Elfelejtette a jelszót?</string>
     <string name="email_wrong_format">Rosszul megadott emailcím</string>
     <string name="devDatabase">Fejlesztőknek fenntartott terület!</string>
 
@@ -27,12 +27,12 @@
     <string name="broj_jedinki">Egyedszám</string>
     <string name="pol">Nem</string>
     <string name="M">Hím egyed</string>
-    <string name="Z">Női egyed</string>
+    <string name="Z">Nőstény egyed</string>
     <string name="razvojni_stadijum">Kor</string>
     <string name="stage_hint">Faj fejlettségi stádiuma</string>
     <string name="jedinka_je">Elpusztult egyed?</string>
     <string name="ziva">élő</string>
-    <string name="mrtva">holt</string>
+    <string name="mrtva">halott</string>
     <string name="razlog_smrti">Pusztulás oka</string>
     <string name="habitat">Élőhely</string>
     <string name="komentar">Megjegyzés</string>
@@ -47,18 +47,18 @@
     <string name="enable_location_yes">Bekapcsol</string>
     <string name="enable_location_no">Visszavon</string>
     <string name="saved">A bevitel elmentve.</string>
-    <string name="location_is_zero">A készülék helyzete még nincs bemérve. Bevitel visszavonása vagy várakozás amíg a GPS megkeresi a pontos lokációt?</string>
-    <string name="wait">Várakozz</string>
+    <string name="location_is_zero">A készülék még nem találta meg a lokációját. Szeretné megvárni a lokáció meghatározást vagy kilépne?</string>
+    <string name="wait">Várakozás</string>
 
     <!--picture dialog-->
     <string name="choose_picture">Kép kiválasztása</string>
-    <string name="choose_picture_gallery">Válassz a telefongalériából?</string>
+    <string name="choose_picture_gallery">Választás a telefongalériából.</string>
     <string name="choose_picture_camera">Fotó készítése</string>
     <!--map-->
     <string name="accurcy">Helyszínpontosság (m)</string>
 
     <!--LandingActivity-->
-    <string name="confirmExit">Kilép?</string>
+    <string name="confirmExit">Kilépés?</string>
     <string name="yes">Igen</string>
     <string name="no">Nem</string>
     <string name="updating_database">Rendszertan-adatbázis frissítése</string>
@@ -70,7 +70,7 @@
     <!-- navigation drawer -->
     <string name="logout_btn">Kilépés</string>
     <string name="setup">Beállítások</string>
-    <string name="about">Többet a programról</string>
+    <string name="about">Többet az applikációról</string>
     <string name="about_us">Többet rólunk</string>
     <string name="list">Eddigi bejegyzések</string>
     <string name="nav_open_drawer">Navigációs fiók megnyitása</string>
@@ -100,17 +100,17 @@
     <string name="Slide2_title">A navigálás egyszerű</string>
     <string name="second_slide">Az oldalsó panellből minden művelet és beállítás elérhető. A panell megnyitásához húzzúk jobbra a képernyőt.</string>
     <string name="Slide3_title">A fő képernyőmező</string>
-    <string name="third_slide">A fő képernyő mezejében adhatjuk hozzá az új megfigyelési adatokat, módosíthatjuk, illetve szükség esetén törölhetjük őket és innen kerülnek továbbításra az adataink.</string>
+    <string name="third_slide">A fő képernyőmezőben hozzáadhatjuk az új megfigyelési adatokat, módosíthatjuk, illetve szükség esetén törölhetjük őket és innen kerülnek továbbításra az adataink.</string>
     <string name="Slide4_title">Új megfigyelések</string>
-    <string name="fourth_slide">Az adatok bevitele rendkívül könnyű! Csak becsüljük fel a fajt, adjunk mellé fotót és hagyjuk, hogy a Biologer elvégezze a többit. Amennyiben több részletre vagyunk kívácsiak, aktiváljuk a Beállítások menüpontból a \'haladó\' opciót.</string>
-    <string name="unprecise_coordinates">A helyszín koordinátáinak pontossága 25 m alatti. Precízebb ponttért talán várakozni szükséges.</string>
+    <string name="fourth_slide">Az adatok bevitele rendkívül könnyű! Csak határozzuk meg a fajt, tegyünk mellé fotót és hagyjuk, hogy a Biologer elvégezze a többit. Amennyiben több részletre vagyunk kívácsiak, aktiváljuk a Beállítások menüpontból a \'haladó\' opciót.</string>
+    <string name="unprecise_coordinates">A helyszín koordinátáinak pontossága 25 m alatti. A pontosabb helyszínmeghatározásra várni kell.</string>
     <string name="save_anyway">Adatmentés így</string>
-    <string name="database_empty">A Biologer rendszertani – taxonómiai – bázisa még nincs a készülékre töltve. A művelet lefolytatásához stabil internet kapcsolat szükséges.</string>
+    <string name="database_empty">A Biologer rendszertani – taxonómiai – bázisa még nincs letöltve a készülékre. A művelet folytatásához stabil internet kapcsolat szükséges.</string>
     <string name="contin">Letöltés folyamatban</string>
     <string name="skip">Később</string>
     <string name="google_maps_title">Google térkép</string>
     <string name="select_map_type">Térkép típusa</string>
-    <string name="you_are_here">Itt vagyunk!</string>
+    <string name="you_are_here">Itt tartózkodik!</string>
     <string name="normal">Alap</string>
     <string name="hybrid">Kombinált</string>
     <string name="terrain">Topográfia</string>
@@ -132,10 +132,10 @@
     <string name="channel_name">Frissítsd a taxonómiát</string>
     <string name="notify_title_taxa">Taxonómia frissítése</string>
     <string name="notify_desc_taxa">A Biologer újított taxonómiai bázisának letöltése.</string>
-    <string name="notify_title_taxa_updated">A legújabb verzió van meg</string>
+    <string name="notify_title_taxa_updated">A legújabb verzió van letöltve</string>
     <string name="notify_desc_taxa_updated">A taxonómiai adatbázis frissítése megtörtént.</string>
     <string name="notify_title_taxa_failed">Frissítés nem sikerült</string>
-    <string name="notify_desc_taxa_failed">A Biologer rendszertani bázisa nem frissült fel, mert rossz internet kapcsolat miatt a letöltés megszakadt. A művelet ismételt indítása szükséges.</string>
+    <string name="notify_desc_taxa_failed">A Biologer rendszertani bázisa nem frissült fel, rossz internet kapcsolat miatt a letöltés megszakadt. A művelet ismételt indítása szükséges.</string>
     <string name="retry">Újrapróbál?</string>
     <string name="OK">Rendben</string>
     <string name="exit_application">Kijelentkezés után, beléphet a Biologer valamely más nyelvű onlájn adatbázisába.</string>
@@ -163,7 +163,7 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="notify_desc_taxa_paused">A frissített rendszertan letöltése a szerverről szünetel.</string>
     <string name="notify_title_taxa_canceled">Frissítés leállítva</string>
     <string name="notify_desc_taxa_canceled">A frissített rendszertan letöltése felhasználó részéről stoppolva.</string>
-    <string name="invalid_taxon_name">Ismeretlen fajnevet választott. Mégis menti e név alatt?</string>
+    <string name="invalid_taxon_name">Úgy tűnik, ismeretlen taxont választott. Mégis szeretné elmenteni?</string>
     <string name="image_frame">Képkeret</string>
     <string name="camera">Kamera</string>
     <string name="gallery">Képgaléria</string>
@@ -203,26 +203,27 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="URL_address">URL:</string>
     <string name="no_image_on_storage">A kép kitörlődhetett a készülékéből!
 Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és törölje vagy másikkal helyettesítse a képet.</string>
-    <string name="notifications_disabled1">Important notice! Notifications are not enabled for channel \"biologer_taxa\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled2">Important notice! Notifications are not enabled for channel \"biologer_entries\". Biologer will not be able to receive species list from internet, which is required for most of its core functionality.</string>
-    <string name="notifications_disabled">Important notice: notifications are not enabled! This meand that Biologer will not be able to receive species list or upload your records online. Enabling notifications is required for most of application core functionalities.</string>
-    <string name="auto_download">Auto download and upload</string>
-    <string name="auto_download_desc">Allows data to be automatically downloaded and uploaded withought user intervention.</string>
-    <string name="only_wifi">Only on WiFi networks</string>
-    <string name="any_network">On any network</string>
-    <string name="always_ask">Always ask user</string>
-    <string name="found_on">Found on</string>
-    <string name="is_male">Male</string>
-    <string name="is_female">Female</string>
-    <string name="unknown_sex">Unknown sex</string>
-    <string name="preferences_data_entry">Data entry</string>
-    <string name="allow_english_names">Always list english names</string>
-    <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
-    <string name="preferences_user_settings">User account</string>
-    <string name="preferences_other">Other settings</string>
-    <string name="number_of_males">Number of males</string>
-    <string name="number_of_females">Number of females</string>
-    <string name="both_sexes">Both sexes</string>
-    <string name="both">Both</string>
-    <string name="unknown_sex_short">Unknown</string>
+    <string name="notifications_disabled1">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_taxa\" csatornán. A Biologer nem fogja tudni megkapni az internetről a fajok listáját, amely a helyes fajnevek és a terepi megfigyelések elküldéséhez szükséges.</string>
+    <string name="notifications_disabled2">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_entries\" csatornán. A Biologer nem fogja tudni feltölteni megfigyeléseit online, ez az egyik alapvető funkciója.</string>
+    <string name="notifications_disabled">Fontos figyelmeztetés: az értesítések nem engedélyezettek! Ez azt jelenti, hogy a Biologer nem fogja tudni megkapni a fajok listáját vagy feltölteni az adatait online. Az értesítések Android operációs rendszerben történő engedélyezéséhez az alkalmazás alapvető funkcióinak nagy része szükséges, és nem működik megfelelően, ha ez a beállítás nem engedélyezett.</string>
+    <string name="auto_download">Automatikus le- és feltöltés</string>
+    <string name="auto_download_desc">Lehetővé teszi az adatok automatikus be- és feltöltését felhasználói beavatkozás nélkül. Alapértelmezés szerint az adatokat csak a WiFi-n továbbítják.</string>
+    <string name="only_wifi">Csak WiFi hálózatokon</string>
+    <string name="any_network">Bármely hálózaton</string>
+    <string name="always_ask">Mindig kérdezze meg a felhasználót</string>
+    <string name="found_on">Megtalálható a</string>
+    <string name="is_male">Hím</string>
+    <string name="is_female">Nőstény</string>
+    <string name="unknown_sex">Ismeretlen nem</string>
+    <string name="preferences_data_entry">Adat bevitel</string>
+    <string name="allow_english_names">Mindig listázd ki az angol neveket</string>
+    <string name="allow_english_names_desc">Lehetővé teszi a Biologer számára a fajok angol neveinek felsorolását akkor is, ha a telefon nyelve más nyelvre van beállítva.</string>
+    <string name="preferences_user_settings">Felhasználó fiók</string>
+    <string name="preferences_other">Egyéb beállítások</string>
+    <string name="number_of_males">Hím egyedek száma</string>
+    <string name="number_of_females">Nőstény egyedek száma</string>
+    <string name="both_sexes">Mindkét nem</string>
+    <string name="both">Mindkét</string>
+    <string name="unknown_sex_short">Ismeretlen</string>
+
 </resources>
