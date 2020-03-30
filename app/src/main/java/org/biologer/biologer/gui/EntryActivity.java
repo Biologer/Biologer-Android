@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.common.util.ArrayUtils;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
@@ -52,7 +53,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.biologer.biologer.App;
@@ -96,18 +96,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
-    private TextView tv_gps, tvStage, tv_latitude, tv_longitude, select_sex;
-    private EditText text_DeathComment, text_Comment, et_NoSpecimens, et_NoMales, et_NoFemales, et_Habitat, et_FoundOn;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex;
+    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
+            editTextFemalesNo, editTextHabitat, editTextFoundOn;
     AutoCompleteTextView acTextView;
-    FrameLayout ib_pic1_frame, ib_pic2_frame, ib_pic3_frame;
-    ImageView ib_pic1, ib_pic1_del, ib_pic2, ib_pic2_del, ib_pic3, ib_pic3_del, iv_map, iconTakePhotoCamera, iconTakePhotoGallery;
+    FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
+    ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
+            imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
     private CheckBox check_dead;
     ChipGroup observation_types;
     LinearLayout detailedEntry;
     RelativeLayout numberMalesFemales;
     private boolean save_enabled = false;
     private String image1, image2, image3;
-    private SwipeRefreshLayout swipe;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private Entry currentItem;
     private String locale_script = "en";
     Calendar calendar;
@@ -141,89 +143,48 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         /*
          * Get the view...
          */
-        swipe = findViewById(R.id.swipe);
-        swipe.setOnRefreshListener(this);
-        tv_latitude = findViewById(R.id.tv_latitude);
-        tv_longitude = findViewById(R.id.tv_longitude);
-        tv_gps = findViewById(R.id.tv_gps);
-        tvStage = findViewById(R.id.text_view_stages);
-        tvStage.setOnClickListener(this);
-        text_DeathComment = findViewById(R.id.edit_text_death_comment);
-        text_Comment = findViewById(R.id.et_komentar);
-        et_NoSpecimens = findViewById(R.id.et_brojJedinki);
-        et_NoSpecimens.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d(TAG, "Text for number of individuals changed.");
-                if (getSex().equals("both")) {
-                    numberMalesFemales.setVisibility(View.GONE);
-                }
-            }
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-        et_NoMales = findViewById(R.id.et_number_of_males);
-        et_NoMales.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d(TAG, "Text for number of males changed.");
-                    et_NoSpecimens.setVisibility(View.GONE);
-            }
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-        et_NoFemales = findViewById(R.id.et_number_of_females);
-        et_NoFemales.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d(TAG, "Text for number of females changed.");
-                et_NoSpecimens.setVisibility(View.GONE);
-            }
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-        et_Habitat = findViewById(R.id.et_habitat);
-        et_FoundOn = findViewById(R.id.et_found_on);
+        swipeRefreshLayout = findViewById(R.id.swipe);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        textViewLatitude = findViewById(R.id.tv_latitude);
+        textViewLongitude = findViewById(R.id.tv_longitude);
+        textViewGPS = findViewById(R.id.tv_gps);
+        textViewStage = findViewById(R.id.text_view_stages);
+        textViewStage.setOnClickListener(this);
+        editTextDeathComment = findViewById(R.id.editText_death_comment);
+        editTextComment = findViewById(R.id.editText_comment);
+        editTextSpecimensNo = findViewById(R.id.editText_number_of_specimens);
+        editTextMalesNo = findViewById(R.id.editText_number_of_males);
+        editTextFemalesNo = findViewById(R.id.editText_number_of_females);
+        editTextHabitat = findViewById(R.id.editText_habitat);
+        editTextFoundOn = findViewById(R.id.editText_found_on);
         // In order not to use spinner to choose sex, we will put this into EditText
-        select_sex = findViewById(R.id.text_view_sex);
-        select_sex.setOnClickListener(this);
+        textViewSex = findViewById(R.id.text_view_sex);
+        textViewSex.setOnClickListener(this);
         check_dead = findViewById(R.id.dead_specimen);
         check_dead.setOnClickListener(this);
         // Buttons to add images
-        ib_pic1_frame = findViewById(R.id.ib_pic1_frame);
-        ib_pic1 = findViewById(R.id.ib_pic1);
-        ib_pic1.setOnClickListener(this);
-        ib_pic1_del = findViewById(R.id.ib_pic1_del);
-        ib_pic1_del.setOnClickListener(this);
-        ib_pic2_frame = findViewById(R.id.ib_pic2_frame);
-        ib_pic2 = findViewById(R.id.ib_pic2);
-        ib_pic2.setOnClickListener(this);
-        ib_pic2_del = findViewById(R.id.ib_pic2_del);
-        ib_pic2_del.setOnClickListener(this);
-        ib_pic3_frame = findViewById(R.id.ib_pic3_frame);
-        ib_pic3 = findViewById(R.id.ib_pic3);
-        ib_pic3.setOnClickListener(this);
-        ib_pic3_del = findViewById(R.id.ib_pic3_del);
-        ib_pic3_del.setOnClickListener(this);
-        iconTakePhotoCamera = findViewById(R.id.image_view_take_photo_camera);
-        iconTakePhotoCamera.setOnClickListener(this);
-        iconTakePhotoGallery = findViewById(R.id.image_view_take_photo_gallery);
-        iconTakePhotoGallery.setOnClickListener(this);
+        frameLayoutPicture1 = findViewById(R.id.ib_pic1_frame);
+        imageViewPicture1 = findViewById(R.id.ib_pic1);
+        imageViewPicture1.setOnClickListener(this);
+        imageViewPicture1Del = findViewById(R.id.ib_pic1_del);
+        imageViewPicture1Del.setOnClickListener(this);
+        frameLayoutPicture2 = findViewById(R.id.ib_pic2_frame);
+        imageViewPicture2 = findViewById(R.id.ib_pic2);
+        imageViewPicture2.setOnClickListener(this);
+        imageViewPicture2Del = findViewById(R.id.ib_pic2_del);
+        imageViewPicture2Del.setOnClickListener(this);
+        frameLayoutPicture3 = findViewById(R.id.ib_pic3_frame);
+        imageViewPicture3 = findViewById(R.id.ib_pic3);
+        imageViewPicture3.setOnClickListener(this);
+        imageViewPicture3Del = findViewById(R.id.ib_pic3_del);
+        imageViewPicture3Del.setOnClickListener(this);
+        imageViewCamera = findViewById(R.id.image_view_take_photo_camera);
+        imageViewCamera.setOnClickListener(this);
+        imageViewGallery = findViewById(R.id.image_view_take_photo_gallery);
+        imageViewGallery.setOnClickListener(this);
         // Map icon
-        iv_map = findViewById(R.id.iv_map);
-        iv_map.setOnClickListener(this);
+        imageViewMap = findViewById(R.id.iv_map);
+        imageViewMap.setOnClickListener(this);
         // Tag cloud for observation types
         observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
@@ -243,20 +204,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (image1 != null) {
                 Glide.with(this)
                         .load(image1)
-                        .into(ib_pic1);
-                ib_pic1_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture1);
+                frameLayoutPicture1.setVisibility(View.VISIBLE);
             }
             if (image2 != null) {
                 Glide.with(this)
                         .load(image2)
-                        .into(ib_pic2);
-                ib_pic2_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture2);
+                frameLayoutPicture2.setVisibility(View.VISIBLE);
             }
             if (image3 != null) {
                 Glide.with(this)
                         .load(image3)
-                        .into(ib_pic3);
-                ib_pic3_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture3);
+                frameLayoutPicture3.setVisibility(View.VISIBLE);
             }
         }
 
@@ -385,7 +346,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 setLocationValues(location.getLatitude(), location.getLongitude());
                 elev = location.getAltitude();
                 acc = (double) location.getAccuracy();
-                tv_gps.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", acc));
             }
 
             @Override
@@ -415,111 +376,23 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     /  If existing entry get the known values from the entry.
     */
     private void startEntryActivity() {
-        Long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
         if (isNewEntry()) {
+
             Log.i(TAG, "Starting new entry.");
             getLocation(100, 2);
+
+            // Always add Observation Type for observed specimen
             int id_for_observed_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
                     .where(ObservationTypesDataDao.Properties.Slug.eq("observed"))
                     .list().get(0).getObservationId().intValue();
             Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
             observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
-        } else {
-            currentItem = App.get().getDaoSession().getEntryDao().load(existing_entry_id);
-            Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
-            // Get the latitude, longitude, coordinate precision and elevation...
-            currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
-            elev = currentItem.getElevation();
-            acc = currentItem.getAccuracy();
-            tv_latitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLattitude()));
-            tv_longitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLongitude()));
-            tv_gps.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
-            // Get the name of the taxon for this entry
-            acTextView.setText(currentItem.getTaxonSuggestion());
-            acTextView.dismissDropDown();
-            // Get the name of the stage for the entry from the database
-            if (currentItem.getStage() != null) {
-                String stageName = (App.get().getDaoSession().getStageDao().queryBuilder()
-                        .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
-                        .list().get(1).getName());
-                long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
-                        .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
-                        .list().get(1).getStageId());
-                Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
-                tvStage.setTag(stage);
-                tvStage.setText(stageName);
-            }
-            if (currentItem.getCauseOfDeath().length() != 0) {
-                text_DeathComment.setText(currentItem.getCauseOfDeath());
-            }
-            if (currentItem.getComment().length() != 0) {
-                text_Comment.setText(currentItem.getComment());
-            }
-            if (currentItem.getNoSpecimens() != null) {
-                et_NoSpecimens.setText(String.valueOf(currentItem.getNoSpecimens()));
-            }
-            // Get the selected sex. If not selected set spinner to default...
-            Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
-            if (currentItem.getSex().equals("male")) {
-                Log.d(TAG, "Setting spinner selected item to male.");
-                select_sex.setText(getString(R.string.is_male));
-            }
-            if (currentItem.getSex().equals("female")) {
-                Log.d(TAG, "Setting spinner selected item to female.");
-                select_sex.setText(getString(R.string.is_female));
-            }
-            if (currentItem.getDeadOrAlive().equals("true")) {
-                // Specimen is a live
-                check_dead.setChecked(false);
-            } else {
-                // Specimen is dead, Checkbox should be activated and Dead Comment shown
-                check_dead.setChecked(true);
-                showDeadComment();
-            }
-            image1 = currentItem.getSlika1();
-            if (image1 != null) {
-                Glide.with(this)
-                        .load(image1)
-                        .into(ib_pic1);
-                ib_pic1_frame.setVisibility(View.VISIBLE);
-            }
-            image2 = currentItem.getSlika2();
-            if (image2 != null) {
-                Glide.with(this)
-                        .load(image2)
-                        .into(ib_pic2);
-                ib_pic2_frame.setVisibility(View.VISIBLE);
-            }
-            image3 = currentItem.getSlika3();
-            if (image3 != null) {
-                Glide.with(this)
-                        .load(image3)
-                        .into(ib_pic3);
-                ib_pic3_frame.setVisibility(View.VISIBLE);
-            }
 
-            if (image1 == null || image2 == null || image3 == null) {
-                disablePhotoButtons(false);
-            } else {
-                disablePhotoButtons(true);
-            }
-            if (currentItem.getHabitat() != null) {
-                et_Habitat.setText(currentItem.getHabitat());
-            }
-            if (currentItem.getFoundOn() != null) {
-                et_FoundOn.setText(currentItem.getFoundOn());
-            }
-            // Load observation types and delete tag for photographed.
-            observation_type_ids_string = currentItem.getObservation_type_ids();
-            Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
-            observation_type_ids = getArrayFromText(observation_type_ids_string);
-            if (image1 != null || image2 != null || image3 != null) {
-                Log.d(TAG, "Removing image tag just in case images got deleted.");
-                int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
-                        .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
-                        .list().get(0).getObservationId().intValue();
-                observation_type_ids = removeFromArray(observation_type_ids, id_photo_tag);
-            }
+        } else {
+
+            Log.d(TAG, "Opening existing entry.");
+            fillExistingEntry();
+
         }
     }
 
@@ -527,6 +400,116 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
         assert is_new_entry != null;
         return is_new_entry.equals("YES");
+    }
+
+    private void fillExistingEntry() {
+
+        Long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
+        currentItem = App.get().getDaoSession().getEntryDao().load(existing_entry_id);
+        Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
+
+        // Get the latitude, longitude, coordinate precision and elevation...
+        currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
+        elev = currentItem.getElevation();
+        acc = currentItem.getAccuracy();
+        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLattitude()));
+        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLongitude()));
+        textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
+
+        // Get the name of the taxon for this entry
+        acTextView.setText(currentItem.getTaxonSuggestion());
+        acTextView.dismissDropDown();
+
+        // Get the name of the stage for the entry from the database
+        if (currentItem.getStage() != null) {
+            String stageName = (App.get().getDaoSession().getStageDao().queryBuilder()
+                    .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
+                    .list().get(1).getName());
+            long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
+                    .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
+                    .list().get(1).getStageId());
+            Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
+            textViewStage.setTag(stage);
+            textViewStage.setText(stageName);
+        }
+
+        // Get the selected sex. If not selected set spinner to default...
+        Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
+        if (currentItem.getSex().equals("male")) {
+            Log.d(TAG, "Setting spinner selected item to male.");
+            textViewSex.setText(getString(R.string.is_male));
+        }
+        if (currentItem.getSex().equals("female")) {
+            Log.d(TAG, "Setting spinner selected item to female.");
+            textViewSex.setText(getString(R.string.is_female));
+        }
+
+        if (currentItem.getDeadOrAlive().equals("true")) {
+            // Specimen is a live
+            check_dead.setChecked(false);
+        } else {
+            // Specimen is dead, Checkbox should be activated and Dead Comment shown
+            check_dead.setChecked(true);
+            showDeadComment();
+        }
+
+        // Get the images
+        image1 = currentItem.getSlika1();
+        if (image1 != null) {
+            Glide.with(this)
+                    .load(image1)
+                    .into(imageViewPicture1);
+            frameLayoutPicture1.setVisibility(View.VISIBLE);
+        }
+        image2 = currentItem.getSlika2();
+        if (image2 != null) {
+            Glide.with(this)
+                    .load(image2)
+                    .into(imageViewPicture2);
+            frameLayoutPicture2.setVisibility(View.VISIBLE);
+        }
+        image3 = currentItem.getSlika3();
+        if (image3 != null) {
+            Glide.with(this)
+                    .load(image3)
+                    .into(imageViewPicture3);
+            frameLayoutPicture3.setVisibility(View.VISIBLE);
+        }
+
+        if (image1 == null || image2 == null || image3 == null) {
+            disablePhotoButtons(false);
+        } else {
+            disablePhotoButtons(true);
+        }
+        if (currentItem.getHabitat() != null) {
+            editTextHabitat.setText(currentItem.getHabitat());
+        }
+        if (currentItem.getFoundOn() != null) {
+            editTextFoundOn.setText(currentItem.getFoundOn());
+        }
+
+        // Get other values
+        if (currentItem.getCauseOfDeath().length() != 0) {
+            editTextDeathComment.setText(currentItem.getCauseOfDeath());
+        }
+        if (currentItem.getComment().length() != 0) {
+            editTextComment.setText(currentItem.getComment());
+        }
+        if (currentItem.getNoSpecimens() != null) {
+            editTextSpecimensNo.setText(String.valueOf(currentItem.getNoSpecimens()));
+        }
+
+        // Load observation types and delete tag for photographed.
+        observation_type_ids_string = currentItem.getObservation_type_ids();
+        Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
+        observation_type_ids = getArrayFromText(observation_type_ids_string);
+        if (image1 != null || image2 != null || image3 != null) {
+            Log.d(TAG, "Removing image tag just in case images got deleted.");
+            int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+                    .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
+                    .list().get(0).getObservationId().intValue();
+            observation_type_ids = removeFromArray(observation_type_ids, id_photo_tag);
+        }
     }
 
     // Add Save button in the right part of the toolbar
@@ -574,6 +557,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // On click
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.editText_number_of_specimens:
+                Log.d(TAG, "Text for number of individuals changed.");
+                if (getSex().equals("both")) {
+                    numberMalesFemales.setVisibility(View.GONE);
+                }
+                break;
+            case R.id.editText_number_of_males:
+                Log.d(TAG, "Text for number of males changed.");
+                editTextSpecimensNo.setVisibility(View.GONE);
+                break;
+            case R.id.editText_number_of_females:
+                Log.d(TAG, "Text for number of females changed.");
+                editTextSpecimensNo.setVisibility(View.GONE);
+                break;
             case R.id.text_view_stages:
                 getStageForTaxon();
                 break;
@@ -582,7 +579,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.ib_pic1_del:
                 Log.i(TAG, "Deleting image 1.");
-                ib_pic1_frame.setVisibility(View.GONE);
+                frameLayoutPicture1.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image1 = null;
                 break;
@@ -591,7 +588,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 openInGallery(image1);
                 break;
             case R.id.ib_pic2_del:
-                ib_pic2_frame.setVisibility(View.GONE);
+                frameLayoutPicture2.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image2 = null;
                 break;
@@ -600,7 +597,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 openInGallery(image2);
                 break;
             case R.id.ib_pic3_del:
-                ib_pic3_frame.setVisibility(View.GONE);
+                frameLayoutPicture3.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 image3 = null;
                 break;
@@ -685,9 +682,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     /  PART 3: Check if both male and female entries should be created
     */
     private void saveEntry3(TaxonData taxon) {
-        String all_specimens_number = et_NoSpecimens.getText().toString();
-        String males_number = et_NoMales.getText().toString();
-        String females_number = et_NoFemales.getText().toString();
+        String all_specimens_number = editTextSpecimensNo.getText().toString();
+        String males_number = editTextMalesNo.getText().toString();
+        String females_number = editTextFemalesNo.getText().toString();
         if (getSex().equals("male")) {
             Log.d(TAG, "Only male individuals selected.");
             entrySaver(taxon, all_specimens_number, "male", 1);
@@ -724,13 +721,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
     private void entrySaver(TaxonData taxon, String specimens, String sex, int entry_id) {
-        Stage stage = (tvStage.getTag() != null) ? (Stage) tvStage.getTag() : null;
-        String comment = text_Comment.getText().toString();
+        Stage stage = (textViewStage.getTag() != null) ? (Stage) textViewStage.getTag() : null;
+        String comment = editTextComment.getText().toString();
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
-        String deathComment = (text_DeathComment.getText() != null) ? text_DeathComment.getText().toString() : "";
-        String habitat = et_Habitat.getText() != null ? et_Habitat.getText().toString() : "";
-        String foundOn = et_FoundOn.getText() != null ? et_FoundOn.getText().toString() : "";
+        String deathComment = (editTextDeathComment.getText() != null) ? editTextDeathComment.getText().toString() : "";
+        String habitat = editTextHabitat.getText() != null ? editTextHabitat.getText().toString() : "";
+        String foundOn = editTextFoundOn.getText() != null ? editTextFoundOn.getText().toString() : "";
 
         if (entry_id != 1 || isNewEntry()) {
             calendar = Calendar.getInstance();
@@ -757,7 +754,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             setResult(RESULT_OK);
             finish();
         } else { // if the entry exist already
-            currentItem.setTaxonId(taxon.getId());
+            currentItem.setTaxonId(taxon.getTaxonId());
             currentItem.setTaxonSuggestion(taxon.getLatinName());
             currentItem.setComment(comment);
             currentItem.setNoSpecimens(numberOfSpecimens);
@@ -797,7 +794,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private String getSex() {
         String[] sex = {getString(R.string.unknown_sex_short), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both)};
-        String sex_is = select_sex.getText().toString();
+        String sex_is = textViewSex.getText().toString();
         int sex_id = Arrays.asList(sex).indexOf(sex_is);
         if (sex_id == 1) {
             Log.d(TAG, "Sex from spinner index 1 selected with value " + sex_is);
@@ -857,14 +854,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setItems(taxon_stages, (dialogInterface, i) -> {
-                    tvStage.setText(taxon_stages[i]);
-                    tvStage.setTag(stageList.get(i));
+                    textViewStage.setText(taxon_stages[i]);
+                    textViewStage.setTag(stageList.get(i));
                 });
                 builder.show();
                 Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
             }
         } else {
-            tvStage.setEnabled(false);
+            textViewStage.setEnabled(false);
             Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
         }
     }
@@ -874,20 +871,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(sex, (dialogInterface, i) -> {
             if (sex[i].equals(getString(R.string.unknown_sex))) {
-                select_sex.setText(getString(R.string.unknown_sex_short));
+                textViewSex.setText(getString(R.string.unknown_sex_short));
                 Log.d(TAG, "No sex is selected.");
                 numberMalesFemales.setVisibility(View.GONE);
-                et_NoSpecimens.setVisibility(View.VISIBLE);
+                editTextSpecimensNo.setVisibility(View.VISIBLE);
             } if (sex[i].equals(getString(R.string.both_sexes))) {
-                select_sex.setText(getString(R.string.both));
+                textViewSex.setText(getString(R.string.both));
                 Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
                 numberMalesFemales.setVisibility(View.VISIBLE);
             }
             else {
-                select_sex.setText(sex[i]);
+                textViewSex.setText(sex[i]);
                 Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
                 numberMalesFemales.setVisibility(View.GONE);
-                et_NoSpecimens.setVisibility(View.VISIBLE);
+                editTextSpecimensNo.setVisibility(View.VISIBLE);
             }
         });
         builder.show();
@@ -981,24 +978,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         image1 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image1)
-                                .into(ib_pic1);
-                        ib_pic1_frame.setVisibility(View.VISIBLE);
+                                .into(imageViewPicture1);
+                        frameLayoutPicture1.setVisibility(View.VISIBLE);
                     } else if (image2 == null) {
                         image2 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image2)
-                                .into(ib_pic2);
-                        ib_pic2_frame.setVisibility(View.VISIBLE);
+                                .into(imageViewPicture2);
+                        frameLayoutPicture2.setVisibility(View.VISIBLE);
                     } else if (image3 == null) {
                         image3 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image3)
-                                .into(ib_pic3);
-                        ib_pic3_frame.setVisibility(View.VISIBLE);
-                        iconTakePhotoGallery.setEnabled(false);
-                        iconTakePhotoGallery.setImageAlpha(20);
-                        iconTakePhotoCamera.setEnabled(false);
-                        iconTakePhotoCamera.setImageAlpha(20);
+                                .into(imageViewPicture3);
+                        frameLayoutPicture3.setVisibility(View.VISIBLE);
+                        imageViewGallery.setEnabled(false);
+                        imageViewGallery.setImageAlpha(20);
+                        imageViewCamera.setEnabled(false);
+                        imageViewCamera.setImageAlpha(20);
                     }
                 } else {
                     // If multiple images are selected we have a workaround...
@@ -1046,26 +1043,26 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (image1 != null) {
                             Glide.with(this)
                                     .load(image1)
-                                    .into(ib_pic1);
-                            ib_pic1_frame.setVisibility(View.VISIBLE);
+                                    .into(imageViewPicture1);
+                            frameLayoutPicture1.setVisibility(View.VISIBLE);
                         }
                         if (image2 != null) {
                             Glide.with(this)
                                     .load(image2)
-                                    .into(ib_pic2);
-                            ib_pic2_frame.setVisibility(View.VISIBLE);
+                                    .into(imageViewPicture2);
+                            frameLayoutPicture2.setVisibility(View.VISIBLE);
                         }
                         if (image3 != null) {
                             Glide.with(this)
                                     .load(image3)
-                                    .into(ib_pic3);
-                            ib_pic3_frame.setVisibility(View.VISIBLE);
+                                    .into(imageViewPicture3);
+                            frameLayoutPicture3.setVisibility(View.VISIBLE);
                         }
                         if (image1 != null && image2 != null && image3 != null) {
-                            iconTakePhotoGallery.setEnabled(false);
-                            iconTakePhotoGallery.setImageAlpha(20);
-                            iconTakePhotoCamera.setEnabled(false);
-                            iconTakePhotoCamera.setImageAlpha(20);
+                            imageViewGallery.setEnabled(false);
+                            imageViewGallery.setImageAlpha(20);
+                            imageViewCamera.setEnabled(false);
+                            imageViewCamera.setImageAlpha(20);
                         }
                     } else {
                         Toast.makeText(this, getString(R.string.no_photo_selected),
@@ -1080,20 +1077,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 image1 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image1)
-                        .into(ib_pic1);
-                ib_pic1_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture1);
+                frameLayoutPicture1.setVisibility(View.VISIBLE);
             } else if (image2 == null) {
                 image2 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image2)
-                        .into(ib_pic2);
-                ib_pic2_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture2);
+                frameLayoutPicture2.setVisibility(View.VISIBLE);
             } else if (image3 == null) {
                 image3 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image3)
-                        .into(ib_pic3);
-                ib_pic3_frame.setVisibility(View.VISIBLE);
+                        .into(imageViewPicture3);
+                frameLayoutPicture3.setVisibility(View.VISIBLE);
                 disablePhotoButtons(true);
             }
             Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
@@ -1111,24 +1108,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
             assert data != null;
             if (Objects.equals(data.getExtras().getString("google_map_accuracy"), "0.0")) {
-                tv_gps.setText(R.string.not_available);
+                textViewGPS.setText(R.string.not_available);
             } else {
-                tv_gps.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", acc));
             }
         }
     }
 
     private void disablePhotoButtons(Boolean value) {
         if (value) {
-            iconTakePhotoGallery.setEnabled(false);
-            iconTakePhotoGallery.setImageAlpha(20);
-            iconTakePhotoCamera.setEnabled(false);
-            iconTakePhotoCamera.setImageAlpha(20);
+            imageViewGallery.setEnabled(false);
+            imageViewGallery.setImageAlpha(20);
+            imageViewCamera.setEnabled(false);
+            imageViewCamera.setImageAlpha(20);
         } else {
-            iconTakePhotoGallery.setEnabled(true);
-            iconTakePhotoGallery.setImageAlpha(255);
-            iconTakePhotoCamera.setEnabled(true);
-            iconTakePhotoCamera.setImageAlpha(255);
+            imageViewGallery.setEnabled(true);
+            imageViewGallery.setImageAlpha(255);
+            imageViewCamera.setEnabled(true);
+            imageViewCamera.setImageAlpha(255);
         }
     }
 
@@ -1198,9 +1195,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     public void showDeadComment() {
         if (check_dead.isChecked()) {
-            text_DeathComment.setVisibility(View.VISIBLE);
+            editTextDeathComment.setVisibility(View.VISIBLE);
         } else {
-            text_DeathComment.setVisibility(View.GONE);
+            editTextDeathComment.setVisibility(View.GONE);
         }
     }
 
@@ -1243,8 +1240,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void setLocationValues(double latti, double longi) {
         latitude = String.format(Locale.ENGLISH, "%.4f", (latti));
         longitude = String.format(Locale.ENGLISH, "%.4f", (longi));
-        tv_latitude.setText(latitude);
-        tv_longitude.setText(longitude);
+        textViewLatitude.setText(latitude);
+        textViewLongitude.setText(longitude);
     }
 
     // Show the message if the taxon is not chosen from the taxonomic list
@@ -1297,21 +1294,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onRefresh() {
         if (isNewEntry()) {
-            swipe.setRefreshing(true);
+            swipeRefreshLayout.setRefreshing(true);
             getLocation(0, 0);
-            swipe.setRefreshing(false);
+            swipeRefreshLayout.setRefreshing(false);
         } else {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(getString(R.string.gps_update))
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                        swipe.setRefreshing(true);
+                        swipeRefreshLayout.setRefreshing(true);
                         getLocation(0, 0);
-                        swipe.setRefreshing(false);
+                        swipeRefreshLayout.setRefreshing(false);
                     })
                     .setNegativeButton(getString(R.string.no), (dialog, id) -> {
                         dialog.cancel();
-                        swipe.setRefreshing(false);
+                        swipeRefreshLayout.setRefreshing(false);
                     });
             final AlertDialog alert = builder.create();
             alert.show();

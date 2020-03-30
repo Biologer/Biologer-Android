@@ -158,7 +158,7 @@
                             android:layout_height="wrap_content"
                             app:boxBackgroundColor="@color/white">
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/et_komentar"
+                                android:id="@+id/editText_comment"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:maxLength="1000"
@@ -189,7 +189,7 @@
                                     app:boxBackgroundColor="@color/white"
                                     android:layout_alignParentStart="true">
                                     <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/et_brojJedinki"
+                                        android:id="@+id/editText_number_of_specimens"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:hint="@string/broj_jedinki"
@@ -235,7 +235,7 @@
                                     app:boxBackgroundColor="@color/white"
                                     android:layout_alignParentStart="true">
                                     <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/et_number_of_males"
+                                        android:id="@+id/editText_number_of_males"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:layout_marginStart="6dp"
@@ -252,7 +252,7 @@
                                     app:boxBackgroundColor="@color/white"
                                     android:layout_alignParentEnd="true">
                                     <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/et_number_of_females"
+                                        android:id="@+id/editText_number_of_females"
                                         android:layout_width="fill_parent"
                                         android:layout_height="match_parent"
                                         android:layout_marginStart="6dp"
@@ -297,7 +297,7 @@
                                 android:layout_height="wrap_content"
                                 app:boxBackgroundColor="@color/white">
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_habitat"
+                                    android:id="@+id/editText_habitat"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:maxLength="100"
@@ -309,7 +309,7 @@
                                 android:layout_height="wrap_content"
                                 app:boxBackgroundColor="@color/white">
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/et_found_on"
+                                    android:id="@+id/editText_found_on"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:maxLength="100"
@@ -341,7 +341,7 @@
                                 android:layout_height="wrap_content"
                                 app:boxBackgroundColor="@color/white">
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/edit_text_death_comment"
+                                    android:id="@+id/editText_death_comment"
                                     android:layout_width="match_parent"
                                     android:maxLength="1000"
                                     android:layout_height="wrap_content"

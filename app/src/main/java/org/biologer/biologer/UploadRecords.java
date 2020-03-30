@@ -105,10 +105,7 @@ public class UploadRecords extends Service {
                         break;
                     case ACTION_CANCEL:
                         // Stop uploading!
-                        Log.d(TAG, "Canceling upload process…");
-                        keep_going = false;
-                        stopForeground(true);
-                        notificationUpdateText(getString(R.string.notify_title_upload_canceled), getString(R.string.notify_desc_upload_canceled));
+                        cancelUpload(getString(R.string.notify_title_upload_canceled), getString(R.string.notify_desc_upload_canceled));
                         try {
                             deleteCache();
                         } catch (IOException e) {
@@ -120,6 +117,13 @@ public class UploadRecords extends Service {
             }
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void cancelUpload(String title, String description) {
+        Log.d(TAG, "Canceling upload process…");
+        keep_going = false;
+        stopForeground(true);
+        notificationUpdateText(title, description);
     }
 
     private void notificationInitiate() {
@@ -161,11 +165,10 @@ public class UploadRecords extends Service {
         ArrayList<String> listOfImages = new ArrayList<>();
         images_array.clear();
 
+        // When all entries are uploaded
         if (entryList.size() == 0) {
-            App.get().getDaoSession().getEntryDao().deleteAll();
-            // Inform the user of success
             Log.i(TAG, "All entries seems to be uploaded to the server!");
-            // Stop the foreground service and update notification
+            App.get().getDaoSession().getEntryDao().deleteAll();
             stopForeground(true);
             notificationUpdateText(getString(R.string.notify_title_entries_uploaded), getString(R.string.notify_desc_entries_uploaded));
             deleteCache();
@@ -173,7 +176,7 @@ public class UploadRecords extends Service {
             return;
         }
 
-        // Upload status bar
+        // Update upload status bar
         remainingEntries = totalEntries - entryList.size() + 1;
         String statusText =
                 getString(R.string.notify_desc_uploading) + " " + remainingEntries + " " +
@@ -217,19 +220,19 @@ public class UploadRecords extends Service {
                     if (i == 0) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image1 = new File(tmp_image_path);
-                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        Log.d(TAG, "Uploading image 1 to a server.");
                         uploadPhoto(image1);
                     }
                     if (i == 1) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image2 = new File(tmp_image_path);
-                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        Log.d(TAG, "Uploading image 2 to a server.");
                         uploadPhoto(image2);
                     }
                     if (i == 2) {
                         tmp_image_path = saveTmpImage(bitmap);
                         image3 = new File(tmp_image_path);
-                        Log.d(TAG, "Uploading image " + i+1 + " to a server.");
+                        Log.d(TAG, "Uploading image 3 to a server.");
                         uploadPhoto(image3);
                     }
                 }
@@ -239,6 +242,7 @@ public class UploadRecords extends Service {
 
     // Upload the entries, one by one Record
     private void uploadStep2() {
+        Log.d(TAG, "Upload data step 2 started...");
         APIEntry apiEntry = new APIEntry();
         photos = new ArrayList<>();
         // Create apiEntry object
@@ -301,14 +305,15 @@ public class UploadRecords extends Service {
                             e.printStackTrace();
                         }
                     } else {
-                        Log.i(TAG, "Upload entry did not work for some reason. No internet?");
+                        Log.i(TAG, "Uploading of entry did not work for some reason. No internet?");
                     }
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
-                Log.i(TAG, Objects.requireNonNull(t.getLocalizedMessage()));
+                Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
+                cancelUpload("Failed!", "Uploading of entry was not successful!");
             }
         });
     }
@@ -340,11 +345,11 @@ public class UploadRecords extends Service {
 
                         if (responseFile != null) {
                             images_array.add(responseFile.getFile());
+                            Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
                             m++;
                             if (m == n) {
                                 uploadStep2();
                             }
-                            Log.d(TAG, "File: " + responseFile.getFile());
                         }
                     }
                 }
@@ -353,7 +358,8 @@ public class UploadRecords extends Service {
             @Override
             public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
                 if (t.getLocalizedMessage() != null) {
-                    Log.e(TAG, t.getLocalizedMessage());
+                    Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
+                    cancelUpload("Failed!", "Uploading of photo was not successful!");
                 }
             }
         });
