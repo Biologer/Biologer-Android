@@ -15,7 +15,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.model.greendao.StageDao;
+import org.biologer.biologer.sql.StageDao;
 
 import java.util.ArrayList;
 import java.util.List;

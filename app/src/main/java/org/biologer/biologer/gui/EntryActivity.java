@@ -60,11 +60,11 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
-import org.biologer.biologer.model.greendao.ObservationTypesDataDao;
+import org.biologer.biologer.sql.ObservationTypesDataDao;
 import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.model.greendao.StageDao;
+import org.biologer.biologer.sql.StageDao;
 import org.biologer.biologer.sql.TaxonData;
-import org.biologer.biologer.model.greendao.TaxonDataDao;
+import org.biologer.biologer.sql.TaxonDataDao;
 import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -283,18 +283,48 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Get the list of taxa from the GreenDao database
                      */
                     QueryBuilder<TaxonData> query = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                    if (preferences.getBoolean("english_names", false)) {
-                        query.where(
-                                query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                        TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
-                                query.or(TaxonDataDao.Properties.Locale.eq(locale_script),
-                                        TaxonDataDao.Properties.Locale.eq("en")));
+                    if (locale_script.equals("sr")) {
+                        if (preferences.getBoolean("english_names", false)) {
+                            query.where(
+                                    query.or(
+                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq("sr-Latn")),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq("en"))));
+                        } else {
+                            query.where(
+                                    query.or(
+                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq("sr-Latn"))));
+                        }
                     } else {
-                        query.where(
-                                query.or(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                        TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%")),
-                                TaxonDataDao.Properties.Locale.eq(locale_script));
+                        if (preferences.getBoolean("english_names", false)) {
+                            query.where(
+                                    query.or(
+                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq("en"))));
+                        } else {
+                            query.where(
+                                    query.or(
+                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
+                                                    TaxonDataDao.Properties.Locale.eq(locale_script))));
+                        }
                     }
+
                     query.limit(10);
                     List<TaxonData> taxaList = query.list();
 
@@ -766,7 +796,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private String getSex() {
-        String selected_sex = "";
         String[] sex = {getString(R.string.unknown_sex_short), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both)};
         String sex_is = select_sex.getText().toString();
         int sex_id = Arrays.asList(sex).indexOf(sex_is);

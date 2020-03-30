@@ -4,10 +4,10 @@ import android.content.Context;
 
 import android.util.Log;
 
-import org.biologer.biologer.model.greendao.DaoMaster;
+import org.biologer.biologer.sql.DaoMaster;
 import org.greenrobot.greendao.database.Database;
 
-import static org.biologer.biologer.model.greendao.DaoMaster.dropAllTables;
+import static org.biologer.biologer.sql.DaoMaster.dropAllTables;
 
 public class GreenDaoInitialization extends DaoMaster.DevOpenHelper {
 
