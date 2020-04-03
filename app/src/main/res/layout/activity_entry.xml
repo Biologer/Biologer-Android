@@ -143,7 +143,7 @@
                                 android:id="@+id/textview_list_of_taxa"
                                 android:layout_width="match_parent"
                                 android:layout_height="48dp"
-                                android:background="@drawable/gray_border"
+                                android:background="@color/white"
                                 android:hint="@string/naziv_taksona"
                                 android:paddingStart="14dp"
                                 android:paddingEnd="14dp"

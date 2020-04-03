@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="org.biologer.biologer.gui.SplashActivity"
     android:padding="15dp"
-    android:background="#f3f6ed">
+    android:background="@color/white">
 
     <ImageView
         android:id="@+id/imageView4"

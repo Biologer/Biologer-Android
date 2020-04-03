@@ -68,7 +68,7 @@
         android:textAllCaps="true"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:background="@drawable/roundshapebtn"
+        android:background="@color/colorPrimary"
         android:clickable="true"
         android:focusable="true" />
 </LinearLayout>
