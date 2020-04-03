@@ -16,8 +16,8 @@ android {
         // API level 19 = Android 4.4
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 56
-        versionName "2.1.1"
+        versionCode 57
+        versionName "2.1.2"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
@@ -95,8 +95,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
-    implementation 'com.google.firebase:firebase-core:17.2.3'
-    implementation 'com.google.firebase:firebase-iid:20.1.2'
+    implementation 'com.google.firebase:firebase-core:17.3.0'
+    implementation 'com.google.firebase:firebase-iid:20.1.4'
     implementation 'com.squareup.retrofit2:retrofit:2.7.2'
     implementation 'com.squareup.retrofit2:converter-jackson:2.7.2'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.4.0'

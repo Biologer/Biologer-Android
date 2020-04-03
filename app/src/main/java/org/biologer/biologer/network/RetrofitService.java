@@ -3,7 +3,7 @@ package org.biologer.biologer.network;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
-import org.biologer.biologer.network.JSON.TaksoniResponse;
+import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
@@ -42,9 +42,9 @@ public interface RetrofitService {
                               @Field("password") String password);
 
     @GET("api/taxa")
-    Call<TaksoniResponse> getTaxa(@Query("page") int page_number,
-                                  @Query("per_page") int per_page,
-                                  @Query("updated_after") int updated_after);
+    Call<TaxaResponse> getTaxa(@Query("page") int page_number,
+                               @Query("per_page") int per_page,
+                               @Query("updated_after") int updated_after);
 
     @Multipart
     @POST("api/uploads/photos")

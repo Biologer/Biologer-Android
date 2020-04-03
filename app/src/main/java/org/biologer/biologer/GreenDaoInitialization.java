@@ -18,7 +18,7 @@ public class GreenDaoInitialization extends DaoMaster.DevOpenHelper {
     @Override
     public void onUpgrade(Database db, int oldVersion, int newVersion) {
         Log.i("Biologer.greenDAO", "Upgrading schema from version " + oldVersion + " to " + newVersion + " by dropping all tables");
-        ClearUserData.resetSettings();
+        User.resetSettings();
         dropAllTables(db, true);
         onCreate(db);
     }

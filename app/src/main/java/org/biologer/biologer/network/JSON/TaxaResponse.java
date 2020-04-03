@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "meta"
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TaksoniResponse {
+public class TaxaResponse {
 
     @JsonProperty("data")
     private List<Taxa> data = null;
@@ -39,8 +39,6 @@ public class TaksoniResponse {
     @JsonProperty("meta")
     public void setMeta(TaxaMeta meta) {
         this.meta = meta;
-
-        TaxaMeta test = meta;
     }
 
 }

@@ -29,7 +29,6 @@ import static org.biologer.biologer.R.id.slika;
 public class Adapter extends BaseAdapter {
     private Context mContext;
     private ArrayList<Entry> mList;
-    private String koristiSliku;
 
     public Adapter(Context mContext, ArrayList<Entry> mList) {
         this.mContext = mContext;
@@ -64,7 +63,6 @@ public class Adapter extends BaseAdapter {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         ViewHolder viewHolder = new ViewHolder();
 
-
         if (convertView == null) {
 
             convertView = inflater.inflate(R.layout.list_item, parent, false);
@@ -94,24 +92,25 @@ public class Adapter extends BaseAdapter {
             viewHolder.stage.setText("");
         }
 
+        String useImage;
         if (getItem(position).getSlika1() != null) {
-            koristiSliku = getItem(position).getSlika1();
+            useImage = getItem(position).getSlika1();
         } else {
             if (getItem(position).getSlika2() != null) {
-                koristiSliku = getItem(position).getSlika2();
+                useImage = getItem(position).getSlika2();
             } else {
                 if (getItem(position).getSlika3() != null) {
-                    koristiSliku = getItem(position).getSlika3();
+                    useImage = getItem(position).getSlika3();
                 } else {
-                    koristiSliku = "";
+                    useImage = "";
                 }
             }
         }
-        if (koristiSliku != null && koristiSliku.trim().length() > 0) {
-            Uri myUri = Uri.parse(koristiSliku);
+        if (useImage != null && useImage.trim().length() > 0) {
+            Uri myUri = Uri.parse(useImage);
             //viewHolder.slika.setImageURI(myUri);
             Glide.with(convertView)
-                    .load(koristiSliku)
+                    .load(useImage)
                     .into(viewHolder.slika);
         } else {
             viewHolder.slika.setImageResource(R.mipmap.ic_kornjaca_kocka);
@@ -119,7 +118,7 @@ public class Adapter extends BaseAdapter {
         return convertView;
     }
 
-    private class ViewHolder {
+    private static class ViewHolder {
         TextView taxon;
         TextView stage;
         //        TextView entryId;

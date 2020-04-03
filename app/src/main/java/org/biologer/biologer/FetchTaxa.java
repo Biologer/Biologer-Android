@@ -10,8 +10,8 @@ import android.os.IBinder;
 import android.util.Log;
 
 import org.biologer.biologer.gui.SplashActivity;
-import org.biologer.biologer.network.JSON.Stage6;
-import org.biologer.biologer.network.JSON.TaksoniResponse;
+import org.biologer.biologer.network.JSON.TaxaStages;
+import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.Taxa;
 import org.biologer.biologer.network.JSON.TaxaTranslations;
 import org.biologer.biologer.network.RetrofitClient;
@@ -157,21 +157,21 @@ public class FetchTaxa extends Service {
                 break;
             case "keep_going":
 
-                Call<TaksoniResponse> call = RetrofitClient.getService(
+                Call<TaxaResponse> call = RetrofitClient.getService(
                         SettingsManager.getDatabaseName()).getTaxa(current_page, 200, updated_at);
-                call.enqueue(new Callback<TaksoniResponse>() {
+                call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override
-                    public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
+                    public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
                         if (response.isSuccessful()) {
-                            TaksoniResponse taksoniResponse = response.body();
-                            assert taksoniResponse != null;
-                            saveFetchedPage(taksoniResponse);
+                            TaxaResponse taxaResponse = response.body();
+                            assert taxaResponse != null;
+                            saveFetchedPage(taxaResponse);
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<TaksoniResponse> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
 
                         if (retry_number == 4) {
@@ -191,12 +191,12 @@ public class FetchTaxa extends Service {
         }
     }
 
-    private void saveFetchedPage(TaksoniResponse taksoniResponse) {
+    private void saveFetchedPage(TaxaResponse taxaResponse) {
 
         if (totalPages == 0) {
-            totalPages = taksoniResponse.getMeta().getLastPage();
+            totalPages = taxaResponse.getMeta().getLastPage();
         }
-        List<Taxa> taxa = taksoniResponse.getData();
+        List<Taxa> taxa = taxaResponse.getData();
 
         // Variables used to update the Progress Bar status
         progressStatus = (current_page * 100 / totalPages);
@@ -209,10 +209,10 @@ public class FetchTaxa extends Service {
             String taxon_latin_name = taxon.getName();
             // Log.d(TAG, "Adding taxon " + taxon_name + " with ID: " + taxon_id);
 
-            List<Stage6> stages = taxon.getStages();
+            List<TaxaStages> stages = taxon.getStages();
             Stage[] final_stages = new Stage[stages.size()];
             for (int i = 0; i < stages.size(); i++) {
-                Stage6 stage = stages.get(i);
+                TaxaStages stage = stages.get(i);
                 final_stages[i] = new Stage(null, stage.getName(), stage.getId(), taxon_id);
             }
             App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);

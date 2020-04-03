@@ -35,19 +35,19 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ClearUserData;
 import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
+import org.biologer.biologer.User;
 import org.biologer.biologer.network.JSON.ObservationTypes;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
-import org.biologer.biologer.network.JSON.TaksoniResponse;
+import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -178,17 +178,17 @@ public class LandingActivity extends AppCompatActivity
     private void updateTaxa() {
         String updated_at = SettingsManager.getTaxaUpdatedAt();
 
-        Call<TaksoniResponse> call = RetrofitClient.getService(
+        Call<TaxaResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(updated_at));
-        call.enqueue(new Callback<TaksoniResponse>() {
+        call.enqueue(new Callback<TaxaResponse>() {
 
             @Override
-            public void onResponse(@NonNull Call<TaksoniResponse> call, @NonNull Response<TaksoniResponse> response) {
+            public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
                 if (response.isSuccessful()) {
                     // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                    TaksoniResponse taksoniResponse = response.body();
-                    if (taksoniResponse != null) {
-                        if (taksoniResponse.getData().isEmpty()) {
+                    TaxaResponse taxaResponse = response.body();
+                    if (taxaResponse != null) {
+                        if (taxaResponse.getData().isEmpty()) {
                             Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
                         } else {
                             Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
@@ -206,7 +206,7 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<TaksoniResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                 // Inform the user on failure and write log message
                 //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
                 Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
@@ -218,16 +218,16 @@ public class LandingActivity extends AppCompatActivity
 
         Log.i(TAG, "User chooses to skip updating taxonomic database on timestamp: " + skip_this);
 
-        Call<TaksoniResponse> call = RetrofitClient.getService(
+        Call<TaxaResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(skip_this));
-        call.enqueue(new Callback<TaksoniResponse>() {
+        call.enqueue(new Callback<TaxaResponse>() {
 
             @Override
-            public void onResponse(@NotNull Call<TaksoniResponse> call, @NotNull Response<TaksoniResponse> response) {
+            public void onResponse(@NotNull Call<TaxaResponse> call, @NotNull Response<TaxaResponse> response) {
                 if (response.isSuccessful()) {
-                    TaksoniResponse taksoniResponse = response.body();
-                    if (taksoniResponse != null) {
-                        if (taksoniResponse.getData().isEmpty()) {
+                    TaxaResponse taxaResponse = response.body();
+                    if (taxaResponse != null) {
+                        if (taxaResponse.getData().isEmpty()) {
                             Log.i(TAG, "No new taxonomic database since the last time you skipped an update. Nothing to do here!");
                         } else {
                             updateTaxa2();
@@ -237,7 +237,7 @@ public class LandingActivity extends AppCompatActivity
             }
 
             @Override
-            public void onFailure(@NotNull Call<TaksoniResponse> call, @NotNull Throwable t) {
+            public void onFailure(@NotNull Call<TaxaResponse> call, @NotNull Throwable t) {
                 Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
             }
         });
@@ -477,7 +477,7 @@ public class LandingActivity extends AppCompatActivity
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             // Delete user data
-            ClearUserData.deleteAll(this);
+            User.clearUserData(this);
             // Go to login screen
             userLogOut();
             return null;

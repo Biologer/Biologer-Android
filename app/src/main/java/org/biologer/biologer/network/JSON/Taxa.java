@@ -44,7 +44,7 @@ public class Taxa {
     @JsonProperty("parent")
     private Parent parent;
     @JsonProperty("stages")
-    private List<Stage6> stages = null;
+    private List<TaxaStages> stages = null;
     @JsonProperty("activity")
     private List<Object> activity = null;
 
@@ -209,12 +209,12 @@ public class Taxa {
     }
 
     @JsonProperty("stages")
-    public List<Stage6> getStages() {
+    public List<TaxaStages> getStages() {
         return stages;
     }
 
     @JsonProperty("stages")
-    public void setStages(List<Stage6> stages) {
+    public void setStages(List<TaxaStages> stages) {
         this.stages = stages;
     }
 

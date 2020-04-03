@@ -278,7 +278,7 @@ public class APIEntry {
     }
 
     @JsonProperty("habitat")
-    public String getHahitat() {
+    public String getHabitat() {
         return habitat;
     }
 
