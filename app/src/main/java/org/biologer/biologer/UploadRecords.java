@@ -8,11 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -212,7 +210,7 @@ public class UploadRecords extends Service {
                 int image_number = i+1;
                 Log.d(TAG, "Resizing image " + image_number + ": " + image);
                 String tmp_image_path;
-                Bitmap bitmap = resizeImage(image, 1024);
+                Bitmap bitmap = resizeImage(image);
 
                 if (bitmap == null) {
                     stopSelf();
@@ -385,13 +383,11 @@ public class UploadRecords extends Service {
         return tmp_file.getAbsolutePath();
     }
 
-    private Bitmap resizeImage(String path_to_image, int max_dimensions) {
+    private Bitmap resizeImage(String path_to_image) {
 
         Uri imageUri = Uri.parse(path_to_image);
 
         // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
-
-        // Part 1. Get the resize factor "inSampleSize".
         int inSampleSize = 1;
 
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -399,7 +395,7 @@ public class UploadRecords extends Service {
         try {
             InputStream inputStream = getContentResolver().openInputStream(imageUri);
             BitmapFactory.decodeResourceStream(getResources(), null, inputStream, null, options);
-            inSampleSize = getInSampleSize(options, max_dimensions);
+            inSampleSize = getInSampleSize(options, 1024);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -411,7 +407,7 @@ public class UploadRecords extends Service {
 
         try {
             InputStream inputStream = getContentResolver().openInputStream(imageUri);
-            input_image = BitmapFactory.decodeStream(inputStream);
+            input_image = BitmapFactory.decodeStream(inputStream, null, options);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -434,16 +430,20 @@ public class UploadRecords extends Service {
         if (input_image == null) {
             Log.e(TAG, "It looks like input image does not exist!");
             return null;
-        } else {
-            return resizeBitmap(input_image, max_dimensions);
+        }
+        if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
+            Log.d(TAG, "The image fits perfectly! Returning image without resize");
+                return input_image;
+            }
+        else {
+            Log.d(TAG, "Resizing image prior to upload...");
+            return resizeBitmap(input_image, 1024);
         }
     }
 
     public static int getInSampleSize(BitmapFactory.Options options, int max_dimensions) {
         int inSampleSize = 1;
-        int height = options.outHeight;
-        int width = options.outWidth;
-        int larger_side = Math.max(height, width);
+        int larger_side = Math.max(options.outHeight, options.outWidth);
 
         if (larger_side > max_dimensions) {
 
@@ -454,14 +454,15 @@ public class UploadRecords extends Service {
             }
 
         }
-        Log.d(TAG, "Original image dimensions: " + height + "×" + width + " px. Resize factor value: " + inSampleSize);
+        Log.d(TAG, "Original image dimensions: " + options.outHeight + "×" + options.outWidth + " px. Resize factor value: " + inSampleSize);
         return inSampleSize;
     }
 
     public Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {
-        Log.i(TAG, "Resizing image to a maximum of " + maxSize + "px.");
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
+
+        Log.i(TAG, "Resizing image of " + height + "×" + width + "px to a maximum of " + maxSize + "px.");
 
         if (height == width) {
             height = maxSize;
