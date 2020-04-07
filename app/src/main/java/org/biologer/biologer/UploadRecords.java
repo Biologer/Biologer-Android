@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -210,7 +212,7 @@ public class UploadRecords extends Service {
                 int image_number = i+1;
                 Log.d(TAG, "Resizing image " + image_number + ": " + image);
                 String tmp_image_path;
-                Bitmap bitmap = resizeImage(image);
+                Bitmap bitmap = resizeImage(image, 1024);
 
                 if (bitmap == null) {
                     stopSelf();
@@ -383,14 +385,43 @@ public class UploadRecords extends Service {
         return tmp_file.getAbsolutePath();
     }
 
-    // This uses MediaStore to resize images, which is forced in Android Q
-    private Bitmap resizeImage(String path_to_image) {
+    private Bitmap resizeImage(String path_to_image, int max_dimensions) {
+
         Uri imageUri = Uri.parse(path_to_image);
+
+        // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
+
+        // Part 1. Get the resize factor "inSampleSize".
+        int inSampleSize = 1;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            BitmapFactory.decodeResourceStream(getResources(), null, inputStream, null, options);
+            inSampleSize = getInSampleSize(options, max_dimensions);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        Bitmap input_image = null;
+
+        options.inSampleSize = inSampleSize;
+        options.inJustDecodeBounds = false; // now load the image into memory
+
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            input_image = BitmapFactory.decodeStream(inputStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        /*
         Bitmap input_image = null;
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ImageDecoder.Source source = ImageDecoder.createSource(this.getContentResolver(), imageUri);
-                input_image = ImageDecoder.decodeBitmap(source);
+                //ImageDecoder.Source source = ImageDecoder.createSource(this.getContentResolver(), imageUri);
+                //input_image = ImageDecoder.decodeBitmap(source);
             } else {
                 input_image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
 
@@ -398,12 +429,33 @@ public class UploadRecords extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
+         */
+
         if (input_image == null) {
             Log.e(TAG, "It looks like input image does not exist!");
             return null;
         } else {
-            return resizeBitmap(input_image, 1024);
+            return resizeBitmap(input_image, max_dimensions);
         }
+    }
+
+    public static int getInSampleSize(BitmapFactory.Options options, int max_dimensions) {
+        int inSampleSize = 1;
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int larger_side = Math.max(height, width);
+
+        if (larger_side > max_dimensions) {
+
+            final int halfSide = larger_side / 2;
+
+            while ((halfSide / inSampleSize) >= max_dimensions) {
+                inSampleSize *= 2;
+            }
+
+        }
+        Log.d(TAG, "Original image dimensions: " + height + "×" + width + " px. Resize factor value: " + inSampleSize);
+        return inSampleSize;
     }
 
     public Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {

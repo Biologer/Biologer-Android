@@ -204,18 +204,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (image1 != null) {
                 Glide.with(this)
                         .load(image1)
+                        .override(100, 100)
                         .into(imageViewPicture1);
                 frameLayoutPicture1.setVisibility(View.VISIBLE);
             }
             if (image2 != null) {
                 Glide.with(this)
                         .load(image2)
+                        .override(100, 100)
                         .into(imageViewPicture2);
                 frameLayoutPicture2.setVisibility(View.VISIBLE);
             }
             if (image3 != null) {
                 Glide.with(this)
                         .load(image3)
+                        .override(100, 100)
                         .into(imageViewPicture3);
                 frameLayoutPicture3.setVisibility(View.VISIBLE);
             }
@@ -458,6 +461,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (image1 != null) {
             Glide.with(this)
                     .load(image1)
+                    .override(100, 100)
                     .into(imageViewPicture1);
             frameLayoutPicture1.setVisibility(View.VISIBLE);
         }
@@ -465,6 +469,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (image2 != null) {
             Glide.with(this)
                     .load(image2)
+                    .override(100, 100)
                     .into(imageViewPicture2);
             frameLayoutPicture2.setVisibility(View.VISIBLE);
         }
@@ -472,6 +477,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (image3 != null) {
             Glide.with(this)
                     .load(image3)
+                    .override(100, 100)
                     .into(imageViewPicture3);
             frameLayoutPicture3.setVisibility(View.VISIBLE);
         }
@@ -978,18 +984,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         image1 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image1)
+                                .override(100, 100)
                                 .into(imageViewPicture1);
                         frameLayoutPicture1.setVisibility(View.VISIBLE);
                     } else if (image2 == null) {
                         image2 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image2)
+                                .override(100, 100)
                                 .into(imageViewPicture2);
                         frameLayoutPicture2.setVisibility(View.VISIBLE);
                     } else if (image3 == null) {
                         image3 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
                                 .load(image3)
+                                .override(100, 100)
                                 .into(imageViewPicture3);
                         frameLayoutPicture3.setVisibility(View.VISIBLE);
                         imageViewGallery.setEnabled(false);
@@ -1043,18 +1052,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (image1 != null) {
                             Glide.with(this)
                                     .load(image1)
+                                    .override(100, 100)
                                     .into(imageViewPicture1);
                             frameLayoutPicture1.setVisibility(View.VISIBLE);
                         }
                         if (image2 != null) {
                             Glide.with(this)
                                     .load(image2)
+                                    .override(100, 100)
                                     .into(imageViewPicture2);
                             frameLayoutPicture2.setVisibility(View.VISIBLE);
                         }
                         if (image3 != null) {
                             Glide.with(this)
                                     .load(image3)
+                                    .override(100, 100)
                                     .into(imageViewPicture3);
                             frameLayoutPicture3.setVisibility(View.VISIBLE);
                         }
@@ -1077,18 +1089,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 image1 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image1)
+                        .override(100, 100)
                         .into(imageViewPicture1);
                 frameLayoutPicture1.setVisibility(View.VISIBLE);
             } else if (image2 == null) {
                 image2 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image2)
+                        .override(100, 100)
                         .into(imageViewPicture2);
                 frameLayoutPicture2.setVisibility(View.VISIBLE);
             } else if (image3 == null) {
                 image3 = String.valueOf(currentPhotoUri);
                 Glide.with(this)
                         .load(image3)
+                        .override(100, 100)
                         .into(imageViewPicture3);
                 frameLayoutPicture3.setVisibility(View.VISIBLE);
                 disablePhotoButtons(true);
