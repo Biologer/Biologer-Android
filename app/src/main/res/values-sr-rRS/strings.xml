@@ -223,5 +223,6 @@
     <string name="both_sexes">Оба пола</string>
     <string name="both">Оба</string>
     <string name="unknown_sex_short">Непознат</string>
+    <string name="image_deleted">This image does not exist on your device anymore!</string>
 
 </resources>

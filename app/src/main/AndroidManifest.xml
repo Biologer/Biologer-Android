@@ -75,7 +75,7 @@
             android:noHistory="true"/>
         <activity
             android:name=".gui.LandingActivity"
-            android:launchMode="standard">
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

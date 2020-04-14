@@ -223,5 +223,6 @@
     <string name="both_sexes">Both sexes</string>
     <string name="both">Both</string>
     <string name="unknown_sex_short">Unknown</string>
+    <string name="image_deleted">This image does not exist on your device anymore!</string>
 
 </resources>

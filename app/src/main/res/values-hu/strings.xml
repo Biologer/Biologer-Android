@@ -225,5 +225,6 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="both_sexes">Mindkét nem</string>
     <string name="both">Mindkét</string>
     <string name="unknown_sex_short">Ismeretlen</string>
+    <string name="image_deleted">This image does not exist on your device anymore!</string>
 
 </resources>
