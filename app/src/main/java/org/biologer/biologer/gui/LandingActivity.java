@@ -339,14 +339,8 @@ public class LandingActivity extends AppCompatActivity
                 break;
             case R.id.nav_help:
                 startActivity(new Intent(LandingActivity.this, IntroActivity.class));
-                finish();
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
-                /*
-                startActivity(new Intent(LandingActivity.this, SetupActivity.class));
-                drawer.closeDrawer(GravityCompat.START);
-                return true;
-                */
             default:
                 fragment = new LandingFragment();
         }
