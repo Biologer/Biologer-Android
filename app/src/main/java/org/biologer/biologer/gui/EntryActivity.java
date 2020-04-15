@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -70,7 +69,6 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -99,9 +97,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex,
+            textViewMethod, textViewHabitat, textViewWaterHabitat, textViewWaterBottom;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
-            editTextFemalesNo, editTextHabitat, editTextFoundOn;
+            editTextFemalesNo, editTextFoundOn;
     AutoCompleteTextView acTextView;
     FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
     ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
@@ -158,11 +157,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         editTextSpecimensNo = findViewById(R.id.editText_number_of_specimens);
         editTextMalesNo = findViewById(R.id.editText_number_of_males);
         editTextFemalesNo = findViewById(R.id.editText_number_of_females);
-        editTextHabitat = findViewById(R.id.editText_habitat);
+        textViewHabitat = findViewById(R.id.textHabitat);
+        textViewHabitat.setOnClickListener(this);
+        textViewWaterHabitat = findViewById(R.id.textWaterHabitat);
+        textViewWaterHabitat.setOnClickListener(this);
+        textViewWaterBottom = findViewById(R.id.textWaterHabitatBottom);
+        textViewWaterBottom.setOnClickListener(this);
         editTextFoundOn = findViewById(R.id.editText_found_on);
         // In order not to use spinner to choose sex, we will put this into EditText
         textViewSex = findViewById(R.id.text_view_sex);
         textViewSex.setOnClickListener(this);
+        textViewMethod = findViewById(R.id.editText_method);
+        textViewMethod.setOnClickListener(this);
         check_dead = findViewById(R.id.dead_specimen);
         check_dead.setOnClickListener(this);
         // Buttons to add images
@@ -491,7 +497,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             disablePhotoButtons(true);
         }
         if (currentItem.getHabitat() != null) {
-            editTextHabitat.setText(currentItem.getHabitat());
+            textViewHabitat.setText(currentItem.getHabitat());
         }
         if (currentItem.getFoundOn() != null) {
             editTextFoundOn.setText(currentItem.getFoundOn());
@@ -586,6 +592,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case R.id.text_view_sex:
                 getSexForList();
                 break;
+            case R.id.editText_method:
+                getMethod();
+                break;
+            case R.id.textHabitat:
+                getHabitat();
+                break;
+            case R.id.textWaterHabitat:
+                getWaterHabitat();
+                break;
+            case R.id.textWaterHabitatBottom:
+                getWaterBottom();
+                break;
             case R.id.ib_pic1_del:
                 Log.i(TAG, "Deleting image 1.");
                 frameLayoutPicture1.setVisibility(View.GONE);
@@ -627,6 +645,43 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 takePhotoFromGallery();
                 break;
         }
+    }
+
+    private void getWaterBottom() {
+        String[] strings = {"", "stenovito", "kamenito", "šljunkovito", "peskovito", "muljevito", "drugo"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(strings, (dialogInterface, i) -> {
+            textViewWaterBottom.setText(strings[i]);
+        });
+        builder.show();
+    }
+
+    private void getWaterHabitat() {
+        String[] strings = {"", "jezero", "bara", "lokva", "akumulacija", "ribnjak", "rit", "močvara", "tresava", "reka", "potok", "izvor", "kanal", "vodopad", "drugo"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(strings, (dialogInterface, i) -> {
+            textViewWaterHabitat.setText(strings[i]);
+        });
+        builder.show();
+    }
+
+    private void getHabitat() {
+        String[] strings = {"", "šuma", "žbunjak", "travnjak", "peščara", "slatina", "sipar", "stena", "visoka zelen", "stajaća voda",
+                            "tekuća voda", "obala", "poljoprivreda", "antropogeno", "drugo"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(strings, (dialogInterface, i) -> {
+            textViewHabitat.setText(strings[i]);
+        });
+        builder.show();
+    }
+
+    private void getMethod() {
+        String[] strings = {"", "ručno hvatanje", "mreže", "vrše", "klopke", "bageri", "sita", "elektroribolov", "videozamke", "eholokacija", "posmatranje", "ostalo"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(strings, (dialogInterface, i) -> {
+            textViewMethod.setText(strings[i]);
+        });
+        builder.show();
     }
 
     private void openInGallery(String image) {
@@ -750,7 +805,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
         String deathComment = (editTextDeathComment.getText() != null) ? editTextDeathComment.getText().toString() : "";
-        String habitat = editTextHabitat.getText() != null ? editTextHabitat.getText().toString() : "";
+        String habitat = textViewHabitat.getText() != null ? textViewHabitat.getText().toString() : "";
         String foundOn = editTextFoundOn.getText() != null ? editTextFoundOn.getText().toString() : "";
 
         if (entry_id != 1 || isNewEntry()) {
