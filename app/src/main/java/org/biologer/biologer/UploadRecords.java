@@ -62,6 +62,7 @@ public class UploadRecords extends Service {
     ArrayList<Entry> entryList;
     int totalEntries = 0;
     int remainingEntries = 0;
+    int retry_number = 1;
     ArrayList<String> images_array = new ArrayList<>();
     List<APIEntry.Photo> photos = null;
     File image1, image2, image3;
@@ -305,7 +306,8 @@ public class UploadRecords extends Service {
                             e.printStackTrace();
                         }
                     } else {
-                        Log.i(TAG, "Uploading of entry did not work for some reason. No internet?");
+                        Log.i(TAG, "Uploading has bean canceled by the user.");
+                        //cancelUpload("Canceled!", "Uploading of entry has bean canceled by the user.");
                     }
                 }
             }
@@ -314,6 +316,12 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload("Failed!", "Uploading of entry was not successful!");
+                try {
+                    deleteCache();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                stopSelf();
             }
         });
     }
@@ -351,6 +359,9 @@ public class UploadRecords extends Service {
                                 uploadStep2();
                             }
                         }
+                    } else {
+                        Log.i(TAG, "Uploading of images has bean canceled by the user.");
+                        //cancelUpload("Canceled!", "Uploading of images has bean canceled by the user.");
                     }
                 }
             }
@@ -360,6 +371,12 @@ public class UploadRecords extends Service {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
                     cancelUpload("Failed!", "Uploading of photo was not successful!");
+                    try {
+                        deleteCache();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    stopSelf();
                 }
             }
         });

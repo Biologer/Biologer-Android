@@ -16,14 +16,24 @@
 #   public *;
 #}
 
+###############################################
+# Debuging code
+###############################################
+# This option forces Proguard to use different obfuscated names
+# for different members. It avoids the 'or' stack traces.
+#-useuniqueclassmembernames
+
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
 
+###############################################
+# Biologer app
+###############################################
 # Keep my entire code, damn you proguard!!!
 -keep class org.biologer.** { *; }
 
