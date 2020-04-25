@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
@@ -70,6 +71,7 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -632,29 +634,33 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void openInGallery(String image) {
         Uri uri = Uri.parse(image);
 
-        try { // Try to open image just to see if it still exist on the storage.
-            InputStream inputStream = getContentResolver().openInputStream(uri);
-            if (inputStream != null) {
-                inputStream.close();
+        // Try to open image just to see if it still exist on the storage.
+        ParcelFileDescriptor parcelFileDescriptor;
+        try {
+            parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
 
-                // If the image is there open it!
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.setData(uri);
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    startActivity(intent);
-                } else {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.setDataAndType(uri, "image/*");
-                    startActivity(intent);
-                }
-
+            // If the image is there open it!
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setData(uri);
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivity(intent);
+            } else {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setDataAndType(uri, "image/*");
+                startActivity(intent);
             }
-        } catch (IOException e) {
+
+            assert parcelFileDescriptor != null;
+            parcelFileDescriptor.close();
+
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
             Toast.makeText(this, R.string.image_deleted, Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }

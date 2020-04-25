@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,7 @@ import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -403,12 +405,24 @@ public class UploadRecords extends Service {
     private Bitmap resizeImage(String path_to_image) {
 
         Uri imageUri = Uri.parse(path_to_image);
+        ParcelFileDescriptor parcelFileDescriptor = null;
+        try {
+            parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        assert parcelFileDescriptor != null;
+        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
 
         // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
-        int inSampleSize = 1;
+        int inSampleSize;
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+        BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+        inSampleSize = getInSampleSize(options, 1024);
+
+        /*
         try {
             InputStream inputStream = getContentResolver().openInputStream(imageUri);
             BitmapFactory.decodeResourceStream(getResources(), null, inputStream, null, options);
@@ -416,16 +430,18 @@ public class UploadRecords extends Service {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        */
 
-        Bitmap input_image = null;
+        Bitmap input_image;
 
         options.inSampleSize = inSampleSize;
         options.inJustDecodeBounds = false; // now load the image into memory
+        input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
 
+        //  Finally close the FileDescriptor
         try {
-            InputStream inputStream = getContentResolver().openInputStream(imageUri);
-            input_image = BitmapFactory.decodeStream(inputStream, null, options);
-        } catch (FileNotFoundException e) {
+            parcelFileDescriptor.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

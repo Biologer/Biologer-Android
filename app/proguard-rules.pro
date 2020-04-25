@@ -21,7 +21,7 @@
 ###############################################
 # This option forces Proguard to use different obfuscated names
 # for different members. It avoids the 'or' stack traces.
-#-useuniqueclassmembernames
+-useuniqueclassmembernames
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
