@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -36,7 +37,6 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -297,19 +297,41 @@ public class UploadRecords extends Service {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
                 if (response.isSuccessful()) {
-                    if (keep_going) {
-                        App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
-                        entryList.remove(0);
-                        EventBus.getDefault().post(new DeleteEntryFromList());
-                        m = 0;
-                        try {
-                            uploadStep1();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+
+                    if (response.code() == 429) {
+                        String retry_after = response.headers().get("Retry-After");
+                        Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + "seconds.");
+                        if (retry_after != null) {
+                            int wait = Integer.parseInt(retry_after) * 1000;
+                            SystemClock.sleep(wait);
+                            uploadStep2();
+/*
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(wait);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }).start();
+ */
                         }
-                    } else {
-                        Log.i(TAG, "Uploading has bean canceled by the user.");
-                        //cancelUpload("Canceled!", "Uploading of entry has bean canceled by the user.");
+                    }
+
+                    else {
+                        if (keep_going) {
+                            App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
+                            entryList.remove(0);
+                            EventBus.getDefault().post(new DeleteEntryFromList());
+                            m = 0;
+                            try {
+                                uploadStep1();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Log.i(TAG, "Uploading has bean canceled by the user.");
+                            //cancelUpload("Canceled!", "Uploading of entry has bean canceled by the user.");
+                        }
                     }
                 }
             }
@@ -350,20 +372,42 @@ public class UploadRecords extends Service {
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
                 if (response.isSuccessful()) {
-                    if (keep_going) {
-                        UploadFileResponse responseFile = response.body();
 
-                        if (responseFile != null) {
-                            images_array.add(responseFile.getFile());
-                            Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
-                            m++;
-                            if (m == n) {
-                                uploadStep2();
-                            }
+                    if (response.code() == 429) {
+                        String retry_after = response.headers().get("Retry-After");
+                        Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + "seconds.");
+                        if (retry_after != null) {
+                            int wait = Integer.parseInt(retry_after) * 1000;
+                            SystemClock.sleep(wait);
+                            uploadStep2();
+/*
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(wait);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }).start();
+ */
                         }
-                    } else {
-                        Log.i(TAG, "Uploading of images has bean canceled by the user.");
-                        //cancelUpload("Canceled!", "Uploading of images has bean canceled by the user.");
+                    }
+
+                    else {
+                        if (keep_going) {
+                            UploadFileResponse responseFile = response.body();
+
+                            if (responseFile != null) {
+                                images_array.add(responseFile.getFile());
+                                Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
+                                m++;
+                                if (m == n) {
+                                    uploadStep2();
+                                }
+                            }
+                        } else {
+                            Log.i(TAG, "Uploading of images has bean canceled by the user.");
+                            //cancelUpload("Canceled!", "Uploading of images has bean canceled by the user.");
+                        }
                     }
                 }
             }
@@ -411,54 +455,31 @@ public class UploadRecords extends Service {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        assert parcelFileDescriptor != null;
-        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
 
-        // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
-        int inSampleSize;
-
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
-        BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
-        inSampleSize = getInSampleSize(options, 1024);
-
-        /*
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(imageUri);
-            BitmapFactory.decodeResourceStream(getResources(), null, inputStream, null, options);
-            inSampleSize = getInSampleSize(options, 1024);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        */
-
-        Bitmap input_image;
-
-        options.inSampleSize = inSampleSize;
-        options.inJustDecodeBounds = false; // now load the image into memory
-        input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
-
-        //  Finally close the FileDescriptor
-        try {
-            parcelFileDescriptor.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        /*
         Bitmap input_image = null;
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                //ImageDecoder.Source source = ImageDecoder.createSource(this.getContentResolver(), imageUri);
-                //input_image = ImageDecoder.decodeBitmap(source);
-            } else {
-                input_image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
 
+        if (parcelFileDescriptor != null) {
+            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+
+            // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
+            int inSampleSize;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+            BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+            inSampleSize = getInSampleSize(options, 1024);
+
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false; // now load the image into memory
+            input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+
+            //  Finally close the FileDescriptor
+            try {
+                parcelFileDescriptor.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-         */
 
         if (input_image == null) {
             Log.e(TAG, "It looks like input image does not exist!");

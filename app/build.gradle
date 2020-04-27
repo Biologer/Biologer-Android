@@ -16,8 +16,8 @@ android {
         // API level 19 = Android 4.4
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 61
-        versionName "2.1.6"
+        versionCode 63
+        versionName "2.1.8"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {

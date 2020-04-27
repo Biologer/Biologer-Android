@@ -16,7 +16,6 @@ import org.biologer.biologer.SettingsManager;
 
 import java.util.Objects;
 
-
 public class AboutFragment extends Fragment {
 
     @Override
@@ -36,14 +35,11 @@ public class AboutFragment extends Fragment {
         }
 
         // Add onClick to the biologer.org link
-        TextView address = (TextView) Objects.requireNonNull(getActivity()).findViewById(R.id.biologerorg_url);
-        address.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setData(Uri.parse("https://biologer.org"));
-                Objects.requireNonNull(getActivity()).startActivity(i);
-            }
+        TextView address = Objects.requireNonNull(getActivity()).findViewById(R.id.biologerorg_url);
+        address.setOnClickListener(view1 -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://biologer.org"));
+            startActivity(browserIntent);
         });
+
     }
 }
