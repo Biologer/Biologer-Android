@@ -308,7 +308,6 @@ public class UploadRecords extends Service {
                 }
 
                 if (response.isSuccessful()) {
-                     Log.i(TAG, "Response code 201 received. All good :)");
                         if (keep_going) {
                             SystemClock.sleep(300);
                             App.get().getDaoSession().getEntryDao().delete(entryList.get(0));

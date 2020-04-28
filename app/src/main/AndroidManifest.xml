@@ -87,11 +87,9 @@
         </activity>
         <activity android:name=".gui.IntroActivity" />
 
-        <service android:name="org.biologer.biologer.FetchTaxa"
-            android:enabled="true" />
+        <service android:name="org.biologer.biologer.FetchTaxa"/>
 
-        <service android:name="org.biologer.biologer.UploadRecords"
-            android:enabled="true" />
+        <service android:name="org.biologer.biologer.UploadRecords"/>
 
         <service android:name="org.biologer.biologer.UpdateLicenses"/>
 

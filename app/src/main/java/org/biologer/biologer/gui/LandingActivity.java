@@ -409,6 +409,7 @@ public class LandingActivity extends AppCompatActivity
         if (App.get().getDaoSession().getEntryDao().count() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
+            uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             uploadRecords.setAction(UploadRecords.ACTION_START);
             startService(uploadRecords);
         } else {
