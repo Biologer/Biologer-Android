@@ -296,29 +296,21 @@ public class UploadRecords extends Service {
         call.enqueue(new Callback<APIEntryResponse>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
-                if (response.isSuccessful()) {
 
-                    if (response.code() == 429) {
-                        String retry_after = response.headers().get("Retry-After");
-                        Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + "seconds.");
-                        if (retry_after != null) {
-                            int wait = Integer.parseInt(retry_after) * 1000;
-                            SystemClock.sleep(wait);
-                            uploadStep2();
-/*
-                            new Thread(() -> {
-                                try {
-                                    Thread.sleep(wait);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }).start();
- */
-                        }
+                if (response.code() == 429) {
+                    String retry_after = response.headers().get("Retry-After");
+                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
+                    if (retry_after != null) {
+                        int wait = Integer.parseInt(retry_after) * 1000;
+                        SystemClock.sleep(wait);
+                        uploadStep2();
                     }
+                }
 
-                    else {
+                if (response.isSuccessful()) {
+                     Log.i(TAG, "Response code 201 received. All good :)");
                         if (keep_going) {
+                            SystemClock.sleep(300);
                             App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
                             entryList.remove(0);
                             EventBus.getDefault().post(new DeleteEntryFromList());
@@ -330,9 +322,7 @@ public class UploadRecords extends Service {
                             }
                         } else {
                             Log.i(TAG, "Uploading has bean canceled by the user.");
-                            //cancelUpload("Canceled!", "Uploading of entry has bean canceled by the user.");
                         }
-                    }
                 }
             }
 
@@ -371,43 +361,30 @@ public class UploadRecords extends Service {
             @Override
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
-                if (response.isSuccessful()) {
-
-                    if (response.code() == 429) {
-                        String retry_after = response.headers().get("Retry-After");
-                        Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + "seconds.");
-                        if (retry_after != null) {
-                            int wait = Integer.parseInt(retry_after) * 1000;
-                            SystemClock.sleep(wait);
-                            uploadStep2();
-/*
-                            new Thread(() -> {
-                                try {
-                                    Thread.sleep(wait);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }).start();
- */
-                        }
+                if (response.code() == 429) {
+                    String retry_after = response.headers().get("Retry-After");
+                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
+                    if (retry_after != null) {
+                        int wait = Integer.parseInt(retry_after) * 1000;
+                        SystemClock.sleep(wait);
+                        uploadPhoto(image);
                     }
+                }
 
-                    else {
-                        if (keep_going) {
-                            UploadFileResponse responseFile = response.body();
+                if (response.isSuccessful()) {
+                    if (keep_going) {
+                        UploadFileResponse responseFile = response.body();
 
-                            if (responseFile != null) {
-                                images_array.add(responseFile.getFile());
-                                Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
-                                m++;
-                                if (m == n) {
-                                    uploadStep2();
-                                }
+                        if (responseFile != null) {
+                            images_array.add(responseFile.getFile());
+                            Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
+                            m++;
+                            if (m == n) {
+                                uploadStep2();
                             }
-                        } else {
-                            Log.i(TAG, "Uploading of images has bean canceled by the user.");
-                            //cancelUpload("Canceled!", "Uploading of images has bean canceled by the user.");
                         }
+                    } else {
+                        Log.i(TAG, "Uploading of images has bean canceled by the user.");
                     }
                 }
             }

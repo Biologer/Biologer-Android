@@ -33,8 +33,8 @@ public class RetrofitClient {
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .readTimeout(15, TimeUnit.SECONDS)
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(5, TimeUnit.MINUTES)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .writeTimeout(15, TimeUnit.SECONDS)
                     .addInterceptor(
                             chain -> {
                                 Request request = chain.request();
