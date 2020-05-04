@@ -285,32 +285,33 @@ public class LandingActivity extends AppCompatActivity
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
                 ObservationTypesResponse observationsResponse = response.body();
-                assert observationsResponse != null;
-                if (observationsResponse.getData().length == 0) {
-                    Log.d(TAG, "Recent observation types are already downloaded from server.");
-                } else {
-                    ObservationTypes[] obs = observationsResponse.getData();
-                    for (ObservationTypes ob : obs) {
-                        Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
+                if (observationsResponse != null) {
+                    if (observationsResponse.getData().length == 0) {
+                        Log.d(TAG, "Recent observation types are already downloaded from server.");
+                    } else {
+                        ObservationTypes[] obs = observationsResponse.getData();
+                        for (ObservationTypes ob : obs) {
+                            Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
 
-                        // Save translations in a separate table...
-                        List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
-                        ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
-                        for (int j = 0; j < observation_translations.size(); j++) {
-                            ObservationTypesData localization = new ObservationTypesData();
-                            localization.setObservationId(ob.getId().longValue());
-                            localization.setSlug(ob.getSlug());
-                            localization.setLocaleId(observation_translations.get(j).getId());
-                            localization.setLocale(observation_translations.get(j).getLocale());
-                            localization.setName(observation_translations.get(j).getName());
-                            localizations[j] = localization;
+                            // Save translations in a separate table...
+                            List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
+                            ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
+                            for (int j = 0; j < observation_translations.size(); j++) {
+                                ObservationTypesData localization = new ObservationTypesData();
+                                localization.setObservationId(ob.getId().longValue());
+                                localization.setSlug(ob.getSlug());
+                                localization.setLocaleId(observation_translations.get(j).getId());
+                                localization.setLocale(observation_translations.get(j).getLocale());
+                                localization.setName(observation_translations.get(j).getName());
+                                localizations[j] = localization;
+                            }
+                            App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
+
                         }
-                        App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
-
+                        Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
+                        SettingsManager.setObservationTypesUpdated(system_time);
+                        Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                     }
-                    Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
-                    SettingsManager.setObservationTypesUpdated(system_time);
-                    Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                 }
             }
 
