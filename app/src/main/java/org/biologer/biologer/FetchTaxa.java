@@ -208,6 +208,8 @@ public class FetchTaxa extends Service {
             long taxon_id = taxon.getId();
             String taxon_latin_name = taxon.getName();
             // Log.d(TAG, "Adding taxon " + taxon_name + " with ID: " + taxon_id);
+            boolean use_atlas_code = taxon.isUses_atlas_codes();
+            String ancestor_names = taxon.getAncestors_names();
 
             List<TaxaStages> stages = taxon.getStages();
             Stage[] final_stages = new Stage[stages.size()];
@@ -225,6 +227,8 @@ public class FetchTaxa extends Service {
                         null,
                         taxon_id,
                         taxon_latin_name,
+                        use_atlas_code,
+                        ancestor_names,
                         taxaTranslation.getLocale(),
                         taxaTranslation.getNativeName());
                 //Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());

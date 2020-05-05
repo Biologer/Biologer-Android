@@ -226,5 +226,21 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="both">Mindkét</string>
     <string name="unknown_sex_short">Ismeretlen</string>
     <string name="image_deleted">This image does not exist on your device anymore!</string>
+    <string name="select_atlas_code">Nesting atlas code</string>
+    <string name="atlas_code_0">Species observed but suspected to be still on migration or to be summering non-breeder</string>
+    <string name="atlas_code_1">Species observed in breeding season in possible nesting habitat</string>
+    <string name="atlas_code_2">3. Singing male(s) present (or breeding calls heard) in breeding season</string>
+    <string name="atlas_code_3">4. Pair observed in suitable nesting habitat in breeding season</string>
+    <string name="atlas_code_4">5. Permanent territory presumed through registration of territorial behaviour (song, etc.) on at least two different days a week or more apart at the same place</string>
+    <string name="atlas_code_8">8 Brood patch on adult examined in the hand</string>
+    <string name="atlas_code_9">9. Nest building or excavating nest-hole</string>
+    <string name="atlas_code_10">10. Distraction-display or injury-feigning</string>
+    <string name="atlas_code_11">11. Used nest or eggshells found (occupied or laid within period of survey)</string>
+    <string name="atlas_code_12">12. Recently fledged young (nidicolous species) or downy young (nidifugous species)</string>
+    <string name="atlas_code_13">13. Adults entering or leaving nest-site in circumstances indicating occupied nest (including high nests or nest-holes, the contents of which can not be seen) or adult seen incubating</string>
+    <string name="atlas_code_14">14. Adult carrying faecal sac or food for young</string>
+    <string name="atlas_code_15">15. Nest containing eggs</string>
+    <string name="atlas_code_16">16. Nest with young seen or heard</string>
+    <string name="not_selected">Not selected</string>
 
 </resources>

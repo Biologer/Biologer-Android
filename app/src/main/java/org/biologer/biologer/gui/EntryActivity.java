@@ -98,7 +98,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private int CAMERA = 2, MAP = 3;
     int GALLERY = 1;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
     AutoCompleteTextView acTextView;
@@ -162,6 +162,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // In order not to use spinner to choose sex, we will put this into EditText
         textViewSex = findViewById(R.id.text_view_sex);
         textViewSex.setOnClickListener(this);
+        textViewAtlasCode = findViewById(R.id.text_view_atlas_code);
+        textViewAtlasCode.setOnClickListener(this);
         check_dead = findViewById(R.id.dead_specimen);
         check_dead.setOnClickListener(this);
         // Buttons to add images
@@ -314,9 +316,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             stages.setVisibility(View.VISIBLE);
                         }
                         Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
+                        if (taxonData.getUseAtlasCode()) {
+                            textViewAtlasCode.setVisibility(View.VISIBLE);
+                            Log.d(TAG, "Taxon uses the atlas code. Enabling Atlas code for this taxon.");
+                        }
                     } else {
                         stages.setVisibility(View.GONE);
-                        Log.d(TAG, "Taxon is not selected from the list. Disabling Stages for this taxon.");
+                        textViewAtlasCode.setVisibility(View.GONE);
+                        Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
                     }
                     // Enable/disable Save button in Toolbar
                     if (acTextView.getText().toString().length() > 1) {
@@ -449,6 +456,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             textViewSex.setText(getString(R.string.is_female));
         }
 
+        // Get the atlas code.
+        if (currentItem.getAtlas_code() != null) {
+            Long code = currentItem.getAtlas_code();
+            Log.d(TAG, "Setting the spinner to atlas code: " + code);
+            textViewAtlasCode.setText(setAtlasCode(Math.toIntExact(code)));
+        }
+
         if (currentItem.getDeadOrAlive().equals("true")) {
             // Specimen is a live
             check_dead.setChecked(false);
@@ -579,6 +593,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 Log.d(TAG, "Text for number of females changed.");
                 editTextSpecimensNo.setVisibility(View.GONE);
                 break;
+            case R.id.text_view_atlas_code:
+                getAtlasCodeForList();
+                break;
             case R.id.text_view_stages:
                 getStageForTaxon();
                 break;
@@ -696,7 +713,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (currentLocation.latitude > 0 && (acc <= 25)) {
             if (taxon == null) {
                 Log.d(TAG, "Saving taxon with unknown ID as simple text.");
-                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(), null, null);
+                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(), false, null, null, null);
                 saveEntry3(taxon_noId);
             } else {
                 Log.d(TAG, "Saving taxon with known ID: " + taxon.getTaxonId());
@@ -772,7 +789,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
-            Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage,
+            Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
                     String.valueOf(!check_dead.isChecked()), deathComment, currentLocation.latitude, currentLocation.longitude, acc,
                     elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
@@ -787,6 +804,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.setNoSpecimens(numberOfSpecimens);
             currentItem.setSex(sex);
             currentItem.setStage(selectedStage);
+            currentItem.setAtlasCode(getAtlasCode());
             currentItem.setDeadOrAlive(String.valueOf(!check_dead.isChecked()));
             currentItem.setCauseOfDeath(deathComment);
             currentItem.setLattitude(currentLocation.latitude);
@@ -837,6 +855,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
         else {
             return "";
+        }
+    }
+
+    private Long getAtlasCode() {
+        String[] atlas_codes = {getString(R.string.atlas_code_0), getString(R.string.atlas_code_1), getString(R.string.atlas_code_2),
+                getString(R.string.atlas_code_3), getString(R.string.atlas_code_4), getString(R.string.atlas_code_5),
+                getString(R.string.atlas_code_6), getString(R.string.atlas_code_7), getString(R.string.atlas_code_8),
+                getString(R.string.atlas_code_9), getString(R.string.atlas_code_10), getString(R.string.atlas_code_11),
+                getString(R.string.atlas_code_12), getString(R.string.atlas_code_13), getString(R.string.atlas_code_14),
+                getString(R.string.atlas_code_15), getString(R.string.atlas_code_16)};
+        String atlas_code = textViewAtlasCode.getText().toString();
+        int atlas_code_id = Arrays.asList(atlas_codes).indexOf(atlas_code);
+        if (atlas_code_id == -1) {
+            Log.i(TAG, "Atlas code is not selected.");
+            return null;
+        } else {
+            Log.i(TAG, "Setting the atlas code to: " + atlas_code_id);
+            return (long) atlas_code_id;
         }
     }
 
@@ -915,6 +951,31 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         });
         builder.show();
+    }
+
+    private void getAtlasCodeForList() {
+        final String[] atlas_codes = {getString(R.string.not_selected),
+                getString(R.string.atlas_code_0), getString(R.string.atlas_code_1), getString(R.string.atlas_code_2),
+                getString(R.string.atlas_code_3), getString(R.string.atlas_code_4), getString(R.string.atlas_code_5),
+                getString(R.string.atlas_code_6), getString(R.string.atlas_code_7), getString(R.string.atlas_code_8),
+                getString(R.string.atlas_code_9), getString(R.string.atlas_code_10), getString(R.string.atlas_code_11),
+                getString(R.string.atlas_code_12), getString(R.string.atlas_code_13), getString(R.string.atlas_code_14),
+                getString(R.string.atlas_code_15), getString(R.string.atlas_code_16)};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(atlas_codes, (dialogInterface, i) -> {
+            textViewAtlasCode.setText(atlas_codes[i]);
+        });
+        builder.show();
+    }
+
+    private String setAtlasCode(int index) {
+        final String[] atlas_codes = {getString(R.string.atlas_code_0), getString(R.string.atlas_code_1), getString(R.string.atlas_code_2),
+                getString(R.string.atlas_code_3), getString(R.string.atlas_code_4), getString(R.string.atlas_code_5),
+                getString(R.string.atlas_code_6), getString(R.string.atlas_code_7), getString(R.string.atlas_code_8),
+                getString(R.string.atlas_code_9), getString(R.string.atlas_code_10), getString(R.string.atlas_code_11),
+                getString(R.string.atlas_code_12), getString(R.string.atlas_code_13), getString(R.string.atlas_code_14),
+                getString(R.string.atlas_code_15), getString(R.string.atlas_code_16)};
+        return atlas_codes[index];
     }
 
     private void showMap() {

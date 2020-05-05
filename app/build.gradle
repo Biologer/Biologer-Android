@@ -16,8 +16,8 @@ android {
         // API level 19 = Android 4.4
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 66
-        versionName "2.1.11"
+        versionCode 67
+        versionName "2.2"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
@@ -27,7 +27,7 @@ android {
     }
 
 greendao {
-        schemaVersion 141
+        schemaVersion 143
     }
 
     applicationVariants.all { variant ->

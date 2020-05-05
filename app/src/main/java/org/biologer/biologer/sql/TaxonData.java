@@ -14,14 +14,18 @@ public class TaxonData {
     private Long id;
     private Long taxonId;
     private String latinName;
+    private boolean useAtlasCode;
+    private String ancestorNames;
     private String locale;
     private String nativeName;
-    @Generated(hash = 1359738450)
-    public TaxonData(Long id, Long taxonId, String latinName, String locale,
-            String nativeName) {
+    @Generated(hash = 1218675374)
+    public TaxonData(Long id, Long taxonId, String latinName, boolean useAtlasCode,
+            String ancestorNames, String locale, String nativeName) {
         this.id = id;
         this.taxonId = taxonId;
         this.latinName = latinName;
+        this.useAtlasCode = useAtlasCode;
+        this.ancestorNames = ancestorNames;
         this.locale = locale;
         this.nativeName = nativeName;
     }
@@ -64,6 +68,22 @@ public class TaxonData {
 
     public void setTaxonId(Long taxonId) {
         this.taxonId = taxonId;
+    }
+
+    public boolean getUseAtlasCode() {
+        return useAtlasCode;
+    }
+
+    public void setUseAtlasCode(boolean useAtlasCode) {
+        this.useAtlasCode = useAtlasCode;
+    }
+
+    public String getAncestorNames() {
+        return ancestorNames;
+    }
+
+    public void setAncestorNames(String ancestorNames) {
+        this.ancestorNames = ancestorNames;
     }
 }
 

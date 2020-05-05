@@ -29,6 +29,10 @@ public class Taxa {
     private boolean allochthonous;
     @JsonProperty("invasive")
     private boolean invasive;
+    @JsonProperty("uses_atlas_codes")
+    private boolean uses_atlas_codes;
+    @JsonProperty("ancestors_names")
+    private String ancestors_names;
     @JsonProperty("can_edit")
     private boolean can_edit;
     @JsonProperty("can_delete")
@@ -242,5 +246,21 @@ public class Taxa {
 
     public void setCan_delete(boolean can_delete) {
         this.can_delete = can_delete;
+    }
+
+    public boolean isUses_atlas_codes() {
+        return uses_atlas_codes;
+    }
+
+    public void setUses_atlas_codes(boolean uses_atlas_codes) {
+        this.uses_atlas_codes = uses_atlas_codes;
+    }
+
+    public String getAncestors_names() {
+        return ancestors_names;
+    }
+
+    public void setAncestors_names(String ancestors_names) {
+        this.ancestors_names = ancestors_names;
     }
 }

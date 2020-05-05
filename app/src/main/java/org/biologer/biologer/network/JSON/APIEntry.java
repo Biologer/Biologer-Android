@@ -44,6 +44,8 @@ public class APIEntry {
     private String foundOn;
     @JsonProperty("stage_id")
     private Long stageId;
+    @JsonProperty("atlas_code")
+    private Long atlas_code;
     @JsonProperty("found_dead")
     private int foundDead;
     @JsonProperty("found_dead_note")
@@ -285,6 +287,14 @@ public class APIEntry {
     @JsonProperty("habitat")
     public void setHabitat(String habitat) {
         this.habitat = habitat;
+    }
+
+    public Long getAtlasCode() {
+        return atlas_code;
+    }
+
+    public void setAtlasCode(Long atlas_code) {
+        this.atlas_code = atlas_code;
     }
 
     public static class Photo {

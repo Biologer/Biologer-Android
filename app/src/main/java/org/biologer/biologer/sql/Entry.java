@@ -22,6 +22,7 @@ public class Entry {
     private Integer noSpecimens;
     private String sex;
     private Long stage;
+    private Long atlas_code;
     private String deadOrAlive;
     private String causeOfDeath;
     private double lattitude;
@@ -40,13 +41,12 @@ public class Entry {
     private String habitat;
     private String observation_type_ids;
 
-    @Generated(hash = 335098683)
+    @Generated(hash = 935327969)
     public Entry(Long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
-            String comment, Integer noSpecimens, String sex, Long stage, String deadOrAlive,
+            String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
             String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
-            String location, String slika1, String slika2, String slika3, String projectId,
-            String foundOn, String data_licence, int image_licence, String time, String habitat,
-            String observation_type_ids) {
+            String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
+            String data_licence, int image_licence, String time, String habitat, String observation_type_ids) {
         this.id = id;
         this.taxonId = taxonId;
         this.taxonSuggestion = taxonSuggestion;
@@ -57,6 +57,7 @@ public class Entry {
         this.noSpecimens = noSpecimens;
         this.sex = sex;
         this.stage = stage;
+        this.atlas_code = atlas_code;
         this.deadOrAlive = deadOrAlive;
         this.causeOfDeath = causeOfDeath;
         this.lattitude = lattitude;
@@ -241,5 +242,19 @@ public class Entry {
 
     public void setObservation_type_ids(String observation_type_ids) {
         this.observation_type_ids = observation_type_ids;
+    }
+
+    public Long getAtlasCode() {
+        return atlas_code;
+    }
+
+    public void setAtlasCode(Long atlas_code) {
+        this.atlas_code = atlas_code;
+    }
+    public Long getAtlas_code() {
+        return this.atlas_code;
+    }
+    public void setAtlas_code(Long atlas_code) {
+        this.atlas_code = atlas_code;
     }
 }

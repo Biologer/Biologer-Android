@@ -270,6 +270,7 @@ public class UploadRecords extends Service {
         apiEntry.setProject(entry.getProjectId());
         apiEntry.setFoundOn(entry.getFoundOn());
         apiEntry.setStageId(entry.getStage());
+        apiEntry.setAtlasCode(entry.getAtlasCode());
         apiEntry.setFoundDead(entry.getDeadOrAlive().equals("true") ? 0 : 1);
         apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
         apiEntry.setDataLicense(entry.getData_licence());
