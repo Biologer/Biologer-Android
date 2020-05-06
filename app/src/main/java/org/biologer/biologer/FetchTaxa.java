@@ -207,7 +207,7 @@ public class FetchTaxa extends Service {
         for (Taxa taxon : taxa) {
             long taxon_id = taxon.getId();
             String taxon_latin_name = taxon.getName();
-            // Log.d(TAG, "Adding taxon " + taxon_name + " with ID: " + taxon_id);
+            // Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
             boolean use_atlas_code = taxon.isUses_atlas_codes();
             String ancestor_names = taxon.getAncestors_names();
 
@@ -220,20 +220,38 @@ public class FetchTaxa extends Service {
             App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
-            TaxonData[] final_translations = new TaxonData[taxaTranslations.size()];
-            for (int i = 0; i < taxaTranslations.size(); i++) {
-                TaxaTranslations taxaTranslation = taxaTranslations.get(i);
-                final_translations[i] = new TaxonData(
+
+            // If there are no translations, just take the taxon and set its translation english with value null
+            if (taxaTranslations.isEmpty()) {
+                TaxonData final_translation = new TaxonData(
                         null,
                         taxon_id,
                         taxon_latin_name,
                         use_atlas_code,
                         ancestor_names,
-                        taxaTranslation.getLocale(),
-                        taxaTranslation.getNativeName());
-                //Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
+                        "en",
+                        null);
+                // Log.d(TAG, "Taxon translation_id: null" + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: en (empty)" + ", native name: null");
+                App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_translation);
             }
-            App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_translations);
+
+            // If there are translations save them individually
+            else {
+                TaxonData[] final_translations = new TaxonData[taxaTranslations.size()];
+                for (int i = 0; i < taxaTranslations.size(); i++) {
+                    TaxaTranslations taxaTranslation = taxaTranslations.get(i);
+                    final_translations[i] = new TaxonData(
+                            null,
+                            taxon_id,
+                            taxon_latin_name,
+                            use_atlas_code,
+                            ancestor_names,
+                            taxaTranslation.getLocale(),
+                            taxaTranslation.getNativeName());
+                    // Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
+                }
+                App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_translations);
+            }
         }
 
         // If we just finished fetching taxa data for the last page, we can stop showing

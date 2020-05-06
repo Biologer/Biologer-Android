@@ -57,6 +57,7 @@ import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.sql.Entry;
@@ -140,7 +141,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         checkWriteStoragePermission();
 
         // Get the system locale to translate names of the taxa
-        locale_script = getLocaleScript();
+        locale_script = Localisation.getLocaleScript();
 
         /*
          * Get the view...
@@ -293,7 +294,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         }
                     }
 
-                    query.limit(10);
+                    query.limit(15);
                     List<TaxonData> taxaList = query.list();
 
                     String[] taxaNames = new String[taxaList.size()];
@@ -1452,32 +1453,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             return 0;
         }
         return 0;
-    }
-
-    Locale getCurrentLocale() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Locale locale = getResources().getConfiguration().getLocales().get(0);
-            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
-            return locale;
-        } else {
-            Locale locale = getResources().getConfiguration().locale;
-            Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
-            return locale;
-        }
-    }
-
-    private String getLocaleScript() {
-        Locale locale = getCurrentLocale();
-        // Workaround for Serbian Latin script
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
-                return "sr-Latn";
-            } else {
-                return locale.getLanguage();
-            }
-        } else {
-            return locale.getLanguage();
-        }
     }
 
     private TaxonData getSelectedTaxon() {
