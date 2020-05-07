@@ -1,5 +1,6 @@
 package org.biologer.biologer.sql;
 
+import org.biologer.biologer.Localisation;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
@@ -32,26 +33,34 @@ public class TaxonData {
     @Generated(hash = 345389106)
     public TaxonData() {
     }
+
     public Long getId() {
         return this.id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getLatinName() {
         return this.latinName;
     }
-    public void setLatinName(String latinName) {
+
+    void setLatinName(String latinName) {
         this.latinName = latinName;
     }
+
     public String getLocale() { return this.locale; }
+
     public void setLocale(String locale) {
         this.locale = locale;
     }
-    public String getNativeName() {
+
+    String getNativeName() {
         return this.nativeName;
     }
-    public void setNativeName(String nativeName) {
+
+    void setNativeName(String nativeName) {
         this.nativeName = nativeName;
     }
 
@@ -74,15 +83,15 @@ public class TaxonData {
         return useAtlasCode;
     }
 
-    public void setUseAtlasCode(boolean useAtlasCode) {
+    void setUseAtlasCode(boolean useAtlasCode) {
         this.useAtlasCode = useAtlasCode;
     }
 
-    public String getAncestorNames() {
+    String getAncestorNames() {
         return ancestorNames;
     }
 
-    public void setAncestorNames(String ancestorNames) {
+    void setAncestorNames(String ancestorNames) {
         this.ancestorNames = ancestorNames;
     }
 }

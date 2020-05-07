@@ -78,9 +78,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.LongStream;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -257,7 +259,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             query.where(
                                     query.or(
                                             query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
+                                                            TaxonDataDao.Properties.Locale.eq("en"))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -268,7 +272,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             query.where(
                                     query.or(
                                             query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
+                                                            TaxonDataDao.Properties.Locale.eq("en"))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -279,7 +285,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             query.where(
                                     query.or(
                                             query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
+                                                            TaxonDataDao.Properties.Locale.eq("en"))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -288,20 +296,23 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             query.where(
                                     query.or(
                                             query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
+                                                            TaxonDataDao.Properties.Locale.eq("en"))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script))));
                         }
                     }
 
-                    query.limit(15);
+                    query.limit(10);
                     List<TaxonData> taxaList = query.list();
 
                     String[] taxaNames = new String[taxaList.size()];
                     for (int i = 0; i < taxaList.size(); i++) {
-                        // Get the latin names
+                        // Get all the IDs
                         taxaNames[i] = taxaList.get(i).getLatinNativeNames();
                     }
+
                     ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
                     acTextView.setAdapter(adapter1);
                     adapter1.notifyDataSetChanged();
@@ -963,9 +974,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 getString(R.string.atlas_code_12), getString(R.string.atlas_code_13), getString(R.string.atlas_code_14),
                 getString(R.string.atlas_code_15), getString(R.string.atlas_code_16)};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(atlas_codes, (dialogInterface, i) -> {
-            textViewAtlasCode.setText(atlas_codes[i]);
-        });
+        builder.setItems(atlas_codes, (dialogInterface, i) -> textViewAtlasCode.setText(atlas_codes[i]));
         builder.show();
     }
 
