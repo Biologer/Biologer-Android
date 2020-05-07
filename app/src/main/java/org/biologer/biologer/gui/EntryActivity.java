@@ -258,10 +258,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (preferences.getBoolean("english_names", false)) {
                             query.where(
                                     query.or(
-                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
-                                                            TaxonDataDao.Properties.Locale.eq("en"))),
+                                            query.and(
+                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    query.or(
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -271,10 +276,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         } else {
                             query.where(
                                     query.or(
-                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
-                                                            TaxonDataDao.Properties.Locale.eq("en"))),
+                                            query.and(
+                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    query.or(
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -284,10 +294,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (preferences.getBoolean("english_names", false)) {
                             query.where(
                                     query.or(
-                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
-                                                            TaxonDataDao.Properties.Locale.eq("en"))),
+                                            query.and(
+                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    query.or(
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -295,10 +310,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         } else {
                             query.where(
                                     query.or(
-                                            query.and(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(query.and(TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                            TaxonDataDao.Properties.NativeName.eq(locale_script)),
-                                                            TaxonDataDao.Properties.Locale.eq("en"))),
+                                            query.and(
+                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
+                                                    query.or(
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
+                                                            query.and(
+                                                                    TaxonDataDao.Properties.NativeName.isNull(),
+                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script))));
                         }
