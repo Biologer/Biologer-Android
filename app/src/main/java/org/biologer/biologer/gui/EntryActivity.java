@@ -278,13 +278,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     query.or(
                                             query.and(
                                                     TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
+                                                    TaxonDataDao.Properties.Locale.eq("en")),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
                                                     TaxonDataDao.Properties.Locale.eq(locale_script)),
                                             query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
@@ -329,8 +323,27 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                     String[] taxaNames = new String[taxaList.size()];
                     for (int i = 0; i < taxaList.size(); i++) {
-                        // Get all the IDs
-                        taxaNames[i] = taxaList.get(i).getLatinNativeNames();
+
+                        String latin_name = taxaList.get(i).getLatinName();
+
+                        // Query fot the native name (stupid solution, but what can we do...)
+                        QueryBuilder<TaxonData> query1 = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                        query1.where(
+                                query1.and(TaxonDataDao.Properties.LatinName.eq(latin_name),
+                                        TaxonDataDao.Properties.Locale.eq(locale_script)));
+
+                        List<TaxonData> currentTaxon = query1.list();
+
+                        if (currentTaxon.isEmpty()) {
+                            taxaNames[i] = latin_name;
+                        } else {
+                            String native_name = currentTaxon.get(0).getNativeName();
+                            if (native_name == null) {
+                                taxaNames[i] = latin_name;
+                            } else {
+                                taxaNames[i] = latin_name + " (" + native_name + ")";
+                            }
+                        }
                     }
 
                     ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
@@ -368,7 +381,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         invalidateOptionsMenu();
                     }
                 };
-                handler.postDelayed(runnable, 600);
+                handler.postDelayed(runnable, 400);
             }
 
             @Override

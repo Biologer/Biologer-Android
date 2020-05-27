@@ -56,19 +56,8 @@ public class TaxonData {
         this.locale = locale;
     }
 
-    String getNativeName() {
+    public String getNativeName() {
         return this.nativeName;
-    }
-
-    void setNativeName(String nativeName) {
-        this.nativeName = nativeName;
-    }
-
-    public String getLatinNativeNames() {
-        if (getNativeName() == null) {
-            return getLatinName();
-        }
-        return getLatinName() + " (" + getNativeName() + ")";
     }
 
     public Long getTaxonId() {
@@ -93,6 +82,9 @@ public class TaxonData {
 
     void setAncestorNames(String ancestorNames) {
         this.ancestorNames = ancestorNames;
+    }
+    void setNativeName(String nativeName) {
+        this.nativeName = nativeName;
     }
 }
 
