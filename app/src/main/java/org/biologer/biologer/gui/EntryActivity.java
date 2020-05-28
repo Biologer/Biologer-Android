@@ -7,6 +7,9 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,6 +19,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -71,18 +75,19 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.LongStream;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -897,8 +902,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (sex_id == 3) {
             Log.d(TAG, "Sex from spinner index 3 selected with value " + sex_is);
             return "both";
-        }
-        else {
+        } else {
             return "";
         }
     }
@@ -983,12 +987,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 Log.d(TAG, "No sex is selected.");
                 numberMalesFemales.setVisibility(View.GONE);
                 editTextSpecimensNo.setVisibility(View.VISIBLE);
-            } if (sex[i].equals(getString(R.string.both_sexes))) {
+            }
+            if (sex[i].equals(getString(R.string.both_sexes))) {
                 textViewSex.setText(getString(R.string.both));
                 Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
                 numberMalesFemales.setVisibility(View.VISIBLE);
-            }
-            else {
+            } else {
                 textViewSex.setText(sex[i]);
                 Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
                 numberMalesFemales.setVisibility(View.GONE);
@@ -1057,16 +1061,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Check for camera permission and run function takePhoto()
     private void takePhotoFromCamera() {
         Log.i(TAG, "Taking photo from Camera.");
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
                 Log.d(TAG, "Could not show camera permission dialog.");
             } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
-                        MY_PERMISSIONS_REQUEST_CAMERA);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
             }
         } else {
             takePhoto();
@@ -1080,14 +1079,153 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             }
-            Uri photoUri = getPhotoUri();
+            Uri photoUri = getPhotoUri(getImageFileName());
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             startActivityForResult(takePictureIntent, CAMERA);
             // Update global variable to this URI
             currentPhotoUri = photoUri;
+            Log.d(TAG, "The photo is: " + currentPhotoUri);
         } else {
             Log.d(TAG, "Take picture intent could not start for some reason.");
         }
+    }
+
+    private Bitmap resizeImage(Uri imageUri) {
+
+        ParcelFileDescriptor parcelFileDescriptor = null;
+        try {
+            parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        Bitmap input_image = null;
+
+        if (parcelFileDescriptor != null) {
+            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+
+            // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
+            int inSampleSize;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+            BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+            inSampleSize = getInSampleSize(options, 1024);
+
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false; // now load the image into memory
+            input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+
+            //  Finally close the FileDescriptor
+            try {
+                parcelFileDescriptor.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (input_image == null) {
+            Log.e(TAG, "It looks like input image does not exist!");
+            return null;
+        }
+        if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
+            Log.d(TAG, "The image fits perfectly! Returning image without resize");
+            return input_image;
+        }
+        else {
+            Log.d(TAG, "Resizing image prior to upload...");
+            return resizeBitmap(input_image, 1024);
+        }
+    }
+
+    private static int getInSampleSize(BitmapFactory.Options options, int max_dimensions) {
+        int inSampleSize = 1;
+        int larger_side = Math.max(options.outHeight, options.outWidth);
+
+        if (larger_side > max_dimensions) {
+
+            final int halfSide = larger_side / 2;
+
+            while ((halfSide / inSampleSize) >= max_dimensions) {
+                inSampleSize *= 2;
+            }
+
+        }
+        Log.d(TAG, "Original image dimensions: " + options.outHeight + "×" + options.outWidth + " px. Resize factor value: " + inSampleSize);
+        return inSampleSize;
+    }
+
+    private Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        Log.i(TAG, "Resizing image of " + height + "×" + width + "px to a maximum of " + maxSize + "px.");
+
+        if (height == width) {
+            height = maxSize;
+            width = maxSize;
+        } if (height < width) {
+            height = height * maxSize / width;
+            width = maxSize;
+        } else {
+            width = width * maxSize /height;
+            height = maxSize;
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, false);
+    }
+
+    private Uri saveImage(Bitmap bitmap, @NonNull String fileName) {
+        Uri photoUri;
+        OutputStream fos = null;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            String picturesDir = Environment.DIRECTORY_PICTURES + "/" + "Biologer";
+            Log.i(TAG, "Saving image: " + fileName + " into a directory " + picturesDir);
+            ContentResolver resolver = getContentResolver();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
+            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, picturesDir);
+            photoUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+            try {
+                fos = resolver.openOutputStream(Objects.requireNonNull(photoUri));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile(fileName);
+            } catch (IOException ex) {
+                Log.e(TAG, "Could not create image file.");
+            }
+            try {
+                fos = new FileOutputStream(Objects.requireNonNull(photoFile));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            // Continue only if the File was successfully created
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.files", photoFile);
+            } else {
+                photoUri = Uri.fromFile(photoFile);
+            }
+            Log.i(TAG, "Saving image into: " + photoUri);
+
+        }
+
+        if (fos != null) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 87, fos);
+            try {
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return photoUri;
     }
 
     @Override
@@ -1106,21 +1244,27 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Log.i(TAG, "You have selected this image from Gallery: " + currentPhotoUri);
                     entryAddPic();
                     if (image1 == null) {
-                        image1 = String.valueOf(currentPhotoUri);
+                        Bitmap bitmap = resizeImage(currentPhotoUri);
+                        Uri uri1 = saveImage(bitmap, "resized1");
+                        image1 = String.valueOf(uri1);
                         Glide.with(this)
                                 .load(image1)
                                 .override(100, 100)
                                 .into(imageViewPicture1);
                         frameLayoutPicture1.setVisibility(View.VISIBLE);
                     } else if (image2 == null) {
-                        image2 = String.valueOf(currentPhotoUri);
+                        Bitmap bitmap = resizeImage(currentPhotoUri);
+                        Uri uri2 = saveImage(bitmap, "resized2");
+                        image2 = String.valueOf(uri2);
                         Glide.with(this)
                                 .load(image2)
                                 .override(100, 100)
                                 .into(imageViewPicture2);
                         frameLayoutPicture2.setVisibility(View.VISIBLE);
                     } else if (image3 == null) {
-                        image3 = String.valueOf(currentPhotoUri);
+                        Bitmap bitmap = resizeImage(currentPhotoUri);
+                        Uri uri3 = saveImage(bitmap, "resized3");
+                        image3 = String.valueOf(uri3);
                         Glide.with(this)
                                 .load(image3)
                                 .override(100, 100)
@@ -1175,6 +1319,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         image3 = images[2];
 
                         if (image1 != null) {
+                            Bitmap bitmap = resizeImage(Uri.parse(image1));
+                            Uri uri1 = saveImage(bitmap, "resized1");
+                            image1 = String.valueOf(uri1);
                             Glide.with(this)
                                     .load(image1)
                                     .override(100, 100)
@@ -1182,6 +1329,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             frameLayoutPicture1.setVisibility(View.VISIBLE);
                         }
                         if (image2 != null) {
+                            Bitmap bitmap = resizeImage(Uri.parse(image2));
+                            Uri uri2 = saveImage(bitmap, "resized2");
+                            image2 = String.valueOf(uri2);
                             Glide.with(this)
                                     .load(image2)
                                     .override(100, 100)
@@ -1189,6 +1339,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             frameLayoutPicture2.setVisibility(View.VISIBLE);
                         }
                         if (image3 != null) {
+                            Bitmap bitmap = resizeImage(Uri.parse(image3));
+                            Uri uri3 = saveImage(bitmap, "resized3");
+                            image3 = String.valueOf(uri3);
                             Glide.with(this)
                                     .load(image3)
                                     .override(100, 100)
@@ -1211,21 +1364,27 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         } else if (requestCode == CAMERA) {
             entryAddPic();
             if (image1 == null) {
-                image1 = String.valueOf(currentPhotoUri);
+                Bitmap bitmap = resizeImage(currentPhotoUri);
+                Uri uri1 = saveImage(bitmap, "resized1");
+                image1 = String.valueOf(uri1);
                 Glide.with(this)
                         .load(image1)
                         .override(100, 100)
                         .into(imageViewPicture1);
                 frameLayoutPicture1.setVisibility(View.VISIBLE);
             } else if (image2 == null) {
-                image2 = String.valueOf(currentPhotoUri);
+                Bitmap bitmap = resizeImage(currentPhotoUri);
+                Uri uri2 = saveImage(bitmap, "resized2");
+                image2 = String.valueOf(uri2);
                 Glide.with(this)
                         .load(image2)
                         .override(100, 100)
                         .into(imageViewPicture2);
                 frameLayoutPicture2.setVisibility(View.VISIBLE);
             } else if (image3 == null) {
-                image3 = String.valueOf(currentPhotoUri);
+                Bitmap bitmap = resizeImage(currentPhotoUri);
+                Uri uri3 = saveImage(bitmap, "resized3");
+                image3 = String.valueOf(uri3);
                 Glide.with(this)
                         .load(image3)
                         .override(100, 100)
@@ -1269,15 +1428,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private Uri getPhotoUri() {
+    private Uri getPhotoUri(String fileName) {
         Uri photoUri = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            String pictureName = getImageFileName();
             String picturesDir = Environment.DIRECTORY_PICTURES + "/" + "Biologer";
-            Log.i(TAG, "Saving image: " + pictureName + " into a directory " + picturesDir);
+            Log.i(TAG, "Saving image: " + fileName + " into a directory " + picturesDir);
             ContentResolver resolver = getContentResolver();
             ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, pictureName + ".jpg");
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName + ".jpg");
             contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, picturesDir);
             currentPhotoUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
@@ -1287,7 +1445,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = createImageFile(fileName);
             } catch (IOException ex) {
                 Log.e(TAG, "Could not create image file.");
             }
@@ -1305,7 +1463,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     // This will create image on Android <= 9.0
-    private File createImageFile() throws IOException {
+    private File createImageFile(String fileName) throws IOException {
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DCIM), "Biologer");
@@ -1318,7 +1476,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         }
 
-        return File.createTempFile(getImageFileName(), ".jpg", mediaStorageDir);
+        return File.createTempFile(fileName, ".jpg", mediaStorageDir);
     }
 
     // Set the filename for image taken through the Camera
