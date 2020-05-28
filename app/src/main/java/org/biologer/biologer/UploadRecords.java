@@ -6,8 +6,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -29,10 +33,16 @@ import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -54,8 +64,10 @@ public class UploadRecords extends Service {
     ArrayList<Entry> entryList;
     int totalEntries = 0;
     int remainingEntries = 0;
+    int retry_number = 1;
     ArrayList<String> images_array = new ArrayList<>();
     List<APIEntry.Photo> photos = null;
+    File image1, image2, image3;
     LocalBroadcastManager broadcaster;
 
     int n = 0;
@@ -97,6 +109,11 @@ public class UploadRecords extends Service {
                     case ACTION_CANCEL:
                         // Stop uploading!
                         cancelUpload(getString(R.string.notify_title_upload_canceled), getString(R.string.notify_desc_upload_canceled));
+                        try {
+                            deleteCache();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         stopSelf();
                         break;
                 }
@@ -157,7 +174,7 @@ public class UploadRecords extends Service {
             App.get().getDaoSession().getEntryDao().deleteAll();
             stopForeground(true);
             notificationUpdateText(getString(R.string.notify_title_entries_uploaded), getString(R.string.notify_desc_entries_uploaded));
-            //deleteCache();
+            deleteCache();
             stopSelf();
             return;
         }
@@ -194,15 +211,33 @@ public class UploadRecords extends Service {
             for (int i = 0; i < n; i++) {
                 String image = listOfImages.get(i);
                 int image_number = i+1;
-                Log.d(TAG, "Uploading image " + image_number + ": " + image);
-                if (image == null) {
+                Log.d(TAG, "Resizing image " + image_number + ": " + image);
+                String tmp_image_path;
+                Bitmap bitmap = resizeImage(image);
+
+                if (bitmap == null) {
                     stopSelf();
                     Log.e(TAG, "Stopping the service, there is no image on the storage!");
                     sendResult("no image");
                 } else {
-                    Uri uri = Uri.parse(image);
-                    File file = new File(Objects.requireNonNull(uri.getPath()));
-                    uploadPhoto(file);
+                    if (i == 0) {
+                        tmp_image_path = saveTmpImage(bitmap);
+                        image1 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image 1 to a server.");
+                        uploadPhoto(image1);
+                    }
+                    if (i == 1) {
+                        tmp_image_path = saveTmpImage(bitmap);
+                        image2 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image 2 to a server.");
+                        uploadPhoto(image2);
+                    }
+                    if (i == 2) {
+                        tmp_image_path = saveTmpImage(bitmap);
+                        image3 = new File(tmp_image_path);
+                        Log.d(TAG, "Uploading image 3 to a server.");
+                        uploadPhoto(image3);
+                    }
                 }
             }
         }
@@ -295,6 +330,11 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload("Failed!", "Uploading of entry was not successful!");
+                try {
+                    deleteCache();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 stopSelf();
             }
         });
@@ -354,10 +394,118 @@ public class UploadRecords extends Service {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
                     cancelUpload("Failed!", "Uploading of photo was not successful!");
+                    try {
+                        deleteCache();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     stopSelf();
                 }
             }
         });
+    }
+
+    private String saveTmpImage(Bitmap resized_image) throws IOException {
+        // Create unique file name
+        String filename = UUID.randomUUID().toString() + ".jpg";
+        File tmp_file = new File(getCacheDir(), filename);
+        Log.d(TAG,"Temporary file for resized images will be: " + tmp_file.getAbsolutePath());
+
+        try {
+            OutputStream fos = new FileOutputStream(tmp_file);
+            resized_image.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+            Objects.requireNonNull(fos).close();
+            Log.i(TAG, "Temporary file saved.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Log.i(TAG, "Temporary file NOT saved.");
+        }
+        return tmp_file.getAbsolutePath();
+    }
+
+    private Bitmap resizeImage(String path_to_image) {
+
+        Uri imageUri = Uri.parse(path_to_image);
+        ParcelFileDescriptor parcelFileDescriptor = null;
+        try {
+            parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        Bitmap input_image = null;
+
+        if (parcelFileDescriptor != null) {
+            FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+
+            // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
+            int inSampleSize;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+            BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+            inSampleSize = getInSampleSize(options, 1024);
+
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false; // now load the image into memory
+            input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+
+            //  Finally close the FileDescriptor
+            try {
+                parcelFileDescriptor.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (input_image == null) {
+            Log.e(TAG, "It looks like input image does not exist!");
+            return null;
+        }
+        if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
+            Log.d(TAG, "The image fits perfectly! Returning image without resize");
+                return input_image;
+            }
+        else {
+            Log.d(TAG, "Resizing image prior to upload...");
+            return resizeBitmap(input_image, 1024);
+        }
+    }
+
+    public static int getInSampleSize(BitmapFactory.Options options, int max_dimensions) {
+        int inSampleSize = 1;
+        int larger_side = Math.max(options.outHeight, options.outWidth);
+
+        if (larger_side > max_dimensions) {
+
+            final int halfSide = larger_side / 2;
+
+            while ((halfSide / inSampleSize) >= max_dimensions) {
+                inSampleSize *= 2;
+            }
+
+        }
+        Log.d(TAG, "Original image dimensions: " + options.outHeight + "×" + options.outWidth + " px. Resize factor value: " + inSampleSize);
+        return inSampleSize;
+    }
+
+    public Bitmap resizeBitmap(Bitmap bitmap, int maxSize) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        Log.i(TAG, "Resizing image of " + height + "×" + width + "px to a maximum of " + maxSize + "px.");
+
+        if (height == width) {
+            height = maxSize;
+            width = maxSize;
+        } if (height < width) {
+            height = height * maxSize / width;
+            width = maxSize;
+        } else {
+            width = width * maxSize /height;
+            height = maxSize;
+        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, false);
     }
 
     private void notificationUpdateProgress(int maxValue, int currentValue, String descriptionText) {
@@ -414,6 +562,23 @@ public class UploadRecords extends Service {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         assert mNotificationManager != null;
         mNotificationManager.notify(1, notification);
+    }
+
+    private void deleteCache () throws IOException {
+        File cacheDir = getCacheDir();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d(TAG, "Deleting cache.");
+            Files.delete(cacheDir.toPath());
+        } else {
+            File[] files = cacheDir.listFiles();
+            if (files != null) {
+                Log.d(TAG, "Deleting cache. There are " + files.length + " files in a cache directory.");
+                for (File file : files)
+                    if (file.delete()) {
+                        Log.d(TAG, "Deleting cache file " + file.getName());
+                    }
+            }
+        }
     }
 
     public void sendResult(String message) {
