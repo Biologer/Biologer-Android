@@ -1,9 +1,8 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.ClipData;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -12,10 +11,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -28,7 +25,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -60,6 +56,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.CameraActivity;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
@@ -70,19 +67,15 @@ import org.biologer.biologer.sql.TaxonDataDao;
 import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.stream.LongStream;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -92,15 +85,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1006;
     private static final int REQUEST_LOCATION = 1;
 
-    private Uri currentPhotoUri;
     private LocationManager locationManager;
     private LocationListener locationListener;
     String latitude = "0", longitude = "0";
     private double elev = 0.0;
     private LatLng currentLocation = new LatLng(0.0, 0.0);
     private Double acc = 0.0;
-    private int CAMERA = 2, MAP = 3;
-    int GALLERY = 1;
+    private final int CAMERA = 2;
+    private final int MAP = 3;
     private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
@@ -374,12 +366,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     if (acTextView.getText().toString().length() > 1) {
                         save_enabled = true;
                         Log.d(TAG, "Taxon is set to: " + acTextView.getText());
-                        invalidateOptionsMenu();
                     } else {
                         save_enabled = false;
                         Log.d(TAG, "Taxon entry field is empty.");
-                        invalidateOptionsMenu();
                     }
+                    invalidateOptionsMenu();
                 };
                 handler.postDelayed(runnable, 400);
             }
@@ -398,7 +389,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Call the function updateLocation() to do all the magic...
         locationListener = new LocationListener() {
             @Override
-            public void onLocationChanged(Location location) {
+            public void onLocationChanged(@NonNull Location location) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                 setLocationValues(location.getLatitude(), location.getLongitude());
                 elev = location.getAltitude();
@@ -411,11 +402,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
 
             @Override
-            public void onProviderEnabled(String s) {
+            public void onProviderEnabled(@NonNull String s) {
             }
 
             @Override
-            public void onProviderDisabled(String s) {
+            public void onProviderDisabled(@NonNull String s) {
                 //buildAlertMessageNoGps();
                 startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
             }
@@ -505,7 +496,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (currentItem.getAtlas_code() != null) {
             Long code = currentItem.getAtlas_code();
             Log.d(TAG, "Setting the spinner to atlas code: " + code);
-            textViewAtlasCode.setText(setAtlasCode(Math.toIntExact(code)));
+            textViewAtlasCode.setText(setAtlasCode(code.intValue()));
+
         }
 
         if (currentItem.getDeadOrAlive().equals("true")) {
@@ -543,11 +535,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             frameLayoutPicture3.setVisibility(View.VISIBLE);
         }
 
-        if (image1 == null || image2 == null || image3 == null) {
-            disablePhotoButtons(false);
-        } else {
-            disablePhotoButtons(true);
-        }
+        disablePhotoButtons(image1 != null && image2 != null && image3 != null);
         if (currentItem.getHabitat() != null) {
             editTextHabitat.setText(currentItem.getHabitat());
         }
@@ -622,6 +610,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     // On click
+    @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.editText_number_of_specimens:
@@ -839,9 +828,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
-            Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK);
-            finish();
         } else { // if the entry exist already
             currentItem.setTaxonId(taxon.getTaxonId());
             currentItem.setTaxonSuggestion(taxon.getLatinName());
@@ -865,11 +851,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Now just update the database with new data...
             App.get().getDaoSession().getEntryDao().updateInTx(currentItem);
-            Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
 
-            setResult(RESULT_OK);
-            finish();
         }
+        Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
+        setResult(RESULT_OK);
+        finish();
     }
 
     private void getPhotoTag() {
@@ -1073,23 +1059,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private void takePhoto() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            Log.i(TAG, "There is Camera software installed. All ready to take picture!");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            }
-            Uri photoUri = getPhotoUri();
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-            startActivityForResult(takePictureIntent, CAMERA);
-            // Update global variable to this URI
-            currentPhotoUri = photoUri;
-        } else {
-            Log.d(TAG, "Take picture intent could not start for some reason.");
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -1098,13 +1067,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
+        int GALLERY = 1;
         if (requestCode == GALLERY) {
+            Log.d(TAG, "GALLERY requestCode sent");
             if (data != null) {
                 // If a single image is selected we cen get it directly...
                 if (data.getData() != null) {
-                    currentPhotoUri = data.getData();
+                    Uri currentPhotoUri = data.getData();
                     Log.i(TAG, "You have selected this image from Gallery: " + currentPhotoUri);
-                    entryAddPic();
+                    entryAddPic(String.valueOf(currentPhotoUri));
                     if (image1 == null) {
                         image1 = String.valueOf(currentPhotoUri);
                         Glide.with(this)
@@ -1209,35 +1180,40 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
 
         } else if (requestCode == CAMERA) {
-            entryAddPic();
-            if (image1 == null) {
-                image1 = String.valueOf(currentPhotoUri);
-                Glide.with(this)
-                        .load(image1)
-                        .override(100, 100)
-                        .into(imageViewPicture1);
-                frameLayoutPicture1.setVisibility(View.VISIBLE);
-            } else if (image2 == null) {
-                image2 = String.valueOf(currentPhotoUri);
-                Glide.with(this)
-                        .load(image2)
-                        .override(100, 100)
-                        .into(imageViewPicture2);
-                frameLayoutPicture2.setVisibility(View.VISIBLE);
-            } else if (image3 == null) {
-                image3 = String.valueOf(currentPhotoUri);
-                Glide.with(this)
-                        .load(image3)
-                        .override(100, 100)
-                        .into(imageViewPicture3);
-                frameLayoutPicture3.setVisibility(View.VISIBLE);
-                disablePhotoButtons(true);
+            Log.d(TAG, "CAMERA requestCode sent");
+            if (data != null) {
+                String image_string = data.getStringExtra("image_string");
+                entryAddPic(image_string);
+                if (image1 == null) {
+                    image1 = image_string;
+                    Glide.with(this)
+                            .load(image1)
+                            .override(100, 100)
+                            .into(imageViewPicture1);
+                    frameLayoutPicture1.setVisibility(View.VISIBLE);
+                } else if (image2 == null) {
+                    image2 = image_string;
+                    Glide.with(this)
+                            .load(image2)
+                            .override(100, 100)
+                            .into(imageViewPicture2);
+                    frameLayoutPicture2.setVisibility(View.VISIBLE);
+                } else if (image3 == null) {
+                    image3 = image_string;
+                    Glide.with(this)
+                            .load(image3)
+                            .override(100, 100)
+                            .into(imageViewPicture3);
+                    frameLayoutPicture3.setVisibility(View.VISIBLE);
+                    disablePhotoButtons(true);
+                }
             }
             Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
         }
 
         // Get data from Google MapActivity.java and save it as local variables
         if (requestCode == MAP) {
+            Log.d(TAG, "MAP requestCode sent");
             locationManager.removeUpdates(locationListener);
             if (data != null) {
                 currentLocation = data.getParcelableExtra("google_map_latlong");
@@ -1269,67 +1245,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private Uri getPhotoUri() {
-        Uri photoUri = null;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            String pictureName = getImageFileName();
-            String picturesDir = Environment.DIRECTORY_PICTURES + "/" + "Biologer";
-            Log.i(TAG, "Saving image: " + pictureName + " into a directory " + picturesDir);
-            ContentResolver resolver = getContentResolver();
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, pictureName + ".jpg");
-            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, picturesDir);
-            currentPhotoUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-            photoUri = currentPhotoUri;
-            Log.i(TAG, "Image URI is: " + photoUri + ".");
-        } else {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                Log.e(TAG, "Could not create image file.");
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.files", photoFile);
-                } else {
-                    photoUri = Uri.fromFile(photoFile);
-                }
-            }
-            Log.i(TAG, "Saving image into: " + photoUri);
-        }
-        return photoUri;
-    }
-
-    // This will create image on Android <= 9.0
-    private File createImageFile() throws IOException {
-
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DCIM), "Biologer");
-
-        if (!mediaStorageDir.exists()) {
-            Log.d(TAG, "Media Storage directory does not exist");
-            if (!mediaStorageDir.mkdirs()) {
-                Log.d(TAG, "Media Storage directory should be created now...");
-                return null;
-            }
-        }
-
-        return File.createTempFile(getImageFileName(), ".jpg", mediaStorageDir);
-    }
-
-    // Set the filename for image taken through the Camera
-    private String getImageFileName() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-        return "JPEG_" + timeStamp;
-    }
-
-    private void entryAddPic() {
+    private void entryAddPic(String string) {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        mediaScanIntent.setData(currentPhotoUri);
+        Uri uri = Uri.parse(string);
+        mediaScanIntent.setData(uri);
         this.sendBroadcast(mediaScanIntent);
     }
 
@@ -1354,6 +1273,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 }
                 return;
             }
+
             case MY_PERMISSIONS_REQUEST_CAMERA: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -1363,6 +1283,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 }
             }
         }
+    }
+
+    private void takePhoto() {
+        Intent camera = new Intent(this, CameraActivity.class);
+        startActivityForResult(camera, CAMERA);
     }
 
     // Function used to retrieve the location
@@ -1551,11 +1476,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 chip.setId(observation_id);
                 chip.setTag(slug);
                 chip.setText(observation_type.getName());
-                if (arrayContainsNumber(observation_type_ids, observation_id)) {
-                    chip.setChecked(true);
-                } else {
-                    chip.setChecked(false);
-                }
+                chip.setChecked(arrayContainsNumber(observation_type_ids, observation_id));
                 chip.setOnCheckedChangeListener((compoundButton, b) -> {
                     String text = (String) compoundButton.getTag();
                     int id = compoundButton.getId();
