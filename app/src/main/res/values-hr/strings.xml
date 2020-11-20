@@ -240,4 +240,5 @@
     <string name="atlas_code_14">14. Odrasle jedinke nose hranu ili izmet mladunaca</string>
     <string name="atlas_code_15">15. Gnijezdo sa odraslim jedinkama u inkubaciji</string>
     <string name="atlas_code_16">16. Mladunci slušani ili promatrani na gnijezdu</string>
-    </resources>
+    <string name="display_image_on_full_screen">Display image on full screen.</string>
+</resources>

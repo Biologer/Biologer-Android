@@ -243,5 +243,6 @@
     <string name="atlas_code_15">15. Pronađeno gnezdo sa jajima</string>
     <string name="atlas_code_16">16. Pronađeno gnezdo sa mladuncima (posmatranim ili slušanim)</string>
     <string name="not_selected">Nije izabrano</string>
+    <string name="display_image_on_full_screen">Display image on full screen.</string>
 
 </resources>

@@ -100,7 +100,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
-    int RESIZE_IMAGE = 111;
     private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
@@ -707,29 +706,32 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 Log.i(TAG, "Deleting image 1.");
                 frameLayoutPicture1.setVisibility(View.GONE);
                 disablePhotoButtons(false);
+                deleteImageFile(image1);
                 image1 = null;
                 break;
             case R.id.ib_pic1:
                 Log.i(TAG, "Image 1 clicked. URL: " + image1);
-                openInGallery(image1);
+                viewImage(image1);
                 break;
             case R.id.ib_pic2_del:
                 frameLayoutPicture2.setVisibility(View.GONE);
                 disablePhotoButtons(false);
+                deleteImageFile(image2);
                 image2 = null;
                 break;
             case R.id.ib_pic2:
                 Log.i(TAG, "Image 2 clicked. URL: " + image2);
-                openInGallery(image2);
+                viewImage(image2);
                 break;
             case R.id.ib_pic3_del:
                 frameLayoutPicture3.setVisibility(View.GONE);
                 disablePhotoButtons(false);
+                deleteImageFile(image3);
                 image3 = null;
                 break;
             case R.id.ib_pic3:
                 Log.i(TAG, "Image 3 clicked. URL: " + image3);
-                openInGallery(image3);
+                viewImage(image3);
                 break;
             case R.id.dead_specimen:
                 showDeadComment();
@@ -743,6 +745,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case R.id.image_view_take_photo_gallery:
                 takePhotoFromGallery();
                 break;
+        }
+    }
+
+    private void viewImage(String image) {
+        Intent intent = new Intent(this, ViewImage.class);
+        intent.putExtra("image", image);
+        startActivity(intent);
+    }
+
+    private void deleteImageFile(String image) {
+        if (image != null) {
+            String filename = new File(image).getName();
+            final File file = new File(getFilesDir(), filename);
+            boolean b = file.delete();
+            Log.d(TAG, "Deleting image " + filename + " returned: " + b);
         }
     }
 

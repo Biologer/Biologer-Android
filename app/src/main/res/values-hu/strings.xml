@@ -245,5 +245,6 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="atlas_code_15">15. Nest containing eggs</string>
     <string name="atlas_code_16">16. Nest with young seen or heard</string>
     <string name="not_selected">Not selected</string>
+    <string name="display_image_on_full_screen">Display image on full screen.</string>
 
 </resources>

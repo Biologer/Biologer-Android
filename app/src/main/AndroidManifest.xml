@@ -89,6 +89,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".gui.IntroActivity" />
+        <activity android:name=".gui.ViewImage"/>
 
         <service android:name="org.biologer.biologer.FetchTaxa"/>
         <service android:name="org.biologer.biologer.UploadRecords"/>
