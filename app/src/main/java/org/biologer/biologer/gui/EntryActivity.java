@@ -2,13 +2,17 @@ package org.biologer.biologer.gui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -25,6 +29,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -57,6 +62,7 @@ import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CameraActivity;
+import org.biologer.biologer.adapters.ResizeImage;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
@@ -67,6 +73,7 @@ import org.biologer.biologer.sql.TaxonDataDao;
 import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -93,6 +100,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
+    int RESIZE_IMAGE = 111;
     private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
@@ -116,6 +124,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     List<Stage> stageList = App.get().getDaoSession().getStageDao().loadAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
+
+    BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -414,6 +424,48 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        // Broadcaster used for receiving resized images
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String s = intent.getStringExtra(ResizeImage.RESIZED);
+                if (s != null) {
+                    Log.d(TAG, "Resize Images returned code: " + s);
+
+                    if (s.equals("error")) {
+                        Log.d(TAG, "Unknown error. Can not get resized image!");
+                    } else {
+                        if (image1 == null) {
+                            image1 = s;
+                            Glide.with(EntryActivity.this)
+                                    .load(image1)
+                                    .override(100, 100)
+                                    .into(imageViewPicture1);
+                            frameLayoutPicture1.setVisibility(View.VISIBLE);
+                        } else if (image2 == null) {
+                            image2 = s;
+                            Glide.with(EntryActivity.this)
+                                    .load(image2)
+                                    .override(100, 100)
+                                    .into(imageViewPicture2);
+                            frameLayoutPicture2.setVisibility(View.VISIBLE);
+                        } else if (image3 == null) {
+                            image3 = s;
+                            Glide.with(EntryActivity.this)
+                                    .load(image3)
+                                    .override(100, 100)
+                                    .into(imageViewPicture3);
+                            frameLayoutPicture3.setVisibility(View.VISIBLE);
+                            imageViewGallery.setEnabled(false);
+                            imageViewGallery.setImageAlpha(20);
+                            imageViewCamera.setEnabled(false);
+                            imageViewCamera.setImageAlpha(20);
+                        }
+                    }
+                }
+            }
+        };
+
         // Finally to start the gathering of data...
         startEntryActivity();
         fillObservationTypes();
@@ -595,13 +647,28 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            this.finish();
-            return true;
+            onBackPressed();
+            //this.finish();
+            //return true;
         }
         if (id == R.id.action_save) {
             saveEntry1();
         }
         return true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
+                new IntentFilter(ResizeImage.RESIZED)
+        );
+    }
+
+    @Override
+    protected void onStop() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        super.onStop();
     }
 
     @Override
@@ -1042,21 +1109,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     // Check for camera permission and run function takePhoto()
     private void takePhotoFromCamera() {
-        Log.i(TAG, "Taking photo from Camera.");
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-                Log.d(TAG, "Could not show camera permission dialog.");
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
-                        MY_PERMISSIONS_REQUEST_CAMERA);
-            }
-        } else {
             takePhoto();
-        }
     }
 
     @Override
@@ -1075,103 +1128,29 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 if (data.getData() != null) {
                     Uri currentPhotoUri = data.getData();
                     Log.i(TAG, "You have selected this image from Gallery: " + currentPhotoUri);
-                    entryAddPic(String.valueOf(currentPhotoUri));
-                    if (image1 == null) {
-                        image1 = String.valueOf(currentPhotoUri);
-                        Glide.with(this)
-                                .load(image1)
-                                .override(100, 100)
-                                .into(imageViewPicture1);
-                        frameLayoutPicture1.setVisibility(View.VISIBLE);
-                    } else if (image2 == null) {
-                        image2 = String.valueOf(currentPhotoUri);
-                        Glide.with(this)
-                                .load(image2)
-                                .override(100, 100)
-                                .into(imageViewPicture2);
-                        frameLayoutPicture2.setVisibility(View.VISIBLE);
-                    } else if (image3 == null) {
-                        image3 = String.valueOf(currentPhotoUri);
-                        Glide.with(this)
-                                .load(image3)
-                                .override(100, 100)
-                                .into(imageViewPicture3);
-                        frameLayoutPicture3.setVisibility(View.VISIBLE);
-                        imageViewGallery.setEnabled(false);
-                        imageViewGallery.setImageAlpha(20);
-                        imageViewCamera.setEnabled(false);
-                        imageViewCamera.setImageAlpha(20);
-                    }
+                    resizeAndViewImage(currentPhotoUri);
+                    // entryAddPic(resized_image); // Not sure if I need this...
                 } else {
                     // If multiple images are selected we have a workaround...
                     if (data.getClipData() != null) {
                         ClipData clipData = data.getClipData();
-                        ArrayList<Uri> arrayUri = new ArrayList<>();
-                        for (int i = 0; i < clipData.getItemCount(); i++) {
-                            ClipData.Item item = clipData.getItemAt(i);
-                            Uri uri = item.getUri();
-                            arrayUri.add(uri);
-                        }
+                        int count_selected = clipData.getItemCount();
+                        int count_free = countEmptyImageFrames();
+                        Log.d(TAG, count_selected + " images selected from Gallery; " + count_free + " image placeholders are free...");
 
-                        String[] images = new String[3];
-                        images[0] = image1;
-                        images[1] = image2;
-                        images[2] = image3;
-
-                        int j = 0;
-                        for (int i = 0; i < 3; i++) {
-                            if (images[i] == null) {
-                                Log.i(TAG, "Image " + i + 1 + " is null.");
-                                if (j < arrayUri.size()) {
-                                    String uri = arrayUri.get(j).toString();
-                                    j++;
-                                    images[i] = uri;
-                                }
-                            } else {
-                                Log.i(TAG, "Image " + i + 1 + " is already set to: " + images[i]);
-                            }
-                        }
-
-                        // Send a message to the user if more than 3 photos are selected...
-                        Log.i(TAG, "You have selected " + arrayUri.size() + " images; " + j + " image place holder exist in the Entry.");
-                        if (j < arrayUri.size()) {
+                        if (count_free < count_selected) {
                             Toast.makeText(this,
-                                    getString(R.string.limit_photo1) + " " + arrayUri.size() + " " +
-                                            getString(R.string.limit_photo2) + " " + j + " " +
+                                    getString(R.string.limit_photo1) + " " + count_selected + " " +
+                                            getString(R.string.limit_photo2) + " " + count_free + " " +
                                             getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                         }
 
-                        image1 = images[0];
-                        image2 = images[1];
-                        image3 = images[2];
+                        for (int i = 0; i < Math.min(count_free, count_selected); i++) {
+                            ClipData.Item item = clipData.getItemAt(i);
+                            Uri uri = item.getUri();
+                            resizeAndViewImage(uri);
+                        }
 
-                        if (image1 != null) {
-                            Glide.with(this)
-                                    .load(image1)
-                                    .override(100, 100)
-                                    .into(imageViewPicture1);
-                            frameLayoutPicture1.setVisibility(View.VISIBLE);
-                        }
-                        if (image2 != null) {
-                            Glide.with(this)
-                                    .load(image2)
-                                    .override(100, 100)
-                                    .into(imageViewPicture2);
-                            frameLayoutPicture2.setVisibility(View.VISIBLE);
-                        }
-                        if (image3 != null) {
-                            Glide.with(this)
-                                    .load(image3)
-                                    .override(100, 100)
-                                    .into(imageViewPicture3);
-                            frameLayoutPicture3.setVisibility(View.VISIBLE);
-                        }
-                        if (image1 != null && image2 != null && image3 != null) {
-                            imageViewGallery.setEnabled(false);
-                            imageViewGallery.setImageAlpha(20);
-                            imageViewCamera.setEnabled(false);
-                            imageViewCamera.setImageAlpha(20);
-                        }
                     } else {
                         Toast.makeText(this, getString(R.string.no_photo_selected),
                                 Toast.LENGTH_LONG).show();
@@ -1182,24 +1161,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         } else if (requestCode == CAMERA) {
             Log.d(TAG, "CAMERA requestCode sent");
             if (data != null) {
-                String image_string = data.getStringExtra("image_string");
-                entryAddPic(image_string);
+                String image_uri_string = data.getStringExtra("image_string");
+                entryAddPic(image_uri_string);
                 if (image1 == null) {
-                    image1 = image_string;
+                    image1 = image_uri_string;
                     Glide.with(this)
                             .load(image1)
                             .override(100, 100)
                             .into(imageViewPicture1);
                     frameLayoutPicture1.setVisibility(View.VISIBLE);
                 } else if (image2 == null) {
-                    image2 = image_string;
+                    image2 = image_uri_string;
                     Glide.with(this)
                             .load(image2)
                             .override(100, 100)
                             .into(imageViewPicture2);
                     frameLayoutPicture2.setVisibility(View.VISIBLE);
                 } else if (image3 == null) {
-                    image3 = image_string;
+                    image3 = image_uri_string;
                     Glide.with(this)
                             .load(image3)
                             .override(100, 100)
@@ -1245,11 +1224,32 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
+    private int countEmptyImageFrames() {
+
+        String[] images = getImagesArray();
+
+        int count = 0;
+        for (Object obj : images) {
+            if ( obj == null ) count++;
+        }
+
+        return count;
+    }
+
+    private String[] getImagesArray() {
+        String[] images = new String[3];
+        images[0] = image1;
+        images[1] = image2;
+        images[2] = image3;
+
+        return images;
+    }
+
     private void entryAddPic(String string) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         Uri uri = Uri.parse(string);
-        mediaScanIntent.setData(uri);
-        this.sendBroadcast(mediaScanIntent);
+        intent.setData(uri);
+        this.sendBroadcast(intent);
     }
 
     public void showDeadComment() {
@@ -1382,6 +1382,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onBackPressed() {
+
+        // If EntryActivity was canceled, delete unsaved images from internal memory.
+        String[] images = getImagesArray();
+        for (String image: images) {
+            if (image != null) {
+                String filename = new File(image).getName();
+                final File file = new File(getFilesDir(), filename);
+                boolean b = file.delete();
+                Log.d(TAG, "Deleting image " + image + " returned: " + b);
+            }
+        }
+
         Intent intent = new Intent(EntryActivity.this, LandingActivity.class);
         startActivity(intent);
         super.onBackPressed();
@@ -1537,5 +1549,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             new_array[i] = Integer.parseInt(strings[i]);
         }
         return new_array;
+    }
+
+    private void resizeAndViewImage(Uri uri) {
+        // Start another Activity to resize captured image.
+        Intent resizeImage = new Intent(this, ResizeImage.class);
+        resizeImage.putExtra("image_uri", String.valueOf(uri));
+        startService(resizeImage);
     }
 }

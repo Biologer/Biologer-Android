@@ -33,7 +33,7 @@ public class UpdateLicenses extends Service {
 
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Update licence activity started...");
+        Log.d(TAG, "Update licence service started...");
         updateLicense();
     }
 

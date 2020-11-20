@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <uses-feature android:name="android.hardware.location.gps" />
+    <uses-feature android:name="android.hardware.camera.any" />
     <uses-feature
         android:name="android.hardware.camera" />
 
@@ -63,8 +64,7 @@
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
         <activity
-            android:name=".adapters.CameraActivity"
-            android:noHistory="true">
+            android:name=".adapters.CameraActivity">
         </activity>
         <activity android:name=".gui.SplashActivity">
             <intent-filter>
@@ -91,10 +91,9 @@
         <activity android:name=".gui.IntroActivity" />
 
         <service android:name="org.biologer.biologer.FetchTaxa"/>
-
         <service android:name="org.biologer.biologer.UploadRecords"/>
-
         <service android:name="org.biologer.biologer.UpdateLicenses"/>
+        <service android:name="org.biologer.biologer.adapters.ResizeImage"/>
 
     </application>
 

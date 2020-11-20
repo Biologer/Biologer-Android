@@ -1,7 +1,6 @@
 package org.biologer.biologer.adapters;
 
 import android.content.Context;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +26,8 @@ import static org.biologer.biologer.R.id.slika;
  */
 
 public class Adapter extends BaseAdapter {
-    private Context mContext;
-    private ArrayList<Entry> mList;
+    private final Context mContext;
+    private final ArrayList<Entry> mList;
 
     public Adapter(Context mContext, ArrayList<Entry> mList) {
         this.mContext = mContext;
@@ -107,8 +106,6 @@ public class Adapter extends BaseAdapter {
             }
         }
         if (useImage != null && useImage.trim().length() > 0) {
-            Uri myUri = Uri.parse(useImage);
-            //viewHolder.slika.setImageURI(myUri);
             Glide.with(convertView)
                     .load(useImage)
                     .into(viewHolder.slika);
@@ -121,7 +118,6 @@ public class Adapter extends BaseAdapter {
     private static class ViewHolder {
         TextView taxon;
         TextView stage;
-        //        TextView entryId;
         ImageView slika;
     }
 
