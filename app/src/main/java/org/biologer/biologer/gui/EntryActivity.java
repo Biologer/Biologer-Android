@@ -123,6 +123,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     List<Stage> stageList = App.get().getDaoSession().getStageDao().loadAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
+    List<String> list_new_images = new ArrayList<>();
 
     BroadcastReceiver receiver;
 
@@ -441,6 +442,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     .override(100, 100)
                                     .into(imageViewPicture1);
                             frameLayoutPicture1.setVisibility(View.VISIBLE);
+                             list_new_images.add(image1);
                         } else if (image2 == null) {
                             image2 = s;
                             Glide.with(EntryActivity.this)
@@ -448,6 +450,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     .override(100, 100)
                                     .into(imageViewPicture2);
                             frameLayoutPicture2.setVisibility(View.VISIBLE);
+                            list_new_images.add(image2);
                         } else if (image3 == null) {
                             image3 = s;
                             Glide.with(EntryActivity.this)
@@ -455,6 +458,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     .override(100, 100)
                                     .into(imageViewPicture3);
                             frameLayoutPicture3.setVisibility(View.VISIBLE);
+                            list_new_images.add(image3);
                             imageViewGallery.setEnabled(false);
                             imageViewGallery.setImageAlpha(20);
                             imageViewCamera.setEnabled(false);
@@ -1186,6 +1190,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             .load(image1)
                             .override(100, 100)
                             .into(imageViewPicture1);
+                    list_new_images.add(image1);
                     frameLayoutPicture1.setVisibility(View.VISIBLE);
                 } else if (image2 == null) {
                     image2 = image_uri_string;
@@ -1193,6 +1198,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             .load(image2)
                             .override(100, 100)
                             .into(imageViewPicture2);
+                    list_new_images.add(image2);
                     frameLayoutPicture2.setVisibility(View.VISIBLE);
                 } else if (image3 == null) {
                     image3 = image_uri_string;
@@ -1200,6 +1206,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             .load(image3)
                             .override(100, 100)
                             .into(imageViewPicture3);
+                    list_new_images.add(image3);
                     frameLayoutPicture3.setVisibility(View.VISIBLE);
                     disablePhotoButtons(true);
                 }
@@ -1401,15 +1408,29 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public void onBackPressed() {
 
         // If EntryActivity was canceled, delete unsaved images from internal memory.
+
+        for( String image : list_new_images ) {
+            if (image != null) {
+                    String filename = new File(image).getName();
+                    final File file = new File(getFilesDir(), filename);
+                    boolean b = file.delete();
+                    Log.d(TAG, "Deleting image " + image + " returned: " + b);
+            }
+        }
+/*
         String[] images = getImagesArray();
         for (String image: images) {
             if (image != null) {
-                String filename = new File(image).getName();
-                final File file = new File(getFilesDir(), filename);
-                boolean b = file.delete();
-                Log.d(TAG, "Deleting image " + image + " returned: " + b);
+                if (isNewEntry()) {
+                    String filename = new File(image).getName();
+                    final File file = new File(getFilesDir(), filename);
+                    boolean b = file.delete();
+                    Log.d(TAG, "Deleting image " + image + " returned: " + b);
+                }
             }
         }
+
+ */
 
         Intent intent = new Intent(EntryActivity.this, LandingActivity.class);
         startActivity(intent);

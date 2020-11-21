@@ -244,5 +244,6 @@
     <string name="atlas_code_16">16. Nest with young seen or heard</string>
     <string name="not_selected">Not selected</string>
     <string name="display_image_on_full_screen">Display image on full screen.</string>
+    <string name="image_view">Image View</string>
 
 </resources>
