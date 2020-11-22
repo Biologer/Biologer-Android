@@ -142,8 +142,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             actionbar.setDisplayShowHomeEnabled(true);
         }
 
-        checkWriteStoragePermission();
-
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            checkWriteStoragePermission();
+        }
         // Get the system locale to translate names of the taxa
         locale_script = Localisation.getLocaleScript();
 
@@ -744,7 +745,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 showMap();
                 break;
             case R.id.image_view_take_photo_camera:
-                takePhotoFromCamera();
+                takePhoto();
                 break;
             case R.id.image_view_take_photo_gallery:
                 takePhotoFromGallery();
@@ -765,40 +766,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             boolean b = file.delete();
             Log.d(TAG, "Deleting image " + filename + " returned: " + b);
         }
-    }
-
-    private void openInGallery(String image) {
-        Uri uri = Uri.parse(image);
-
-        // Try to open image just to see if it still exist on the storage.
-        ParcelFileDescriptor parcelFileDescriptor;
-        try {
-            parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
-
-            // If the image is there open it!
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setData(uri);
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                startActivity(intent);
-            } else {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(uri, "image/*");
-                startActivity(intent);
-            }
-
-            assert parcelFileDescriptor != null;
-            parcelFileDescriptor.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(this, R.string.image_deleted, Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     /*
@@ -1128,11 +1095,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
     }
 
-    // Check for camera permission and run function takePhoto()
-    private void takePhotoFromCamera() {
-            takePhoto();
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -1291,9 +1253,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Not possible to get permission to write external storage.");
+                    Log.d(TAG, "Permission to write external storage granted.");
+                    getLocation(100, 2); // Ensure that EntryActivity ask for location permission.
                 } else {
-                    finish();
+                    Log.d(TAG, "Not possible to get permission to write external storage.");
                 }
                 return;
             }
@@ -1301,7 +1264,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case MY_PERMISSIONS_REQUEST_CAMERA: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    takePhoto();
+                    Log.d(TAG, "Permission to take camera granted, taking photo now…");
+                    takePhotoFromCamera();
+                } else {
+                    Log.d(TAG, "Not possible to get permission to use camera.");
+                }
+            }
+
+            case REQUEST_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getLocation(100, 2);
+                    Log.d(TAG, "Permission to request location granted.");
                 } else {
                     Log.d(TAG, "Not possible to get permission to use camera.");
                 }
@@ -1310,6 +1284,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void takePhoto() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                Log.d(TAG, "Could not show camera permission dialog.");
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+            }
+        } else {
+            takePhotoFromCamera();
+        }
+    }
+
+    private void takePhotoFromCamera() {
         Intent camera = new Intent(this, CameraActivity.class);
         startActivityForResult(camera, CAMERA);
     }
@@ -1319,8 +1305,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(EntryActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-            // Sometimes there is a problem with first run of the program. So, request location again in 10 seconds...
-            new Handler().postDelayed(() -> getLocation(100, 2), 10000);
         } else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, locationListener);
         }
@@ -1417,20 +1401,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Log.d(TAG, "Deleting image " + image + " returned: " + b);
             }
         }
-/*
-        String[] images = getImagesArray();
-        for (String image: images) {
-            if (image != null) {
-                if (isNewEntry()) {
-                    String filename = new File(image).getName();
-                    final File file = new File(getFilesDir(), filename);
-                    boolean b = file.delete();
-                    Log.d(TAG, "Deleting image " + image + " returned: " + b);
-                }
-            }
-        }
-
- */
 
         Intent intent = new Intent(EntryActivity.this, LandingActivity.class);
         startActivity(intent);

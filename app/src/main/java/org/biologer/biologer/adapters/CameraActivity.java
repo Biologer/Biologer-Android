@@ -17,6 +17,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -31,7 +32,6 @@ import java.util.Locale;
 public class CameraActivity extends Activity {
 
     private static final String TAG = "Biologer.Camera";
-    private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1006;
     int CAMERA = 1;
     Uri uri;
 
@@ -42,19 +42,6 @@ public class CameraActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Log.d(TAG, "Starting CameraActivity");
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-                Log.d(TAG, "Could not show camera permission dialog.");
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
-                        MY_PERMISSIONS_REQUEST_CAMERA);
-            }
-        }
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
