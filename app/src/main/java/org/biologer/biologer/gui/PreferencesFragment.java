@@ -47,7 +47,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // This is a workaround in order to change background color of the fragment
-        getListView().setBackgroundColor(Color.WHITE);
+        getListView().setBackgroundResource(R.color.fragment_background);
     }
 
     @Override

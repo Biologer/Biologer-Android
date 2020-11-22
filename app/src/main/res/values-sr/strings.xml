@@ -244,5 +244,8 @@
     <string name="atlas_code_16">16. Пронађено гнездо са младунцима (посматраним или слушаним)</string>
     <string name="not_selected">Није изабрано</string>
     <string name="image_view">Преглед слике</string>
+    <string name="taxon_name">Taxon name</string>
+    <string name="developmental_stage">Developmental stage</string>
+    <string name="thumbnail">Thumbnail</string>
 
 </resources>

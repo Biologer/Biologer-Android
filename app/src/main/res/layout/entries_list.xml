@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="72dp"
     android:paddingStart="16dp"
@@ -19,7 +18,8 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:scaleType="centerCrop"
-            android:src="@mipmap/ic_kornjaca_kocka" />
+            android:src="@mipmap/ic_kornjaca_kocka"
+            android:contentDescription="@string/thumbnail" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -32,26 +32,18 @@
                 android:id="@+id/taxon_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Taxon name"
-                android:textColor="@color/black"
+                android:text="@string/taxon_name"
                 android:textSize="16sp"
-                android:textStyle="italic" />
+                android:textStyle="italic"
+                android:textColor="@color/colorPrimary"/>
 
             <TextView
                 android:id="@+id/stage"
                 android:layout_width="match_parent"
                 android:layout_height="20dp"
-                android:text="Razvojni stadijum"
-                android:textColor="@color/black"
-                android:textSize="12sp" />
-
-            <!--<TextView-->
-            <!--android:id="@+id/entryId"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="25dp"-->
-            <!--android:paddingLeft="14dp"-->
-            <!--android:text="id u bazi"-->
-            <!--android:textSize="9sp" />-->
+                android:text="@string/developmental_stage"
+                android:textSize="12sp"
+                android:textColor="@color/colorPrimary"/>
 
         </LinearLayout>
 

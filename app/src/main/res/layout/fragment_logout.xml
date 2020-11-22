@@ -6,7 +6,7 @@
     android:layout_gravity="center"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="@color/white"
+    android:background="@color/fragment_background"
     tools:context="org.biologer.biologer.gui.LogoutFragment">
 
     <TextView

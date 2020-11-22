@@ -25,11 +25,11 @@ import static org.biologer.biologer.R.id.slika;
  * Created by brjovanovic on 2/24/2018.
  */
 
-public class Adapter extends BaseAdapter {
+public class EntriesList extends BaseAdapter {
     private final Context mContext;
     private final ArrayList<Entry> mList;
 
-    public Adapter(Context mContext, ArrayList<Entry> mList) {
+    public EntriesList(Context mContext, ArrayList<Entry> mList) {
         this.mContext = mContext;
         this.mList = mList;
     }
@@ -64,7 +64,7 @@ public class Adapter extends BaseAdapter {
 
         if (convertView == null) {
 
-            convertView = inflater.inflate(R.layout.list_item, parent, false);
+            convertView = inflater.inflate(R.layout.entries_list, parent, false);
 
             viewHolder.taxon = convertView.findViewById(R.id.taxon_name);
             viewHolder.stage = convertView.findViewById(R.id.stage);

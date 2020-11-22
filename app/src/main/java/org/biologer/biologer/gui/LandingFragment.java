@@ -17,7 +17,7 @@ import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.Adapter;
+import org.biologer.biologer.adapters.EntriesList;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.sql.Entry;
 import org.greenrobot.eventbus.EventBus;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 public class LandingFragment extends Fragment {
 
     private static final int REQ_CODE_NEW_ENTRY = 1001;
-    private Adapter adapter;
+    private EntriesList entriesList;
     private ArrayList<Entry> entries;
     private SwipeMenuListView listView;
 
@@ -43,10 +43,10 @@ public class LandingFragment extends Fragment {
         // If there are entries display the list with taxa
         Activity activity = getActivity();
         if (activity != null) {
-            adapter = new Adapter(activity.getApplicationContext(), entries);
+            entriesList = new EntriesList(activity.getApplicationContext(), entries);
         }
         listView = rootView.findViewById(R.id.list_entries);
-        listView.setAdapter(adapter);
+        listView.setAdapter(entriesList);
 
         SwipeMenuCreator creator = menu -> {
             // create "delete" item
@@ -67,15 +67,15 @@ public class LandingFragment extends Fragment {
 
         listView.setOnMenuItemClickListener((position, menu, index) -> {
             if (index == 0) {// delete button
-                App.get().getDaoSession().getEntryDao().deleteByKey(adapter.getItem(position).getId());
+                App.get().getDaoSession().getEntryDao().deleteByKey(entriesList.getItem(position).getId());
                 entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
                 if (entries == null) {
                     entries = new ArrayList<>();
                 }
                 Activity activity12 = getActivity();
                 if (activity12 != null) {
-                    adapter = new Adapter(activity12.getApplicationContext(), entries);
-                    listView.setAdapter(adapter);
+                    entriesList = new EntriesList(activity12.getApplicationContext(), entries);
+                    listView.setAdapter(entriesList);
                 }
             }
             // false : close the menu; true : not close the menu
@@ -83,7 +83,7 @@ public class LandingFragment extends Fragment {
         });
 
         listView.setOnItemClickListener((adapterView, view, position, id) -> {
-            Entry entry = adapter.getItem(position);
+            Entry entry = entriesList.getItem(position);
             long l = entry.getId();
             Activity activity13 = getActivity();
             if (activity13 != null) {
@@ -112,7 +112,7 @@ public class LandingFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(DeleteEntryFromList deleteEntryFromList) {
-        adapter.addAll(App.get().getDaoSession().getEntryDao().loadAll(), true);
+        entriesList.addAll(App.get().getDaoSession().getEntryDao().loadAll(), true);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class LandingFragment extends Fragment {
     public void onResume() {
         super.onResume();
         entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
-        adapter.addAll(entries, true);
+        entriesList.addAll(entries, true);
     }
 
     void updateData() {
@@ -133,6 +133,6 @@ public class LandingFragment extends Fragment {
         if (entries == null) {
             entries = new ArrayList<>();
         }
-        adapter.addAll(entries, true);
+        entriesList.addAll(entries, true);
     }
 }
