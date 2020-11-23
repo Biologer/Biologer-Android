@@ -250,5 +250,6 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="taxon_name">Taxon name</string>
     <string name="developmental_stage">Developmental stage</string>
     <string name="thumbnail">Thumbnail</string>
+    <string name="map_type">Map type</string>
 
 </resources>

@@ -1,6 +1,5 @@
 package org.biologer.biologer.adapters;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -9,7 +8,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,9 +15,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -59,7 +54,7 @@ public class CameraActivity extends Activity {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(ResizeImage.RESIZED);
+                String s = intent.getStringExtra(PreparePhotos.RESIZED);
                 // This will be executed after upload is completed
                 if (s != null) {
                     Log.d(TAG, "Resize Images returned code: " + s);
@@ -82,7 +77,7 @@ public class CameraActivity extends Activity {
     protected void onStart() {
         super.onStart();
         LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(ResizeImage.RESIZED)
+                new IntentFilter(PreparePhotos.RESIZED)
         );
     }
 
@@ -165,7 +160,7 @@ public class CameraActivity extends Activity {
             Log.d(TAG, "Camera request code received...");
 
             // Start another Activity to resize captured image.
-            Intent resizeImage = new Intent(this, ResizeImage.class);
+            Intent resizeImage = new Intent(this, PreparePhotos.class);
             resizeImage.putExtra("image_uri", String.valueOf(uri));
             startService(resizeImage);
         }

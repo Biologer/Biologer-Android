@@ -12,11 +12,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.ParcelFileDescriptor;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -62,7 +60,7 @@ import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CameraActivity;
-import org.biologer.biologer.adapters.ResizeImage;
+import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
@@ -74,8 +72,6 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,7 +119,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     List<Stage> stageList = App.get().getDaoSession().getStageDao().loadAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
-    List<String> list_new_images = new ArrayList<>();
+    ArrayList<String> list_new_images = new ArrayList<>();
 
     BroadcastReceiver receiver;
 
@@ -232,6 +228,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         .into(imageViewPicture3);
                 frameLayoutPicture3.setVisibility(View.VISIBLE);
             }
+            list_new_images = savedInstanceState.getStringArrayList("list_new_images");
         }
 
         // Fill in the drop down menu with list of taxa
@@ -429,7 +426,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(ResizeImage.RESIZED);
+                String s = intent.getStringExtra(PreparePhotos.RESIZED);
                 if (s != null) {
                     Log.d(TAG, "Resize Images returned code: " + s);
 
@@ -665,7 +662,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     protected void onStart() {
         super.onStart();
         LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(ResizeImage.RESIZED)
+                new IntentFilter(PreparePhotos.RESIZED)
         );
     }
 
@@ -1328,7 +1325,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     saveEntry2(null);
                     dialog.dismiss();
                 })
-                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
+                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> dialog.dismiss());
         final AlertDialog alert = builder_taxon.create();
         alert.show();
     }
@@ -1342,7 +1339,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     getLocation(0, 0);
                     dialog.dismiss();
                 })
-                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> finish());
+                .setNegativeButton(getString(R.string.cancel), (dialog, id) -> {
+                    finish();
+                    deleteUnsavedImages();
+                });
         final AlertDialog alert = builder.create();
         alert.show();
     }
@@ -1392,19 +1392,22 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public void onBackPressed() {
 
         // If EntryActivity was canceled, delete unsaved images from internal memory.
-
-        for( String image : list_new_images ) {
-            if (image != null) {
-                    String filename = new File(image).getName();
-                    final File file = new File(getFilesDir(), filename);
-                    boolean b = file.delete();
-                    Log.d(TAG, "Deleting image " + image + " returned: " + b);
-            }
-        }
+        deleteUnsavedImages();
 
         Intent intent = new Intent(EntryActivity.this, LandingActivity.class);
         startActivity(intent);
         super.onBackPressed();
+    }
+
+    private void deleteUnsavedImages() {
+        for( String image : list_new_images ) {
+            if (image != null) {
+                String filename = new File(image).getName();
+                final File file = new File(getFilesDir(), filename);
+                boolean b = file.delete();
+                Log.d(TAG, "Deleting image " + image + " returned: " + b);
+            }
+        }
     }
 
     // Check for permissions and add them if required
@@ -1466,6 +1469,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         outState.putString("image1", image1);
         outState.putString("image2", image2);
         outState.putString("image3", image3);
+        outState.putStringArrayList("list_new_images", list_new_images);
         Log.d(TAG, "Activity will be recreated. Saving the state!");
         super.onSaveInstanceState(outState);
     }
@@ -1561,7 +1565,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void resizeAndViewImage(Uri uri) {
         // Start another Activity to resize captured image.
-        Intent resizeImage = new Intent(this, ResizeImage.class);
+        Intent resizeImage = new Intent(this, PreparePhotos.class);
         resizeImage.putExtra("image_uri", String.valueOf(uri));
         startService(resizeImage);
     }

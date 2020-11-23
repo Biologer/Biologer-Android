@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.File;
@@ -18,12 +20,13 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
-public class ResizeImage extends Service {
+public class PreparePhotos extends Service {
 
     private static final String TAG = "Biologer.Resize";
     LocalBroadcastManager broadcaster;
@@ -32,7 +35,6 @@ public class ResizeImage extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        ResizeImage instance = this;
         broadcaster = LocalBroadcastManager.getInstance(this);
         Log.d(TAG, "Starting service for resizing images.");
     }
@@ -67,6 +69,14 @@ public class ResizeImage extends Service {
     }
 
     private Uri resizeImage(Uri path_to_image) {
+        int rotation = 0;
+
+        try {
+            rotation = getExifImageRotation(path_to_image);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Can not open image stream to read EXIF data!");
+        }
 
         Log.d(TAG, "Opening image for resize: " + path_to_image);
         ParcelFileDescriptor parcelFileDescriptor = null;
@@ -110,12 +120,12 @@ public class ResizeImage extends Service {
         }
         if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
             Log.d(TAG, "The image fits perfectly! Returning image without resize");
-            return saveBitmap(input_image);
+            return saveBitmap(rotateImage(input_image, rotation));
         }
         else {
             Log.d(TAG, "Resizing image...");
             Bitmap resizedBitmap = resizeBitmap(input_image, 1024);
-            return saveBitmap(resizedBitmap);
+            return saveBitmap(rotateImage(resizedBitmap, rotation));
         }
     }
 
@@ -199,5 +209,43 @@ public class ResizeImage extends Service {
         intent.putExtra(RESIZED, uri);
         broadcaster.sendBroadcast(intent);
         stopSelf();
+    }
+
+    private int getExifImageRotation(Uri image) throws IOException {
+        int exif_orientation = 0;
+        ExifInterface exif_data = null;
+
+        InputStream imageStream = getContentResolver().openInputStream(image);
+
+        if (imageStream != null) {
+            exif_data = new ExifInterface(imageStream);
+        }
+        if (exif_data != null) {
+            exif_orientation = exif_data.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        }
+        Log.d(TAG, "Exif orientation tag is set to: " + exif_orientation);
+
+        if (imageStream != null) {
+            imageStream.close();
+        }
+
+        switch (exif_orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return 90;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return 180;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return 270;
+            default:
+                return 0;
+        }
+    }
+
+    private static Bitmap rotateImage(Bitmap image, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+        image.recycle();
+        return rotatedImg;
     }
 }
