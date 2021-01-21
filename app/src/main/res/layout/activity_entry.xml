@@ -49,21 +49,49 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="@string/latitude"/>
+                                    android:text="La:"/>
                                 <TextView
                                     android:id="@+id/tv_latitude"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:paddingStart="10dp"
                                     android:paddingEnd="0dp"
-                                    android:text="@string/unknown" />
+                                    android:text="n/a" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="; Lo:"/>
+                                <TextView
+                                    android:id="@+id/tv_longitude"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="0dp"
+                                    android:text="n/a" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="; Prec:"/>
+                                <TextView
+                                    android:id="@+id/tv_gps"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="0dp"
+                                    android:text=""/>
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text=" m"/>
                             </LinearLayout>
+
 
                             <!--desni deo(mapa)-->
                             <ImageView
                                 android:id="@+id/iv_map"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
                                 android:contentDescription="@string/map"
                                 android:clickable="true"
                                 android:focusable="true"
@@ -71,40 +99,6 @@
                                 android:layout_rowSpan="3"
                                 android:layout_columnSpan="1"
                                 android:src="@mipmap/ic_map"/>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/longitude"/>
-                                <TextView
-                                    android:id="@+id/tv_longitude"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="0dp"
-                                    android:text="@string/unknown" />
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/GPSaccuracy"/>
-                                <TextView
-                                    android:id="@+id/tv_gps"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="0dp"
-                                    android:text="@string/unknown"/>
-                            </LinearLayout>
                         </GridLayout>
 
                         <LinearLayout

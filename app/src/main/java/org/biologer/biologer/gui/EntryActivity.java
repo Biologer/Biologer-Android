@@ -359,6 +359,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         // Check if the taxon has stages. If not hide the stages dialog.
                         if (isStageAvailable(taxonData)) {
                             stages.setVisibility(View.VISIBLE);
+
+                            // If user preferences are selected, the stage for taxa will be set to adult by default.
+                            // Step 1: Get the prferences
+                            if (preferences.getBoolean("adult_by_default", false)) {
+                                // If stage is already selected ignore this...
+                                if (textViewStage.getText().toString().equals("")) {
+                                    stageList = App.get().getDaoSession().getStageDao().queryBuilder()
+                                            .where(StageDao.Properties.TaxonId.eq(taxonData.getTaxonId()))
+                                            .where(StageDao.Properties.Name.eq("adult"))
+                                            .list();
+                                    if (stageList.get(0) != null) {
+                                        Stage stage = new Stage(null, "adult", stageList.get(0).getStageId(), taxonData.getTaxonId());
+                                        textViewStage.setText(getString(R.string.stage_adult));
+                                        textViewStage.setTag(stage);
+                                    }
+                                }
+
+                            }
                         }
                         Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
                         if (taxonData.getUseAtlasCode()) {
@@ -367,10 +385,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         }
                     } else {
                         stages.setVisibility(View.GONE);
+                        textViewStage.setTag(null);
+                        textViewStage.setText(null);
                         textViewAtlasCode.setVisibility(View.GONE);
                         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
                     }
-                    // Enable/disable Save button in Toolbar
+
+                    // Enable/disable Save button in the Toolbar
                     if (acTextView.getText().toString().length() > 1) {
                         save_enabled = true;
                         Log.d(TAG, "Taxon is set to: " + acTextView.getText());
@@ -423,6 +444,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         // Broadcaster used for receiving resized images
+        registerBroadcastReceiver();
+
+        // Finally to start the gathering of data...
+        startEntryActivity();
+        fillObservationTypes();
+    }
+
+    private void registerBroadcastReceiver() {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -440,7 +469,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     .override(100, 100)
                                     .into(imageViewPicture1);
                             frameLayoutPicture1.setVisibility(View.VISIBLE);
-                             list_new_images.add(image1);
+                            list_new_images.add(image1);
                         } else if (image2 == null) {
                             image2 = s;
                             Glide.with(EntryActivity.this)
@@ -466,10 +495,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 }
             }
         };
-
-        // Finally to start the gathering of data...
-        startEntryActivity();
-        fillObservationTypes();
     }
 
     /*
@@ -513,8 +538,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
         elev = currentItem.getElevation();
         acc = currentItem.getAccuracy();
-        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLattitude()));
-        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLongitude()));
+        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLattitude()));
+        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLongitude()));
         textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
 
         // Get the name of the taxon for this entry
@@ -1470,6 +1495,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         outState.putString("image2", image2);
         outState.putString("image3", image3);
         outState.putStringArrayList("list_new_images", list_new_images);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         Log.d(TAG, "Activity will be recreated. Saving the state!");
         super.onSaveInstanceState(outState);
     }

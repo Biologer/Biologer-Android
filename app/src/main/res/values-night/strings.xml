@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="map_type">Map type</string>
+    <string name="defaults_to_adult">Set as adult by default</string>
+    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
 </resources>

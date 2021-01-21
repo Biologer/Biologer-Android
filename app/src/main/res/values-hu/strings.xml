@@ -251,5 +251,7 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="developmental_stage">Developmental stage</string>
     <string name="thumbnail">Thumbnail</string>
     <string name="map_type">Map type</string>
+    <string name="defaults_to_adult">Set as adult by default</string>
+    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
 
 </resources>

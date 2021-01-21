@@ -47,6 +47,12 @@
     <PreferenceCategory
             android:title="@string/preferences_other"
             app:iconSpaceReserved="false">
+        <CheckBoxPreference
+            android:key="adult_by_default"
+            android:title="@string/defaults_to_adult"
+            android:summary="@string/defaults_to_adult_summary"
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"/>
         <ListPreference
             android:key="auto_download"
             android:title="@string/auto_download"
