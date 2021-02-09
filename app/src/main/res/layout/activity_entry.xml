@@ -153,9 +153,11 @@
                         </LinearLayout>
 
                         <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/text_view_atlas_code_layout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            app:boxBackgroundColor="@android:color/transparent">
+                            app:boxBackgroundColor="@android:color/transparent"
+                            android:visibility="gone">
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/text_view_atlas_code"
                                 android:layout_width="match_parent"
@@ -163,8 +165,7 @@
                                 android:drawableEnd="@drawable/ic_arrow_drop_down"
                                 android:clickable="false"
                                 android:focusable="false"
-                                android:hint="@string/select_atlas_code"
-                                android:visibility="gone"/>
+                                android:hint="@string/select_atlas_code"/>
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.textfield.TextInputLayout

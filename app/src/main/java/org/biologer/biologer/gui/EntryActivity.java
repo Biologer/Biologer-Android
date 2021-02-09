@@ -36,6 +36,7 @@ import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
@@ -96,7 +97,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode, textViewAtlasCodeLayout;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
     AutoCompleteTextView acTextView;
@@ -164,6 +165,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // In order not to use spinner to choose sex, we will put this into EditText
         textViewSex = findViewById(R.id.text_view_sex);
         textViewSex.setOnClickListener(this);
+        textViewAtlasCodeLayout = findViewById(R.id.text_view_atlas_code_layout);
         textViewAtlasCode = findViewById(R.id.text_view_atlas_code);
         textViewAtlasCode.setOnClickListener(this);
         check_dead = findViewById(R.id.dead_specimen);
@@ -380,14 +382,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         }
                         Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
                         if (taxonData.getUseAtlasCode()) {
-                            textViewAtlasCode.setVisibility(View.VISIBLE);
+                            textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
                             Log.d(TAG, "Taxon uses the atlas code. Enabling Atlas code for this taxon.");
                         }
                     } else {
                         stages.setVisibility(View.GONE);
                         textViewStage.setTag(null);
                         textViewStage.setText(null);
-                        textViewAtlasCode.setVisibility(View.GONE);
+                        textViewAtlasCodeLayout.setVisibility(View.GONE);
                         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
                     }
 
