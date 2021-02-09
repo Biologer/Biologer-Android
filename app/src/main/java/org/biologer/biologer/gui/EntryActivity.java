@@ -97,7 +97,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode, textViewAtlasCodeLayout;
+    private TextInputLayout textViewAtlasCodeLayout;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
             editTextFemalesNo, editTextHabitat, editTextFoundOn;
     AutoCompleteTextView acTextView;
@@ -390,6 +391,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         textViewStage.setTag(null);
                         textViewStage.setText(null);
                         textViewAtlasCodeLayout.setVisibility(View.GONE);
+                        textViewAtlasCode.setText("");
                         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
                     }
 
