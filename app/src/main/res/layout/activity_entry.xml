@@ -315,8 +315,10 @@
                             </LinearLayout>
 
                             <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/textView_death_comment"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:visibility="gone"
                                 app:boxBackgroundColor="@android:color/transparent">
                                 <com.google.android.material.textfield.TextInputEditText
                                     android:id="@+id/editText_death_comment"
@@ -324,7 +326,6 @@
                                     android:maxLength="1000"
                                     android:layout_height="wrap_content"
                                     android:hint="@string/razlog_smrti"
-                                    android:visibility="gone"
                                     android:inputType="text"/>
                             </com.google.android.material.textfield.TextInputLayout>
 

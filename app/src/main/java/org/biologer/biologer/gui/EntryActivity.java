@@ -37,7 +37,6 @@ import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
-import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
@@ -45,13 +44,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.View;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -98,7 +95,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
-    private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2;
+    private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment;
     private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
     private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
@@ -108,7 +105,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
     ChipGroup observation_types;
     LinearLayout detailedEntry;
-    RelativeLayout numberMalesFemales;
     private boolean save_enabled = false;
     private String image1, image2, image3;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -157,6 +153,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         textViewStage = findViewById(R.id.text_view_stages);
         textViewStage.setOnClickListener(this);
         editTextDeathComment = findViewById(R.id.editText_death_comment);
+        textViewDeathComment = findViewById(R.id.textView_death_comment);
         editTextComment = findViewById(R.id.editText_comment);
         editTextSpecimensNo1 = findViewById(R.id.editText_number_of_specimens_1);
         textViewSpecimensNo1 = findViewById(R.id.textView_specimens_no_1);
@@ -711,12 +708,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.editText_number_of_specimens_1:
-                Log.d(TAG, "Text for number of individuals changed.");
-                break;
-            case R.id.editText_number_of_specimens_2:
-                Log.d(TAG, "Text for number of individuals changed.");
-                break;
             case R.id.text_view_atlas_code:
                 getAtlasCodeForList();
                 break;
@@ -1231,9 +1222,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     public void showDeadComment() {
         if (checkBox_dead.isChecked()) {
-            editTextDeathComment.setVisibility(View.VISIBLE);
+            textViewDeathComment.setVisibility(View.VISIBLE);
         } else {
-            editTextDeathComment.setVisibility(View.GONE);
+            textViewDeathComment.setVisibility(View.GONE);
+            editTextDeathComment.setText("");
         }
     }
 
