@@ -8,8 +8,8 @@
     <color name="warningRed">#B33A3A</color>
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
-    <color name="color20">#30994a</color>
     <color name="transparent">#00000000</color>
     <color name="colorChips">#689f38</color>
     <color name="fragment_background">#151515</color>
+    <color name="checkBox_text">#999999</color>
 </resources>

@@ -19,6 +19,7 @@ import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.util.ArrayUtils;
+import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
@@ -97,15 +98,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private final int CAMERA = 2;
     private final int MAP = 3;
-    private TextInputLayout textViewAtlasCodeLayout;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewSex, textViewAtlasCode;
-    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo, editTextMalesNo,
-            editTextFemalesNo, editTextHabitat, editTextFoundOn;
+    private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2;
+    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode;
+    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
+    private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
     AutoCompleteTextView acTextView;
     FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
     ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
             imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
-    private CheckBox check_dead;
     ChipGroup observation_types;
     LinearLayout detailedEntry;
     RelativeLayout numberMalesFemales;
@@ -158,19 +158,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         textViewStage.setOnClickListener(this);
         editTextDeathComment = findViewById(R.id.editText_death_comment);
         editTextComment = findViewById(R.id.editText_comment);
-        editTextSpecimensNo = findViewById(R.id.editText_number_of_specimens);
-        editTextMalesNo = findViewById(R.id.editText_number_of_males);
-        editTextFemalesNo = findViewById(R.id.editText_number_of_females);
+        editTextSpecimensNo1 = findViewById(R.id.editText_number_of_specimens_1);
+        textViewSpecimensNo1 = findViewById(R.id.textView_specimens_no_1);
+        editTextSpecimensNo2 = findViewById(R.id.editText_number_of_specimens_2);
+        textViewSpecimensNo2 = findViewById(R.id.textView_specimens_no_2);
         editTextHabitat = findViewById(R.id.editText_habitat);
         editTextFoundOn = findViewById(R.id.editText_found_on);
-        // In order not to use spinner to choose sex, we will put this into EditText
-        textViewSex = findViewById(R.id.text_view_sex);
-        textViewSex.setOnClickListener(this);
+        checkBox_males = findViewById(R.id.male);
+        checkBox_males.setOnClickListener(this);
+        checkBox_females = findViewById(R.id.female);
+        checkBox_females.setOnClickListener(this);
         textViewAtlasCodeLayout = findViewById(R.id.text_view_atlas_code_layout);
         textViewAtlasCode = findViewById(R.id.text_view_atlas_code);
         textViewAtlasCode.setOnClickListener(this);
-        check_dead = findViewById(R.id.dead_specimen);
-        check_dead.setOnClickListener(this);
+        checkBox_dead = findViewById(R.id.dead_specimen);
+        checkBox_dead.setOnClickListener(this);
         // Buttons to add images
         frameLayoutPicture1 = findViewById(R.id.ib_pic1_frame);
         imageViewPicture1 = findViewById(R.id.ib_pic1);
@@ -198,7 +200,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
         detailedEntry = findViewById(R.id.detailed_entry);
-        numberMalesFemales = findViewById(R.id.both_sexes_no);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
@@ -567,11 +568,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
         if (currentItem.getSex().equals("male")) {
             Log.d(TAG, "Setting spinner selected item to male.");
-            textViewSex.setText(getString(R.string.is_male));
+            checkBox_males.setChecked(true);
         }
         if (currentItem.getSex().equals("female")) {
             Log.d(TAG, "Setting spinner selected item to female.");
-            textViewSex.setText(getString(R.string.is_female));
+            checkBox_females.setChecked(true);
         }
 
         // Get the atlas code.
@@ -584,10 +585,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         if (currentItem.getDeadOrAlive().equals("true")) {
             // Specimen is a live
-            check_dead.setChecked(false);
+            checkBox_dead.setChecked(false);
         } else {
             // Specimen is dead, Checkbox should be activated and Dead Comment shown
-            check_dead.setChecked(true);
+            checkBox_dead.setChecked(true);
             showDeadComment();
         }
 
@@ -633,7 +634,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             editTextComment.setText(currentItem.getComment());
         }
         if (currentItem.getNoSpecimens() != null) {
-            editTextSpecimensNo.setText(String.valueOf(currentItem.getNoSpecimens()));
+            editTextSpecimensNo1.setText(String.valueOf(currentItem.getNoSpecimens()));
         }
 
         // Load observation types and delete tag for photographed.
@@ -710,19 +711,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.editText_number_of_specimens:
+            case R.id.editText_number_of_specimens_1:
                 Log.d(TAG, "Text for number of individuals changed.");
-                if (getSex().equals("both")) {
-                    numberMalesFemales.setVisibility(View.GONE);
-                }
                 break;
-            case R.id.editText_number_of_males:
-                Log.d(TAG, "Text for number of males changed.");
-                editTextSpecimensNo.setVisibility(View.GONE);
-                break;
-            case R.id.editText_number_of_females:
-                Log.d(TAG, "Text for number of females changed.");
-                editTextSpecimensNo.setVisibility(View.GONE);
+            case R.id.editText_number_of_specimens_2:
+                Log.d(TAG, "Text for number of individuals changed.");
                 break;
             case R.id.text_view_atlas_code:
                 getAtlasCodeForList();
@@ -730,8 +723,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case R.id.text_view_stages:
                 getStageForTaxon();
                 break;
-            case R.id.text_view_sex:
-                getSexForList();
+            case R.id.male:
+                Log.d(TAG, "Males checkbox selected!");
+                setMalesFemalesChecked();
+                break;
+            case R.id.female:
+                Log.d(TAG, "Females checkbox selected!");
+                setMalesFemalesChecked();
                 break;
             case R.id.ib_pic1_del:
                 Log.i(TAG, "Deleting image 1.");
@@ -776,6 +774,34 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             case R.id.image_view_take_photo_gallery:
                 takePhotoFromGallery();
                 break;
+        }
+    }
+
+    private void setMalesFemalesChecked() {
+        boolean males = checkBox_males.isChecked();
+        boolean females = checkBox_females.isChecked();
+        Log.d(TAG, "Males checkbox is " + males + ". Females checkbox is " + females);
+        if (males && females) {
+            textViewSpecimensNo1.setVisibility(View.VISIBLE);
+            textViewSpecimensNo1.setHint(getString(R.string.number_of_males));
+            textViewSpecimensNo2.setVisibility(View.VISIBLE);
+            textViewSpecimensNo2.setHint(getString(R.string.number_of_females));
+        } if (males && !females) {
+            textViewSpecimensNo1.setVisibility(View.VISIBLE);
+            textViewSpecimensNo1.setHint(getString(R.string.number_of_males));
+            textViewSpecimensNo2.setVisibility(View.GONE);
+            editTextSpecimensNo2.setText("");
+        } if (!males && females) {
+            textViewSpecimensNo1.setVisibility(View.GONE);
+            editTextSpecimensNo1.setText("");
+            textViewSpecimensNo2.setVisibility(View.VISIBLE);
+            textViewSpecimensNo2.setHint(getString(R.string.number_of_females));
+        } if (!males && !females) {
+            textViewSpecimensNo1.setVisibility(View.VISIBLE);
+            textViewSpecimensNo1.setHint(getString(R.string.broj_jedinki));
+            editTextSpecimensNo1.setText("");
+            textViewSpecimensNo2.setVisibility(View.GONE);
+            editTextSpecimensNo2.setText("");
         }
     }
 
@@ -841,40 +867,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     /  PART 3: Check if both male and female entries should be created
     */
     private void saveEntry3(TaxonData taxon) {
-        String all_specimens_number = editTextSpecimensNo.getText().toString();
-        String males_number = editTextMalesNo.getText().toString();
-        String females_number = editTextFemalesNo.getText().toString();
-        if (getSex().equals("male")) {
+        String specimens_number_1 = editTextSpecimensNo1.getText().toString();
+        String specimens_number_2 = editTextSpecimensNo2.getText().toString();
+        if (checkBox_males.isChecked() && !checkBox_females.isChecked()) {
             Log.d(TAG, "Only male individuals selected.");
-            entrySaver(taxon, all_specimens_number, "male", 1);
+            entrySaver(taxon, specimens_number_1, "male", 1);
         }
-        if (getSex().equals("female")) {
+        if (!checkBox_males.isChecked() && checkBox_females.isChecked()) {
             Log.d(TAG, "Only female individuals selected.");
-            entrySaver(taxon, all_specimens_number, "female", 1);
+            entrySaver(taxon, specimens_number_2, "female", 1);
         }
-        if (getSex().equals("")) {
+        if (!checkBox_males.isChecked() && !checkBox_females.isChecked()) {
             Log.d(TAG, "No sex of individuals selected.");
-            entrySaver(taxon, all_specimens_number, "", 1);
+            entrySaver(taxon, specimens_number_1, "", 1);
         }
-        if (getSex().equals("both")) {
+        if (checkBox_males.isChecked() && checkBox_females.isChecked()) {
             Log.d(TAG, "Both male and female individuals selected.");
-            if (!males_number.equals("") && !females_number.equals("")) {
-                Log.d(TAG, "Creating two entries, since both males and females are selected.");
-                entrySaver(taxon, males_number, "male", 1);
-                entrySaver(taxon, females_number, "female", 2);
-            }
-            if (!males_number.equals("") && females_number.equals("")) {
-                Log.d(TAG, "Creating one entry, since only " + males_number + " males selected.");
-                entrySaver(taxon, males_number, "male", 1);
-            }
-            if (males_number.equals("") && !females_number.equals("")) {
-                Log.d(TAG, "Creating one entry, since only " + females_number + " females selected.");
-                entrySaver(taxon, females_number, "female", 1);
-            }
-            if (males_number.equals("") && females_number.equals("")) {
-                Log.d(TAG, "No males and females number selected, saving a single entry.");
-                entrySaver(taxon, all_specimens_number, "", 1);
-            }
+                entrySaver(taxon, specimens_number_1, "male", 1);
+                entrySaver(taxon, specimens_number_2, "female", 2);
         }
     }
 
@@ -905,7 +915,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Get the data structure and save it into a database Entry
             Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
-                    String.valueOf(!check_dead.isChecked()), deathComment, currentLocation.latitude, currentLocation.longitude, acc,
+                    String.valueOf(!checkBox_dead.isChecked()), deathComment, currentLocation.latitude, currentLocation.longitude, acc,
                     elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
@@ -917,7 +927,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.setSex(sex);
             currentItem.setStage(selectedStage);
             currentItem.setAtlasCode(getAtlasCode());
-            currentItem.setDeadOrAlive(String.valueOf(!check_dead.isChecked()));
+            currentItem.setDeadOrAlive(String.valueOf(!checkBox_dead.isChecked()));
             currentItem.setCauseOfDeath(deathComment);
             currentItem.setLattitude(currentLocation.latitude);
             currentItem.setLongitude(currentLocation.longitude);
@@ -946,27 +956,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     .list().get(0).getObservationId().intValue();
             Log.d(TAG, "Photographed tag has ID: " + id_photo_tag);
             observation_type_ids = insertIntoArray(observation_type_ids, id_photo_tag);
-        }
-    }
-
-    private String getSex() {
-        String[] sex = {getString(R.string.unknown_sex_short), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both)};
-        String sex_is = textViewSex.getText().toString();
-        int sex_id = Arrays.asList(sex).indexOf(sex_is);
-        if (sex_id == 1) {
-            Log.d(TAG, "Sex from spinner index 1 selected with value " + sex_is);
-            return "male";
-        }
-        if (sex_id == 2) {
-            Log.d(TAG, "Sex from spinner index 2 selected with value " + sex_is);
-            return "female";
-        }
-        if (sex_id == 3) {
-            Log.d(TAG, "Sex from spinner index 3 selected with value " + sex_is);
-            return "both";
-        }
-        else {
-            return "";
         }
     }
 
@@ -1039,30 +1028,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             textViewStage.setEnabled(false);
             Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
         }
-    }
-
-    private void getSexForList() {
-        final String[] sex = {getString(R.string.unknown_sex), getString(R.string.is_male), getString(R.string.is_female), getString(R.string.both_sexes)};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(sex, (dialogInterface, i) -> {
-            if (sex[i].equals(getString(R.string.unknown_sex))) {
-                textViewSex.setText(getString(R.string.unknown_sex_short));
-                Log.d(TAG, "No sex is selected.");
-                numberMalesFemales.setVisibility(View.GONE);
-                editTextSpecimensNo.setVisibility(View.VISIBLE);
-            } if (sex[i].equals(getString(R.string.both_sexes))) {
-                textViewSex.setText(getString(R.string.both));
-                Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
-                numberMalesFemales.setVisibility(View.VISIBLE);
-            }
-            else {
-                textViewSex.setText(sex[i]);
-                Log.d(TAG, "Selected sex for this entry is " + sex[i] + ".");
-                numberMalesFemales.setVisibility(View.GONE);
-                editTextSpecimensNo.setVisibility(View.VISIBLE);
-            }
-        });
-        builder.show();
     }
 
     private void getAtlasCodeForList() {
@@ -1265,7 +1230,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void showDeadComment() {
-        if (check_dead.isChecked()) {
+        if (checkBox_dead.isChecked()) {
             editTextDeathComment.setVisibility(View.VISIBLE);
         } else {
             editTextDeathComment.setVisibility(View.GONE);

@@ -5,11 +5,11 @@
     <color name="colorPrimaryLight">#c5e1a5</color>
     <color name="colorAccent">#0abd37</color>
     <color name="colorDivider">#1f000000</color>
-    <color name="warningRed">#B33A3A</color>
+    <color name="warningRed">#C02424</color>
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
-    <color name="color20">#30994a</color>
     <color name="transparent">#00000000</color>
     <color name="colorChips">#689f38</color>
     <color name="fragment_background">#ffffff</color>
+    <color name="checkBox_text">#4d4d4d</color>
 </resources>

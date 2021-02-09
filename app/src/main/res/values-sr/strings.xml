@@ -218,8 +218,8 @@
     <string name="allow_english_names_desc">Дозвољава Биологеру да приказује и називе врста на енглеском чак и када је другачије подешен језик телефона</string>
     <string name="preferences_user_settings">Кориснички налог</string>
     <string name="preferences_other">Остала подешавања</string>
-    <string name="number_of_males">Број мужјака</string>
-    <string name="number_of_females">Број женки</string>
+    <string name="number_of_males">Бр. мужјака</string>
+    <string name="number_of_females">Бр. женки</string>
     <string name="both_sexes">Оба пола</string>
     <string name="both">Оба</string>
     <string name="unknown_sex_short">Непознат</string>

@@ -46,10 +46,12 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:orientation="horizontal">
+
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="La:"/>
+                                    android:text="La:" />
+
                                 <TextView
                                     android:id="@+id/tv_latitude"
                                     android:layout_width="wrap_content"
@@ -61,7 +63,8 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="; Lo:"/>
+                                    android:text="; Lo:" />
+
                                 <TextView
                                     android:id="@+id/tv_longitude"
                                     android:layout_width="wrap_content"
@@ -69,21 +72,24 @@
                                     android:paddingStart="10dp"
                                     android:paddingEnd="0dp"
                                     android:text="n/a" />
+
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="; Prec:"/>
+                                    android:text="; Prec:" />
+
                                 <TextView
                                     android:id="@+id/tv_gps"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:paddingStart="10dp"
                                     android:paddingEnd="0dp"
-                                    android:text=""/>
+                                    android:text="" />
+
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text=" m"/>
+                                    android:text=" m" />
                             </LinearLayout>
 
 
@@ -186,110 +192,68 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:layout_marginBottom="12dp"
-                            android:visibility="gone">
+                            android:visibility="visible">
 
-                            <RelativeLayout
+                            <androidx.appcompat.widget.LinearLayoutCompat
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content">
 
-                                <View android:id="@+id/central_line"
-                                    android:layout_width="0dp"
-                                    android:layout_height="0dp"
-                                    android:layout_centerHorizontal="true"/>
+                                <com.google.android.material.checkbox.MaterialCheckBox
+                                    android:id="@+id/male"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:textColor="@color/checkBox_text"
+                                    android:text="@string/is_male"/>
+
+                                <com.google.android.material.checkbox.MaterialCheckBox
+                                    android:id="@+id/female"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:textColor="@color/checkBox_text"
+
+                                    android:text="@string/is_female"/>
 
                                 <com.google.android.material.textfield.TextInputLayout
+                                    android:id="@+id/textView_specimens_no_1"
                                     android:layout_width="0dp"
+                                    android:layout_weight="1"
                                     android:layout_height="wrap_content"
-                                    android:layout_alignEnd="@id/central_line"
-                                    android:layout_alignParentStart="true"
+                                    android:layout_marginStart="8dp"
                                     app:boxBackgroundColor="@android:color/transparent">
 
                                     <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/editText_number_of_specimens"
+                                        android:id="@+id/editText_number_of_specimens_1"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:hint="@string/broj_jedinki"
+                                        android:inputType="number"
+                                        android:maxLength="10" />
+                                </com.google.android.material.textfield.TextInputLayout>
+
+                                <com.google.android.material.textfield.TextInputLayout
+                                    android:id="@+id/textView_specimens_no_2"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:visibility="gone"
+                                    app:boxBackgroundColor="@android:color/transparent">
+
+                                    <com.google.android.material.textfield.TextInputEditText
+                                        android:id="@+id/editText_number_of_specimens_2"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:hint="@string/broj_jedinki"
                                         android:maxLength="10"
-                                        android:layout_marginEnd="6dp"
-                                        android:inputType="number" />
+                                        android:inputType="number"/>
                                 </com.google.android.material.textfield.TextInputLayout>
 
-                                <com.google.android.material.textfield.TextInputLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_alignStart="@id/central_line"
-                                    android:layout_alignParentEnd="true"
-                                    app:boxBackgroundColor="@android:color/transparent">
-
-                                    <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/text_view_sex"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="match_parent"
-                                        android:drawableEnd="@drawable/ic_arrow_drop_down"
-                                        android:clickable="false"
-                                        android:focusable="false"
-                                        android:layout_marginStart="6dp"
-                                        android:hint="@string/select_sex"/>
-                                </com.google.android.material.textfield.TextInputLayout>
-
-                            </RelativeLayout>
-
-                            <RelativeLayout
-                                android:id="@+id/both_sexes_no"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:visibility="gone">
-
-                                <View android:id="@+id/central_line1"
-                                    android:layout_width="0dp"
-                                    android:layout_height="0dp"
-                                    android:layout_centerHorizontal="true"/>
-
-                                <com.google.android.material.textfield.TextInputLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_alignEnd="@id/central_line1"
-                                    android:layout_alignParentStart="true"
-                                    app:boxBackgroundColor="@android:color/transparent">
-
-                                    <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/editText_number_of_males"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        android:layout_marginStart="6dp"
-                                        android:hint="@string/number_of_males"
-                                        android:maxLength="10"
-                                        android:layout_marginEnd="6dp"
-                                        android:inputType="number" />
-                                </com.google.android.material.textfield.TextInputLayout>
-
-                                <com.google.android.material.textfield.TextInputLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_alignStart="@id/central_line1"
-                                    android:layout_alignParentEnd="true"
-                                    app:boxBackgroundColor="@android:color/transparent">
-
-                                    <com.google.android.material.textfield.TextInputEditText
-                                        android:id="@+id/editText_number_of_females"
-                                        android:layout_width="fill_parent"
-                                        android:layout_height="match_parent"
-                                        android:layout_marginStart="6dp"
-                                        android:hint="@string/number_of_females"
-                                        android:maxLength="10"
-                                        android:layout_marginEnd="6dp"
-                                        android:inputType="number" />
-                                </com.google.android.material.textfield.TextInputLayout>
-
-                            </RelativeLayout>
+                            </androidx.appcompat.widget.LinearLayoutCompat>
 
                             <com.google.android.material.chip.ChipGroup
                                 android:id="@+id/observation_types"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="24dp"
-                                android:layout_marginTop="20dp"
-                                android:layout_marginEnd="24dp"
                                 app:layout_constraintEnd_toEndOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
                                 app:layout_constraintTop_toBottomOf="@+id/textView2">
@@ -345,13 +309,8 @@
                                     android:id="@+id/dead_specimen"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
-                                    android:layout_marginEnd="8dp"/>
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="match_parent"
-                                    android:gravity="center"
-                                    android:text="@string/jedinka_je" />
+                                    android:textColor="@color/checkBox_text"
+                                    android:text="@string/jedinka_je"/>
 
                             </LinearLayout>
 
