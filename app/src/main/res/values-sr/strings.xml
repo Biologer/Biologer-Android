@@ -18,8 +18,8 @@
     <string name="GPSaccuracy">"Прецизност координате:"</string>
     <string name="latitude">Географска ширина:</string>
     <string name="longitude">Географска дужина:</string>
-    <string name="not_available">непознато</string>
-    <string name="unknown">недоступно</string>
+    <string name="not_available">недоступно</string>
+    <string name="unknown">непознато</string>
     <string name="taxon_hint">Почните да куцате…</string>
     <string name="more">Још…</string>
     <string name="naziv_taksona">Назив таксона</string>
@@ -244,11 +244,19 @@
     <string name="atlas_code_16">16. Пронађено гнездо са младунцима (посматраним или слушаним)</string>
     <string name="not_selected">Није изабрано</string>
     <string name="image_view">Преглед слике</string>
-    <string name="taxon_name">Taxon name</string>
-    <string name="developmental_stage">Developmental stage</string>
-    <string name="thumbnail">Thumbnail</string>
-    <string name="map_type">Map type</string>
-    <string name="defaults_to_adult">Set as adult by default</string>
-    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="taxon_name">Име таксона</string>
+    <string name="developmental_stage">Развојни стадијум</string>
+    <string name="thumbnail">Умањена сличица</string>
+    <string name="map_type">Врста карте</string>
+    <string name="defaults_to_adult">Подразумевано су јединке су одрасле</string>
+    <string name="defaults_to_adult_summary">Подразумевано уноси да је посматрана одрасла јединка уколико је одрасли стадијум доступан за одабрани таксон.</string>
+    <string name="location_is_not_available">Сачекајте на координате…</string>
+    <string name="north">° СГШ;</string>
+    <string name="east">° ИГД</string>
+    <string name="meter">m</string>
+    <string name="accuracy">Тачност коордианта:</string>
+    <string name="display_image_on_full_screen">Приказ слике преко целог екрана.</string>
+    <string name="male">♂</string>
+    <string name="female">♀</string>
 
 </resources>

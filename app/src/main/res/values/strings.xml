@@ -18,8 +18,8 @@
     <string name="GPSaccuracy">Coordinate accuracy:</string>
     <string name="latitude">Latitude:</string>
     <string name="longitude">Longitude:</string>
-    <string name="not_available">unknown</string>
-    <string name="unknown">unavailable</string>
+    <string name="not_available">unavailable</string>
+    <string name="unknown">unknown</string>
     <string name="taxon_hint">Start typing…</string>
     <string name="more">More…</string>
     <string name="naziv_taksona">Taxon name</string>
@@ -251,5 +251,12 @@
     <string name="map_type">Map type</string>
     <string name="defaults_to_adult">Set as adult by default</string>
     <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="location_is_not_available">Waiting for the coordinates…</string>
+    <string name="north">° N;</string>
+    <string name="east">° E</string>
+    <string name="meter">m</string>
+    <string name="accuracy">Accuracy:</string>
+    <string name="male">♂</string>
+    <string name="female">♀</string>
 
 </resources>

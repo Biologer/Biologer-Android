@@ -307,20 +307,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
                 if (response.body() != null) {
-                    elevation = String.valueOf(response.body().getElevation());
-                    Log.d(TAG, "Elevation for this point is " + elevation + ".");
-                    saveAndExit();
+                    Long elev = response.body().getElevation();
+                    if (elev != null) {
+                        elevation = String.valueOf(elev);
+                    } else {
+                        elevation = "0.0";
+                    }
                 } else {
                     elevation = "0.0";
-                    saveAndExit();
                 }
+                Log.d(TAG, "Elevation for this point is " + elevation + ".");
+                saveAndExit();
             }
 
             @Override
             public void onFailure(@NonNull Call<ElevationResponse> call, @NonNull Throwable t) {
                 Log.d(TAG, "No elevation returned from server...");
                 elevation = "0.0";
-
                 saveAndExit();
             }
         });

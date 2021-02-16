@@ -253,5 +253,12 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="map_type">Map type</string>
     <string name="defaults_to_adult">Set as adult by default</string>
     <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="location_is_not_available">Location is not available</string>
+    <string name="north">° N;</string>
+    <string name="east">° E</string>
+    <string name="meter">m</string>
+    <string name="accuracy">Accuracy</string>
+    <string name="male">♂</string>
+    <string name="female">♀</string>
 
 </resources>

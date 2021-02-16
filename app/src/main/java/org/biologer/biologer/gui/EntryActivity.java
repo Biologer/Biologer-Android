@@ -96,7 +96,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private final int CAMERA = 2;
     private final int MAP = 3;
     private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment;
-    private TextView textViewGPS, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode;
+    private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
     private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
     AutoCompleteTextView acTextView;
@@ -104,7 +104,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
             imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
     ChipGroup observation_types;
-    LinearLayout detailedEntry;
+    LinearLayout detailedEntry, layoutCoordinates, layoutUnknownCoordinates;
     private boolean save_enabled = false;
     private String image1, image2, image3;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -149,7 +149,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         swipeRefreshLayout.setOnRefreshListener(this);
         textViewLatitude = findViewById(R.id.tv_latitude);
         textViewLongitude = findViewById(R.id.tv_longitude);
-        textViewGPS = findViewById(R.id.tv_gps);
+        textViewGPSAccuracy = findViewById(R.id.textView_gps_accuracy);
+        textViewMeters = findViewById(R.id.textView_meter);
         textViewStage = findViewById(R.id.text_view_stages);
         textViewStage.setOnClickListener(this);
         editTextDeathComment = findViewById(R.id.editText_death_comment);
@@ -197,6 +198,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
         detailedEntry = findViewById(R.id.detailed_entry);
+        layoutCoordinates = findViewById(R.id.layout_coordinates);
+        layoutUnknownCoordinates = findViewById(R.id.layout_unknown_coordinates);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
@@ -425,7 +428,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 setLocationValues(location.getLatitude(), location.getLongitude());
                 elev = location.getAltitude();
                 acc = (double) location.getAccuracy();
-                textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewMeters.setVisibility(View.VISIBLE);
+                setAccuracyColor();
             }
 
             @Override
@@ -451,6 +456,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Finally to start the gathering of data...
         startEntryActivity();
         fillObservationTypes();
+    }
+
+    private void setAccuracyColor() {
+        if (acc != null) {
+            if (acc <= 25) {
+                textViewMeters.setTextColor(getResources().getColor(R.color.checkBox_text));
+                textViewGPSAccuracy.setTextColor(getResources().getColor(R.color.checkBox_text));
+            } else {
+                textViewMeters.setTextColor(getResources().getColor(R.color.warningRed));
+                textViewGPSAccuracy.setTextColor(getResources().getColor(R.color.warningRed));
+            }
+        }
     }
 
     private void registerBroadcastReceiver() {
@@ -542,7 +559,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         acc = currentItem.getAccuracy();
         textViewLatitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLattitude()));
         textViewLongitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLongitude()));
-        textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
+        layoutUnknownCoordinates.setVisibility(View.GONE);
+        layoutCoordinates.setVisibility(View.VISIBLE);
+        textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
+        textViewMeters.setVisibility(View.VISIBLE);
+        setAccuracyColor();
 
         // Get the name of the taxon for this entry
         acTextView.setText(currentItem.getTaxonSuggestion());
@@ -1167,13 +1188,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 assert currentLocation != null;
                 setLocationValues(currentLocation.latitude, currentLocation.longitude);
                 acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
+
                 elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
             }
             assert data != null;
             if (Objects.equals(data.getExtras().getString("google_map_accuracy"), "0.0")) {
-                textViewGPS.setText(R.string.not_available);
+                textViewGPSAccuracy.setText(R.string.unknown);
+                textViewMeters.setVisibility(View.GONE);
             } else {
-                textViewGPS.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                textViewMeters.setVisibility(View.VISIBLE);
+                setAccuracyColor();
             }
         }
     }
@@ -1298,6 +1323,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         longitude = String.format(Locale.ENGLISH, "%.4f", (longi));
         textViewLatitude.setText(latitude);
         textViewLongitude.setText(longitude);
+        layoutUnknownCoordinates.setVisibility(View.GONE);
+        layoutCoordinates.setVisibility(View.VISIBLE);
     }
 
     // Show the message if the taxon is not chosen from the taxonomic list

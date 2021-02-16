@@ -223,8 +223,8 @@
     <string name="both_sexes">Oba pola</string>
     <string name="both">Oba</string>
     <string name="unknown_sex_short">Nepoznat</string>
-    <string name="image_deleted">Izgleda da ova slika više nije na vašem uređaju!</string>
-    <string name="select_atlas_code">Atlas kodovi gnežđenja</string>
+    <string name="image_deleted">Изгледа да ова слика више није на вашем уређају!</string>
+    <string name="select_atlas_code">Атлас кодови гнежђења</string>
     <string name="atlas_code_0">0. Sumnja se da je jedinka na seobi ili da se samo zadržava tokom letnjeg perioda, ali se ne gnezdi</string>
     <string name="atlas_code_1">1. Vrsta posmatrana u gnezdećoj sezoni u mogućem gnezdećem staništu</string>
     <string name="atlas_code_2">2. Teritorijalni (pevajući) mužjak prisutan tokom gnezdeće sezone</string>
@@ -243,7 +243,7 @@
     <string name="atlas_code_15">15. Pronađeno gnezdo sa jajima</string>
     <string name="atlas_code_16">16. Pronađeno gnezdo sa mladuncima (posmatranim ili slušanim)</string>
     <string name="not_selected">Nije izabrano</string>
-    <string name="display_image_on_full_screen">Display image on full screen.</string>
+    <string name="display_image_on_full_screen">Приказ слике преко целог екрана.</string>
     <string name="image_view">Image View</string>
     <string name="taxon_name">Taxon name</string>
     <string name="developmental_stage">Developmental stage</string>
@@ -251,5 +251,12 @@
     <string name="map_type">Map type</string>
     <string name="defaults_to_adult">Set as adult by default</string>
     <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="location_is_not_available">Location is not available</string>
+    <string name="north">° N;</string>
+    <string name="east">° E</string>
+    <string name="meter">m</string>
+    <string name="accuracy">Accuracy</string>
+    <string name="male">♂</string>
+    <string name="female">♀</string>
 
 </resources>

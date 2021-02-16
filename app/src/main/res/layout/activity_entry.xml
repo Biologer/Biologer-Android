@@ -34,78 +34,97 @@
                         android:padding="12dp"
                         android:verticalScrollbarPosition="right">
 
-                        <GridLayout
+                        <!--map and coordinates-->
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:columnCount="2"
-                            android:paddingStart="6dp"
-                            android:paddingEnd="6dp"
-                            android:layout_marginTop="4dp">
+                            android:layout_height="wrap_content">
 
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="La:" />
-
-                                <TextView
-                                    android:id="@+id/tv_latitude"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="0dp"
-                                    android:text="n/a" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="; Lo:" />
-
-                                <TextView
-                                    android:id="@+id/tv_longitude"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="0dp"
-                                    android:text="n/a" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="; Prec:" />
-
-                                <TextView
-                                    android:id="@+id/tv_gps"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="0dp"
-                                    android:text="" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text=" m" />
-                            </LinearLayout>
-
-
-                            <!--desni deo(mapa)-->
+                            <!--map icon-->
                             <ImageView
                                 android:id="@+id/iv_map"
                                 android:layout_width="32dp"
-                                android:layout_height="32dp"
+                                android:layout_height="match_parent"
                                 android:contentDescription="@string/map"
                                 android:clickable="true"
                                 android:focusable="true"
-                                android:layout_gravity="end"
-                                android:layout_rowSpan="3"
-                                android:layout_columnSpan="1"
-                                android:src="@mipmap/ic_map"/>
-                        </GridLayout>
+                                android:paddingTop="2dp"
+                                android:layout_gravity="start"
+                                android:src="@drawable/ic_gps_turtle"/>
+
+                            <GridLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:columnCount="1">
+
+                                <!--geographic coordinates-->
+                                <LinearLayout
+                                    android:id="@+id/layout_unknown_coordinates"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:textColor="@color/warningRed"
+                                        android:text="@string/location_is_not_available"/>
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:id="@+id/layout_coordinates"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:visibility="gone">
+
+                                    <TextView
+                                        android:id="@+id/tv_latitude"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:text="@string/unknown" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:text="@string/north" />
+
+                                    <TextView
+                                        android:id="@+id/tv_longitude"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:text="@string/unknown" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:text="@string/east" />
+                                </LinearLayout>
+
+
+                                <!--coordinate accuracy-->
+                                <LinearLayout>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:text="@string/accuracy" />
+
+                                    <TextView
+                                        android:id="@+id/textView_gps_accuracy"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_marginStart="4dp"
+                                        android:text="@string/unknown" />
+
+                                    <TextView
+                                        android:id="@+id/textView_meter"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_marginStart="4dp"
+                                        android:visibility="gone"
+                                        android:text="@string/meter" />
+                                </LinearLayout>
+                            </GridLayout>
+                        </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -122,7 +141,8 @@
                                 android:focusable="true"
                                 android:scaleType="fitEnd"
                                 android:layout_gravity="start"
-                                android:layout_margin="4dp"
+                                android:layout_marginBottom="4dp"
+                                android:layout_marginTop="4dp"
                                 android:src="@drawable/ic_photo_camera" />
 
                             <ImageView
@@ -134,7 +154,9 @@
                                 android:focusable="true"
                                 android:scaleType="fitEnd"
                                 android:layout_gravity="start"
-                                android:layout_margin="4dp"
+                                android:layout_marginTop="4dp"
+                                android:layout_marginBottom="4dp"
+                                android:layout_marginStart="8dp"
                                 android:src="@drawable/ic_photo_gallery" />
 
                             <com.google.android.material.textfield.TextInputLayout
@@ -203,15 +225,18 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:textColor="@color/checkBox_text"
-                                    android:text="@string/is_male"/>
+                                    android:textSize="22sp"
+                                    android:paddingBottom="8dp"
+                                    android:text="@string/male"/>
 
                                 <com.google.android.material.checkbox.MaterialCheckBox
                                     android:id="@+id/female"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:textColor="@color/checkBox_text"
-
-                                    android:text="@string/is_female"/>
+                                    android:textSize="22sp"
+                                    android:paddingBottom="4dp"
+                                    android:text="@string/female"/>
 
                                 <com.google.android.material.textfield.TextInputLayout
                                     android:id="@+id/textView_specimens_no_1"
