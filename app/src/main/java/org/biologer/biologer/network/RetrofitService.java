@@ -36,11 +36,6 @@ public interface RetrofitService {
                               @Field("username") String username,
                               @Field("password") String password);
 
-    @FormUrlEncoded
-    @POST("v1/login")
-    Call<LoginResponse> login2(@Field("email") String username,
-                              @Field("password") String password);
-
     @GET("api/taxa")
     Call<TaxaResponse> getTaxa(@Query("page") int page_number,
                                @Query("per_page") int per_page,

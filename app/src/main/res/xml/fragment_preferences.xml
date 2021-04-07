@@ -11,7 +11,7 @@
             android:title="@string/advanced_entry"
             android:summary="@string/advanced_entry_desc"
             app:iconSpaceReserved="false"
-            android:defaultValue="false"/>
+            android:defaultValue="true"/>
         <CheckBoxPreference
             android:key="english_names"
             android:title="@string/allow_english_names"
