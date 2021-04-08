@@ -258,4 +258,5 @@
     <string name="select_atlas_code">Nesting atlas code</string>
     <string name="male">♂</string>
     <string name="female">♀</string>
+    <string name="add_new_observetion">Add new observetion</string>
 </resources>

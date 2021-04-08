@@ -97,14 +97,7 @@ public class FetchTaxa extends Service {
                     case ACTION_CANCEL_PAUSED:
                         Log.i(TAG, "Action cancel selected while download was paused.");
                         sendResult("canceled");
-                        // Stop the foreground service and update the notification
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
-                            stopForeground(STOP_FOREGROUND_DETACH);
-                        } else {
-                            stopForeground(true);
-                            notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
-                        }
+                        updateNotification(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled), null, null);
                         stopSelf();
                         break;
                     case ACTION_RESUME:
@@ -124,27 +117,13 @@ public class FetchTaxa extends Service {
             case "pause":
                 Log.d(TAG, "Fetching of taxa data is paused by the user!");
                 sendResult("paused");
-                // Stop the foreground service and update the notification
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action));
-                    stopForeground(STOP_FOREGROUND_DETACH);
-                } else {
-                    stopForeground(true);
-                    notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action));
-                }
+                updateNotification(getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action), progressStatus);
                 stopSelf();
                 break;
             case "cancel":
                 Log.d(TAG, "Fetching of taxa data is canceled by the user!");
                 sendResult("canceled");
-                // Stop the foreground service and update the notification
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
-                    stopForeground(STOP_FOREGROUND_DETACH);
-                } else {
-                    stopForeground(true);
-                    notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
-                }
+                updateNotification(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled), null, null);
                 stopSelf();
                 break;
             case "keep_going":
@@ -168,24 +147,16 @@ public class FetchTaxa extends Service {
 
                         if (retry_number == 4) {
                             sendResult("failed");
-                            // Stop the foreground service and update the notification
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry));
-                                stopForeground(STOP_FOREGROUND_DETACH);
-                            } else {
-                                stopForeground(true);
-                                notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry));
-                            }
-
+                            updateNotification(getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry), progressStatus);
                             stopSelf();
                             Log.d(TAG, "Fetching taxa failed!");
                         }
                         else {
-                                Log.d(TAG, "Starting retry loop No. " + retry_number + ".");
-                                fetchTaxa();
-                                retry_number++;
+                            Log.d(TAG, "Starting retry loop No. " + retry_number + ".");
+                            fetchTaxa();
+                            retry_number++;
                         }
-                        }
+                    }
                 });
         }
     }
@@ -256,14 +227,7 @@ public class FetchTaxa extends Service {
         // If we just finished fetching taxa data for the last page, we can stop showing
         // loader. Otherwise we continue fetching taxa from the API on the next page.
         if (isLastPage(current_page)) {
-            // Stop the foreground service and update the notification
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
-                stopForeground(STOP_FOREGROUND_DETACH);
-            } else {
-                stopForeground(true);
-                notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
-            }
+            updateNotification(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated), null, null);
             // Inform the user of success
             Log.i(TAG, "All taxa were successfully updated from the server!");
             sendResult("fetched");
@@ -279,6 +243,27 @@ public class FetchTaxa extends Service {
             fetchTaxa();
         }
 
+    }
+
+    // Stop the foreground service and update the notification
+    private void updateNotification(String title, String description, String buttonTitle, Integer progressStatus) {
+        if (progressStatus != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                notificationResumeFetchButton(progressStatus, title, description, buttonTitle);
+                stopForeground(STOP_FOREGROUND_DETACH);
+            } else {
+                stopForeground(true);
+                notificationResumeFetchButton(progressStatus, title, description, buttonTitle);
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                notificationUpdateText(title, description);
+                stopForeground(STOP_FOREGROUND_DETACH);
+            } else {
+                stopForeground(true);
+                notificationUpdateText(title, description);
+            }
+        }
     }
 
     private void notificationInitiate() {

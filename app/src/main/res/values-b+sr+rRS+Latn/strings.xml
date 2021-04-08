@@ -258,5 +258,6 @@
     <string name="accuracy">Accuracy</string>
     <string name="male">♂</string>
     <string name="female">♀</string>
+    <string name="add_new_observetion">Add new observetion</string>
 
 </resources>

@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
@@ -107,8 +108,18 @@ public class UploadRecords extends Service {
     private void cancelUpload(String title, String description) {
         Log.d(TAG, "Canceling upload process…");
         keep_going = false;
-        stopForeground(true);
-        notificationUpdateText(title, description);
+        stopForegroundAndNotify(title, description);
+    }
+
+    // Stop the foreground service and update the notification
+    private void stopForegroundAndNotify(String title, String description) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            notificationUpdateText(title, description);
+            stopForeground(STOP_FOREGROUND_DETACH);
+        } else {
+            stopForeground(true);
+            notificationUpdateText(title, description);
+        }
     }
 
     private void notificationInitiate() {
@@ -139,7 +150,7 @@ public class UploadRecords extends Service {
 
     // This checks if there are photos in the Entry Record.
     // If there are upload photos first.
-    // If no photos/or after the photos are uploaded upload the data.
+    // If no photos/or after the photos are uploaded, upload the data.
     private void uploadStep1() {
         // n is a number of images from 1 to 3
         n = 0;
@@ -150,8 +161,9 @@ public class UploadRecords extends Service {
         if (entryList.size() == 0) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
             App.get().getDaoSession().getEntryDao().deleteAll();
-            stopForeground(true);
-            notificationUpdateText(getString(R.string.notify_title_entries_uploaded), getString(R.string.notify_desc_entries_uploaded));
+            // Stop the foreground service and update the notification
+            stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
+                    getString(R.string.notify_desc_entries_uploaded));
             stopSelf();
             return;
         }
@@ -263,29 +275,29 @@ public class UploadRecords extends Service {
                 }
 
                 if (response.isSuccessful()) {
-                        if (keep_going) {
-                            // Wait... Don’t send too many requests to the server!
-                            SystemClock.sleep(300);
-                            // Delete uploaded entry
-                            App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
-                            entryList.remove(0);
-                            EventBus.getDefault().post(new DeleteEntryFromList());
-                            // Delete image files from internal storage
-                            for (String filename: filenames) {
-                                if (filename != null) {
-                                    final File file = new File(getFilesDir(), filename);
-                                    boolean b = file.delete();
-                                    Log.d(TAG, "Deleting image " + filename + " returned: " + b);
-                                }
+                    if (keep_going) {
+                        // Wait... Don’t send too many requests to the server!
+                        SystemClock.sleep(300);
+                        // Delete uploaded entry
+                        App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
+                        entryList.remove(0);
+                        EventBus.getDefault().post(new DeleteEntryFromList());
+                        // Delete image files from internal storage
+                        for (String filename: filenames) {
+                            if (filename != null) {
+                                final File file = new File(getFilesDir(), filename);
+                                boolean b = file.delete();
+                                Log.d(TAG, "Deleting image " + filename + " returned: " + b);
                             }
-                            filenames = new String[3];
-                            // Reset the counter
-                            m = 0;
-                            // All done! Upload next entry :)
-                            uploadStep1();
-                        } else {
-                            Log.i(TAG, "Uploading has bean canceled by the user.");
                         }
+                        filenames = new String[3];
+                        // Reset the counter
+                        m = 0;
+                        // All done! Upload next entry :)
+                        uploadStep1();
+                    } else {
+                        Log.i(TAG, "Uploading has bean canceled by the user.");
+                    }
                 }
             }
 

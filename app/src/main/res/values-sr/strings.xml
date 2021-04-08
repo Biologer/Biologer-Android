@@ -258,5 +258,6 @@
     <string name="display_image_on_full_screen">Приказ слике преко целог екрана.</string>
     <string name="male">♂</string>
     <string name="female">♀</string>
+    <string name="add_new_observetion">Add new observetion</string>
 
 </resources>

@@ -398,12 +398,16 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-            if (item.getItemId() == R.id.action_upload) {
-                    Log.d(TAG, "Upload records button clicked.");
-                    uploadRecords();
-                    return true;
-            }
-            return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.action_upload) {
+            Log.d(TAG, "Upload records button clicked.");
+            // Disable the upload button to avoid double taps
+            item.setEnabled(false);
+            item.getIcon().setAlpha(100);
+            // Upload data to the server
+            uploadRecords();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void uploadRecords() {
