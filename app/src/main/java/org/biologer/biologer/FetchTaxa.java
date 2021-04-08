@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -96,8 +97,14 @@ public class FetchTaxa extends Service {
                     case ACTION_CANCEL_PAUSED:
                         Log.i(TAG, "Action cancel selected while download was paused.");
                         sendResult("canceled");
-                        stopForeground(true);
-                        notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                        // Stop the foreground service and update the notification
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                            stopForeground(STOP_FOREGROUND_DETACH);
+                        } else {
+                            stopForeground(true);
+                            notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                        }
                         stopSelf();
                         break;
                     case ACTION_RESUME:
@@ -111,48 +118,33 @@ public class FetchTaxa extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void notificationInitiate() {
-        // Start the fetching and display notification
-        Log.i(TAG, "Service for fetching taxa started.");
-
-        // Create initial notification to be set to Foreground
-        Intent intent = new Intent(this, SplashActivity.class);
-        intent.setAction(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
-                .setSmallIcon(R.mipmap.ic_notification)
-                .setContentTitle(getString(R.string.notify_title_taxa))
-                .setContentText(getString(R.string.notify_desc_taxa))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setContentIntent(pendingIntent)
-                .setAutoCancel(false);
-
-        Notification notification = mBuilder.build();
-        startForeground(1, notification);
-
-        fetchTaxa();
-
-    }
-
     public void fetchTaxa() {
         // If user selected pause or cancel we will stop the script
         switch (stop_fetching) {
             case "pause":
                 Log.d(TAG, "Fetching of taxa data is paused by the user!");
                 sendResult("paused");
-                stopForeground(true);
-                notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action));
+                // Stop the foreground service and update the notification
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action));
+                    stopForeground(STOP_FOREGROUND_DETACH);
+                } else {
+                    stopForeground(true);
+                    notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa), getString(R.string.notify_desc_taxa), getString(R.string.resume_action));
+                }
                 stopSelf();
                 break;
             case "cancel":
                 Log.d(TAG, "Fetching of taxa data is canceled by the user!");
                 sendResult("canceled");
-                stopForeground(true);
-                notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                // Stop the foreground service and update the notification
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                    stopForeground(STOP_FOREGROUND_DETACH);
+                } else {
+                    stopForeground(true);
+                    notificationUpdateText(getString(R.string.notify_title_taxa_canceled), getString(R.string.notify_desc_taxa_canceled));
+                }
                 stopSelf();
                 break;
             case "keep_going":
@@ -176,8 +168,15 @@ public class FetchTaxa extends Service {
 
                         if (retry_number == 4) {
                             sendResult("failed");
-                            stopForeground(true);
-                            notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry));
+                            // Stop the foreground service and update the notification
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry));
+                                stopForeground(STOP_FOREGROUND_DETACH);
+                            } else {
+                                stopForeground(true);
+                                notificationResumeFetchButton(progressStatus, getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry));
+                            }
+
                             stopSelf();
                             Log.d(TAG, "Fetching taxa failed!");
                         }
@@ -257,12 +256,17 @@ public class FetchTaxa extends Service {
         // If we just finished fetching taxa data for the last page, we can stop showing
         // loader. Otherwise we continue fetching taxa from the API on the next page.
         if (isLastPage(current_page)) {
+            // Stop the foreground service and update the notification
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
+                stopForeground(STOP_FOREGROUND_DETACH);
+            } else {
+                stopForeground(true);
+                notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
+            }
             // Inform the user of success
             Log.i(TAG, "All taxa were successfully updated from the server!");
             sendResult("fetched");
-            // Stop the foreground service and update notification
-            stopForeground(true);
-            notificationUpdateText(getString(R.string.notify_title_taxa_updated), getString(R.string.notify_desc_taxa_updated));
             // Set the preference to know when the taxonomic data was updates
             SettingsManager.setTaxaUpdatedAt(system_time);
             SettingsManager.setTaxaLastPageFetched("1");
@@ -274,6 +278,33 @@ public class FetchTaxa extends Service {
             SettingsManager.setTaxaLastPageFetched(String.valueOf(current_page));
             fetchTaxa();
         }
+
+    }
+
+    private void notificationInitiate() {
+        // Start the fetching and display notification
+        Log.i(TAG, "Service for fetching taxa started.");
+
+        // Create initial notification to be set to Foreground
+        Intent intent = new Intent(this, SplashActivity.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
+                .setSmallIcon(R.mipmap.ic_notification)
+                .setContentTitle(getString(R.string.notify_title_taxa))
+                .setContentText(getString(R.string.notify_desc_taxa))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(false);
+
+        Notification notification = mBuilder.build();
+        startForeground(1, notification);
+
+        fetchTaxa();
 
     }
 
