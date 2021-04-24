@@ -15,33 +15,33 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class TaxaTranslations {
 
     @JsonProperty("id")
-    private long id;
+    private Long id;
     @JsonProperty("taxon_id")
-    private String taxonId;
+    private Long taxonId;
     @JsonProperty("locale")
     private String locale;
     @JsonProperty("native_name")
     private String nativeName;
     @JsonProperty("description")
-    private Object description;
+    private String description;
 
     @JsonProperty("id")
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
     @JsonProperty("taxon_id")
-    public String getTaxonId() {
+    public Long getTaxonId() {
         return taxonId;
     }
 
     @JsonProperty("taxon_id")
-    public void setTaxonId(String taxonId) {
+    public void setTaxonId(Long taxonId) {
         this.taxonId = taxonId;
     }
 
@@ -66,12 +66,12 @@ public class TaxaTranslations {
     }
 
     @JsonProperty("description")
-    public Object getDescription() {
+    public String getDescription() {
         return description;
     }
 
     @JsonProperty("description")
-    public void setDescription(Object description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 

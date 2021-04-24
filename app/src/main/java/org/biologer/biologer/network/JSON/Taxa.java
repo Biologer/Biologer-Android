@@ -8,17 +8,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Taxa {
 
     @JsonProperty("id")
-    private long id;
+    private Long id;
     @JsonProperty("parent_id")
-    private String parentId;
+    private Long parentId;
     @JsonProperty("name")
     private String name;
     @JsonProperty("rank")
     private String rank;
     @JsonProperty("rank_level")
-    private long rankLevel;
+    private Long rankLevel;
     @JsonProperty("author")
-    private Object author;
+    private String author;
     @JsonProperty("fe_old_id")
     private Object feOldId;
     @JsonProperty("fe_id")
@@ -53,22 +53,22 @@ public class Taxa {
     private List<Object> activity = null;
 
     @JsonProperty("id")
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
     @JsonProperty("parent_id")
-    public String getParentId() {
+    public Long getParentId() {
         return parentId;
     }
 
     @JsonProperty("parent_id")
-    public void setParentId(String parentId) {
+    public void setParentId(Long parentId) {
         this.parentId = parentId;
     }
 
@@ -93,22 +93,22 @@ public class Taxa {
     }
 
     @JsonProperty("rank_level")
-    public long getRankLevel() {
+    public Long getRankLevel() {
         return rankLevel;
     }
 
     @JsonProperty("rank_level")
-    public void setRankLevel(long rankLevel) {
+    public void setRankLevel(Long rankLevel) {
         this.rankLevel = rankLevel;
     }
 
     @JsonProperty("author")
-    public Object getAuthor() {
+    public String getAuthor() {
         return author;
     }
 
     @JsonProperty("author")
-    public void setAuthor(Object author) {
+    public void setAuthor(String author) {
         this.author = author;
     }
 

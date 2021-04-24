@@ -18,6 +18,7 @@ import org.biologer.biologer.network.JSON.TaxaTranslations;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.TaxonData;
+import org.biologer.biologer.sql.TaxaTranslationData;
 
 import java.util.List;
 
@@ -129,7 +130,7 @@ public class FetchTaxa extends Service {
             case "keep_going":
 
                 Call<TaxaResponse> call = RetrofitClient.getService(
-                        SettingsManager.getDatabaseName()).getTaxa(current_page, 200, updated_at);
+                        SettingsManager.getDatabaseName()).getTaxa(current_page, 250, updated_at);
                 call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override
@@ -174,55 +175,54 @@ public class FetchTaxa extends Service {
 
         Log.i(TAG, "Page " + current_page + " downloaded, total " + totalPages + " pages");
 
-        for (Taxa taxon : taxa) {
-            long taxon_id = taxon.getId();
+        TaxonData[] final_taxa = new TaxonData[taxa.size()];
+        for (int i = 0; i < taxa.size(); i++) {
+            Taxa taxon = taxa.get(i);
+            Long taxon_id = taxon.getId();
             String taxon_latin_name = taxon.getName();
             // Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
-            boolean use_atlas_code = taxon.isUses_atlas_codes();
-            String ancestor_names = taxon.getAncestors_names();
 
             List<TaxaStages> stages = taxon.getStages();
             Stage[] final_stages = new Stage[stages.size()];
-            for (int i = 0; i < stages.size(); i++) {
-                TaxaStages stage = stages.get(i);
-                final_stages[i] = new Stage(null, stage.getName(), stage.getId(), taxon_id);
+            for (int j = 0; j < stages.size(); j++) {
+                TaxaStages stage = stages.get(j);
+                final_stages[j] = new Stage(null, stage.getName(), stage.getId(), taxon_id);
             }
             App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
-            // If there are no translations, just take the taxon and set its translation english with value null
-            if (taxaTranslations.isEmpty()) {
-                TaxonData final_translation = new TaxonData(
-                        null,
-                        taxon_id,
-                        taxon_latin_name,
-                        use_atlas_code,
-                        ancestor_names,
-                        "en",
-                        null);
-                // Log.d(TAG, "Taxon translation_id: null" + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: en (empty)" + ", native name: null");
-                App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_translation);
-            }
+            // Write taxon data in SQL database
+            final_taxa[i] = new TaxonData(
+                    taxon_id,
+                    taxon.getParentId(),
+                    taxon_latin_name,
+                    taxon.getRank(),
+                    taxon.getRankLevel(),
+                    taxon.getAuthor(),
+                    taxon.isRestricted(),
+                    taxon.isUses_atlas_codes(),
+                    taxon.getAncestors_names());
+            Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name);
 
-            // If there are translations save them individually
-            else {
-                TaxonData[] final_translations = new TaxonData[taxaTranslations.size()];
-                for (int i = 0; i < taxaTranslations.size(); i++) {
-                    TaxaTranslations taxaTranslation = taxaTranslations.get(i);
-                    final_translations[i] = new TaxonData(
-                            null,
+            // If there are translations save them in different table
+            if (!taxaTranslations.isEmpty()) {
+                TaxaTranslationData[] final_translations = new TaxaTranslationData[taxaTranslations.size()];
+                for (int k = 0; k < taxaTranslations.size(); k++) {
+                    TaxaTranslations taxaTranslation = taxaTranslations.get(k);
+                    final_translations[k] = new TaxaTranslationData(
+                            taxaTranslation.getId(),
                             taxon_id,
-                            taxon_latin_name,
-                            use_atlas_code,
-                            ancestor_names,
                             taxaTranslation.getLocale(),
-                            taxaTranslation.getNativeName());
-                    // Log.d(TAG, "Taxon translation_id: " + taxaTranslation.getId() + ", id: "+ taxon_id + ", name: " + taxon_latin_name + ", locale: " +taxaTranslation.getLocale() + ", native name: " + taxaTranslation.getNativeName());
+                            taxaTranslation.getNativeName(),
+                            taxaTranslation.getDescription());
+                    Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
+                            " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
-                App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_translations);
+                App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
+        App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
         // loader. Otherwise we continue fetching taxa from the API on the next page.

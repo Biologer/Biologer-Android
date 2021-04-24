@@ -65,6 +65,8 @@ import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.StageDao;
+import org.biologer.biologer.sql.TaxaTranslationData;
+import org.biologer.biologer.sql.TaxaTranslationDataDao;
 import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxonDataDao;
 import org.biologer.biologer.sql.UserData;
@@ -257,99 +259,91 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     /*
                     Get the list of taxa from the GreenDao database
                      */
-                    QueryBuilder<TaxonData> query = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+
+                    // Query latin names
+                    QueryBuilder<TaxonData> latinQuery = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                    latinQuery.where(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"));
+                    latinQuery.limit(10);
+                    List<TaxonData> latinNames = latinQuery.list();
+
+                    List<String> taxaNames = new ArrayList<>();
+
+                    for (int i = 0; i < latinNames.size(); i++) {
+                        Long id = latinNames.get(i).getId();
+                        QueryBuilder<TaxaTranslationData> translationQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
+                        translationQuery.where(
+                                translationQuery.and(TaxaTranslationDataDao.Properties.TaxonId.eq(id),
+                                        TaxaTranslationDataDao.Properties.Locale.eq("sr")));
+                        List<TaxaTranslationData> translation = translationQuery.list();
+                        if (translation.size() >= 1) {
+                            String name = translation.get(0).getNativeName();
+                            if (name != null) {
+                                taxaNames.add(latinNames.get(i).getLatinName() + " (" + translation.get(0).getNativeName() + ")");
+                            }
+                        } else {
+                            taxaNames.add(latinNames.get(i).getLatinName());
+                        }
+                    }
+
+                    // Query native names
+                    QueryBuilder<TaxaTranslationData> nativeQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
+
+                    // For Serbian language we should also search for latin ans cyrilic names
                     if (locale_script.equals("sr")) {
                         if (preferences.getBoolean("english_names", false)) {
-                            query.where(
-                                    query.or(
-                                            query.and(
-                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq("sr-Latn")),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq("en"))));
+                            nativeQuery.where(
+                                    nativeQuery.or(
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("en"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("sr"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("sr-Latn"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%"))));
                         } else {
-                            query.where(
-                                    query.or(
-                                            query.and(
-                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq("en")),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq("sr-Latn"))));
+                            nativeQuery.where(
+                                    nativeQuery.or(
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("sr"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("sr-Latn"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%"))));
                         }
-                    } else {
+                    }
+
+                    // Fot other languages it is more simple...
+                    else {
                         if (preferences.getBoolean("english_names", false)) {
-                            query.where(
-                                    query.or(
-                                            query.and(
-                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq("en"))));
+                            nativeQuery.where(
+                                    nativeQuery.or(
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq("en"),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%")),
+                                            nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq(locale_script),
+                                                    TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%"))));
                         } else {
-                            query.where(
-                                    query.or(
-                                            query.and(
-                                                    TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"),
-                                                    query.or(
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNotNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq(locale_script)),
-                                                            query.and(
-                                                                    TaxonDataDao.Properties.NativeName.isNull(),
-                                                                    TaxonDataDao.Properties.Locale.eq("en")))),
-                                            query.and(TaxonDataDao.Properties.NativeName.like("%" + typed_name + "%"),
-                                                    TaxonDataDao.Properties.Locale.eq(locale_script))));
+                            nativeQuery.where(
+                                    nativeQuery.and(TaxaTranslationDataDao.Properties.Locale.eq(locale_script),
+                                            TaxaTranslationDataDao.Properties.NativeName.like("%" + typed_name + "%")));
                         }
                     }
 
-                    query.limit(10);
-                    List<TaxonData> taxaList = query.list();
-
-                    String[] taxaNames = new String[taxaList.size()];
-                    for (int i = 0; i < taxaList.size(); i++) {
-
-                        String latin_name = taxaList.get(i).getLatinName();
-
-                        // Query fot the native name (stupid solution, but what can we do...)
-                        QueryBuilder<TaxonData> query1 = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                        query1.where(
-                                query1.and(TaxonDataDao.Properties.LatinName.eq(latin_name),
-                                        TaxonDataDao.Properties.Locale.eq(locale_script)));
-
-                        List<TaxonData> currentTaxon = query1.list();
-
-                        if (currentTaxon.isEmpty()) {
-                            taxaNames[i] = latin_name;
-                        } else {
-                            String native_name = currentTaxon.get(0).getNativeName();
-                            if (native_name == null) {
-                                taxaNames[i] = latin_name;
-                            } else {
-                                taxaNames[i] = latin_name + " (" + native_name + ")";
+                    nativeQuery.limit(10);
+                    List<TaxaTranslationData> nativeNames = nativeQuery.list();
+                    for (int i = 0; i < nativeNames.size(); i++) {
+                        Long id = nativeNames.get(i).getTaxonId();
+                        QueryBuilder<TaxonData> translationQuery = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                        translationQuery.where(TaxonDataDao.Properties.Id.eq(id));
+                        List<TaxonData> translation = translationQuery.list();
+                        if (translation.size() >= 1) {
+                            String name = translation.get(0).getLatinName();
+                            if (name != null) {
+                                taxaNames.add(name + " (" + nativeNames.get(i).getNativeName() + ")");
                             }
+                        } else {
+                            // Should not be called at all, but I will live it just in case...
+                            taxaNames.add(nativeNames.get(i).getNativeName());
                         }
                     }
 
+                    // Add the Query to the drop down list
                     ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
                     acTextView.setAdapter(adapter1);
                     adapter1.notifyDataSetChanged();
@@ -365,16 +359,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             stages.setVisibility(View.VISIBLE);
 
                             // If user preferences are selected, the stage for taxa will be set to adult by default.
-                            // Step 1: Get the prferences
+                            // Step 1: Get the preferences
                             if (preferences.getBoolean("adult_by_default", false)) {
                                 // If stage is already selected ignore this...
                                 if (textViewStage.getText().toString().equals("")) {
                                     stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                                            .where(StageDao.Properties.TaxonId.eq(taxonData.getTaxonId()))
+                                            .where(StageDao.Properties.TaxonId.eq(taxonData.getId()))
                                             .where(StageDao.Properties.Name.eq("adult"))
                                             .list();
                                     if (stageList.get(0) != null) {
-                                        Stage stage = new Stage(null, "adult", stageList.get(0).getStageId(), taxonData.getTaxonId());
+                                        Stage stage = new Stage(null, "adult", stageList.get(0).getStageId(), taxonData.getId());
                                         textViewStage.setText(getString(R.string.stage_adult));
                                         textViewStage.setTag(stage);
                                     }
@@ -383,7 +377,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             }
                         }
                         Log.d(TAG, "Taxon is selected from the list. Enabling Stages for this taxon.");
-                        if (taxonData.getUseAtlasCode()) {
+                        if (taxonData.isUseAtlasCode()) {
                             textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
                             Log.d(TAG, "Taxon uses the atlas code. Enabling Atlas code for this taxon.");
                         }
@@ -842,7 +836,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "The taxon does not exist in GreenDao database. Asking user to save it as is.");
             buildAlertMessageInvalidTaxon();
         } else {
-            Log.d(TAG, "The taxon with ID " + taxon.getTaxonId() + " selected. Checking coordinates and saving the entry!");
+            Log.d(TAG, "The taxon with ID " + taxon.getId() + " selected. Checking coordinates and saving the entry!");
             saveEntry2(taxon);
         }
     }
@@ -866,10 +860,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (currentLocation.latitude > 0 && (acc <= 25)) {
             if (taxon == null) {
                 Log.d(TAG, "Saving taxon with unknown ID as simple text.");
-                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(), false, null, null, null);
+                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(),
+                        null, null, null, false, false, null);
                 saveEntry3(taxon_noId);
             } else {
-                Log.d(TAG, "Saving taxon with known ID: " + taxon.getTaxonId());
+                Log.d(TAG, "Saving taxon with known ID: " + taxon.getId());
                 saveEntry3(taxon);
             }
         }
@@ -918,7 +913,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             String month = fullDate.substring(3, 5);
             String year = fullDate.substring(6, 10);
             String time = fullDate.substring(11, 16);
-            Long taxon_id = taxon.getTaxonId();
+            Long taxon_id = taxon.getId();
             String taxon_name = taxon.getLatinName();
             String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
             getPhotoTag();
@@ -932,7 +927,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
         } else { // if the entry exist already
-            currentItem.setTaxonId(taxon.getTaxonId());
+            currentItem.setTaxonId(taxon.getId());
             currentItem.setTaxonSuggestion(taxon.getLatinName());
             currentItem.setComment(comment);
             currentItem.setNoSpecimens(numberOfSpecimens);
@@ -991,7 +986,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private Boolean isStageAvailable(TaxonData taxonData) {
         stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                .where(StageDao.Properties.TaxonId.eq(taxonData.getTaxonId()))
+                .where(StageDao.Properties.TaxonId.eq(taxonData.getId()))
                 .list();
         return stageList.size() != 0;
     }
@@ -1002,7 +997,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 .limit(1)
                 .unique();
         stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                .where(StageDao.Properties.TaxonId.eq(taxon.getTaxonId()))
+                .where(StageDao.Properties.TaxonId.eq(taxon.getId()))
                 .list();
         if (stageList != null) {
             final String[] taxon_stages = new String[stageList.size()];
