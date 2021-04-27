@@ -23,8 +23,8 @@ public class User {
         return user;
     }
 
-    public boolean isLoggedIn(){
-        return SettingsManager.getToken()!=null;
+    public boolean tokenPresent() {
+        return SettingsManager.getAccessToken() != null;
     }
 
     public static void clearUserData(Context context) {
@@ -46,11 +46,14 @@ public class User {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString("data_license", "0");
         editor.putString("image_license", "0");
+        editor.putBoolean("firstrun", true);
         editor.apply();
     }
 
     static void resetSettings() {
-        SettingsManager.deleteToken();
+        SettingsManager.deleteAccessToken();
+        SettingsManager.deleteRefreshToken();
+        SettingsManager.setMailConfirmed(false);
         SettingsManager.setTaxaUpdatedAt("0");
         SettingsManager.setSkipTaxaDatabaseUpdate("0");
         SettingsManager.setTaxaLastPageFetched("1");

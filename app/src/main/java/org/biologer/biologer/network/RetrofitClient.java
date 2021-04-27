@@ -39,7 +39,7 @@ public class RetrofitClient {
                             chain -> {
                                 Request request = chain.request();
                                 Request.Builder builder = request.newBuilder()
-                                        .header("Authorization", "Bearer " + SettingsManager.getToken());
+                                        .header("Authorization", "Bearer " + SettingsManager.getAccessToken());
                                 request = builder.build();
 
                                 return chain.proceed(request);

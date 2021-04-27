@@ -3,6 +3,9 @@ package org.biologer.biologer.network;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
+import org.biologer.biologer.network.JSON.RefreshTokenResponse;
+import org.biologer.biologer.network.JSON.RegisterResponse;
+import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.LoginResponse;
@@ -28,6 +31,7 @@ import retrofit2.http.Query;
 public interface RetrofitService {
 
     @FormUrlEncoded
+    @Headers({"Accept: application/json"})
     @POST("oauth/token")
     Call<LoginResponse> login(@Field("grant_type") String grant_type,
                               @Field("client_id") String client_id,
@@ -36,12 +40,36 @@ public interface RetrofitService {
                               @Field("username") String username,
                               @Field("password") String password);
 
+    @FormUrlEncoded
+    @Headers({"Accept: application/json"})
+    @POST("oauth/token")
+    Call<RefreshTokenResponse> refresh(@Field("grant_type") String grant_type,
+                                     @Field("client_id") String client_id,
+                                     @Field("client_secret") String client_secret,
+                                     @Field("refresh_token") String refresh_token,
+                                     @Field("scope") String scope);
+
+    @FormUrlEncoded
+    @Headers({"Accept: application/json"})
+    @POST("api/register")
+    Call<RegisterResponse> register(@Field("client_id") int client_id,
+                                 @Field("client_secret") String client_secret,
+                                 @Field("first_name") String first_name,
+                                 @Field("last_name") String last_name,
+                                 @Field("data_license") int data_license,
+                                 @Field("image_license") int image_license,
+                                 @Field("institution") String institution,
+                                 @Field("email") String email,
+                                 @Field("password") String password);
+
+    @Headers({"Accept: application/json"})
     @GET("api/taxa")
     Call<TaxaResponse> getTaxa(@Query("page") int page_number,
                                @Query("per_page") int per_page,
                                @Query("updated_after") int updated_after);
 
     @Multipart
+    @Headers({"Accept: application/json"})
     @POST("api/uploads/photos")
     Call<UploadFileResponse> uploadFile( @Part MultipartBody.Part file);
 
@@ -50,12 +78,19 @@ public interface RetrofitService {
     @POST("api/field-observations")
     Call<APIEntryResponse> uploadEntry(@Body APIEntry apiEntry);
 
+    @Headers({"Accept: application/json"})
     @GET("/api/my/profile")
     Call<UserDataResponse> getUserData();
 
+    @Headers({"Accept: application/json"})
+    @GET("/api/view-groups")
+    Call<TaxaGroupsResponse> getTaxaGroupsResponse();
+
+    @Headers({"Accept: application/json"})
     @GET("/api/observation-types")
     Call<ObservationTypesResponse> getObservationTypes(@Query("updated_after") int updated_after);
 
+    @Headers({"Accept: application/json"})
     @POST("/api/elevation")
     Call<ElevationResponse> getElevation(@Query("latitude") double latitude,
                                          @Query("longitude") double longitude);

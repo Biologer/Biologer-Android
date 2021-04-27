@@ -55,20 +55,15 @@
         android:layout_marginBottom="24dp"
         android:gravity="center"/>
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btn_logout"
-        style="@style/Widget.AppCompat.ActionButton"
+    <com.google.android.material.button.MaterialButton
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:text="@string/logout_btn"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        android:textAllCaps="true"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="@color/colorPrimary"
-        android:clickable="true"
-        android:focusable="true" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
+        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:id="@+id/btn_logout"
+        android:text="@string/logout_btn">
+    </com.google.android.material.button.MaterialButton>
+
 </LinearLayout>

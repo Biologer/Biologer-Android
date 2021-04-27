@@ -33,7 +33,7 @@ public class IntroActivity extends AppIntro2 {
     @Override
     public void onSkipPressed() {
         // Do something when users tap on Done button.
-        if (User.getUser().isLoggedIn()) {
+        if (User.getUser().tokenPresent()) {
             Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
             startActivity(intent);
         } else {
@@ -51,7 +51,7 @@ public class IntroActivity extends AppIntro2 {
     @Override
     public void onDonePressed() {
         // Do something when users tap on Done button.
-        if (User.getUser().isLoggedIn()) {
+        if (User.getUser().tokenPresent()) {
             Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
             startActivity(intent);
         } else {

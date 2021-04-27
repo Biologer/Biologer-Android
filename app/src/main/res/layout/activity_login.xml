@@ -2,6 +2,7 @@
 
 <LinearLayout android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="@color/fragment_background"
     xmlns:android="http://schemas.android.com/apk/res/android">
@@ -11,202 +12,214 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
         android:layout_marginEnd="50dp"
+        android:layout_marginTop="20dp"
         android:contentDescription="@string/Biologer"
         android:src="@drawable/banner" />
 
+    <LinearLayout
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
+        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical">
+
         <LinearLayout
             android:layout_width="280dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical">
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:layout_gravity="center"
+                android:contentDescription="@string/database"
+                android:src="@mipmap/database_round" />
 
-            <LinearLayout
-                android:layout_width="280dp"
+            <!-- TODO Recommended implementation of the Spinner is by AutoCompleteTextView
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputDatabases"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:hint="@string/database"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/database"
-                    android:src="@mipmap/database_round" />
-
-                <Spinner
-                    android:id="@+id/spinner_databases"
+                app:boxBackgroundColor="@android:color/transparent">
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/autoCompleteDatabases"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="0dp"
-                    android:layout_gravity="center">
-                </Spinner>
-            </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
+            -->
 
-            <View
-                android:id="@+id/underline"
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/spinner_databases"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="52dp"
-                android:layout_marginEnd="4dp"
-                android:background="@color/black"/>
-
-            <TextView
-                android:id="@+id/tv_devDatabase"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:paddingStart="60dp"
-                android:paddingEnd="12dp"
-                android:text=""
-                android:textColor="@color/colorPrimary"/>
+                android:layout_height="56dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center">
+            </androidx.appcompat.widget.AppCompatSpinner>
         </LinearLayout>
 
+        <View
+            android:id="@+id/underline"
+            android:layout_width="224dp"
+            android:layout_height="1dp"
+            android:layout_marginStart="54dp"
+            android:background="@color/checkBox_text"/>
+
+        <TextView
+            android:id="@+id/tv_devDatabase"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:paddingStart="60dp"
+            android:paddingEnd="12dp"
+            android:text=""
+            android:textColor="@color/colorPrimary"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
+        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_gravity="center"
+        android:orientation="vertical">
+
         <LinearLayout
             android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="vertical">
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="280dp"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:layout_gravity="center"
-                android:orientation="horizontal">
+                android:contentDescription="@string/User"
+                android:src="@mipmap/user_round" />
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/User"
-                    android:src="@mipmap/user_round" />
-
-                <androidx.appcompat.widget.AppCompatEditText
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:boxBackgroundColor="@android:color/transparent">
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_username"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:hint="@string/username"
+                    android:layout_height="match_parent"
                     android:inputType="textEmailAddress"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:textColorLink="@color/colorPrimaryDark"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tv_wrongEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:paddingStart="60dp"
-                android:paddingEnd="12dp"
-                android:text=""
-                android:textColor="@color/colorPrimaryDark"/>
+                    android:hint="@string/username"/>
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
+    </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
+        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_gravity="center"
+        android:orientation="vertical">
         <LinearLayout
             android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="vertical">
-            <LinearLayout
-                android:layout_width="280dp"
-                android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:layout_gravity="center"
-                android:orientation="horizontal">
+                android:contentDescription="@string/password"
+                android:src="@mipmap/user_round" />
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/password"
-                    android:src="@mipmap/user_round" />
-
-                <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/et_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
-                    android:textSize="16sp"
-                    android:hint="@string/password"
-                    android:inputType="textPassword" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tv_wrongPass"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:paddingStart="60dp"
-                android:paddingEnd="12dp"
-                android:text=""
-                android:textColor="@color/colorPrimaryDark"/>
+                app:boxBackgroundColor="@android:color/transparent">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:hint="@string/password"/>
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
+    </LinearLayout>
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btn_login"
-                style="@style/Widget.AppCompat.ActionButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginTop="16dp"
-                android:layout_gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/login"
-                android:textAllCaps="true"
-                android:textSize="14sp"
-                android:textColor="@color/white"
-                android:background="@color/colorPrimary"/>
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:id="@+id/btn_login"
+        android:text="@string/login">
+
+    </com.google.android.material.button.MaterialButton>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:paddingTop="30dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_gravity="bottom"
-            android:gravity="center"
-            android:paddingTop="30dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:text="@string/nemas_nalog"
-                    android:layout_marginEnd="8dp"/>
-
-                <TextView
-                    android:id="@+id/ctv_register"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:text="@string/napravi_nalog"
-                    android:textColor="@color/colorPrimary"
-                    android:textStyle="bold"
-                    android:clickable="true"
-                    android:focusable="true"/>
-            </LinearLayout>
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center">
 
             <TextView
-                android:id="@+id/ctv_forgotPass"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:layout_marginTop="14dp"
+                android:text="@string/no_account1"
+                android:layout_marginEnd="6dp"/>
+
+            <TextView
+                android:id="@+id/ctv_register"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:text="@string/no_account2"
+                android:textColor="@color/colorPrimary"
+                android:textStyle="bold"
                 android:clickable="true"
                 android:focusable="true"
-                android:text="@string/zaboravljena_lozinka"
-                android:textColor="@color/colorPrimary"
-                android:textStyle="bold"/>
+                android:layout_marginEnd="6dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:text="@string/no_account3"/>
+
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/ctv_forgotPass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:layout_marginTop="14dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            android:text="@string/zaboravljena_lozinka"
+            android:textColor="@color/colorPrimary"
+            android:textStyle="bold"/>
     </LinearLayout>
+
+</LinearLayout>

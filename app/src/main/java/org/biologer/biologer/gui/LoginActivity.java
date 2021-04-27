@@ -6,9 +6,16 @@ import android.content.Intent;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,15 +28,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputLayout;
+
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.LoginResponse;
+import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,14 +52,23 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Login";
 
+    int retry_login = 1;
+
+    Handler handler = new Handler(Looper.getMainLooper());
+    Runnable runnable;
+
     EditText et_username;
     EditText et_password;
-    TextView tv_wrongPass;
-    TextView tv_wrongEmail;
+    TextInputLayout til_username;
+    TextInputLayout til_password;
     TextView tv_devDatabase;
     Button loginButton;
     String database_name;
     ProgressDialog progressDialog;
+    TextView forgotPassTextView;
+
+    String old_username;
+    String old_password;
 
     /*
      Get the keys for client applications. Separate client key should be given for each Biologer server
@@ -61,8 +81,6 @@ public class LoginActivity extends AppCompatActivity {
 
     Call <LoginResponse> login;
 
-    // regex for email
-    String regex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
     // Initialise list for Database selection
     Spinner spinner;
 
@@ -73,12 +91,26 @@ public class LoginActivity extends AppCompatActivity {
 
         et_username = findViewById(R.id.et_username);
         et_password = findViewById(R.id.et_password);
-        tv_wrongPass = findViewById(R.id.tv_wrongPass);
-        tv_wrongEmail = findViewById(R.id.tv_wrongEmail);
+        til_password = findViewById(R.id.layout_password);
+        til_username = findViewById(R.id.layout_name);
         tv_devDatabase = findViewById(R.id.tv_devDatabase);
 
-         database_name = SettingsManager.getDatabaseName();
-         Log.d(TAG, "Database URL written in the settings is: " + database_name);
+        database_name = SettingsManager.getDatabaseName();
+        Log.d(TAG, "Database URL written in the settings is: " + database_name);
+
+        // Just display the username in order to make app nice
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            et_username.setText(bundle.getString("email"));
+            et_password.setText(bundle.getString("password"));
+        } else {
+            List<UserData> user = App.get().getDaoSession().getUserDataDao().loadAll();
+            if (!user.isEmpty()) {
+                et_username.setText(user.get(0).getEmail());
+                // Just display anything, no mather what...
+                et_password.setText("eightcharacters");
+            }
+        }
 
         // Fill in the data for database list
         spinner = findViewById(R.id.spinner_databases);
@@ -100,19 +132,127 @@ public class LoginActivity extends AppCompatActivity {
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
         // Login button.
         loginButton = findViewById(R.id.btn_login);
+        loginButton.setEnabled(false);
         loginButton.setOnClickListener(this::onLogin);
         // Register link.
         TextView registerTextView = findViewById(R.id.ctv_register);
         registerTextView.setOnClickListener(this::onRegister);
         // Forgot password link.
-        TextView forgotPassTextView = findViewById(R.id.ctv_forgotPass);
+        forgotPassTextView = findViewById(R.id.ctv_forgotPass);
         forgotPassTextView.setOnClickListener(this::onForgotPass);
 
         progressDialog = new ProgressDialog(LoginActivity.this);
 
-        et_username.setOnClickListener(view -> tv_devDatabase.setText(""));
+        et_username.setOnFocusChangeListener((v, hasFocus) -> {
+            Log.d(TAG, "Username focus changed!");
+            tv_devDatabase.setText("");
+            if (!et_username.getText().toString().isEmpty()) {
+                Log.d(TAG, "There is some text written as the username.");
+                et_username.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        old_username = et_username.getText().toString();
+                    }
 
-        et_password.setOnClickListener(view -> tv_devDatabase.setText(""));
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (!old_username.equals(et_username.getText().toString())) {
+                            if (SettingsManager.getAccessToken() != null) {
+                                Log.d(TAG, "Username changed! Deleting Access Token.");
+                                SettingsManager.deleteAccessToken();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        et_password.setOnFocusChangeListener((v, hasFocus) -> {
+            Log.d(TAG, "Password focus changed!");
+            tv_devDatabase.setText("");
+            if (!et_password.getText().toString().isEmpty()) {
+                Log.d(TAG, "There is some text written as password.");
+                et_password.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        old_password = et_password.getText().toString();
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (!old_password.equals(et_password.getText().toString())) {
+                            if (SettingsManager.getAccessToken() != null) {
+                                Log.d(TAG, "Password changed! Deleting Access Token.");
+                                SettingsManager.deleteAccessToken();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        et_password.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Log.d(TAG, "Listening on password changes.");
+                handler.removeCallbacks(runnable);
+                runnable = () -> {
+                    if (et_password.getText().length() < 8) {
+                        til_password.setError(getString(R.string.password_too_short));
+                    } else {
+                        til_password.setError(null);
+                    }
+                    enableButton();
+                };
+                handler.postDelayed(runnable, 1500);
+            }
+        });
+
+        et_username.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Log.d(TAG, "Listening on email changes.");
+                handler.removeCallbacks(runnable);
+                runnable = () -> {
+                    if (!(isValidEmail(et_username.getText().toString()))) {
+                        til_username.setError(getString(R.string.invalid_email));
+                    }
+                    else {
+                        til_username.setError(null);
+                    }
+                    enableButton();
+                };
+                handler.postDelayed(runnable, 1500);
+            }
+        });
+    }
+
+    private void enableButton() {
+        loginButton.setEnabled(et_password.getText().length() >= 8 && isValidEmail(et_username.getText().toString()));
     }
 
     private int getSpinnerIdFromUrl(String url) {
@@ -123,9 +263,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public static class ImageArrayAdapter extends ArrayAdapter<Integer> {
-        private Integer[] images;
-        private String[] text;
-        private Context context;
+        private final Integer[] images;
+        private final String[] text;
+        private final Context context;
 
         ImageArrayAdapter(Context context, Integer[] images, String[] text) {
             super(context, R.layout.databases_and_icons, images);
@@ -163,6 +303,7 @@ public class LoginActivity extends AppCompatActivity {
         public void onItemSelected(AdapterView<?> database, View view, int pos,long id) {
             // Change the preference according to the user selection
             long database_id = database.getItemIdAtPosition(pos);
+            String old_database = database_name;
             database_name = database.getItemAtPosition(pos).toString();
             if (database_id == 0) {database_name = "https://biologer.org";}
             if (database_id == 1) {database_name = "https://biologer.hr";}
@@ -172,6 +313,11 @@ public class LoginActivity extends AppCompatActivity {
             Log.i(TAG, "Database No. " + database_id + " selected: " + database_name);
 
             SettingsManager.setDatabaseName(database_name);
+
+            if (!old_database.equals(database_name)) {
+                Log.d(TAG, "User selected different database, so we should delete token.");
+                SettingsManager.deleteAccessToken();
+            }
 
             String hint_text = getString(R.string.URL_address) + " " + database_name;
             tv_devDatabase.setText(hint_text);
@@ -191,32 +337,26 @@ public class LoginActivity extends AppCompatActivity {
     // Run when user click the login button
     public void onLogin(View view) {
         loginButton.setEnabled(false);
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(et_username.getText().toString());
+        String token = SettingsManager.getAccessToken();
+
+        // If there is no token, we should get one from the server
+        if (token == null) {
+            Log.d(TAG, "TOKEN: " + token);
+            Log.d(TAG, "There is no token. Trying to log in with username and password.");
+            getToken();
+        }
+        else {
+            Log.d(TAG, "TOKEN: " + token);
+            Log.d(TAG, "There is a token. Trying to log in without username/password.");
+            logInTest();
+        }
+    }
+
+    private void getToken() {
 
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage(getString(R.string.logging_in));
         progressDialog.show();
-
-        // On new login clear the previous error messages.
-        tv_wrongPass.setText("");
-        tv_wrongEmail.setText("");
-
-        // Display error messages if email/password is mistyped.
-        if (!(matcher.matches()))
-        {
-            tv_wrongEmail.setText(R.string.valid_email);
-            loginButton.setEnabled(true);
-            progressDialog.dismiss();
-            return;
-        }
-        if (!(et_password.getText().length() > 3))
-        {
-            tv_wrongPass.setText(R.string.valid_pass);
-            loginButton.setEnabled(true);
-            progressDialog.dismiss();
-            return;
-        }
 
         // Change the call according to the database selected
         if (database_name.equals("https://biologer.org")) {
@@ -243,16 +383,31 @@ public class LoginActivity extends AppCompatActivity {
         login.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
+                if(response.code() == 404) {
+                    Log.e(TAG, "Error 404: This response is not implemented on a server.");
+                }
                 if(response.isSuccessful()) {
-                    assert response.body() != null;
-                    progressDialog.dismiss();
-                    String token = response.body().getAccessToken();
-                    Log.d(TAG, "Token value is: " + token);
-                    SettingsManager.setToken(token);
-                    fillUserData();
+                    if(response.body() != null) {
+                        progressDialog.dismiss();
+                        String token = response.body().getAccessToken();
+                        String refresh_token = response.body().getRefreshToken();
+                        Log.d(TAG, "Token value is: " + token);
+                        SettingsManager.setAccessToken(token);
+                        SettingsManager.setRefreshToken(refresh_token);
+                        SettingsManager.setMailConfirmed(true);
+                        long expire = response.body().getExpiresIn();
+                        long expire_date = (System.currentTimeMillis()/1000) + expire;
+                        SettingsManager.setTokenExpire(String.valueOf(expire_date));
+                        Log.d(TAG, "Token will expire on timestamp: " + expire_date);
+                        getUserData();
+                    }
                 }
                 else {
-                    tv_wrongPass.setText(R.string.wrong_creds);
+                    retry_login ++;
+                    if (retry_login >= 4) {
+                        forgotPassTextView.setVisibility(View.VISIBLE);
+                    }
+                    til_password.setError(getString(R.string.wrong_creds));
                     loginButton.setEnabled(true);
                     progressDialog.dismiss();
                     Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
@@ -266,46 +421,102 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e(TAG, "Cannot get response from the server (token)");
             }
         });
-
     }
 
-    // Get email and name and store it
-    private void fillUserData(){
-        Log.d(TAG, "Getting User data from server.");
-        Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
-        service.enqueue(new Callback<UserDataResponse>() {
+    private void getUserData() {
+        Call<UserDataResponse> userData = RetrofitClient.getService(database_name).getUserData();
+        userData.enqueue(new Callback<UserDataResponse>() {
             @Override
-            public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
-                assert response.body() != null;
-                String email = response.body().getData().getEmail();
-                String name = response.body().getData().getFullName();
-                int data_license = response.body().getData().getSettings().getDataLicense();
-                int image_license = response.body().getData().getSettings().getImageLicense();
-                UserData uData = new UserData(null, email, name, data_license, image_license);
-                App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
-                Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
-                startActivity(intent);
-  //              progressDialog.dismiss();
+            public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
+                if (response.isSuccessful()) {
+                    assert response.body() != null;
+                    String email = response.body().getData().getEmail();
+                    String name = response.body().getData().getFullName();
+                    int data_license = response.body().getData().getSettings().getDataLicense();
+                    int image_license = response.body().getData().getSettings().getImageLicense();
+                    UserData user = new UserData(null, email, name, data_license, image_license);
+                    App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                    Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+                    startActivity(intent);
+                }
             }
+
             @Override
-            public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
-                Toast.makeText(LoginActivity.this, "Cannot get response from the server (userdata)", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Cannot get response from the server (userdata)");
-//                progressDialog.dismiss();
+            public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "User data could not be taken from server!");
             }
         });
     }
 
+    private void logInTest() {
+        Log.d(TAG, "Logging in attempt.");
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage(getString(R.string.logging_in));
+        progressDialog.show();
+        Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0);
+        service.enqueue(new Callback<TaxaResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
+                if (response.code() == 403) {
+                    SettingsManager.setMailConfirmed(false);
+                    progressDialog.dismiss();
+                    dialogConfirmMail(getString(R.string.confirm_email));
+                }
+                if (response.code() == 401) {
+                    tv_devDatabase.setText(getString(R.string.check_database));
+                    progressDialog.dismiss();
+                    dialogConfirmMail(getString(R.string.unauthorised));
+                }
+                else {
+                    if (response.body() != null) {
+                        SettingsManager.setMailConfirmed(true);
+                        progressDialog.dismiss();
+                        Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+                        startActivity(intent);
+                    }
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
+                Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Cannot get response from the server (test taxa response)");
+                progressDialog.dismiss();
+                loginButton.setEnabled(true);
+            }
+        });
+    }
+
+    public static boolean isValidEmail(CharSequence target) {
+        return (!TextUtils.isEmpty(target) && Patterns.EMAIL_ADDRESS.matcher(target).matches());
+    }
+
+
+    private void dialogConfirmMail(String message) {
+        // Show the message if registration was successful
+        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(LoginActivity.this);
+        builder_taxon.setMessage(message)
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.OK), (dialog, id) -> {
+                    loginButton.setEnabled(true);
+                    dialog.dismiss();
+                });
+        final AlertDialog alert = builder_taxon.create();
+        alert.show();
+    }
+
     public void onRegister(View view) {
-        String url_register = SettingsManager.getDatabaseName() + "/register";
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url_register));
-        startActivity(browserIntent);
+        Intent registerIntent = new Intent(LoginActivity.this, Register.class);
+        registerIntent.putExtra("database", database_name);
+        registerIntent.putExtra("username", et_username.getText().toString());
+        registerIntent.putExtra("password", et_password.getText().toString());
+        startActivity(registerIntent);
     }
 
     public void onForgotPass(View view) {
-        String url_reset_pass = SettingsManager.getDatabaseName() + "/password/reset";
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url_reset_pass));
-        startActivity(browserIntent);
+        String url = SettingsManager.getDatabaseName() + "/password/reset";
+        Intent defaultBrowser = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER);
+        defaultBrowser.setData(Uri.parse(url));
+        startActivity(defaultBrowser);
     }
 
 }

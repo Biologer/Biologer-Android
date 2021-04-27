@@ -12,20 +12,60 @@ public class SettingsManager {
     private static final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.get());
 
     public enum KEY {
-        token, FIRST_LAUNCH, DATABASE_NAME, GOOGLE_MAP_TYPE,
+        ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, DATABASE_NAME, GOOGLE_MAP_TYPE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
         OBSERVATION_TYPES_UPDATED_AT
     }
 
-    public static boolean isFirstLaunch()
-    {
-        return prefs.getBoolean(KEY.FIRST_LAUNCH.toString(), true);
+    public static void deleteAccessToken() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.ACCESS_TOKEN.toString(), null);
+        editor.apply();
     }
 
-    public static void setFirstLaunch(boolean firstLaunch)
-    {
+    public static void setAccessToken(String token) {
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(KEY.FIRST_LAUNCH.toString(), firstLaunch);
+        editor.putString(KEY.ACCESS_TOKEN.toString(), token);
+        editor.apply();
+    }
+
+    public static String getAccessToken() {
+        return prefs.getString(KEY.ACCESS_TOKEN.toString(),null);
+    }
+
+    public static void deleteRefreshToken() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.REFRESH_TOKEN.toString(), null);
+        editor.apply();
+    }
+
+    public static void setRefreshToken(String token) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.REFRESH_TOKEN.toString(), token);
+        editor.apply();
+    }
+
+    public static void setTokenExpire(String timestamp) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY.TOKEN_EXPIRE_TIMESTAMP.toString(), timestamp);
+        editor.apply();
+    }
+
+    public static String getTokenExpire() {
+        return prefs.getString(KEY.TOKEN_EXPIRE_TIMESTAMP.toString(),null);
+    }
+
+    public static String getRefreshToken() {
+        return prefs.getString(KEY.REFRESH_TOKEN.toString(),null);
+    }
+
+    public static boolean isMailConfirmed() {
+        return prefs.getBoolean(KEY.MAIL_CONFIRMED.toString(), false);
+    }
+
+    public static void setMailConfirmed(boolean mailConfirmed) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY.MAIL_CONFIRMED.toString(), mailConfirmed);
         editor.apply();
     }
 
@@ -37,22 +77,6 @@ public class SettingsManager {
 
     public static String getDatabaseName() {
         return prefs.getString(KEY.DATABASE_NAME.toString(),"https://biologer.org");
-    }
-
-    static void deleteToken(){
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(KEY.token.toString(), null);
-        editor.apply();
-    }
-
-    public static void setToken(String token){
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(KEY.token.toString(), token);
-        editor.apply();
-    }
-
-    public static String getToken(){
-        return prefs.getString(KEY.token.toString(),null);
     }
 
     public static void setGoogleMapType(String google_map_type) {

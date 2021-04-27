@@ -5,7 +5,7 @@
     <string name="username">Korisničko ime (e-adresa)</string>
     <string name="password">Lozinka</string>
     <string name="login">Prijavi me</string>
-    <string name="valid_email">Neispravna e-adresa</string>
+    <string name="invalid_email">Neispravna e-adresa</string>
     <string name="valid_pass">Unesite lozinku</string>
     <string name="wrong_creds">Pogrešna e-pošta ili lozinka</string>
     <string name="nemas_nalog">Da li imate nalog?</string>
@@ -259,5 +259,26 @@
     <string name="male">♂</string>
     <string name="female">♀</string>
     <string name="add_new_observetion">Add new observetion</string>
+    <string name="register_btn">Register</string>
+    <string name="name">Name</string>
+    <string name="institution">Institution</string>
+    <string name="email">Email address</string>
+    <string name="password2">Repeat password</string>
+    <string name="register_intro1">\"You can register to \"</string>
+    <string name="register_intro2">\" by filling this simple form. Please note that you must confirm your account using valid email address.\"</string>
+    <string name="register_intro3">read and accept privacy policy.</string>
+    <string name="i_accept_privacy_policy">I accept privacy policy</string>
+    <string name="register_intro4">and choose how you share data with others</string>
+    <string name="email_already_exist">This email address is already registered</string>
+    <string name="email_domain_wrong">Email address not reacheable</string>
+    <string name="registering">Registering new user</string>
+    <string name="register_succesfull">Registration is almost complete. To make sure this was you, we will send an email with confirmation link. After verifying your email you could login to biologer.</string>
+    <string name="confirm_email">Your email addres is not confirmed yet! We have sent you an email with confirmation link to the given address, just click on it and you are good to go.</string>
+    <string name="unauthorised">The given user does not exist on this server. Maybe you are trying to connect to the wrong database?</string>
+    <string name="cannot_connect_server">Cannot get response from the server!</string>
+    <string name="refresh_token_failed">Your login token has expired, but we could not refresh it from the internet!</string>
+    <string name="check_database">Check if this is correct</string>
+    <string name="name_is_obligatory">Name is obligatory</string>
+    <string name="password_too_short">Password is too short</string>
 
 </resources>
