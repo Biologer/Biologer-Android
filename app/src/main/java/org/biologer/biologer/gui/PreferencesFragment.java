@@ -9,9 +9,12 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.CheckBoxPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceScreen;
+
 import android.util.Log;
 import android.view.View;
 
@@ -52,12 +55,34 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         // Load the preferences from an XML resource
-        setPreferencesFromResource(R.xml.fragment_preferences, rootKey);
-        Preference preferences = getPreferenceScreen();
-        if (preferences != null) {
-            preferences.setIconSpaceReserved(false);
+        setPreferencesFromResource(R.xml.preferences, rootKey);
+        PreferenceScreen preferenceScreen = getPreferenceScreen();
+        if (preferenceScreen != null) {
+            preferenceScreen.setIconSpaceReserved(false);
         }
         Log.d(TAG, "Loading preferences fragment");
+
+        PreferenceScreen taxaGroups = findPreference("species_groups");
+        taxaGroups.setIconSpaceReserved(false);
+        taxaGroups.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                Log.d(TAG, "Preferences for taxa groups clicked.");
+
+                CheckBoxPreference checkAll = new CheckBoxPreference(getContext());
+                checkAll.setTitle(getString(R.string.select_all_groups));
+                checkAll.setSummary(getString(R.string.select_all_groups_desc));
+                checkAll.setChecked(true);
+                checkAll.setIconSpaceReserved(false);
+
+                taxaGroups.addPreference(checkAll);
+
+                setPreferenceScreen(taxaGroups);
+                return true;
+            }
+        });
+
+        setPreferenceScreen(preferenceScreen);
 
         ListPreference dataLicense = findPreference("data_license");
         ListPreference imageLicense = findPreference("image_license");

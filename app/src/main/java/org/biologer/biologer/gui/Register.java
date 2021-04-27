@@ -434,8 +434,7 @@ public class Register extends FragmentActivity {
 
     private void saveUserData() {
         String full_name = name.getText().toString() + " " + surname.getText().toString();
-        // TODO replace licences!!!
-        UserData userData = new UserData(null, full_name, email.getText().toString(), 10, 10);
+        UserData userData = new UserData(null, full_name, email.getText().toString(), getDataLicense(), getImageLicense());
         App.get().getDaoSession().getUserDataDao().insertOrReplace(userData);
         displaySuccess();
     }

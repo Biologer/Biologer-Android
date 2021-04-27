@@ -28,6 +28,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
@@ -42,7 +43,6 @@ import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.network.JSON.ObservationTypes;
-import org.biologer.biologer.network.JSON.TaxaGroups;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
@@ -97,33 +97,34 @@ public class LandingActivity extends AppCompatActivity
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
-        // Get the user settings from preferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
-        how_to_use_network = preferences.getString("auto_download", "wifi");
+        if (savedInstanceState == null) {
+            // Check if notifications are enabled, if not warn the user!
+            areNotificationsEnabled();
 
-        showLandingFragment();
+            showLandingFragment();
 
-        // Check if notifications are enabled, if not warn the user!
-        areNotificationsEnabled();
+            // Get the user settings from preferences
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+            how_to_use_network = preferences.getString("auto_download", "wifi");
 
-        // Check if there is network available and run the commands...
-        String network_type = networkType();
-        if (network_type.equals("connected") || network_type.equals("wifi")) {
-            updateLicenses();
-            updateObservationTypes();
-            updateTaxaGroups();
-            // AUTO upload/download if the right preferences are selected...
-            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+            // Check if there is network available and run the commands...
+            String network_type = networkType();
+            if (network_type.equals("connected") || network_type.equals("wifi")) {
+                updateLicenses();
+                updateObservationTypes();
+                // AUTO upload/download if the right preferences are selected...
+                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                     uploadRecords();
                     should_ask = "download";
                     updateTaxa();
+                } else {
+                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                    should_ask = "ask";
+                    updateTaxa();
+                }
             } else {
-                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                should_ask = "ask";
-                updateTaxa();
+                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
             }
-        } else {
-            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
 
         // Broadcast will watch if upload service is active
@@ -213,27 +214,6 @@ public class LandingActivity extends AppCompatActivity
                 // Inform the user on failure and write log message
                 //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
                 Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
-            }
-        });
-    }
-
-    private void updateTaxaGroups() {
-        Call<TaxaGroupsResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxaGroupsResponse();
-        call.enqueue(new Callback<TaxaGroupsResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<TaxaGroupsResponse> call, @NonNull Response<TaxaGroupsResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        Log.d(TAG, "Successful TaxaGroups response.");
-                        TaxaGroupsResponse taxaGroupsResponse = response.body();
-                        Log.d(TAG, "Test taxa" + taxaGroupsResponse.getData().get(0).getName());
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<TaxaGroupsResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Failed to get Taxa Groups from server " + t);
             }
         });
     }
@@ -408,6 +388,7 @@ public class LandingActivity extends AppCompatActivity
         TextView tv_email = header.findViewById(R.id.tv_email);
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
+
         super.onResume();
     }
 
