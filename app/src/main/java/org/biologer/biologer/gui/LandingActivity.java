@@ -28,7 +28,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 
-import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
@@ -43,7 +42,6 @@ import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.network.JSON.ObservationTypes;
-import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
@@ -116,12 +114,11 @@ public class LandingActivity extends AppCompatActivity
                 if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                     uploadRecords();
                     should_ask = "download";
-                    updateTaxa();
                 } else {
                     Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
                     should_ask = "ask";
-                    updateTaxa();
                 }
+                updateTaxa();
             } else {
                 Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
             }
@@ -332,29 +329,28 @@ public class LandingActivity extends AppCompatActivity
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
-        switch (id) {
-            case R.id.nav_about:
-                fragment = new AboutFragment();
-                break;
-            case R.id.nav_logout:
-                fragment = new LogoutFragment();
-                break;
-            case R.id.nav_setup:
-                fragment = new PreferencesFragment();
-                break;
-            case R.id.nav_help:
-                startActivity(new Intent(LandingActivity.this, IntroActivity.class));
-                drawer.closeDrawer(GravityCompat.START);
-                return true;
-            default:
-                fragment = new LandingFragment();
+        if (id == R.id.nav_list) {
+            fragment = new LandingFragment();
+        }
+        if (id == R.id.nav_setup) {
+            fragment = new PreferencesFragment();
+        }
+        if (id == R.id.nav_logout) {
+            fragment = new LogoutFragment();
+        }
+        if(id == R.id.nav_about) {
+            Log.d(TAG, "User clicked about icon.");
+            fragment = new AboutFragment();
+        }
+        if (id == R.id.nav_help) {
+            startActivity(new Intent(LandingActivity.this, IntroActivity.class));
+            drawer.closeDrawer(GravityCompat.START);
         }
 
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, fragment);
-        ft.addToBackStack("new fragment");
-        ft.commit();
-
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.content_frame, fragment);
+        fragmentTransaction.addToBackStack("new fragment");
+        fragmentTransaction.commit();
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }

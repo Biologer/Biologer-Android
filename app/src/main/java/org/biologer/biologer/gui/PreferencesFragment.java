@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.ListPreference;
@@ -27,8 +29,9 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
     private Preference preferenceButton;
+    Fragment fragment;
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
@@ -57,29 +60,17 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         // Load the preferences from an XML resource
         setPreferencesFromResource(R.xml.preferences, rootKey);
         PreferenceScreen preferenceScreen = getPreferenceScreen();
-        if (preferenceScreen != null) {
-            preferenceScreen.setIconSpaceReserved(false);
-        }
-        Log.d(TAG, "Loading preferences fragment");
+        Log.d(TAG, "Loading preferences fragment.");
 
         PreferenceScreen taxaGroups = findPreference("species_groups");
-        taxaGroups.setIconSpaceReserved(false);
-        taxaGroups.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                Log.d(TAG, "Preferences for taxa groups clicked.");
-
-                CheckBoxPreference checkAll = new CheckBoxPreference(getContext());
-                checkAll.setTitle(getString(R.string.select_all_groups));
-                checkAll.setSummary(getString(R.string.select_all_groups_desc));
-                checkAll.setChecked(true);
-                checkAll.setIconSpaceReserved(false);
-
-                taxaGroups.addPreference(checkAll);
-
-                setPreferenceScreen(taxaGroups);
-                return true;
-            }
+        taxaGroups.setOnPreferenceClickListener(preference -> {
+            Log.d(TAG, "Preferences for taxa groups clicked.");
+            fragment = new PreferencesTaxaGroupsFragment();
+            FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack("new fragment");
+            fragmentTransaction.commit();
+            return true;
         });
 
         setPreferenceScreen(preferenceScreen);

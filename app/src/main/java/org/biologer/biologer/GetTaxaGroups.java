@@ -1,4 +1,4 @@
-package org.biologer.biologer.adapters;
+package org.biologer.biologer;
 
 import android.app.Service;
 import android.content.Intent;
@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.RetrofitClient;
 
