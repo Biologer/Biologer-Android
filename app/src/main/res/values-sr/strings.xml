@@ -284,5 +284,7 @@
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or insects) it will be more simple to find species for data entry.</string>
     <string name="select_all_groups">Select all groups</string>
     <string name="select_all_groups_desc">Selects/deselects all species from the list</string>
+    <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
+    <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
 
 </resources>

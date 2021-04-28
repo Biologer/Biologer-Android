@@ -5,18 +5,20 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.User;
-import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
+import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.sql.UserData;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,31 +38,70 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         prefs = getSharedPreferences("org.biologer.biologer", MODE_PRIVATE);
         String token = SettingsManager.getAccessToken();
+        String database_name = SettingsManager.getDatabaseName();
         boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
 
         new Handler().postDelayed(() -> {
 
+            // On the first run show some help
             if (prefs.getBoolean("firstrun", true)) {
                 Log.d(TAG, "This is first run of the program.");
                 prefs.edit().putBoolean("firstrun", false).apply();
                 Intent intent = new Intent(SplashActivity.this, IntroActivity.class);
                 startActivity(intent);
             }
+
+            // If already started before
             else {
                 if (token != null && MAIL_CONFIRMED) {
                     if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis()/1000) {
-                        Log.d(TAG, "Token is there, email is confirmed.");
-                        Intent intent = new Intent(SplashActivity.this, LandingActivity.class);
-                        startActivity(intent);
+                        Log.d(TAG, "Token is still OK, email is confirmed.");
+                        // If SQL is updated we will try to login in the user
+                        if (SettingsManager.isSqlUpdated()) {
+                            Log.i(TAG, "SQL database must be updated!");
+                            Toast.makeText(this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
+                            SettingsManager.setObservationTypesUpdated("0");
+                            SettingsManager.setSkipTaxaDatabaseUpdate("0");
+
+                            Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
+                            service.enqueue(new Callback<UserDataResponse>() {
+                                @Override
+                                public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
+                                    if (response.isSuccessful()) {
+                                        if (response.body() != null) {
+                                            String email = response.body().getData().getEmail();
+                                            String name = response.body().getData().getFullName();
+                                            int data_license = response.body().getData().getSettings().getDataLicense();
+                                            int image_license = response.body().getData().getSettings().getImageLicense();
+                                            UserData user = new UserData(null, email, name, data_license, image_license);
+                                            App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                                            SettingsManager.setSqlUpdated(false);
+                                            Intent intent = new Intent(SplashActivity.this, LandingActivity.class);
+                                            startActivity(intent);
+                                        } else {
+                                            dialogMessage(getString(R.string.login_after_sql_update_fail));
+                                        }
+                                    }
+                                }
+                                @Override
+                                public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
+                                    Log.e(TAG, "Cannot get response from the server (test taxa response)");
+                                    dialogMessage(getString(R.string.login_after_sql_update_fail));
+                                }
+                            });
+                        }
+                        else {
+                            Log.i(TAG, "Everything is OK starting LandingActivity!");
+                            Intent intent = new Intent(SplashActivity.this, LandingActivity.class);
+                            startActivity(intent);
+                        }
                     } else {
                         Log.d(TAG, "Token expired. Refreshing login token.");
 
-                        String database_name = SettingsManager.getDatabaseName();
                         String refreshToken = SettingsManager.getRefreshToken();
                         String rsKey = BuildConfig.BiologerRS_Key;
                         String hrKey = BuildConfig.BiologerHR_Key;
                         String baKey = BuildConfig.BiologerBA_Key;
-
 
                         if (database_name.equals("https://biologer.org")) {
                             Log.d(TAG, "Serbian database selected.");
@@ -79,6 +120,7 @@ public class SplashActivity extends AppCompatActivity {
                             refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken,"*");
                         }
                         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
+
                         refresh.enqueue(new Callback<RefreshTokenResponse>() {
                             @Override
                             public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
@@ -121,6 +163,17 @@ public class SplashActivity extends AppCompatActivity {
             }
         }, SPLASH_TIME_OUT);
 
+    }
 
+    private void dialogMessage(String message) {
+        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(SplashActivity.this);
+        builder_taxon.setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.OK), (dialog, id) -> {
+                    this.finishAffinity();
+                    dialog.dismiss();
+                });
+        final AlertDialog alert = builder_taxon.create();
+        alert.show();
     }
 }

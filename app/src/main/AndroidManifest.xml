@@ -108,6 +108,7 @@
             android:noHistory="true"/>
 
         <service android:name="org.biologer.biologer.FetchTaxa"/>
+        <service android:name="org.biologer.biologer.GetTaxaGroups"/>
         <service android:name="org.biologer.biologer.UploadRecords"/>
         <service android:name="org.biologer.biologer.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>

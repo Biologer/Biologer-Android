@@ -1,5 +1,6 @@
 package org.biologer.biologer.gui;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +33,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
+import org.biologer.biologer.FetchTaxa;
+import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.LoginResponse;
@@ -41,8 +44,6 @@ import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -108,7 +109,7 @@ public class LoginActivity extends AppCompatActivity {
             if (!user.isEmpty()) {
                 et_username.setText(user.get(0).getEmail());
                 // Just display anything, no mather what...
-                et_password.setText("eightcharacters");
+                et_password.setText("random_string");
             }
         }
 
@@ -446,6 +447,10 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e(TAG, "User data could not be taken from server!");
             }
         });
+
+        // Fetch Taxa groups for preferences
+        final Intent getTaxaGroups = new Intent(this, GetTaxaGroups.class);
+        startService(getTaxaGroups);
     }
 
     private void logInTest() {

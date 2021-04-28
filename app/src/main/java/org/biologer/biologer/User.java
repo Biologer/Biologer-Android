@@ -38,6 +38,9 @@ public class User {
         App.get().getDaoSession().getObservationTypesDataDao().deleteAll();
         App.get().getDaoSession().getStageDao().deleteAll();
         App.get().getDaoSession().getTaxonDataDao().deleteAll();
+        App.get().getDaoSession().getTaxaTranslationDataDao().deleteAll();
+        App.get().getDaoSession().getTaxonGroupsDataDao().deleteAll();
+        App.get().getDaoSession().getTaxonGroupsTranslationDataDao().deleteAll();
         App.get().getDaoSession().getUserDataDao().deleteAll();
     }
 

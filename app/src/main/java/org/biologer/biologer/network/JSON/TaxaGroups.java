@@ -37,4 +37,12 @@ public class TaxaGroups {
     public List<TaxaGroupsTranslations> getTranslations() {
         return translations;
     }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

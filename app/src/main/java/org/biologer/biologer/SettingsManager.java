@@ -14,7 +14,7 @@ public class SettingsManager {
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, DATABASE_NAME, GOOGLE_MAP_TYPE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
-        OBSERVATION_TYPES_UPDATED_AT
+        OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED
     }
 
     public static void deleteAccessToken() {
@@ -127,6 +127,16 @@ public class SettingsManager {
 
     static String getTaxaLastPageFetched() {
         return prefs.getString(KEY.TAXA_LAST_PAGE_FETCHED.toString(),"1");
+    }
+
+    public static void setSqlUpdated(boolean sqlUpdated) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY.SQL_UPDATED.toString(), sqlUpdated);
+        editor.apply();
+    }
+
+    public static Boolean isSqlUpdated() {
+        return prefs.getBoolean(KEY.SQL_UPDATED.toString(),false);
     }
 
 }
