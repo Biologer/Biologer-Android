@@ -2,11 +2,4 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:iconSpaceReserved="false">
-
-    <CheckBoxPreference
-        android:key="species_groups"
-        android:title="@string/select_all_groups"
-        android:summary="@string/select_all_groups_desc"
-        app:iconSpaceReserved="false"
-        android:defaultValue="true"/>
 </PreferenceScreen>

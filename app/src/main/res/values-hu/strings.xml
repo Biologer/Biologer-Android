@@ -10,7 +10,7 @@
     <string name="wrong_creds">Rossz emailcím vagy jelszó</string>
     <string name="nemas_nalog">Nincs még fiókja?</string>
     <string name="napravi_nalog">Regisztrálj</string>
-    <string name="zaboravljena_lozinka">Elfelejtette a jelszót?</string>
+    <string name="pass_forgotten">Elfelejtette a jelszót?</string>
     <string name="email_wrong_format">Rosszul megadott emailcím</string>
     <string name="devDatabase">Fejlesztőknek fenntartott terület!</string>
 

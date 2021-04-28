@@ -10,7 +10,7 @@
     <string name="wrong_creds">Pogrešna e-adresa ili lozinka</string>
     <string name="nemas_nalog">Imate li račun?</string>
     <string name="napravi_nalog">Registrirajte se</string>
-    <string name="zaboravljena_lozinka">Zaboravili ste lozinku?</string>
+    <string name="pass_forgotten">Zaboravili ste lozinku?</string>
     <string name="email_wrong_format">Format e-adrese nije ispravan</string>
     <string name="devDatabase">Ovo je samo za programere!</string>
 

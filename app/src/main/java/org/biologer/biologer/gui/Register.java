@@ -42,9 +42,6 @@ import org.biologer.biologer.network.JSON.RegisterResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import freemarker.template.utility.StringUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -82,7 +79,7 @@ public class Register extends FragmentActivity {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            setContentView(R.layout.fragment_register);
+            setContentView(R.layout.activity_register);
 
         button = findViewById(R.id.buttonRegister);
         button.setOnClickListener(this::onRegister);
@@ -140,7 +137,6 @@ public class Register extends FragmentActivity {
         int start = intro_string.indexOf(getString(R.string.register_intro3));
         int end = intro_string.lastIndexOf(getString(R.string.register_intro3)) + getString(R.string.register_intro3).length();
         intro_string_span.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
         intro = findViewById(R.id.register_message);
         intro.setText(intro_string_span);
         intro.setMovementMethod(LinkMovementMethod.getInstance());

@@ -4,28 +4,21 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
+    android:layout_gravity="center_horizontal"
     android:background="@color/fragment_background"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginTop="20dp"
-        android:contentDescription="@string/Biologer"
-        android:src="@drawable/banner" />
-
     <LinearLayout
-        android:layout_width="280dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
         android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_marginTop="@dimen/appIntroDefaultPaddingTop"
         android:layout_gravity="center_horizontal"
         android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="280dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:orientation="horizontal">
@@ -66,9 +59,9 @@
 
         <View
             android:id="@+id/underline"
-            android:layout_width="224dp"
+            android:layout_width="wrap_content"
             android:layout_height="1dp"
-            android:layout_marginStart="54dp"
+            android:layout_marginStart="48dp"
             android:background="@color/checkBox_text"/>
 
         <TextView
@@ -91,7 +84,7 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="280dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="horizontal">
@@ -128,7 +121,7 @@
         android:layout_gravity="center"
         android:orientation="vertical">
         <LinearLayout
-            android:layout_width="280dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="horizontal">
@@ -167,59 +160,28 @@
 
     </com.google.android.material.button.MaterialButton>
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/ctv_register"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="bottom"
-        android:gravity="center"
-        android:paddingTop="30dp">
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
+        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:text="@string/no_account2"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="@string/no_account1"
-                android:layout_marginEnd="6dp"/>
-
-            <TextView
-                android:id="@+id/ctv_register"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="@string/no_account2"
-                android:textColor="@color/colorPrimary"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginEnd="6dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="@string/no_account3"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/ctv_forgotPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:layout_marginTop="14dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:visibility="gone"
-            android:text="@string/zaboravljena_lozinka"
-            android:textColor="@color/colorPrimary"
-            android:textStyle="bold"/>
-    </LinearLayout>
+    <TextView
+        android:id="@+id/ctv_forgotPass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:layout_marginTop="14dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        android:text="@string/pass_forgotten"
+        android:textColor="@color/colorPrimary"
+        android:textStyle="bold"/>
 
 </LinearLayout>

@@ -11,7 +11,7 @@
     <string name="no_account1">You can</string>
     <string name="no_account2">register here</string>
     <string name="no_account3">if you don’t have an account.</string>
-    <string name="zaboravljena_lozinka">Reset forgotten password online!</string>
+    <string name="pass_forgotten">Reset forgotten password online!</string>
     <string name="email_wrong_format">Wrong email format</string>
     <string name="devDatabase">This is only for developers!</string>
 
@@ -284,8 +284,6 @@
     <string name="password_too_short">Password is too short</string>
     <string name="species_groups">Choose species groups</string>
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or plants) it will be easier to find species for data entry. Other species will not pop up in the drop down menu.</string>
-    <string name="select_all_groups">Select all groups</string>
-    <string name="select_all_groups_desc">Selects/deselects all species from the list</string>
     <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxa</string>

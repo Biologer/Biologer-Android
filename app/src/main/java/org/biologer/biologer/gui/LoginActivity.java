@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -13,8 +14,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -45,6 +51,7 @@ import org.biologer.biologer.network.JSON.UserDataResponse;
 
 import java.util.List;
 
+import freemarker.template.utility.StringUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -135,9 +142,33 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.btn_login);
         loginButton.setEnabled(false);
         loginButton.setOnClickListener(this::onLogin);
+
         // Register link.
+        // This is intro text which should contain a link to privacy policy to click on
         TextView registerTextView = findViewById(R.id.ctv_register);
-        registerTextView.setOnClickListener(this::onRegister);
+        String register_string = getString(R.string.no_account1) + " " +
+                getString(R.string.no_account2) + " " +
+                getString(R.string.no_account3) + ".";
+        // Hyperlink a part of the text
+        SpannableString register_string_span = new SpannableString(register_string);
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View textView) {
+                onRegister(textView);
+            }
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                super.updateDrawState(ds);
+                ds.setUnderlineText(false);
+            }
+        };
+        int start = register_string.indexOf(getString(R.string.no_account2));
+        int end = register_string.lastIndexOf(getString(R.string.no_account2)) + getString(R.string.no_account2).length();
+        register_string_span.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        registerTextView.setText(register_string_span);
+        registerTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        registerTextView.setHighlightColor(Color.TRANSPARENT);
+
         // Forgot password link.
         forgotPassTextView = findViewById(R.id.ctv_forgotPass);
         forgotPassTextView.setOnClickListener(this::onForgotPass);
