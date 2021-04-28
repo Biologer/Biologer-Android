@@ -24,7 +24,7 @@ public class TaxaGroups {
     @JsonProperty("description")
     private String description;
     @JsonProperty("translations")
-    private List<TaxaGroupsTranslations> translations = null;
+    private List<TaxaGroupsTranslations> translations;
 
     public Long getId() {
         return id;

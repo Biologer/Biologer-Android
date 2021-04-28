@@ -1,27 +1,33 @@
 package org.biologer.biologer.gui;
 
-import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.CheckBoxPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import org.biologer.biologer.FetchTaxa;
-import org.biologer.biologer.GetTaxaGroups;
+import org.biologer.biologer.App;
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
+import org.biologer.biologer.sql.TaxonGroupsData;
+import org.biologer.biologer.sql.TaxonGroupsDataDao;
+import org.biologer.biologer.sql.TaxonGroupsTranslationData;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDataDao;
+import org.greenrobot.greendao.query.QueryBuilder;
+
+import java.util.List;
 
 public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     private static final String TAG = "Biologer.Preferences";
 
+    String locale = Localisation.getLocaleScript();
+
+    /*
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -42,15 +48,9 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     };
 
     private void populatePreferences() {
-        PreferenceScreen preferenceScreen = getPreferenceScreen();
 
-        CheckBoxPreference checkAll = new CheckBoxPreference(getContext());
-        checkAll.setTitle(getString(R.string.select_all_groups));
-        checkAll.setSummary(getString(R.string.select_all_groups_desc));
-        checkAll.setChecked(true);
-        checkAll.setIconSpaceReserved(false);
-        preferenceScreen.addPreference(checkAll);
     }
+     */
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -61,16 +61,65 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.preferences_taxa_groups, rootKey);
+        addPreferencesFromResource(R.xml.preferences_taxa_groups);
+        PreferenceScreen preferenceScreen = this.getPreferenceScreen();
         Log.d(TAG, "Starting fragment for taxa groups preferences.");
 
-        // Fetch taxa groups from server
-        final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
-        getTaxaGroups.setAction(FetchTaxa.ACTION_START);
-        Activity activity = getActivity();
-        activity.startService(getTaxaGroups);
+        PreferenceCategory preferenceCategory = new PreferenceCategory(preferenceScreen.getContext());
+        preferenceCategory.setTitle(getString(R.string.groups_of_taxa));
+        preferenceCategory.setIconSpaceReserved(false);
+        preferenceScreen.addPreference(preferenceCategory);
+
+        preferenceCategory.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                Log.d(TAG, "Something changed");
+                return false;
+            }
+        });
+
+        // Query group names from SQL
+        QueryBuilder<TaxonGroupsData> groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
+        groups.where(TaxonGroupsDataDao.Properties.Name.isNotNull());
+        List<TaxonGroupsData> taxonGroupsData = groups.list();
+
+        for (int i = 0; i < taxonGroupsData.size(); i++) {
+            Log.d(TAG, "System locale set to " + locale);
+
+            Long id = taxonGroupsData.get(i).getId();
+            String name = taxonGroupsData.get(i).getName();
+
+            QueryBuilder<TaxonGroupsTranslationData> groups_translation =
+                    App.get().getDaoSession().getTaxonGroupsTranslationDataDao().queryBuilder();
+            groups_translation.where(
+                    groups_translation.and(
+                            TaxonGroupsTranslationDataDao.Properties.Locale.eq(locale),
+                            TaxonGroupsTranslationDataDao.Properties.ViewGroupId.eq(id)));
+            List<TaxonGroupsTranslationData> translation = groups_translation.list();
+
+            if (translation.size() >= 1) {
+                String localised_name = translation.get(0).getNative_name();
+                if (localised_name != null) {
+                    // Log.d(TAG, "Taxon ID: " + id + "; name: " + name + "; translation: " + localised_name);
+                    CheckBoxPreference checkBoxPreference = new CheckBoxPreference(getContext());
+                    checkBoxPreference.setTitle(localised_name);
+                    checkBoxPreference.setChecked(true);
+                    checkBoxPreference.setIconSpaceReserved(false);
+                    preferenceScreen.addPreference(checkBoxPreference);
+                }
+            } else {
+                // Log.d(TAG, "Taxon ID: " + id + "; name: " + name + "; translation: null");
+                CheckBoxPreference checkBoxPreference = new CheckBoxPreference(getContext());
+                checkBoxPreference.setTitle(name);
+                checkBoxPreference.setChecked(true);
+                checkBoxPreference.setIconSpaceReserved(false);
+                preferenceScreen.addPreference(checkBoxPreference);
+            }
+
+        }
     }
 
+    /*
     @Override
     public void onResume() {
         super.onResume();
@@ -89,4 +138,5 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         }
         Log.d(TAG, "Pausing Preferences Taxa Groups Fragment.");
     }
+     */
 }

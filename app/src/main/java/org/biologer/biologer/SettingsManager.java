@@ -89,7 +89,7 @@ public class SettingsManager {
         return prefs.getString(KEY.GOOGLE_MAP_TYPE.toString(),"NORMAL");
     }
 
-    static void setTaxaUpdatedAt(String taxaUpdatedAt) {
+    public static void setTaxaUpdatedAt(String taxaUpdatedAt) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_UPDATED_AT.toString(), taxaUpdatedAt);
         editor.apply();
@@ -119,7 +119,7 @@ public class SettingsManager {
         return prefs.getString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(),"0");
     }
 
-    static void setTaxaLastPageFetched(String last_page) {
+    public static void setTaxaLastPageFetched(String last_page) {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(KEY.TAXA_LAST_PAGE_FETCHED.toString(), last_page);
         editor.apply();

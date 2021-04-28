@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,7 @@ import android.util.Log;
 import android.view.View;
 
 import org.biologer.biologer.FetchTaxa;
+import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
@@ -60,6 +62,14 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         setPreferencesFromResource(R.xml.preferences, rootKey);
         PreferenceScreen preferenceScreen = getPreferenceScreen();
         Log.d(TAG, "Loading preferences fragment.");
+
+        // Fetch taxa groups from server
+        ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivitymanager.getActiveNetworkInfo().isConnected()) {
+            final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
+            Activity getGroups = getActivity();
+            getGroups.startService(getTaxaGroups);
+        }
 
         PreferenceScreen taxaGroups = findPreference("species_groups");
         taxaGroups.setOnPreferenceClickListener(preference -> {

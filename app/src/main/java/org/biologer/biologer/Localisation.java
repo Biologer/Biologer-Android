@@ -10,15 +10,15 @@ public class Localisation {
     private static final String TAG = "Biologer.Entry";
 
     private static Locale getCurrentLocale() {
+        Locale locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Locale locale = App.get().getResources().getConfiguration().getLocales().get(0);
+            locale = App.get().getResources().getConfiguration().getLocales().get(0);
             Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
-            return locale;
         } else {
-            Locale locale = App.get().getResources().getConfiguration().locale;
+            locale = App.get().getResources().getConfiguration().locale;
             Log.d(TAG, "Current System locale is set to " + locale.getLanguage());
-            return locale;
         }
+        return locale;
     }
 
     public static String getLocaleScript() {

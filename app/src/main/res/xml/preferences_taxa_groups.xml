@@ -8,5 +8,5 @@
         android:title="@string/select_all_groups"
         android:summary="@string/select_all_groups_desc"
         app:iconSpaceReserved="false"
-        android:defaultValue="false"/>
+        android:defaultValue="true"/>
 </PreferenceScreen>

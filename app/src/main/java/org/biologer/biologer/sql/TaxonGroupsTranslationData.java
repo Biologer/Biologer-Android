@@ -8,15 +8,15 @@ import org.greenrobot.greendao.annotation.Id;
 public class TaxonGroupsTranslationData {
     @Id(autoincrement = true)
     private Long Id;
-    private Long taxonId;
+    private Long viewGroupId;
     private String locale;
     private String native_name;
     private String description;
 
-    @Generated(hash = 743319503)
-    public TaxonGroupsTranslationData(Long Id, Long taxonId, String locale, String native_name, String description) {
+    @Generated(hash = 1197764029)
+    public TaxonGroupsTranslationData(Long Id, Long viewGroupId, String locale, String native_name, String description) {
         this.Id = Id;
-        this.taxonId = taxonId;
+        this.viewGroupId = viewGroupId;
         this.locale = locale;
         this.native_name = native_name;
         this.description = description;
@@ -34,12 +34,12 @@ public class TaxonGroupsTranslationData {
         Id = id;
     }
 
-    public Long getTaxonId() {
-        return taxonId;
+    public Long getViewGroupId() {
+        return viewGroupId;
     }
 
-    public void setTaxonId(Long taxonId) {
-        this.taxonId = taxonId;
+    public void setViewGroupId(Long viewGroupId) {
+        this.viewGroupId = viewGroupId;
     }
 
     public String getLocale() {

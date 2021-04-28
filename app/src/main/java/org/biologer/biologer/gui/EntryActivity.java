@@ -273,7 +273,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         QueryBuilder<TaxaTranslationData> translationQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
                         translationQuery.where(
                                 translationQuery.and(TaxaTranslationDataDao.Properties.TaxonId.eq(id),
-                                        TaxaTranslationDataDao.Properties.Locale.eq("sr")));
+                                        TaxaTranslationDataDao.Properties.Locale.eq(locale_script)));
                         List<TaxaTranslationData> translation = translationQuery.list();
                         if (translation.size() >= 1) {
                             String name = translation.get(0).getNativeName();

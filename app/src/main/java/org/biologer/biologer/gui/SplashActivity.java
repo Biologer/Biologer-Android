@@ -56,12 +56,15 @@ public class SplashActivity extends AppCompatActivity {
                 if (token != null && MAIL_CONFIRMED) {
                     if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis()/1000) {
                         Log.d(TAG, "Token is still OK, email is confirmed.");
+
                         // If SQL is updated we will try to login in the user
                         if (SettingsManager.isSqlUpdated()) {
                             Log.i(TAG, "SQL database must be updated!");
                             Toast.makeText(this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
                             SettingsManager.setObservationTypesUpdated("0");
+                            SettingsManager.setTaxaUpdatedAt("0");
                             SettingsManager.setSkipTaxaDatabaseUpdate("0");
+                            SettingsManager.setTaxaLastPageFetched("1");
 
                             Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
                             service.enqueue(new Callback<UserDataResponse>() {
