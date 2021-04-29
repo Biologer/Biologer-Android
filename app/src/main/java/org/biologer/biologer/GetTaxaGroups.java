@@ -17,8 +17,12 @@ import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsTranslations;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.TaxonGroupsData;
+import org.biologer.biologer.sql.TaxonGroupsDataDao;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDataDao;
+import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -118,6 +122,38 @@ public class GetTaxaGroups extends Service {
             App.get().getDaoSession().getTaxonGroupsTranslationDataDao().insertOrReplaceInTx(translationData);
         }
         App.get().getDaoSession().getTaxonGroupsDataDao().insertOrReplaceInTx(taxon_groups);
+
+        // Get the IDs from server adn compare them to SQL. Delete SQL if deleted on server
+        ArrayList<Long> server_ids = new ArrayList<>();
+        for (int i = 0; i < taxaGroups.size(); i++) {
+            server_ids.add(taxaGroups.get(i).getId());
+        }
+        ArrayList<Long> sql_ids = new ArrayList<>();
+        List<TaxonGroupsData> sql_ids_list = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder().list();
+        for (int i = 0; i < sql_ids_list.size(); i++) {
+            sql_ids.add(sql_ids_list.get(i).getId());
+        }
+
+        sql_ids.removeAll(server_ids);
+
+        if (!sql_ids.isEmpty()) {
+            Log.d(TAG, "Taxon IDs in SQL which are deleted from server" + sql_ids);
+
+            for (int i = 0; i < sql_ids.size(); i++) {
+                Long id = sql_ids.get(i);
+                List<TaxonGroupsTranslationData> sql_tr = App.get().getDaoSession().getTaxonGroupsTranslationDataDao().
+                        queryBuilder().where(TaxonGroupsTranslationDataDao.Properties.ViewGroupId.eq(id)).list();
+                ArrayList<Long> ids = new ArrayList<>();
+                for (int j = 0; j < sql_tr.size(); j++) {
+                    ids.add(sql_tr.get(j).getId());
+                }
+                App.get().getDaoSession().getTaxonGroupsTranslationDataDao().deleteByKeyInTx(ids);
+            }
+
+            App.get().getDaoSession().getTaxonGroupsDataDao().deleteByKeyInTx(sql_ids);
+        } else {
+            Log.d(TAG, "SQL is up to date!");
+        }
 
         sendResult("done");
 

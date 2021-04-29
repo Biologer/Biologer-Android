@@ -7,8 +7,6 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.preference.CheckBoxPreference;
-import androidx.preference.ListPreference;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
@@ -16,7 +14,6 @@ import androidx.preference.PreferenceScreen;
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
-import org.biologer.biologer.User;
 import org.biologer.biologer.sql.TaxonGroupsData;
 import org.biologer.biologer.sql.TaxonGroupsDataDao;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
@@ -70,8 +67,6 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         PreferenceScreen preferenceScreen = this.getPreferenceScreen();
         Log.d(TAG, "Starting fragment for taxa groups preferences.");
 
-        // User.resetPreferences(getContext());
-
         PreferenceCategory preferenceCategory = new PreferenceCategory(preferenceScreen.getContext());
         preferenceCategory.setTitle(getString(R.string.groups_of_taxa));
         preferenceCategory.setIconSpaceReserved(false);
@@ -79,9 +74,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
 
         // Query Parent groups from SQL
         QueryBuilder<TaxonGroupsData> groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-        groups.where(
-                groups.and(TaxonGroupsDataDao.Properties.Name.isNotNull(),
-                        TaxonGroupsDataDao.Properties.PrentId.isNull()));
+        groups.where(TaxonGroupsDataDao.Properties.PrentId.isNull());
         List<TaxonGroupsData> listParents = groups.list();
 
         for (int i = 0; i < listParents.size(); i++) {
@@ -141,6 +134,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
 
             }
         }
+
     }
 
     private void populateGroup(PreferenceScreen preferenceScreen, String name, String key, Boolean reserve_icon_space) {
@@ -155,48 +149,39 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
 
         preferenceScreen.addPreference(checkBoxes.get(last));
 
-        checkBoxes.get(last).setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                int id = Integer.parseInt(preference.getKey());
-                Log.d(TAG, "Item " + preference.getTitle() + " (" + id + ") clicked.");
+        checkBoxes.get(last).setOnPreferenceChangeListener((preference, newValue) -> {
+            int id = Integer.parseInt(preference.getKey());
+            Log.d(TAG, "Item " + preference.getTitle() + " (" + id + ") clicked.");
 
-                // Query to determine if this is a child or parent checkbox
-                QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-                query.where(TaxonGroupsDataDao.Properties.Id.eq(id));
-                List<TaxonGroupsData> listSelected = query.list();
+            // Query to determine if this is a child or parent checkbox
+            QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
+            query.where(TaxonGroupsDataDao.Properties.Id.eq(id));
+            List<TaxonGroupsData> listSelected = query.list();
 
-                if (!listSelected.isEmpty()) {
-                    if (listSelected.get(0).getPrentId() == null) {
-                        Log.d(TAG, "This checkbox preference is a parent.");
+            if (!listSelected.isEmpty()) {
+                if (listSelected.get(0).getPrentId() == null) {
+                    Log.d(TAG, "This checkbox preference is a parent.");
 
-                        // Query to get all the children
-                        QueryBuilder<TaxonGroupsData> children = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-                        children.where(TaxonGroupsDataDao.Properties.PrentId.eq(id));
-                        List<TaxonGroupsData> listChildren = children.list();
+                    // Query to get all the children
+                    QueryBuilder<TaxonGroupsData> children = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
+                    children.where(TaxonGroupsDataDao.Properties.PrentId.eq(id));
+                    List<TaxonGroupsData> listChildren = children.list();
 
-                        for (int i = 0; i < listChildren.size(); i++) {
-                            if (!listChildren.isEmpty()) {
-                                String key = listChildren.get(i).getId().toString();
-                                CheckBoxPreference temp = findPreference(key);
-                                temp.setChecked(!((CheckBoxPreference) preference).isChecked());
-                            }
+                    for (int i = 0; i < listChildren.size(); i++) {
+                        if (!listChildren.isEmpty()) {
+                            String key1 = listChildren.get(i).getId().toString();
+                            CheckBoxPreference temp = findPreference(key1);
+                            temp.setChecked(!((CheckBoxPreference) preference).isChecked());
                         }
-
-                        }
-                    else {
-                        Log.d(TAG, "This checkbox preference is a child.");
                     }
+
                 }
-
-
-                //boolean blnIsReg = Boolean.getBoolean(newValue.toString());
-                //Editor e = _prefs.edit();
-                //e.putBoolean("isReg", blnIsReg);
-                //e.commit();
-
-                return true;
+                else {
+                    Log.d(TAG, "This checkbox preference is a child.");
+                }
             }
+
+            return true;
         });
 
     }

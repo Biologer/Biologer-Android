@@ -53,7 +53,7 @@
             android:key="image_license"
             android:title="@string/image_license"
             android:summary="@string/choose_ilicense"
-            app:iconSpaceReserved="true"
+            app:iconSpaceReserved="false"
             android:defaultValue="0" />
     </PreferenceCategory>
 
