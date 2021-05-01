@@ -15,8 +15,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 83
-        versionName "3.0b8"
+        versionCode 84
+        versionName "3.0b9"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {

@@ -287,6 +287,6 @@
     <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxa</string>
-    <string name="unselect_all_groups">Unselect all groups</string>
+    <string name="deselect_all_groups">Unselect all groups</string>
 
 </resources>

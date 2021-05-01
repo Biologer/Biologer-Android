@@ -143,12 +143,15 @@ public class Register extends FragmentActivity {
         intro.setHighlightColor(Color.TRANSPARENT);
 
         String[] dataLicenses = {getString(R.string.license10), getString(R.string.license20), getString(R.string.license30), getString(R.string.license_timed), getString(R.string.license40)};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+        String[] imageLicenses = {getString(R.string.license_image_10), getString(R.string.license_image_20), getString(R.string.license_image_30), getString(R.string.license_image_40)};
+        ArrayAdapter<String> adapterDataLicense = new ArrayAdapter<>(this,
                 android.R.layout.simple_dropdown_item_1line, dataLicenses);
-        data_license.setAdapter(adapter);
+        ArrayAdapter<String> adapterImageLicense = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, imageLicenses);
+        data_license.setAdapter(adapterDataLicense);
         data_license.setText(getString(R.string.license10), false);
-        image_license.setAdapter(adapter);
-        image_license.setText(getString(R.string.license10), false);
+        image_license.setAdapter(adapterImageLicense);
+        image_license.setText(getString(R.string.license_image_10), false);
 
         // Change image of the state... don't confuse users
         flag = findViewById(R.id.flag);
@@ -232,15 +235,16 @@ public class Register extends FragmentActivity {
                 runnable = () -> {
                     if (!(password.getText().length() > 8)) {
                         passwordLayout.setError("Password too short");
-                        if(password_repeat.length() != 0) {
-                            if (password.getText().toString().equals(password_repeat.getText().toString())) {
-                                passwordRepeatLayout.setError(null);
-                            } else {
-                                passwordRepeatLayout.setError("Passwords did not match");
-                            }
-                        }
                     } else {
                         passwordLayout.setError(null);
+                    }
+
+                    if (password_repeat.length() != 0 && !(password.getText().length() > 8)) {
+                        if (password.getText().toString().equals(password_repeat.getText().toString())) {
+                            passwordRepeatLayout.setError(null);
+                        } else {
+                            passwordRepeatLayout.setError("Passwords did not match");
+                        }
                     }
                     enableButton();
                 };
@@ -410,19 +414,16 @@ public class Register extends FragmentActivity {
     }
 
     private int getImageLicense() {
-        if (image_license.getText().toString().equals(getString(R.string.license10))) {
+        if (image_license.getText().toString().equals(getString(R.string.license_image_10))) {
             return 10;
         }
-        if (image_license.getText().toString().equals(getString(R.string.license20))) {
+        if (image_license.getText().toString().equals(getString(R.string.license_image_20))) {
             return 20;
         }
-        if (image_license.getText().toString().equals(getString(R.string.license30))) {
+        if (image_license.getText().toString().equals(getString(R.string.license_image_30))) {
             return 30;
         }
-        if (image_license.getText().toString().equals(getString(R.string.license_timed))) {
-            return 35;
-        }
-        if (image_license.getText().toString().equals(getString(R.string.license40))) {
+        if (image_license.getText().toString().equals(getString(R.string.license_image_40))) {
             return 40;
         }
         return 10;

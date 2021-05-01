@@ -121,7 +121,7 @@
     <string name="license_default">Get from server</string>
     <string name="license20">Free, NonCommercial (CC BY-SA-NC)</string>
     <string name="license30">Partially Open (restricted to 10km)</string>
-    <string name="license40">Closed (only for you and editors)</string>
+    <string name="license40">Closed (available to you and editors)</string>
     <string name="setup_title">Setup Biologer</string>
     <string name="choose_dlicense">Choose different license for your data collected through the application</string>
     <string name="choose_ilicense">Choose different license for your images sent through the application</string>
@@ -284,9 +284,13 @@
     <string name="password_too_short">Password is too short</string>
     <string name="species_groups">Choose species groups</string>
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or plants) it will be easier to find species for data entry. Other species will not pop up in the drop down menu.</string>
-    <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
-    <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
+    <string name="sql_updated_message">SQL database structure changed. Biologer will log you back in and download user data from server.</string>
+    <string name="login_after_sql_update_fail">Could not login after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxa</string>
-    <string name="unselect_all_groups">Unselect all groups</string>
+    <string name="deselect_all_groups">Deselect all groups</string>
+    <string name="license_image_30">Keep authorship and share online with watermark</string>
+    <string name="license_image_10">Share images for free (CC-BY-SA)</string>
+    <string name="license_image_20">Share images noncommercial (CC-BY-SA-NC)</string>
+    <string name="license_image_40">Keep authorship and restrict images from public domain</string>
 
 </resources>

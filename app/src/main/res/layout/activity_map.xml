@@ -20,16 +20,14 @@
         android:layout_height="match_parent"
         tools:context="org.biologer.biologer.gui.MapActivity">
 
-        <androidx.appcompat.widget.AppCompatEditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_setAccuracy"
             android:layout_width="180dp"
             android:layout_height="40dp"
             android:hint="@string/accurcy"
             android:inputType="number"
-            android:background="@color/white"
             android:layout_gravity="start|top"
             android:gravity="center"
-            android:textSize="12sp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:autofillHints="meters" />
@@ -47,6 +45,5 @@
             app:backgroundTint="@color/white"
             android:contentDescription="@string/map_type" />
     </fragment>
-
 
 </LinearLayout>

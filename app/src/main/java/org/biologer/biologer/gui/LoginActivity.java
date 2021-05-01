@@ -108,12 +108,14 @@ public class LoginActivity extends AppCompatActivity {
 
         // Just display the username in order to make app nice
         Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
+        if (bundle != null && bundle.getString("email") != null) {
+            Log.d(TAG, "Filling user data from register dialog.");
             et_username.setText(bundle.getString("email"));
             et_password.setText(bundle.getString("password"));
         } else {
             List<UserData> user = App.get().getDaoSession().getUserDataDao().loadAll();
             if (!user.isEmpty()) {
+                Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
                 et_username.setText(user.get(0).getEmail());
                 // Just display anything, no mather what...
                 et_password.setText("random_string");
@@ -140,7 +142,6 @@ public class LoginActivity extends AppCompatActivity {
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
         // Login button.
         loginButton = findViewById(R.id.btn_login);
-        loginButton.setEnabled(false);
         loginButton.setOnClickListener(this::onLogin);
 
         // Register link.
@@ -192,6 +193,14 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        if (!(isValidEmail(et_username.getText().toString()))) {
+                            til_username.setError(getString(R.string.invalid_email));
+                        }
+                        else {
+                            til_username.setError(null);
+                        }
+                        enableButton();
+
                         if (!old_username.equals(et_username.getText().toString())) {
                             if (SettingsManager.getAccessToken() != null) {
                                 Log.d(TAG, "Username changed! Deleting Access Token.");
@@ -220,6 +229,13 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        if (et_password.getText().length() < 8) {
+                            til_password.setError(getString(R.string.password_too_short));
+                        } else {
+                            til_password.setError(null);
+                        }
+                        enableButton();
+
                         if (!old_password.equals(et_password.getText().toString())) {
                             if (SettingsManager.getAccessToken() != null) {
                                 Log.d(TAG, "Password changed! Deleting Access Token.");
@@ -281,6 +297,12 @@ public class LoginActivity extends AppCompatActivity {
                 handler.postDelayed(runnable, 1500);
             }
         });
+
+        // Disable login button if there is no username and password
+        if (et_username.getText().toString().equals("") && et_password.getText().toString().equals("")) {
+            loginButton.setEnabled(false);
+        }
+
     }
 
     private void enableButton() {
@@ -373,8 +395,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // If there is no token, we should get one from the server
         if (token == null) {
-            Log.d(TAG, "TOKEN: " + token);
-            Log.d(TAG, "There is no token. Trying to log in with username and password.");
+            Log.d(TAG, "THERE IS NO TOKEN. Trying to log in with username and password.");
             getToken();
         }
         else {

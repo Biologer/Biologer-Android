@@ -223,7 +223,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             } else {
                 Log.d(TAG, "Checkbox for taxa group ID " + id + " is not checked.");
             }
-
         }
 
         // Restore images on screen rotation...
