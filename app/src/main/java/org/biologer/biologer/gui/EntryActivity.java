@@ -1081,6 +1081,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void showMap() {
         Intent intent = new Intent(this, MapActivity.class);
         // If location is not loaded put some location on the map at the Balkan
+        Bundle bundle = new Bundle();
         if (currentLocation.latitude == 0) {
             String database = SettingsManager.getDatabaseName();
             if (database.equals("https://biologer.org")) {
@@ -1097,6 +1098,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         }
         intent.putExtra("latlong", currentLocation);
+        bundle.putDouble("accuracy", acc);
+        intent.putExtras(bundle);
         startActivityForResult(intent, MAP);
     }
 

@@ -8,6 +8,9 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,6 +22,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -27,6 +32,8 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.JSON.ElevationResponse;
+
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,13 +44,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String TAG = "Biologer.GoogleMaps";
 
     private GoogleMap mMap;
-    private String acc = "0.0";
+    private String acc;
     private String elevation = "0.0";
     ImageView fbtn_mapType;
     private EditText text_input_acc;
     private LatLng latlong;
     String google_map_type = SettingsManager.getGoogleMapType();
     String database_name = SettingsManager.getDatabaseName();
+    Circle circle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +69,13 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             actionbar.setTitle(R.string.google_maps_title);
         }
 
-        text_input_acc = findViewById(R.id.et_setAccuracy);
-
         Bundle bundle = getIntent().getExtras();
         assert bundle != null;
         latlong = bundle.getParcelable("latlong");
+        double accuracy = bundle.getDouble("accuracy", 0);
+        acc = String.format(Locale.ENGLISH, "%.0f", accuracy);
+        //int in = Integer.parseInt(acc);
+        Log.d(TAG, "Accuracy from GPS:" + acc);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -140,6 +150,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 mMap.animateCamera(CameraUpdateFactory.zoomTo(16), 1000, null);
             }
 
+
             mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
                 @Override
                 public void onMarkerDragStart(Marker marker) {
@@ -156,8 +167,62 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
             });
 
-            mMap.setOnMarkerClickListener(marker -> false);
+            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    return false;
+                }
+            });
+
+            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(LatLng latLng) {
+                    setLatLong(latLng.latitude, latLng.longitude);
+                    mMap.clear();
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(latLng.latitude, latLng.longitude)).title(getString(R.string.you_are_here)).draggable(true));
+                }
+            });
+
+            addCircle();
+
+            text_input_acc = findViewById(R.id.et_setAccuracy);
+            text_input_acc.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    acc = text_input_acc.getText().toString();
+                    if (acc != null && !acc.equals("0.0")) {
+                        updatePrecisionCircle();
+                    }
+                }
+            });
+
+            text_input_acc.setText(acc);
+
         }
+    }
+
+    private void addCircle() {
+        circle = mMap.addCircle(new CircleOptions()
+                .center(latlong)
+                .radius(Double.parseDouble(acc))
+                .fillColor(R.color.colorPrimaryLight)
+                .strokeColor(R.color.colorPrimaryDark)
+                .strokeWidth(4.0f));
+    }
+
+    private void updatePrecisionCircle() {
+        circle.setRadius(Double.parseDouble(acc));
+
     }
 
     private void showMapTypeSelectorDialog() {
