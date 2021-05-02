@@ -8,8 +8,6 @@
     <string name="invalid_email">Neispravna e-adresa</string>
     <string name="valid_pass">Unesite lozinku</string>
     <string name="wrong_creds">Pogrešna e-pošta ili lozinka</string>
-    <string name="nemas_nalog">Da li imate nalog?</string>
-    <string name="napravi_nalog">Registrujte se</string>
     <string name="pass_forgotten">Zaboravili ste lozinku?</string>
     <string name="email_wrong_format">Nije ispravan format e-adrese</string>
     <string name="devDatabase">Ovo je samo za programere!</string>
@@ -282,8 +280,6 @@
     <string name="password_too_short">Password is too short</string>
     <string name="species_groups">Choose species groups</string>
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or insects) it will be more simple to find species for data entry.</string>
-    <string name="select_all_groups">Select all groups</string>
-    <string name="select_all_groups_desc">Selects/deselects all species from the list</string>
     <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxa</string>

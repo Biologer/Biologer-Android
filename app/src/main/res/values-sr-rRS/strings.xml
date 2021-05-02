@@ -292,5 +292,9 @@
     <string name="license_image_10">Дели слободно (CC-BY-SA)</string>
     <string name="license_image_20">Дели слободно, некомерцијално (CC-BY-SA-NC)</string>
     <string name="license_image_40">Задржи ауторство и забрани приказ слика у јавном делу</string>
+    <string name="no_map_activity">Активност за карте не може бити учитана из неког разлога.</string>
+    <string name="no_map_fragment">Фрагмент за мапе не може бити учитан из неког разлога.</string>
+    <string name="accuracy_a1">Прецизност координате:</string>
+    <string name="drag_marker">Превуците маркацију да је промените.</string>
 
 </resources>

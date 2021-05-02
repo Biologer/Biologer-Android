@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,24 +10,24 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.textview.MaterialTextView;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -44,14 +45,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final String TAG = "Biologer.GoogleMaps";
 
     private GoogleMap mMap;
-    private String acc;
-    private String elevation = "0.0";
+    private String accuracy;
+    private String elevation;
     ImageView fbtn_mapType;
-    private EditText text_input_acc;
     private LatLng latlong;
     String google_map_type = SettingsManager.getGoogleMapType();
     String database_name = SettingsManager.getDatabaseName();
     Circle circle;
+    Marker marker;
+    Marker temporaryMarker;
+    MaterialTextView textView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,21 +73,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
 
         Bundle bundle = getIntent().getExtras();
-        assert bundle != null;
-        latlong = bundle.getParcelable("latlong");
-        double accuracy = bundle.getDouble("accuracy", 0);
-        acc = String.format(Locale.ENGLISH, "%.0f", accuracy);
-        //int in = Integer.parseInt(acc);
-        Log.d(TAG, "Accuracy from GPS:" + acc);
+        if (bundle != null) {
+            latlong = bundle.getParcelable("LAT_LONG");
+            double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
+            double elevation_bundle = bundle.getDouble("ELEVATION", 0);
+            accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
+            elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
+            //int in = Integer.parseInt(acc);
+            Log.d(TAG, "Accuracy from GPS:" + accuracy + "; elevation: " + elevation + ".");
+        } else {
+            latlong = new LatLng(45.5, 16.3);
+            Log.d(TAG, "Bundle is null for some reason! Setting default LatLong.");
+        }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        assert mapFragment != null;
-        mapFragment.getMapAsync(this);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        } else {
+            Toast.makeText(this, getString(R.string.no_map_fragment), Toast.LENGTH_LONG).show();
+        }
 
         fbtn_mapType = findViewById(R.id.fbtn_mapType);
         fbtn_mapType.setOnClickListener(view -> showMapTypeSelectorDialog());
+
+        textView = findViewById(R.id.coordinate_accuracy_text);
     }
 
     // Add Save button in the right part of the toolbar
@@ -98,131 +112,106 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Select the type of the map according to the user’s settings
-        if (google_map_type.equals("NORMAL")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        } if (google_map_type.equals("SATELLITE")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        } if (google_map_type.equals("TERRAIN")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
-        } if (google_map_type.equals("HYBRID")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        }
-
         if (mMap != null) {
+
+            // Update text
+            String accuracy_text = getString(R.string.accuracy_a1) +
+                    " " + accuracy + " " + getString(R.string.meter) + "\n" + getString(R.string.drag_marker);
+            textView.setText(accuracy_text);
+
+            // Select the type of the map according to the user’s settings
+            if (google_map_type.equals("NORMAL")) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+            } if (google_map_type.equals("SATELLITE")) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+            } if (google_map_type.equals("TERRAIN")) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+            } if (google_map_type.equals("HYBRID")) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+            }
+
             // Add marker at the GPS position on the map
             if (latlong.latitude == 0.0) {
                 if (database_name.equals("https://biologer.hr")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(45.5, 16.3)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(45.5, 16.3), 7));
-                    mMap.animateCamera(CameraUpdateFactory.zoomIn());
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
+                    addMarker(new LatLng(45.5, 16.3), 7);
                 }
-
                 if (database_name.equals("https://biologer.ba")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.3, 17.9)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.3, 17.9), 7));
-                    mMap.animateCamera(CameraUpdateFactory.zoomIn());
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
+                    addMarker(new LatLng(44.3, 17.9), 7);
                 }
-
-                if (database_name.equals("https://biologer.org")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.1, 20.7)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.1, 20.7), 7));
-                    mMap.animateCamera(CameraUpdateFactory.zoomIn());
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
+                if (database_name.equals("https://biologer.org") || database_name.equals("https://dev.biologer.org")) {
+                    addMarker(new LatLng(44.1, 20.7), 7);
                 }
-
-                if (database_name.equals("https://dev.biologer.org")) {
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(44.1, 20.7)).title(getString(R.string.you_are_here)).draggable(true));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(44.1, 20.7), 7));
-                    mMap.animateCamera(CameraUpdateFactory.zoomIn());
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(7), 1000, null);
-                }
-
             } else {
-                mMap.addMarker(new MarkerOptions().position(latlong).title(getString(R.string.you_are_here)).draggable(true));
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latlong, 16));
-                mMap.animateCamera(CameraUpdateFactory.zoomIn());
-                mMap.animateCamera(CameraUpdateFactory.zoomTo(16), 1000, null);
+                addMarker(latlong, 16);
             }
-
 
             mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
                 @Override
-                public void onMarkerDragStart(Marker marker) {
+                public void onMarkerDragStart(@NonNull Marker marker) {
+                    Log.d(TAG, "Location at starting point: " + latlong.latitude + "; " + latlong.longitude + ".");
+                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_radius));
+                    temporaryMarker = mMap.addMarker(new MarkerOptions().position(latlong));
+                    temporaryMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
                 }
 
                 @Override
-                public void onMarkerDrag(Marker marker) {
+                public void onMarkerDrag(@NonNull Marker marker) {
+                    Location old_location = new Location("");
+                    old_location.setLongitude(latlong.longitude);
+                    old_location.setLatitude(latlong.latitude);
+                    Location new_location = new Location("");
+                    new_location.setLongitude(marker.getPosition().longitude);
+                    new_location.setLatitude(marker.getPosition().latitude);
+                    double distance = old_location.distanceTo(new_location);
+                    Log.d(TAG, "Distance between central point and the drown circle is " + distance);
+                    accuracy = String.format(Locale.ENGLISH, "%.0f", distance);
+                    circle.setRadius(Double.parseDouble(accuracy));
+                    String text = getString(R.string.accuracy_a1) + " " + accuracy + " m";
+                    textView.setText(text);
                 }
 
                 @Override
-                public void onMarkerDragEnd(Marker marker) {
-                    setLatLong(marker.getPosition().latitude, marker.getPosition().longitude);
+                public void onMarkerDragEnd(@NonNull Marker marker) {
+                    Log.d(TAG, "Location at ending point: " + latlong.latitude + "; " + latlong.longitude + ".");
+                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+                    marker.setPosition(latlong);
+                    temporaryMarker.remove();
                 }
 
             });
 
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(Marker marker) {
-                    return false;
-                }
-            });
-
-            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-                @Override
-                public void onMapClick(LatLng latLng) {
-                    setLatLong(latLng.latitude, latLng.longitude);
-                    mMap.clear();
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(latLng.latitude, latLng.longitude)).title(getString(R.string.you_are_here)).draggable(true));
-                }
+            mMap.setOnMapClickListener(latLng -> {
+                setLatLong(latLng.latitude, latLng.longitude);
+                marker.setPosition(latLng);
+                circle.setCenter(latLng);
             });
 
             addCircle();
 
-            text_input_acc = findViewById(R.id.et_setAccuracy);
-            text_input_acc.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    acc = text_input_acc.getText().toString();
-                    if (acc != null && !acc.equals("0.0")) {
-                        updatePrecisionCircle();
-                    }
-                }
-            });
-
-            text_input_acc.setText(acc);
-
+        } else {
+            Toast.makeText(this, getString(R.string.no_map_activity), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void addMarker(LatLng latLng, int zoom) {
+        marker = mMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
+        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
     }
 
     private void addCircle() {
         circle = mMap.addCircle(new CircleOptions()
                 .center(latlong)
-                .radius(Double.parseDouble(acc))
-                .fillColor(R.color.colorPrimaryLight)
-                .strokeColor(R.color.colorPrimaryDark)
+                .radius(Double.parseDouble(accuracy))
+                .fillColor(0x66c5e1a5)
+                .clickable(true)
+                .strokeColor(0xff689f38)
                 .strokeWidth(4.0f));
-    }
-
-    private void updatePrecisionCircle() {
-        circle.setRadius(Double.parseDouble(acc));
-
     }
 
     private void showMapTypeSelectorDialog() {
@@ -286,84 +275,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             return true;
         }
         if (id == R.id.action_save) {
-            // Get the accuracy value from the text field
-            if (text_input_acc.getText().toString().length() != 0) {
-                setAcc(text_input_acc.getText().toString());
-            }
-
             // Get elevation from biologer server, save all data and exit
             updateElevationAndSave(latlong);
         }
         return true;
     }
-
-    /*
-    // This function calls Google Elevation API
-    public void getGoogleElevation(LatLng location) throws IOException, JSONException {
-
-        final URL url = new URL("https://maps.googleapis.com/maps/api/elevation/json?locations=" +
-                String.valueOf(location.latitude) + "," +
-                String.valueOf(location.longitude) +
-                "&key=AIzaSyDsLjNreiHg47Mif-CheIYB3uGtXQekTtY");
-        Log.d(TAG, "url=" + url);
-
-        Thread query_altitude = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-
-                    urlConnection.setConnectTimeout(cTimeOutMs);
-                    urlConnection.setReadTimeout(cTimeOutMs);
-                    urlConnection.setRequestProperty("Accept", "application/json");
-
-                    // Set request type
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.setDoOutput(false);
-                    urlConnection.setDoInput(true);
-
-                    // Check for errors
-                    int code = urlConnection.getResponseCode();
-                    Log.d(TAG, "Response code: " + String.valueOf(code));
-                    if (code != HttpsURLConnection.HTTP_OK)
-                        throw new IOException("HTTP error " + urlConnection.getResponseCode());
-
-                    // Get response
-                    BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                    StringBuilder json = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null)
-                        json.append(line);
-                    Log.d(TAG, json.toString());
-
-                    // Decode result
-                    JSONObject jroot = new JSONObject(json.toString());
-                    String status = jroot.getString("status");
-                    if ("OK".equals(status)) {
-                        JSONArray results = jroot.getJSONArray("results");
-                        if (results.length() > 0) {
-                            elevation = results.getJSONObject(0).getString("elevation");
-                            Log.i(TAG, "Server returned elevation of: " + elevation + "m.");
-                        } else
-                            throw new IOException("JSON no results");
-                    } else
-                        throw new JSONException("JSON status " + status);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        query_altitude.start();
-
-        // Wait until we get the altitude...
-        try {
-            query_altitude.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-     */
 
     private void updateElevationAndSave(LatLng coordinates) {
         Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
@@ -397,21 +313,21 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void saveAndExit() {
         // Forward the result to previous Activity
         Intent returnLocation = new Intent();
-        returnLocation.putExtra("google_map_accuracy", acc);
+        returnLocation.putExtra("google_map_accuracy", accuracy);
         returnLocation.putExtra("google_map_latlong", latlong);
         returnLocation.putExtra("google_map_elevation", elevation);
         setResult(3, returnLocation);
 
         Log.d(TAG, "Latitude: " + latlong.latitude);
         Log.d(TAG, "Longitude: " + latlong.longitude);
-        Log.d(TAG, "Accuracy: " + acc);
+        Log.d(TAG, "Accuracy: " + accuracy);
         Log.d(TAG, "Elevation: " + elevation);
 
         finish();
     }
 
-    public void setAcc(String acc) {
-        this.acc = acc;
+    public void setAccuracy(String accuracy) {
+        this.accuracy = accuracy;
     }
 
     public void setLatLong(double lat, double lon) {

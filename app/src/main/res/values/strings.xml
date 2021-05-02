@@ -292,5 +292,9 @@
     <string name="license_image_10">Share images for free (CC-BY-SA)</string>
     <string name="license_image_20">Share images noncommercial (CC-BY-SA-NC)</string>
     <string name="license_image_40">Keep authorship and restrict images from public domain</string>
+    <string name="no_map_activity">Map activity could not be loaded for some reason.</string>
+    <string name="no_map_fragment">Map fragment could not be loaded for some reason.</string>
+    <string name="accuracy_a1">Coordinate accuracy:</string>
+    <string name="drag_marker">Drag marker to change.</string>
 
 </resources>

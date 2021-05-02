@@ -1097,8 +1097,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 currentLocation = new LatLng(44.3, 17.9);
             }
         }
-        intent.putExtra("latlong", currentLocation);
-        bundle.putDouble("accuracy", acc);
+        intent.putExtra("LAT_LONG", currentLocation);
+        bundle.putDouble("ACCURACY", acc);
+        bundle.putDouble("ELEVATION", elev);
         intent.putExtras(bundle);
         startActivityForResult(intent, MAP);
     }
@@ -1204,7 +1205,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 assert currentLocation != null;
                 setLocationValues(currentLocation.latitude, currentLocation.longitude);
                 acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
-
                 elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
             }
             assert data != null;
