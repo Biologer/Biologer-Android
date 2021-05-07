@@ -966,6 +966,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.setSlika2(image2);
             currentItem.setSlika3(image3);
             currentItem.setHabitat(habitat);
+            currentItem.setFoundOn(foundOn);
             getPhotoTag();
             currentItem.setObservation_type_ids(Arrays.toString(observation_type_ids));
 
