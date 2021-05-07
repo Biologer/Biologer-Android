@@ -284,6 +284,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     latinQuery.limit(10);
                     List<TaxonData> latinNames = latinQuery.list();
 
+                    // This is the final list to be shown
                     List<String> taxaNames = new ArrayList<>();
 
                     for (int i = 0; i < latinNames.size(); i++) {
@@ -297,6 +298,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             String name = translation.get(0).getNativeName();
                             if (name != null) {
                                 taxaNames.add(latinNames.get(i).getLatinName() + " (" + translation.get(0).getNativeName() + ")");
+                            } else {
+                                // Sometimes the native name is null, so we must handle this!
+                                taxaNames.add(latinNames.get(i).getLatinName());
                             }
                         } else {
                             taxaNames.add(latinNames.get(i).getLatinName());
