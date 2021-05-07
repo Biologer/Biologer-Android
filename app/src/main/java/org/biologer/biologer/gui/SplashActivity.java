@@ -76,7 +76,7 @@ public class SplashActivity extends AppCompatActivity {
                                             String name = response.body().getData().getFullName();
                                             int data_license = response.body().getData().getSettings().getDataLicense();
                                             int image_license = response.body().getData().getSettings().getImageLicense();
-                                            UserData user = new UserData(null, email, name, data_license, image_license);
+                                            UserData user = new UserData(null, name, email, data_license, image_license);
                                             App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
                                             SettingsManager.setSqlUpdated(false);
                                             Intent intent = new Intent(SplashActivity.this, LandingActivity.class);

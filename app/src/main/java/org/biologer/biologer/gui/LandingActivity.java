@@ -479,7 +479,7 @@ public class LandingActivity extends AppCompatActivity
                 getString(R.string.csv_accuracy),
                 getString(R.string.location),
                 getString(R.string.time),
-                getString(R.string.note),
+                getString(R.string.csv_note),
                 getString(R.string.found_dead),
                 getString(R.string.note_on_dead),
                 getString(R.string.observer),
