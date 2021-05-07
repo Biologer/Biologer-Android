@@ -7,5 +7,9 @@
         android:icon="@drawable/ic_backup_black_24dp"
         android:orderInCategory="1"
         app:showAsAction="ifRoom"/>
-
+    <item
+        android:id="@+id/export_csv"
+        android:title="@string/export_to_csv"
+        android:orderInCategory="2"
+        app:showAsAction="never"/>
 </menu>

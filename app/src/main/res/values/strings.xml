@@ -296,5 +296,26 @@
     <string name="no_map_fragment">Map fragment could not be loaded for some reason.</string>
     <string name="accuracy_a1">Coordinate accuracy:</string>
     <string name="drag_marker">Drag marker to change.</string>
+    <string name="export_to_csv_success">"Export was successfull. File is saved in: "</string>
+    <string name="dataset">Biologer Android Application</string>
+    <string name="taxon">Taxon</string>
+    <string name="year">Year</string>
+    <string name="month">Month</string>
+    <string name="day">Day</string>
+    <string name="elevation">Elevation</string>
+    <string name="csv_accuracy">Accurary</string>
+    <string name="location">Location</string>
+    <string name="time">Time</string>
+    <string name="found_dead">Found dead</string>
+    <string name="note_on_dead">Note on dead observation</string>
+    <string name="observer">Observer</string>
+    <string name="identifier">Identifier</string>
+    <string name="sex">Sex</string>
+    <string name="number">Number</string>
+    <string name="project">Project</string>
+    <string name="stage">Stage</string>
+    <string name="original_observation">Original observation</string>
+    <string name="atlas_code">Atlas code</string>
+    <string name="export_to_csv">Export to CSV</string>
 
 </resources>

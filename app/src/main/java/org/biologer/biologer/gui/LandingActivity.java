@@ -2,6 +2,8 @@ package org.biologer.biologer.gui;
 
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -10,9 +12,11 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 import com.google.android.material.navigation.NavigationView;
+import com.opencsv.CSVWriter;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
@@ -21,6 +25,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -28,11 +33,14 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.FetchTaxa;
@@ -41,7 +49,9 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
+import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.network.JSON.ObservationTypes;
+import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
@@ -50,7 +60,20 @@ import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -408,7 +431,115 @@ public class LandingActivity extends AppCompatActivity
             uploadRecords();
             return true;
         }
+        if (item.getItemId() == R.id.export_csv) {
+            Log.d(TAG, "CSV export button clicked.");
+            // Disable the upload button to avoid double taps
+            //item.setEnabled(false);
+            exportCSV();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    private void exportCSV() {
+
+        String filename = "Export_" + new SimpleDateFormat("yyMMddss", Locale.getDefault()).format(new Date());
+
+        Uri uri = CreateExternalFile.newDocumentFile(this, filename, ".csv");
+        OutputStream output = null;
+        try {
+            if (uri != null) {
+                output = getContentResolver().openOutputStream(uri);
+            }
+            else {
+                Log.d(TAG, "URI is null!");
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        CSVWriter writer;
+        writer = new CSVWriter(
+                new OutputStreamWriter(output),
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END
+        );
+
+        String[] title = {
+                getString(R.string.taxon),
+                getString(R.string.year),
+                getString(R.string.month),
+                getString(R.string.day),
+                getString(R.string.latitude),
+                getString(R.string.longitude),
+                getString(R.string.elevation),
+                getString(R.string.csv_accuracy),
+                getString(R.string.location),
+                getString(R.string.time),
+                getString(R.string.note),
+                getString(R.string.found_dead),
+                getString(R.string.note_on_dead),
+                getString(R.string.observer),
+                getString(R.string.identifier),
+                getString(R.string.sex),
+                getString(R.string.number),
+                getString(R.string.project),
+                getString(R.string.habitat),
+                getString(R.string.found_on),
+                getString(R.string.stage),
+                getString(R.string.original_observation),
+                getString(R.string.dataset),
+                getString(R.string.data_license),
+                getString(R.string.image_license),
+                getString(R.string.atlas_code)
+        };
+        writer.writeNext(title);
+
+        ArrayList<Entry> entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+        String u = getUserName();
+
+        for (int i = 0; i < entries.size(); i++) {
+            Entry entry = entries.get(i);
+            String[] row = {
+                    entry.getTaxonSuggestion(),
+                    entry.getYear(),
+                    entry.getMonth(),
+                    entry.getDay(),
+                    String.valueOf(entry.getLattitude()),
+                    String.valueOf(entry.getLongitude()),
+                    String.valueOf(entry.getElevation()),
+                    String.valueOf(entry.getAccuracy()),
+                    entry.getLocation(),
+                    entry.getTime(),
+                    entry.getComment(),
+                    entry.getDeadOrAlive(),
+                    entry.getCauseOfDeath(),
+                    u,
+                    u,
+                    entry.getSex(),
+                    String.valueOf(entry.getNoSpecimens()),
+                    entry.getProjectId(),
+                    entry.getHabitat(),
+                    entry.getFoundOn(),
+                    String.valueOf(entry.getStage()),
+                    entry.getTaxonSuggestion(),
+                    getString(R.string.dataset),
+                    entry.getData_licence(),
+                    String.valueOf(entry.getImage_licence()),
+                    String.valueOf(entry.getAtlas_code())
+            };
+            writer.writeNext(row);
+        }
+
+        try {
+            writer.close();
+            Toast.makeText(LandingActivity.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void uploadRecords() {

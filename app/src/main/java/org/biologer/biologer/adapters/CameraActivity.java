@@ -76,7 +76,7 @@ public class CameraActivity extends Activity {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 }
-                uri = getPhotoUri(getImageFileName());
+                uri = CreateExternalFile.newDocumentFile(this, getImageFileName(), ".jpg");
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
                 startActivityForResult(takePictureIntent, CAMERA);
             } else {
@@ -107,62 +107,6 @@ public class CameraActivity extends Activity {
     protected void onStop() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         super.onStop();
-    }
-
-    private Uri getPhotoUri(String filename) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            String directory = Environment.DIRECTORY_PICTURES + "/" + "Biologer";
-            Log.i(TAG, "Saving image: " + filename + " into a directory " + directory);
-            ContentResolver resolver = getContentResolver();
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename + ".jpg");
-            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg");
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, directory);
-            Uri photoUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-            Log.i(TAG, "Saving image into: " + photoUri);
-            return photoUri;
-        } else {
-            File photoFile = null;
-            // Create the File where the photo should go
-            try {
-                photoFile = createImageFile(filename);
-            } catch (IOException ex) {
-                Log.e(TAG, "Could not create image file.");
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    Uri photoUri = FileProvider.getUriForFile(this, "org.biologer.biologer.files", photoFile);
-                    Log.i(TAG, "Saving image into: " + photoUri);
-                    return photoUri;
-                } else {
-                    Uri photoUri = Uri.fromFile(photoFile);
-                    Log.i(TAG, "Saving image into: " + photoUri);
-                    return photoUri;
-                }
-            }
-            return null;
-        }
-    }
-
-    // This will create image on Android <= 9.0
-    private File createImageFile(String filename) throws IOException {
-
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "Biologer");
-
-        if (!file.exists()) {
-            Log.d(TAG, "Media Storage directory does not exist");
-            if (!file.mkdirs()) {
-                Log.e(TAG, "Media Storage directory could not be created!");
-                return null;
-            }
-            else {
-                Log.d(TAG, "Media Storage directory should be created now...");
-            }
-        }
-
-        return File.createTempFile(filename, ".jpg", file);
     }
 
     // Set the filename for image taken through the Camera
