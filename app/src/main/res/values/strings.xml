@@ -314,9 +314,9 @@
     <string name="number">Number</string>
     <string name="project">Project</string>
     <string name="stage">Stage</string>
-    <string name="original_observation">Original observation</string>
+    <string name="original_observation">Original identification</string>
     <string name="atlas_code">Atlas code</string>
-    <string name="export_to_csv">Export to CSV</string>
+    <string name="export_to_csv">Export to CSV (backup)</string>
     <string name="csv_note">Note</string>
 
 </resources>

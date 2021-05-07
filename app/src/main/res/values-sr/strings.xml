@@ -296,5 +296,27 @@
     <string name="no_map_fragment">Фрагмент за мапе не може бити учитан из неког разлога.</string>
     <string name="accuracy_a1">Прецизност координате:</string>
     <string name="drag_marker">Превуците маркацију да је промените.</string>
+    <string name="export_to_csv_success">Извоз је успео. Датотека је сачувана у:</string>
+    <string name="dataset">Андроид апликација за Биологер</string>
+    <string name="taxon">Таксон</string>
+    <string name="year">Година</string>
+    <string name="month">Месец</string>
+    <string name="day">Дан</string>
+    <string name="elevation">Надморска висина</string>
+    <string name="csv_accuracy">Прецизност</string>
+    <string name="location">Локалитет</string>
+    <string name="time">Време</string>
+    <string name="found_dead">Нађена мртва</string>
+    <string name="note_on_dead">Белешка о мртвој јединки</string>
+    <string name="observer">Посматрач</string>
+    <string name="identifier">Идентификатор</string>
+    <string name="sex">Пол</string>
+    <string name="number">Број</string>
+    <string name="project">Пројекат</string>
+    <string name="stage">Стадијум</string>
+    <string name="original_observation">Оригинална идентификација</string>
+    <string name="atlas_code">Атлас код</string>
+    <string name="export_to_csv">Извези у CSV (резервна копија)</string>
+    <string name="csv_note">Белешка</string>
 
 </resources>
