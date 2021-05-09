@@ -574,8 +574,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
         elev = currentItem.getElevation();
         acc = currentItem.getAccuracy();
-        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLattitude()));
-        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.1f", currentItem.getLongitude()));
+        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLattitude()));
+        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.getLongitude()));
         layoutUnknownCoordinates.setVisibility(View.GONE);
         layoutCoordinates.setVisibility(View.VISIBLE);
         textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
@@ -945,8 +945,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Get the data structure and save it into a database Entry
             Entry entry1 = new Entry(null, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
-                    String.valueOf(!checkBox_dead.isChecked()), deathComment, currentLocation.latitude, currentLocation.longitude, acc,
-                    elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
+                    String.valueOf(!checkBox_dead.isChecked()), deathComment,
+                    Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.latitude)),
+                    Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.longitude)),
+                    Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", acc)),
+                    Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
+                    "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
         }
