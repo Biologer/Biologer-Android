@@ -218,10 +218,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             int id = allTaxaGroups.get(i).getId().intValue();
             boolean checked = preferences.getBoolean(allTaxaGroups.get(i).getId().toString(), true);
             if (checked)  {
-                Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
+                //Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
                 selectedTaxaGroups.add(allTaxaGroups.get(i).getId().intValue());
             } else {
-                Log.d(TAG, "Checkbox for taxa group ID " + id + " is not checked.");
+                // TODO
+                // Log.d(TAG, "Checkbox for taxa group ID " + id + " is not checked.");
             }
         }
 
@@ -948,7 +949,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     elev, "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
-        } else { // if the entry exist already
+        }
+
+        // If the entry exist already
+        else {
             currentItem.setTaxonId(taxon.getId());
             currentItem.setTaxonSuggestion(taxon.getLatinName());
             currentItem.setComment(comment);
@@ -972,7 +976,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Now just update the database with new data...
             App.get().getDaoSession().getEntryDao().updateInTx(currentItem);
-
         }
         Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
         setResult(RESULT_OK);

@@ -2,8 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -16,7 +14,6 @@ import com.opencsv.CSVWriter;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.core.view.GravityCompat;
@@ -33,8 +30,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.Menu;
@@ -60,20 +55,15 @@ import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -157,6 +147,7 @@ public class LandingActivity extends AppCompatActivity
                 if (s != null) {
                     Log.d(TAG, "Uploading records returned the code: " + s);
                     setUploadIconVisibility();
+                    updateEntryListView();
 
                     if (s.equals("no image")) {
                         alertOKButton(getString(R.string.no_image_on_storage));
@@ -164,6 +155,17 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
         };
+    }
+
+    private void updateEntryListView() {
+        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
+        for (int i = 0; i < fragmentList.size(); i++) {
+            if (fragmentList.get(i) instanceof LandingFragment) {
+                Log.d(TAG, "Updating entries list after upload to server.");
+                ArrayList<Entry> entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+                ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
+            }
+        }
     }
 
     private void areNotificationsEnabled() {
@@ -354,6 +356,12 @@ public class LandingActivity extends AppCompatActivity
 
         if (id == R.id.nav_list) {
             fragment = new LandingFragment();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack("Landing fragment");
+            fragmentTransaction.commit();
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
         }
         if (id == R.id.nav_setup) {
             fragment = new PreferencesFragment();
@@ -546,7 +554,6 @@ public class LandingActivity extends AppCompatActivity
         if (App.get().getDaoSession().getEntryDao().count() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
-            uploadRecords.getFlags();
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             uploadRecords.setAction(UploadRecords.ACTION_START);
             startService(uploadRecords);
@@ -555,16 +562,13 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
+    // Run after filling the new entry from EntryActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "On activity result.");
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            List<Fragment> fl = getSupportFragmentManager().getFragments();
-            for (int i = 0; i < fl.size(); i++) {
-                if (fl.get(i) instanceof LandingFragment) {
-                    ((LandingFragment) fl.get(i)).updateData();
-                }
-            }
+            updateEntryListView();
         }
         // Change the visibility of the Upload Icon
         setUploadIconVisibility();

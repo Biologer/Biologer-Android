@@ -303,7 +303,7 @@
     <string name="month">Month</string>
     <string name="day">Day</string>
     <string name="elevation">Elevation</string>
-    <string name="csv_accuracy">Accurary</string>
+    <string name="csv_accuracy">Accuracy</string>
     <string name="location">Location</string>
     <string name="time">Time</string>
     <string name="found_dead">Found dead</string>
@@ -318,5 +318,13 @@
     <string name="atlas_code">Atlas code</string>
     <string name="export_to_csv">Export to CSV (backup)</string>
     <string name="csv_note">Note</string>
+    <string name="delete_entry">Delete this observation</string>
+    <string name="delete_all_entries">Delete all observations!</string>
+    <string name="entry_deleted_msg1">Observation No.</string>
+    <string name="entry_deleted_msg2">is deleted.</string>
+    <string name="entries_deleted_msg">All observation are deleted from the list.</string>
+    <string name="confirm_delete_all">You are about to delete every single data collected on the field! Are you sure about this?</string>
+    <string name="yes_delete">Delete everything</string>
+    <string name="no_delete">No</string>
 
 </resources>

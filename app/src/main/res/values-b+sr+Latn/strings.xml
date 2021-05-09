@@ -318,5 +318,13 @@
     <string name="atlas_code">Atlas kod</string>
     <string name="export_to_csv">Izvezi u CSV (rezervna kopija)</string>
     <string name="csv_note">Beleška</string>
+    <string name="delete_entry">Obriši ovaj nalaz</string>
+    <string name="delete_all_entries">Obriši sve nalaze!</string>
+    <string name="entry_deleted_msg1">Nalaz br.</string>
+    <string name="entry_deleted_msg2">je obrisan.</string>
+    <string name="entries_deleted_msg">Svi nalazi sa terena su obrisani sa spiska.</string>
+    <string name="confirm_delete_all">Ovim ćete obrisati sve podatke koje ste mukotrpno sakupljali na terenu! Da li ste sigurni da to želite?</string>
+    <string name="yes_delete">Da, obriši sve</string>
+    <string name="no_delete">Ne</string>
 
 </resources>

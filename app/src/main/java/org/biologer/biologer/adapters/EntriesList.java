@@ -41,6 +41,16 @@ public class EntriesList extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void removeItem(int position) {
+        mList.remove(position);
+        notifyDataSetChanged();
+    }
+
+    public void removeAll() {
+        mList.clear();
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getCount() {
         return mList.size();
