@@ -326,5 +326,8 @@
     <string name="confirm_delete_all">You are about to delete every single data collected on the field! Are you sure about this?</string>
     <string name="yes_delete">Delete everything</string>
     <string name="no_delete">No</string>
+    <string name="already_fetching_taxa">Biologer is already downloading taxa! You should wait for this process to finish and download taxa from Biologer Preferences.</string>
+    <string name="message_should_download">You have selected new taxonomic group and Biologer should download it from the network. It is recomended that you do this now, but it can also be accomplished from the Preferences once you rich stable network connection.</string>
+    <string name="download">Download</string>
 
 </resources>

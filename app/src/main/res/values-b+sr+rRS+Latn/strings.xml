@@ -326,5 +326,8 @@
     <string name="confirm_delete_all">Ovim ćete obrisati sve podatke koje ste mukotrpno sakupljali na terenu! Da li ste sigurni da to želite?</string>
     <string name="yes_delete">Da, obriši sve</string>
     <string name="no_delete">Ne</string>
+    <string name="already_fetching_taxa">Biologer već preuzima podatke o taksonima! Sačekajte da se taj proces završi, a zatim preuzmite preostale podatke iz Postavki Biologera.</string>
+    <string name="message_should_download">Dodali ste novu taksonomsku grupu i Biologer treba da preuzme podatke o njoj sa interneta. Preporučujemo da to uradite odmah, ali možete to učiniti i kada dođete do stabilne internet veze, preko Postavki Biologera.</string>
+    <string name="download">Preuzmi</string>
 
 </resources>

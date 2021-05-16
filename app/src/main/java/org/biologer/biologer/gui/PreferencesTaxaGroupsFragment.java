@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
@@ -39,6 +41,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     ArrayList<CheckBoxPreference> checkBoxes = new ArrayList<>();
 
     String locale = Localisation.getLocaleScript();
+    String how_to_use_network;
 
     ArrayList<String> checked_checkbox = new ArrayList<>();
     ArrayList<String> unchecked_checkbox = new ArrayList<>();
@@ -62,6 +65,9 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         preferenceCategory.setTitle(getString(R.string.groups_of_taxa));
         preferenceCategory.setIconSpaceReserved(false);
         preferenceScreen.addPreference(preferenceCategory);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(preferenceScreen.getContext());
+        how_to_use_network = preferences.getString("auto_download", "wifi");
 
         // Query Parent groups from SQL
         QueryBuilder<TaxonGroupsData> groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
@@ -252,59 +258,73 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     @Override
     public void onStop() {
         super.onStop();
-        Log.d(TAG, "Delete this: " + remove_from_sql);
-        if (!remove_from_sql.isEmpty()) {
-            for (int i = 0; i < remove_from_sql.size(); i++) {
-                String key = remove_from_sql.get(i);
-                Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
 
-                // Delete taxa
-                final QueryBuilder<TaxonData> deleteTaxa = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                deleteTaxa.where(TaxonDataDao.Properties.Groups.like("%" + key + ";%"));
-                List<TaxonData> deleteTaxaList = deleteTaxa.list();
-                deleteTaxa.buildDelete().executeDeleteWithoutDetachingEntities();
-                App.get().getDaoSession().clear();
+        Activity activity = getActivity();
+        if (activity != null) {
+            Log.d(TAG, "Delete this: " + remove_from_sql);
+            if (!remove_from_sql.isEmpty()) {
+                for (int i = 0; i < remove_from_sql.size(); i++) {
+                    String key = remove_from_sql.get(i);
+                    Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
 
-                List<Long> deleteThisIds = new ArrayList<>();
+                    // Delete taxa
+                    final QueryBuilder<TaxonData> deleteTaxa = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                    deleteTaxa.where(TaxonDataDao.Properties.Groups.like("%" + key + ";%"));
+                    List<TaxonData> deleteTaxaList = deleteTaxa.list();
+                    deleteTaxa.buildDelete().executeDeleteWithoutDetachingEntities();
+                    App.get().getDaoSession().clear();
 
-                // A large list could not be deleted at once! We have to make this workaround
-                if (deleteTaxaList.size() > 1000) {
-                    int k = 0;
-                    for (int j = 0; j < deleteTaxaList.size(); j++) {
-                        deleteThisIds.add(deleteTaxaList.get(j).getId());
-                        k++;
-                        if (k == 1000) {
-                            // Delete after each 1000th entry
-                            deleteTaxaTranslationFromSQL(deleteThisIds);
-                            // Reset for the further loop...
-                            k = 0;
-                            deleteThisIds.clear();
+                    List<Long> deleteThisIds = new ArrayList<>();
+
+                    // A large list could not be deleted at once! We have to make this workaround
+                    if (deleteTaxaList.size() > 500) {
+                        int k = 0;
+                        for (int j = 0; j < deleteTaxaList.size(); j++) {
+                            deleteThisIds.add(deleteTaxaList.get(j).getId());
+                            k++;
+                            if (k == 500) {
+                                // Delete after each 500th entry
+                                deleteTaxaTranslationFromSQL(deleteThisIds);
+                                // Reset for the further loop...
+                                k = 0;
+                                deleteThisIds.clear();
+                            }
                         }
-                    }
-                    if (k != 0) {
+                        if (k != 0) {
+                            deleteTaxaTranslationFromSQL(deleteThisIds);
+                        }
+                    } else {
+                        for (int j = 0; j < deleteTaxaList.size(); j++) {
+                            deleteThisIds.add(deleteTaxaList.get(j).getId());
+                        }
                         deleteTaxaTranslationFromSQL(deleteThisIds);
                     }
-                } else {
-                    for (int j = 0; j < deleteTaxaList.size(); j++) {
-                        deleteThisIds.add(deleteTaxaList.get(j).getId());
-                    }
-                    deleteTaxaTranslationFromSQL(deleteThisIds);
                 }
             }
-        }
 
-        Log.d(TAG, "Download this: " + add_to_sql.toString());
-        if (FetchTaxa.isInstanceCreated()) {
-            Log.d(TAG, "Already running!");
-            Toast.makeText(getActivity(), "Error. Downloading from server is already active. Go to preferences and download your taxonomic tree.", Toast.LENGTH_LONG).show();
-        } else {
-            if (!add_to_sql.isEmpty()) {
-                Activity activity_fetch = getActivity();
-                if (activity_fetch != null) {
-                    final Intent fetchTaxa = new Intent(activity_fetch, FetchTaxa.class);
-                    fetchTaxa.setAction(FetchTaxa.ACTION_START);
-                    fetchTaxa.putStringArrayListExtra("groups", add_to_sql);
-                    activity_fetch.startService(fetchTaxa);
+            Log.d(TAG, "Download this: " + add_to_sql.toString());
+            if (FetchTaxa.isInstanceCreated()) {
+                Log.d(TAG, "Already running!");
+                buildAlertOKMessage(getString(R.string.already_fetching_taxa));
+            } else {
+                if (!add_to_sql.isEmpty()) {
+                    // Check if there is network available and download the data...
+                    String network_type = networkType();
+                    if (network_type != null) {
+                        if (network_type.equals("connected") || network_type.equals("wifi")) {
+                            if (how_to_use_network.equals("all") ||
+                                    (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                                fetchTaxa(activity);
+                            } else {
+                                buildAlertMessage(getString(R.string.message_should_download),
+                                        getString(R.string.download),
+                                        getString(R.string.skip),
+                                        activity);
+                            }
+                        } else {
+                            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
+                        }
+                    }
                 }
             }
         }
@@ -326,4 +346,61 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         remove_from_sql = new ArrayList<>();
         add_to_sql = new ArrayList<>();
     }
+
+    private String networkType() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            assert connectivitymanager != null;
+            NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
+            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+                NetworkInfo wifiNetworkInfo = connectivitymanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if (wifiNetworkInfo != null && wifiNetworkInfo.isConnected()) {
+                    Log.d(TAG, "You are connected to the WiFi network.");
+                    return "wifi";
+                }
+                Log.d(TAG, "You are connected to the mobile network.");
+                return "connected";
+            }
+            Log.d(TAG, "You are not connected to the network.");
+            return "not_connected";
+        }
+        return null;
+    }
+
+    protected void buildAlertOKMessage(String message) {
+        Activity activity = getActivity();
+        if (activity != null) {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setMessage(message)
+                    .setCancelable(true)
+                    .setPositiveButton(getString(R.string.OK), (dialog, id) -> dialog.dismiss());
+            final AlertDialog alert = builder.create();
+            alert.show();
+        }
+    }
+
+    protected void buildAlertMessage(String message, String yes_string, String no_string, Activity activity) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(yes_string, (dialog, id) -> {
+                    Log.d(TAG, "Positive button clicked");
+                    fetchTaxa(activity);
+                })
+                .setNegativeButton(no_string, (dialog, id) -> {
+                    Log.d(TAG, "Negative button clicked");
+                    dialog.cancel();
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void fetchTaxa(Activity activity) {
+        final Intent fetchTaxa = new Intent(activity, FetchTaxa.class);
+        fetchTaxa.setAction(FetchTaxa.ACTION_START);
+        fetchTaxa.putStringArrayListExtra("groups", add_to_sql);
+        activity.startService(fetchTaxa);
+    }
+
 }
