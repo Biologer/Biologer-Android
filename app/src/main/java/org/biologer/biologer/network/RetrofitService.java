@@ -66,12 +66,14 @@ public interface RetrofitService {
     @GET("api/taxa")
     Call<TaxaResponse> getTaxa(@Query("page") int page_number,
                                @Query("per_page") int per_page,
-                               @Query("updated_after") int updated_after);
+                               @Query("updated_after") int updated_after,
+                               @Query("withGroupsIds") boolean withGroupsIds,
+                               @Query("groups[]") int[] groups);
 
     @Multipart
     @Headers({"Accept: application/json"})
     @POST("api/uploads/photos")
-    Call<UploadFileResponse> uploadFile( @Part MultipartBody.Part file);
+    Call<UploadFileResponse> uploadFile(@Part MultipartBody.Part file);
 
     @Headers({"Accept: application/json"
     ,"content-type: application/json"})

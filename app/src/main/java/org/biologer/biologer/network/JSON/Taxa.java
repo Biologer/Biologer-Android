@@ -51,6 +51,8 @@ public class Taxa {
     private List<TaxaStages> stages = null;
     @JsonProperty("activity")
     private List<Object> activity = null;
+    @JsonProperty("groups")
+    private List<String> groups;
 
     @JsonProperty("id")
     public Long getId() {
@@ -262,5 +264,15 @@ public class Taxa {
 
     public void setAncestors_names(String ancestors_names) {
         this.ancestors_names = ancestors_names;
+    }
+
+    @JsonProperty("groups")
+    public List<String> getGroups() {
+        return groups;
+    }
+
+    @JsonProperty("groups")
+    public void setGroups(List<String> groups) {
+        this.groups = groups;
     }
 }

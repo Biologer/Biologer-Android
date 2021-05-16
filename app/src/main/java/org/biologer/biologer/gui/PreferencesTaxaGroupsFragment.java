@@ -1,58 +1,49 @@
 package org.biologer.biologer.gui;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
+import org.biologer.biologer.sql.TaxaTranslationData;
+import org.biologer.biologer.sql.TaxaTranslationDataDao;
+import org.biologer.biologer.sql.TaxonData;
+import org.biologer.biologer.sql.TaxonDataDao;
 import org.biologer.biologer.sql.TaxonGroupsData;
 import org.biologer.biologer.sql.TaxonGroupsDataDao;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
 import org.biologer.biologer.sql.TaxonGroupsTranslationDataDao;
+import org.greenrobot.greendao.query.DeleteQuery;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
-    private static final String TAG = "Biologer.Preferences";
+    private static final String TAG = "Biologer.PreferencesT";
     ArrayList<CheckBoxPreference> checkBoxes = new ArrayList<>();
 
     String locale = Localisation.getLocaleScript();
 
-    /*
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent != null) {
-                String message = intent.getStringExtra("org.biologer.biologer.GetTaxaGroups.TASK_COMPLETED");
-                if (message != null) {
-                    Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
-                    if (message.equals("done")) {
-                        Log.d(TAG, "Fetching successful");
-                        populatePreferences();
-                    }
-                    if (message.equals("no_network")) {
-                        Log.d(TAG, "No network");
-                    }
-                }
-            }
-        }
-    };
-
-    private void populatePreferences() {
-
-    }
-     */
+    ArrayList<String> checked_checkbox = new ArrayList<>();
+    ArrayList<String> unchecked_checkbox = new ArrayList<>();
+    ArrayList<String> remove_from_sql = new ArrayList<>();
+    ArrayList<String> add_to_sql = new ArrayList<>();
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -113,7 +104,8 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 Log.d(TAG, "Child group: " + child_name + " (" + child_id + "); parent: " + name + " (" + id + ")");
 
                 // Get the translation for Children groups
-                QueryBuilder<TaxonGroupsTranslationData> children_translation = App.get().getDaoSession().getTaxonGroupsTranslationDataDao().queryBuilder();
+                QueryBuilder<TaxonGroupsTranslationData> children_translation = App.get().
+                        getDaoSession().getTaxonGroupsTranslationDataDao().queryBuilder();
                 children_translation.where(
                         children_translation.and(
                                 TaxonGroupsTranslationDataDao.Properties.Locale.eq(locale),
@@ -131,15 +123,17 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 } else {
                     populateGroup(preferenceScreen, name, String.valueOf(child_id), true);
                 }
-
             }
         }
-
     }
 
+    // Add individual checkbox to the list
     private void populateGroup(PreferenceScreen preferenceScreen, String name, String key, Boolean reserve_icon_space) {
         Context context = getContext();
-        CheckBoxPreference checkBoxPreference = new CheckBoxPreference(context);
+        CheckBoxPreference checkBoxPreference = null;
+        if (context != null) {
+            checkBoxPreference = new CheckBoxPreference(context);
+        }
         checkBoxes.add(checkBoxPreference);
         int last = checkBoxes.size() - 1;
         checkBoxes.get(last).setKey(key);
@@ -148,6 +142,24 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         checkBoxes.get(last).setIconSpaceReserved(reserve_icon_space);
 
         preferenceScreen.addPreference(checkBoxes.get(last));
+
+        // Query for taxa groups selection before the user selects anything
+        QueryBuilder<TaxonGroupsData> query_groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
+        List<TaxonGroupsData> allTaxaGroups = query_groups.list();
+        for (int i = 0; i < allTaxaGroups.size(); i++) {
+            int id = allTaxaGroups.get(i).getId().intValue();
+            Activity activity = getActivity();
+            if (activity != null) {
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                boolean checked = preferences.getBoolean(String.valueOf(id), true);
+                if (checked) {
+                    //Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
+                    checked_checkbox.add(String.valueOf(id));
+                } else {
+                    unchecked_checkbox.add(String.valueOf(id));
+                }
+            }
+        }
 
         checkBoxes.get(last).setOnPreferenceChangeListener((preference, newValue) -> {
             int id = Integer.parseInt(preference.getKey());
@@ -162,15 +174,20 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 if (listSelected.get(0).getPrentId() == null) {
                     Log.d(TAG, "This checkbox preference is a parent.");
 
+                    // Save the value of the clicked parent
+                    String key_parent = listSelected.get(0).getId().toString();
+                    saveCheckedState(key_parent);
+
                     // Query to get all the children
                     QueryBuilder<TaxonGroupsData> children = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
                     children.where(TaxonGroupsDataDao.Properties.PrentId.eq(id));
                     List<TaxonGroupsData> listChildren = children.list();
 
                     for (int i = 0; i < listChildren.size(); i++) {
-                        if (!listChildren.isEmpty()) {
-                            String key1 = listChildren.get(i).getId().toString();
-                            CheckBoxPreference temp = findPreference(key1);
+                        String key1 = listChildren.get(i).getId().toString();
+                        saveCheckedOnParentChangeState(key_parent, key1);
+                        CheckBoxPreference temp = findPreference(key1);
+                        if (temp != null) {
                             temp.setChecked(!((CheckBoxPreference) preference).isChecked());
                         }
                     }
@@ -178,6 +195,10 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 }
                 else {
                     Log.d(TAG, "This checkbox preference is a child.");
+
+                    // Save the value of the clicked child
+                    String key_child = listSelected.get(0).getId().toString();
+                    saveCheckedState(key_child);
                 }
             }
 
@@ -186,24 +207,123 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
 
     }
 
-    /*
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (getActivity() != null) {
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
-                    new IntentFilter("org.biologer.biologer.FetchTaxa.TASK_COMPLETED"));
+    private void saveCheckedOnParentChangeState(String parent_key, String child_key) {
+        CheckBoxPreference parent = findPreference(parent_key);
+        CheckBoxPreference child = findPreference(child_key);
+        if (parent != null) {
+            if (parent.isChecked()) {
+                // If preference not checked - delete from SQL
+                if (!remove_from_sql.contains(child_key)) remove_from_sql.add(child_key);
+                Log.d(TAG, "Adding key " + child_key + " to the list for deleting from sql.");
+            } else {
+                // If preference checked - download from server
+                if (child != null) {
+                    if (child.isChecked()) {
+                        Log.d(TAG, "The key " + child_key + " is already downloaded, ignoring.");
+                    } else {
+                        if (!add_to_sql.contains(child_key)) add_to_sql.add(child_key);
+                        Log.d(TAG, "Adding key " + child_key + " to the list for downloading from server.");
+                    }
+                }
+            }
         }
-        Log.d(TAG, "Resuming Preferences Taxa Groups Fragment.");
+    }
+
+    private void saveCheckedState(String key) {
+        CheckBoxPreference clicked_child = findPreference(key);
+        if (clicked_child != null) {
+            // WTF! This returns true if not checked!
+            if(clicked_child.isChecked()) {
+                // If preference not checked
+                if (!remove_from_sql.contains(key)) remove_from_sql.add(key);
+                add_to_sql.remove(key);
+                remove_from_sql.removeAll(unchecked_checkbox);
+                Log.d(TAG, "Adding key " + key + " to the list for deleting from sql.");
+            } else {
+                // If preference checked
+                if (!add_to_sql.contains(key)) add_to_sql.add(key);
+                remove_from_sql.remove(key);
+                add_to_sql.removeAll(checked_checkbox);
+                Log.d(TAG, "Adding key " + key + " to the list for downloading from server.");
+            }
+        }
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (getActivity() != null) {
-            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+    public void onStop() {
+        super.onStop();
+        Log.d(TAG, "Delete this: " + remove_from_sql);
+        if (!remove_from_sql.isEmpty()) {
+            for (int i = 0; i < remove_from_sql.size(); i++) {
+                String key = remove_from_sql.get(i);
+                Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
+
+                // Delete taxa
+                final QueryBuilder<TaxonData> deleteTaxa = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                deleteTaxa.where(TaxonDataDao.Properties.Groups.like("%" + key + ";%"));
+                List<TaxonData> deleteTaxaList = deleteTaxa.list();
+                deleteTaxa.buildDelete().executeDeleteWithoutDetachingEntities();
+                App.get().getDaoSession().clear();
+
+                List<Long> deleteThisIds = new ArrayList<>();
+
+                // A large list could not be deleted at once! We have to make this workaround
+                if (deleteTaxaList.size() > 1000) {
+                    int k = 0;
+                    for (int j = 0; j < deleteTaxaList.size(); j++) {
+                        deleteThisIds.add(deleteTaxaList.get(j).getId());
+                        k++;
+                        if (k == 1000) {
+                            // Delete after each 1000th entry
+                            deleteTaxaTranslationFromSQL(deleteThisIds);
+                            // Reset for the further loop...
+                            k = 0;
+                            deleteThisIds.clear();
+                        }
+                    }
+                    if (k != 0) {
+                        deleteTaxaTranslationFromSQL(deleteThisIds);
+                    }
+                } else {
+                    for (int j = 0; j < deleteTaxaList.size(); j++) {
+                        deleteThisIds.add(deleteTaxaList.get(j).getId());
+                    }
+                    deleteTaxaTranslationFromSQL(deleteThisIds);
+                }
+            }
         }
-        Log.d(TAG, "Pausing Preferences Taxa Groups Fragment.");
+
+        Log.d(TAG, "Download this: " + add_to_sql.toString());
+        if (FetchTaxa.isInstanceCreated()) {
+            Log.d(TAG, "Already running!");
+            Toast.makeText(getActivity(), "Error. Downloading from server is already active. Go to preferences and download your taxonomic tree.", Toast.LENGTH_LONG).show();
+        } else {
+            if (!add_to_sql.isEmpty()) {
+                Activity activity_fetch = getActivity();
+                if (activity_fetch != null) {
+                    final Intent fetchTaxa = new Intent(activity_fetch, FetchTaxa.class);
+                    fetchTaxa.setAction(FetchTaxa.ACTION_START);
+                    fetchTaxa.putStringArrayListExtra("groups", add_to_sql);
+                    activity_fetch.startService(fetchTaxa);
+                }
+            }
+        }
     }
-    */
+
+    private void deleteTaxaTranslationFromSQL(List<Long> deleteThisIds) {
+        Log.d(TAG, "List of taxa to be deleted: " + deleteThisIds.toString());
+        final DeleteQuery<TaxaTranslationData> deleteTaxaTranslation =
+                App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder()
+                        .where(TaxaTranslationDataDao.Properties.TaxonId.in(deleteThisIds))
+                        .buildDelete();
+        deleteTaxaTranslation.executeDeleteWithoutDetachingEntities();
+        App.get().getDaoSession().clear();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        remove_from_sql = new ArrayList<>();
+        add_to_sql = new ArrayList<>();
+    }
 }

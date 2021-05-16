@@ -26,6 +26,8 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
 
+import java.util.Objects;
+
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
@@ -64,23 +66,28 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         Log.d(TAG, "Loading preferences fragment.");
 
         // Fetch taxa groups from server
-        ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivitymanager.getActiveNetworkInfo().isConnected()) {
-            final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
-            Activity getGroups = getActivity();
-            getGroups.startService(getTaxaGroups);
+        Activity activity = getActivity();
+        if (activity != null) {
+            ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (Objects.requireNonNull(connectivitymanager.getActiveNetworkInfo()).isConnected()) {
+                final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
+                Activity getGroups = getActivity();
+                getGroups.startService(getTaxaGroups);
+            }
         }
 
         PreferenceScreen taxaGroups = findPreference("species_groups");
-        taxaGroups.setOnPreferenceClickListener(preference -> {
-            Log.d(TAG, "Preferences for taxa groups clicked.");
-            fragment = new PreferencesTaxaGroupsFragment();
-            FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.add(R.id.content_frame, fragment);
-            fragmentTransaction.addToBackStack("new fragment");
-            fragmentTransaction.commit();
-            return true;
-        });
+        if (taxaGroups != null) {
+            taxaGroups.setOnPreferenceClickListener(preference -> {
+                Log.d(TAG, "Preferences for taxa groups clicked.");
+                fragment = new PreferencesTaxaGroupsFragment();
+                FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+                fragmentTransaction.add(R.id.content_frame, fragment);
+                fragmentTransaction.addToBackStack("new fragment");
+                fragmentTransaction.commit();
+                return true;
+            });
+        }
 
         setPreferenceScreen(preferenceScreen);
 
@@ -107,11 +114,10 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
             preferenceButton.setEnabled(false);
             preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient));
             // Start the service for fetching taxa
-            final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
+            Activity activity_fetch = getActivity();
+            final Intent fetchTaxa = new Intent(activity_fetch, FetchTaxa.class);
             fetchTaxa.setAction(FetchTaxa.ACTION_START_NEW);
-            Activity activity = getActivity();
-            assert activity != null;
-            activity.startService(fetchTaxa);
+            activity_fetch.startService(fetchTaxa);
             return true;
         });
 

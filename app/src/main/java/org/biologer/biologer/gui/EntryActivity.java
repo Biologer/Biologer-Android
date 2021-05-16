@@ -69,8 +69,6 @@ import org.biologer.biologer.sql.TaxaTranslationData;
 import org.biologer.biologer.sql.TaxaTranslationDataDao;
 import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxonDataDao;
-import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsDataDao;
 import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
@@ -122,7 +120,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     String observation_type_ids_string;
     int[] observation_type_ids = null;
     ArrayList<String> list_new_images = new ArrayList<>();
-    ArrayList<Integer> selectedTaxaGroups = new ArrayList<>();
+    List<String> selectedTaxaGroups = new ArrayList<String>();
 
     BroadcastReceiver receiver;
 
@@ -208,22 +206,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
-        }
-
-        // Query to get taxa groups that should be used in a query
-        QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-        query.where(TaxonGroupsDataDao.Properties.Id.isNotNull());
-        List<TaxonGroupsData> allTaxaGroups = query.list();
-        for (int i = 0; i < allTaxaGroups.size(); i++) {
-            int id = allTaxaGroups.get(i).getId().intValue();
-            boolean checked = preferences.getBoolean(allTaxaGroups.get(i).getId().toString(), true);
-            if (checked)  {
-                //Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
-                selectedTaxaGroups.add(allTaxaGroups.get(i).getId().intValue());
-            } else {
-                // TODO
-                // Log.d(TAG, "Checkbox for taxa group ID " + id + " is not checked.");
-            }
         }
 
         // Restore images on screen rotation...
@@ -884,7 +866,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (taxon == null) {
                 Log.d(TAG, "Saving taxon with unknown ID as simple text.");
                 TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(),
-                        null, null, null, false, false, null);
+                        null, null, null, false, false, null, null);
                 saveEntry3(taxon_noId);
             } else {
                 Log.d(TAG, "Saving taxon with known ID: " + taxon.getId());

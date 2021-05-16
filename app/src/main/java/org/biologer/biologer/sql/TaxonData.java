@@ -1,8 +1,11 @@
 package org.biologer.biologer.sql;
 
+import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
 import org.greenrobot.greendao.annotation.Id;
+
+import java.util.List;
 
 /**
  * Created by Miloš Popović on 2.3.2019.
@@ -20,9 +23,11 @@ public class TaxonData {
     private boolean restricted;
     private boolean useAtlasCode;
     private String ancestorNames;
-    @Generated(hash = 1949157406)
+    private String groups;
+
+    @Generated(hash = 605078756)
     public TaxonData(Long Id, Long parentId, String latinName, String rank, Long rankLevel, String speciesAuthor,
-            boolean restricted, boolean useAtlasCode, String ancestorNames) {
+            boolean restricted, boolean useAtlasCode, String ancestorNames, String groups) {
         this.Id = Id;
         this.parentId = parentId;
         this.latinName = latinName;
@@ -32,6 +37,7 @@ public class TaxonData {
         this.restricted = restricted;
         this.useAtlasCode = useAtlasCode;
         this.ancestorNames = ancestorNames;
+        this.groups = groups;
     }
     @Generated(hash = 345389106)
     public TaxonData() {
@@ -107,11 +113,22 @@ public class TaxonData {
     public void setId(Long id) {
         Id = id;
     }
+
     public boolean getRestricted() {
         return this.restricted;
     }
+
     public boolean getUseAtlasCode() {
         return this.useAtlasCode;
     }
+
+    public String getGroups() {
+        return groups;
+    }
+
+    public void setGroups(String groups) {
+        this.groups = groups;
+    }
+
 }
 

@@ -18,7 +18,7 @@ public class TaxaMeta {
     @JsonProperty("to")
     private int to;
     @JsonProperty("total")
-    private long total;
+    private int total;
 
     @JsonProperty("from")
     public int getFrom() {
@@ -81,12 +81,12 @@ public class TaxaMeta {
     }
 
     @JsonProperty("total")
-    public long getTotal() {
+    public int getTotal() {
         return total;
     }
 
     @JsonProperty("total")
-    public void setTotal(long total) {
+    public void setTotal(int total) {
         this.total = total;
     }
 }

@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.EntriesList;
 import org.biologer.biologer.sql.Entry;
 

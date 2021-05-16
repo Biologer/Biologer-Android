@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,12 +20,18 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxaTranslationData;
+import org.biologer.biologer.sql.TaxonGroupsData;
+import org.biologer.biologer.sql.TaxonGroupsDataDao;
+import org.greenrobot.greendao.query.QueryBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -43,6 +50,8 @@ public class FetchTaxa extends Service {
     private static FetchTaxa instance = null;
     static final String TASK_COMPLETED = "org.biologer.biologer.FetchTaxa.TASK_COMPLETED";
     int retry_number = 1;
+    ArrayList<String> taxa_groups = new ArrayList<>();
+
 
     LocalBroadcastManager broadcaster;
 
@@ -70,6 +79,27 @@ public class FetchTaxa extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent != null) {
+            ArrayList<String> groups_list = intent.getStringArrayListExtra("groups");
+            if (groups_list == null) {
+                // Query to get taxa groups that should be used in a query
+                QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
+                query.where(TaxonGroupsDataDao.Properties.Id.isNotNull());
+                List<TaxonGroupsData> allTaxaGroups = query.list();
+                for (int i = 0; i < allTaxaGroups.size(); i++) {
+                    int id = allTaxaGroups.get(i).getId().intValue();
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                    boolean checked = preferences.getBoolean(allTaxaGroups.get(i).getId().toString(), true);
+                    if (checked) {
+                        //Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
+                        taxa_groups.add(String.valueOf(id));
+                    }
+                }
+            } else {
+                taxa_groups = groups_list;
+                current_page = 1;
+                updated_at = 0;
+            }
+
             String action = intent.getAction();
             if (action != null) {
                 switch (action) {
@@ -128,9 +158,13 @@ public class FetchTaxa extends Service {
                 stopSelf();
                 break;
             case "keep_going":
+                int[] taxa_groups_int = new int[taxa_groups.size()];
+                for (int i = 0; i < taxa_groups.size(); i++) {
+                    taxa_groups_int[i] = Integer.parseInt(taxa_groups.get(i));
+                }
 
                 Call<TaxaResponse> call = RetrofitClient.getService(
-                        SettingsManager.getDatabaseName()).getTaxa(current_page, 250, updated_at);
+                        SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at, true, taxa_groups_int);
                 call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override
@@ -166,6 +200,8 @@ public class FetchTaxa extends Service {
 
         if (totalPages == 0) {
             totalPages = taxaResponse.getMeta().getLastPage();
+            Log.d(TAG, "Last page: " + taxaResponse.getMeta().getLastPage() +
+                    "; to: " + taxaResponse.getMeta().getTo() + "; total: " + taxaResponse.getMeta().getTotal());
         }
         List<Taxa> taxa = taxaResponse.getData();
 
@@ -192,6 +228,11 @@ public class FetchTaxa extends Service {
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
+            StringBuilder  stringBuilder = new StringBuilder();
+            for (String string: taxon.getGroups()) {
+                stringBuilder.append(string).append(";");
+            }
+
             // Write taxon data in SQL database
             final_taxa[i] = new TaxonData(
                     taxon_id,
@@ -202,8 +243,9 @@ public class FetchTaxa extends Service {
                     taxon.getAuthor(),
                     taxon.isRestricted(),
                     taxon.isUses_atlas_codes(),
-                    taxon.getAncestors_names());
-            Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name);
+                    taxon.getAncestors_names(),
+                    stringBuilder.toString());
+            Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table
             if (!taxaTranslations.isEmpty()) {

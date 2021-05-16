@@ -14,14 +14,18 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 88
-        versionName "3.0b13"
+        versionCode 89
+        versionName "3.0b14"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
     }
 
 greendao {
-        schemaVersion 164
+        schemaVersion 174
     }
 
     applicationVariants.all { variant ->
@@ -89,7 +93,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.google.android.gms:play-services-maps:17.0.1'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
-    implementation 'com.google.firebase:firebase-core:18.0.3'
+    implementation 'com.google.firebase:firebase-core:19.0.0'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
