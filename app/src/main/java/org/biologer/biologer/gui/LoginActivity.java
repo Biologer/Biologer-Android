@@ -178,6 +178,7 @@ public class LoginActivity extends AppCompatActivity {
             tv_devDatabase.setText("");
             if (!et_username.getText().toString().isEmpty()) {
                 Log.d(TAG, "There is some text written as the username.");
+                setEmailError();
                 et_username.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -190,12 +191,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        if (!(isValidEmail(et_username.getText().toString()))) {
-                            til_username.setError(getString(R.string.invalid_email));
-                        }
-                        else {
-                            til_username.setError(null);
-                        }
+                        setEmailError();
                         enableButton();
 
                         if (!old_username.equals(et_username.getText().toString())) {
@@ -211,6 +207,7 @@ public class LoginActivity extends AppCompatActivity {
 
         et_password.setOnFocusChangeListener((v, hasFocus) -> {
             Log.d(TAG, "Password focus changed!");
+            setPasswordError();
             tv_devDatabase.setText("");
             if (!et_password.getText().toString().isEmpty()) {
                 Log.d(TAG, "There is some text written as password.");
@@ -226,11 +223,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        if (et_password.getText().length() < 8) {
-                            til_password.setError(getString(R.string.password_too_short));
-                        } else {
-                            til_password.setError(null);
-                        }
+                        setPasswordError();
                         enableButton();
 
                         if (!old_password.equals(et_password.getText().toString())) {
@@ -258,11 +251,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "Listening on password changes.");
                 handler.removeCallbacks(runnable);
                 runnable = () -> {
-                    if (et_password.getText().length() < 8) {
-                        til_password.setError(getString(R.string.password_too_short));
-                    } else {
-                        til_password.setError(null);
-                    }
+                    setPasswordError();
                     enableButton();
                 };
                 handler.postDelayed(runnable, 1500);
@@ -283,12 +272,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "Listening on email changes.");
                 handler.removeCallbacks(runnable);
                 runnable = () -> {
-                    if (!(isValidEmail(et_username.getText().toString()))) {
-                        til_username.setError(getString(R.string.invalid_email));
-                    }
-                    else {
-                        til_username.setError(null);
-                    }
+                    setEmailError();
                     enableButton();
                 };
                 handler.postDelayed(runnable, 1500);
@@ -300,6 +284,23 @@ public class LoginActivity extends AppCompatActivity {
             loginButton.setEnabled(false);
         }
 
+    }
+
+    private void setEmailError() {
+        if (!(isValidEmail(et_username.getText().toString()))) {
+            til_username.setError(getString(R.string.invalid_email));
+        }
+        else {
+            til_username.setError(null);
+        }
+    }
+
+    private void setPasswordError() {
+        if (et_password.getText().length() < 8) {
+            til_password.setError(getString(R.string.password_too_short));
+        } else {
+            til_password.setError(null);
+        }
     }
 
     private void enableButton() {
@@ -441,7 +442,7 @@ public class LoginActivity extends AppCompatActivity {
                         progressDialog.dismiss();
                         String token = response.body().getAccessToken();
                         String refresh_token = response.body().getRefreshToken();
-                        Log.d(TAG, "Token value is: " + token);
+                        //Log.d(TAG, "Token value is: " + token);
                         SettingsManager.setAccessToken(token);
                         SettingsManager.setRefreshToken(refresh_token);
                         SettingsManager.setMailConfirmed(true);
@@ -458,6 +459,7 @@ public class LoginActivity extends AppCompatActivity {
                         forgotPassTextView.setVisibility(View.VISIBLE);
                     }
                     til_password.setError(getString(R.string.wrong_creds));
+                    til_username.setError(getString(R.string.wrong_creds));
                     loginButton.setEnabled(true);
                     progressDialog.dismiss();
                     Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());

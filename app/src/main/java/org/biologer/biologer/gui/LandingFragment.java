@@ -22,7 +22,11 @@ import android.widget.Toast;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.EntriesList;
+import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.sql.Entry;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 
@@ -72,6 +76,17 @@ public class LandingFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(DeleteEntryFromList deleteEntryFromList) {
+        entriesList.addAll(App.get().getDaoSession().getEntryDao().loadAll(), true);
+    }
+
     void updateEntries(ArrayList<Entry> entries_list) {
         entries = entries_list;
         if (entries == null) {
@@ -111,6 +126,19 @@ public class LandingFragment extends Fragment {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+        entriesList.addAll(entries, true);
     }
 
     protected void buildAlertOnDeleteAll() {
