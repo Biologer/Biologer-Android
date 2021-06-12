@@ -68,7 +68,8 @@ public interface RetrofitService {
                                @Query("per_page") int per_page,
                                @Query("updated_after") int updated_after,
                                @Query("withGroupsIds") boolean withGroupsIds,
-                               @Query("groups[]") int[] groups);
+                               @Query("groups[]") int[] groups,
+                               @Query("ungrouped") boolean fetch_ungrouped);
 
     @Multipart
     @Headers({"Accept: application/json"})

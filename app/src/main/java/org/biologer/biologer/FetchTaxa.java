@@ -164,7 +164,7 @@ public class FetchTaxa extends Service {
                 }
 
                 Call<TaxaResponse> call = RetrofitClient.getService(
-                        SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at, true, taxa_groups_int);
+                        SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at, true, taxa_groups_int, true);
                 call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override

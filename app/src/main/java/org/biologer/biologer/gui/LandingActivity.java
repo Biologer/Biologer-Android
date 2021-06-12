@@ -205,7 +205,7 @@ public class LandingActivity extends AppCompatActivity
         String updated_at = SettingsManager.getTaxaUpdatedAt();
 
         Call<TaxaResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(updated_at), false, null);
+                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(updated_at), false, null, true);
         call.enqueue(new Callback<TaxaResponse>() {
 
             @Override
@@ -245,7 +245,7 @@ public class LandingActivity extends AppCompatActivity
         Log.i(TAG, "User chooses to skip updating taxonomic database on timestamp: " + skip_this);
 
         Call<TaxaResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(skip_this), true, null);
+                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(skip_this), true, null, true);
         call.enqueue(new Callback<TaxaResponse>() {
 
             @Override

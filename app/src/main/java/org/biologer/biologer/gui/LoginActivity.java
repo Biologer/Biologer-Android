@@ -509,7 +509,7 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage(getString(R.string.logging_in));
         progressDialog.show();
-        Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0, false, null);
+        Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0, false, null, true);
         service.enqueue(new Callback<TaxaResponse>() {
             @Override
             public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
