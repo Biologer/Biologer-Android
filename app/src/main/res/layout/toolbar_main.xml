@@ -6,6 +6,6 @@
     android:layout_width="match_parent"
     android:fitsSystemWindows="true"
     android:minHeight="?attr/actionBarSize"
-    android:theme="@style/ThemeOverlay.AppCompat.DayNight.ActionBar"
+    android:theme="@style/BiologerToolbar"
     android:background="?attr/colorPrimary">
 </androidx.appcompat.widget.Toolbar>

@@ -23,7 +23,6 @@ import android.view.View;
 import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
-import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
 
 import java.util.Objects;
@@ -95,8 +94,11 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         ListPreference imageLicense = findPreference("image_license");
         ListPreference autoDownload = findPreference("auto_download");
 
-        if (dataLicense != null || imageLicense != null) {
+        if (dataLicense != null) {
             getDataLicences(dataLicense);
+        }
+
+        if (imageLicense != null) {
             getImageLicences(imageLicense);
         }
 
@@ -167,41 +169,28 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     }
 
     private void getDataLicences(ListPreference listpreference) {
-        if(SettingsManager.getDatabaseName().equals("https://biologer.hr")) {
-            CharSequence[] entries = {getString(R.string.license_default), getString(R.string.license_public), getString(R.string.license_timed)};
-            CharSequence[] entryValues = {"0", "11", "35"};
-            listpreference.setEntries(entries);
-            listpreference.setDefaultValue("0");
-            listpreference.setEntryValues(entryValues);
-        } else {
-            CharSequence[] entries = {getString(R.string.license_default), getString(R.string.license10), getString(R.string.license20), getString(R.string.license30), getString(R.string.license40)};
-            CharSequence[] entryValues = {"0", "10", "20", "30", "40"};
-            listpreference.setEntries(entries);
-            listpreference.setDefaultValue("0");
-            listpreference.setEntryValues(entryValues);
-        }
+        CharSequence[] entries = {getString(R.string.license_default),
+                getString(R.string.license10),
+                getString(R.string.license20),
+                getString(R.string.license30),
+                getString(R.string.license_timed),
+                getString(R.string.license40)};
+        CharSequence[] entryValues = {"0", "10", "20", "30", "11", "40"};
+        listpreference.setEntries(entries);
+        listpreference.setDefaultValue("0");
+        listpreference.setEntryValues(entryValues);
     }
 
     private void getImageLicences(ListPreference listpreference) {
-        if(SettingsManager.getDatabaseName().equals("https://biologer.hr")) {
-            CharSequence[] entries = {getString(R.string.license_default),
-                    getString(R.string.license_public),
-                    getString(R.string.license_timed)};
-            CharSequence[] entryValues = {"0", "11", "35"};
-            listpreference.setEntries(entries);
-            listpreference.setDefaultValue("0");
-            listpreference.setEntryValues(entryValues);
-        } else {
-            CharSequence[] entries = {getString(R.string.license_default),
-                    getString(R.string.license_image_10),
-                    getString(R.string.license_image_20),
-                    getString(R.string.license_image_30),
-                    getString(R.string.license_image_40)};
-            CharSequence[] entryValues = {"0", "10", "20", "30", "40"};
-            listpreference.setEntries(entries);
-            listpreference.setDefaultValue("0");
-            listpreference.setEntryValues(entryValues);
-        }
+        CharSequence[] entries = {getString(R.string.license_default),
+                getString(R.string.license_image_10),
+                getString(R.string.license_image_20),
+                getString(R.string.license_image_30),
+                getString(R.string.license_image_40)};
+        CharSequence[] entryValues = {"0", "10", "20", "30", "40"};
+        listpreference.setEntries(entries);
+        listpreference.setDefaultValue("0");
+        listpreference.setEntryValues(entryValues);
     }
 
     private void updateLicense() {

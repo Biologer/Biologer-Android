@@ -376,7 +376,7 @@
                                     android:contentDescription="@string/image_frame"
                                     android:scaleType="centerCrop"
                                     android:adjustViewBounds="true"
-                                    android:src="@drawable/ic_add_a_photo_black_24dp" />
+                                    android:src="@drawable/ic_photo_camera" />
                                 <ImageView
                                     android:id="@+id/ib_pic1_del"
                                     android:layout_width="24dp"
@@ -402,7 +402,7 @@
                                 android:contentDescription="@string/image_frame"
                                 android:scaleType="centerCrop"
                                 android:adjustViewBounds="true"
-                                android:src="@drawable/ic_add_a_photo_black_24dp" />
+                                android:src="@drawable/ic_photo_camera" />
                                 <ImageView
                                     android:id="@+id/ib_pic2_del"
                                     android:layout_width="24dp"
@@ -428,7 +428,7 @@
                                 android:contentDescription="@string/image_frame"
                                 android:scaleType="centerCrop"
                                 android:adjustViewBounds="true"
-                                android:src="@drawable/ic_add_a_photo_black_24dp" />
+                                android:src="@drawable/ic_photo_camera" />
                                 <ImageView
                                     android:id="@+id/ib_pic3_del"
                                     android:layout_width="24dp"

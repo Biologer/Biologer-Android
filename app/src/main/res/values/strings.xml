@@ -119,16 +119,15 @@
     <string name="title_setup_activity">Biologer Setup</string>
     <string name="license10">Free (CC BY-SA)</string>
     <string name="license_default">Get from server</string>
+    <string name="license_timed">Temporary closed (publish as free after 3 years)</string>
     <string name="license20">Free, NonCommercial (CC BY-SA-NC)</string>
     <string name="license30">Partially Open (restricted to 10km)</string>
-    <string name="license40">Closed (available to you and editors)</string>
+    <string name="license40">Closed (available to you and the editors)</string>
     <string name="setup_title">Setup Biologer</string>
     <string name="choose_dlicense">Choose different license for your data collected through the application</string>
     <string name="choose_ilicense">Choose different license for your images sent through the application</string>
     <string name="choose_project">Sets the project title if your data was collected during a project.</string>
     <string name="project_name">Project name</string>
-    <string name="license_public">Publish instantly</string>
-    <string name="license_timed">Closed, publish in 3 years as free</string>
     <string name="channel_description">Displays notifications related with taxonomic updates.</string>
     <string name="channel_name">Update taxa</string>
     <string name="notify_title_taxa">Updating taxa</string>
@@ -290,7 +289,7 @@
     <string name="deselect_all_groups">Deselect all groups</string>
     <string name="license_image_30">Keep authorship and share online with watermark</string>
     <string name="license_image_10">Share images for free (CC-BY-SA)</string>
-    <string name="license_image_20">Share images noncommercial (CC-BY-SA-NC)</string>
+    <string name="license_image_20">Share images as noncommercial (CC-BY-SA-NC)</string>
     <string name="license_image_40">Keep authorship and restrict images from public domain</string>
     <string name="no_map_activity">Map activity could not be loaded for some reason.</string>
     <string name="no_map_fragment">Map fragment could not be loaded for some reason.</string>
