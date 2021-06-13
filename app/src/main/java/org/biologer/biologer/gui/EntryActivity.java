@@ -120,7 +120,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     String observation_type_ids_string;
     int[] observation_type_ids = null;
     ArrayList<String> list_new_images = new ArrayList<>();
-    List<String> selectedTaxaGroups = new ArrayList<String>();
 
     BroadcastReceiver receiver;
 
@@ -293,7 +292,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     // Query native names
                     QueryBuilder<TaxaTranslationData> nativeQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
 
-                    // For Serbian language we should also search for latin ans cyrilic names
+                    // For Serbian language we should also search for Latin and Cyrillic names
                     if (locale_script.equals("sr")) {
                         if (preferences.getBoolean("english_names", false)) {
                             nativeQuery.where(
@@ -1266,6 +1265,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL: {
                 // If request is cancelled, the result arrays are empty.
@@ -1328,9 +1328,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private void setLocationValues(double latti, double longi) {
-        latitude = String.format(Locale.ENGLISH, "%.4f", (latti));
-        longitude = String.format(Locale.ENGLISH, "%.4f", (longi));
+    private void setLocationValues(double latitude_value, double longitude_value) {
+        latitude = String.format(Locale.ENGLISH, "%.4f", (latitude_value));
+        longitude = String.format(Locale.ENGLISH, "%.4f", (longitude_value));
         textViewLatitude.setText(latitude);
         textViewLongitude.setText(longitude);
         layoutUnknownCoordinates.setVisibility(View.GONE);

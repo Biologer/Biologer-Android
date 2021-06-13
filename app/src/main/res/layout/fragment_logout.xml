@@ -60,8 +60,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="24dp"
-        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
-        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
         android:id="@+id/btn_logout"
         android:text="@string/logout_btn">
     </com.google.android.material.button.MaterialButton>

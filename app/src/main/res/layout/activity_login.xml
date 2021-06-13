@@ -11,9 +11,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
-        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
-        android:layout_marginTop="@dimen/appIntroDefaultPaddingTop"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginTop="6dp"
         android:layout_gravity="center_horizontal"
         android:orientation="vertical">
 
@@ -78,8 +78,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
-        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
         android:layout_gravity="center"
         android:orientation="vertical">
 
@@ -116,8 +116,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
-        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
         android:layout_gravity="center"
         android:orientation="vertical">
         <LinearLayout
@@ -167,8 +167,8 @@
         android:layout_gravity="center_horizontal"
         android:gravity="center_horizontal"
         android:layout_marginTop="24dp"
-        android:layout_marginStart="@dimen/appIntroDefaultPaddingLeft"
-        android:layout_marginEnd="@dimen/appIntroDefaultPaddingRight"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
         android:text="@string/no_account2"/>
 
     <TextView

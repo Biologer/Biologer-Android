@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="top"
-        android:layout_marginTop="@dimen/appIntroDefaultPaddingBottom"
+        android:layout_marginTop="12dp"
         android:orientation="vertical"
         android:paddingBottom="30dp">
 
@@ -79,7 +79,7 @@
             android:clickable="true"
             android:focusable="true"
             android:layout_gravity="center"
-            android:text="https://biologer.org"
+            android:text="@string/biologer_org_url"
             android:textColor="@color/colorPrimary"
             android:textStyle="bold"/>
 
