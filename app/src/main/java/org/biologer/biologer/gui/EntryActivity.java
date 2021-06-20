@@ -63,6 +63,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CameraActivity;
 import org.biologer.biologer.adapters.PreparePhotos;
+import org.biologer.biologer.adapters.StageLocalization;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
@@ -665,12 +666,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Get the name of the stage for the entry from the database
         if (currentItem.getStage() != null) {
-            String stageName = (App.get().getDaoSession().getStageDao().queryBuilder()
-                    .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
-                    .list().get(1).getName());
             long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
                     .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
                     .list().get(1).getStageId());
+            String stageName = StageLocalization.getStageLocaleFromID(this, stage_id);
             Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
             textViewStage.setTag(stage);
             textViewStage.setText(stageName);
@@ -1107,23 +1106,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (stageList != null) {
             final String[] taxon_stages = new String[stageList.size()];
             for (int i = 0; i < stageList.size(); i++) {
-                taxon_stages[i] = stageList.get(i).getName();
-                // Translate this to interface...
-                if (taxon_stages[i].equals("egg")) {
-                    taxon_stages[i] = getString(R.string.stage_egg);
-                }
-                if (taxon_stages[i].equals("larva")) {
-                    taxon_stages[i] = getString(R.string.stage_larva);
-                }
-                if (taxon_stages[i].equals("pupa")) {
-                    taxon_stages[i] = getString(R.string.stage_pupa);
-                }
-                if (taxon_stages[i].equals("adult")) {
-                    taxon_stages[i] = getString(R.string.stage_adult);
-                }
-                if (taxon_stages[i].equals("juvenile")) {
-                    taxon_stages[i] = getString(R.string.stage_juvenile);
-                }
+                // Translate the stages to the app language
+                taxon_stages[i] = StageLocalization.getStageLocale(this, stageList.get(i).getName());
             }
             if (taxon_stages.length == 0) {
                 Log.d(TAG, "No stages are available for " + getLatinName() + ".");

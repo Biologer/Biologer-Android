@@ -152,9 +152,7 @@ public class LandingFragment extends Fragment {
                         App.get().getDaoSession().getEntryDao().deleteAll();
                         entriesList.removeAll();
                     })
-                    .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> {
-                        dialog.cancel();
-                    });
+                    .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
             final AlertDialog alert = builder.create();
             alert.show();
         }

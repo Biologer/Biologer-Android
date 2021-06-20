@@ -45,10 +45,12 @@ import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
+import org.biologer.biologer.adapters.StageLocalization;
 import org.biologer.biologer.network.JSON.ObservationTypes;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.sql.StageDao;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
@@ -516,28 +518,27 @@ public class LandingActivity extends AppCompatActivity
                     entry.getYear(),
                     entry.getMonth(),
                     entry.getDay(),
-                    String.valueOf(entry.getLattitude()),
-                    String.valueOf(entry.getLongitude()),
-                    String.valueOf(entry.getElevation()),
-                    String.valueOf(entry.getAccuracy()),
+                    String.format(Locale.ENGLISH, "%.6f", entry.getLattitude()),
+                    String.format(Locale.ENGLISH, "%.6f", entry.getLongitude()),
+                    String.format(Locale.ENGLISH, "%.0f", entry.getAccuracy()),
                     entry.getLocation(),
                     entry.getTime(),
                     entry.getComment(),
-                    entry.getDeadOrAlive(),
+                    translateFoundDead(entry.getDeadOrAlive()),
                     entry.getCauseOfDeath(),
                     u,
                     u,
                     entry.getSex(),
-                    String.valueOf(entry.getNoSpecimens()),
+                    removeNullInteger(entry.getNoSpecimens()),
                     entry.getProjectId(),
                     entry.getHabitat(),
                     entry.getFoundOn(),
-                    String.valueOf(entry.getStage()),
+                    StageLocalization.getStageLocaleFromID(this, entry.getStage()),
                     entry.getTaxonSuggestion(),
                     getString(R.string.dataset),
-                    entry.getData_licence(),
-                    String.valueOf(entry.getImage_licence()),
-                    String.valueOf(entry.getAtlas_code())
+                    translateLicence(entry.getData_licence()),
+                    translateLicence(String.valueOf(entry.getImage_licence())),
+                    removeNullLong(entry.getAtlas_code())
             };
             writer.writeNext(row);
         }
@@ -547,6 +548,51 @@ public class LandingActivity extends AppCompatActivity
             Toast.makeText(LandingActivity.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private String removeNullInteger(Integer integer) {
+        if (integer != null) {
+            return String.valueOf(integer);
+        } else {
+            return "";
+        }
+    }
+
+    private String removeNullLong(Long l) {
+        if (l != null) {
+            return String.valueOf(l);
+        } else {
+            return "";
+        }
+    }
+
+    private String translateLicence(String data_license) {
+        if (data_license.equals("10")) {
+            return getString(R.string.export_licence_10);
+        }
+        if (data_license.equals("11")) {
+            return getString(R.string.export_licence_11);
+        }
+        if (data_license.equals("20")) {
+            return getString(R.string.export_licence_20);
+        }
+        if (data_license.equals("30")) {
+            return getString(R.string.export_licence_30);
+        }
+        if (data_license.equals("40")) {
+            return getString(R.string.export_licence_40);
+        }
+        else {
+            return "";
+        }
+    }
+
+    private String translateFoundDead(String alive) {
+        if (alive.equals("true")) {
+            return getString(R.string.no);
+        } else {
+            return getString(R.string.yes);
         }
     }
 

@@ -331,5 +331,10 @@
     <string name="serbian_flag">Serbian flag</string>
     <string name="biologer_org_url">https://biologer.org</string>
     <string name="flag_image">Flag image</string>
+    <string name="export_licence_10">CC BY-SA 4.0</string>
+    <string name="export_licence_20">CC BY-SA-NC 4.0</string>
+    <string name="export_licence_30">Partially open</string>
+    <string name="export_licence_40">Closed</string>
+    <string name="export_licence_11">Closed 3 years</string>
 
 </resources>
