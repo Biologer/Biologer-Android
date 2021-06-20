@@ -257,6 +257,7 @@ public class FetchTaxa extends Service {
                             taxon_id,
                             taxaTranslation.getLocale(),
                             taxaTranslation.getNativeName(),
+                            taxon_latin_name,
                             taxaTranslation.getDescription());
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");

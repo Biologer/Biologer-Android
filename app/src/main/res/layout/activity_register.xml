@@ -181,8 +181,9 @@
             android:id="@+id/checkBox_privacy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="16dp"
             android:layout_marginEnd="6dp"
+            android:textColorHint="@color/black_on_light_white_on_night"
             android:hint="@string/i_accept_privacy_policy">
         </com.google.android.material.checkbox.MaterialCheckBox>
 

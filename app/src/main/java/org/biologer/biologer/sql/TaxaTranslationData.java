@@ -12,14 +12,16 @@ public class TaxaTranslationData {
     private Long taxonId;
     private String locale;
     private String nativeName;
+    private String latinName;
     private String description;
 
-    @Generated(hash = 559793365)
-    public TaxaTranslationData(Long Id, Long taxonId, String locale, String nativeName, String description) {
+    @Generated(hash = 1660920489)
+    public TaxaTranslationData(Long Id, Long taxonId, String locale, String nativeName, String latinName, String description) {
         this.Id = Id;
         this.taxonId = taxonId;
         this.locale = locale;
         this.nativeName = nativeName;
+        this.latinName = latinName;
         this.description = description;
     }
 
@@ -65,5 +67,13 @@ public class TaxaTranslationData {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getLatinName() {
+        return latinName;
+    }
+
+    public void setLatinName(String latinName) {
+        this.latinName = latinName;
     }
 }

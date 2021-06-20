@@ -15,6 +15,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.User;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
@@ -65,6 +66,7 @@ public class SplashActivity extends AppCompatActivity {
                             SettingsManager.setTaxaUpdatedAt("0");
                             SettingsManager.setSkipTaxaDatabaseUpdate("0");
                             SettingsManager.setTaxaLastPageFetched("1");
+                            User.deleteTaxaTables();
 
                             Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
                             service.enqueue(new Callback<UserDataResponse>() {

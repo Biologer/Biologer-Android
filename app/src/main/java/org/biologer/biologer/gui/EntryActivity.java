@@ -77,6 +77,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -260,37 +261,22 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Get the list of taxa from the GreenDao database
                      */
 
+                    // This is the final list of IDs to be shown
+                    List<Long> taxaIDs = new ArrayList<>();
+
                     // Query latin names
-                    QueryBuilder<TaxonData> latinQuery = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                    QueryBuilder<TaxonData> latinQuery =
+                            App.get().getDaoSession().getTaxonDataDao().queryBuilder();
                     latinQuery.where(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"));
                     latinQuery.limit(10);
-                    List<TaxonData> latinNames = latinQuery.list();
-
-                    // This is the final list to be shown
-                    List<String> taxaNames = new ArrayList<>();
-
-                    for (int i = 0; i < latinNames.size(); i++) {
-                        Long id = latinNames.get(i).getId();
-                        QueryBuilder<TaxaTranslationData> translationQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
-                        translationQuery.where(
-                                translationQuery.and(TaxaTranslationDataDao.Properties.TaxonId.eq(id),
-                                        TaxaTranslationDataDao.Properties.Locale.eq(locale_script)));
-                        List<TaxaTranslationData> translation = translationQuery.list();
-                        if (translation.size() >= 1) {
-                            String name = translation.get(0).getNativeName();
-                            if (name != null) {
-                                taxaNames.add(latinNames.get(i).getLatinName() + " (" + translation.get(0).getNativeName() + ")");
-                            } else {
-                                // Sometimes the native name is null, so we must handle this!
-                                taxaNames.add(latinNames.get(i).getLatinName());
-                            }
-                        } else {
-                            taxaNames.add(latinNames.get(i).getLatinName());
-                        }
+                    for (int i = 0; i < latinQuery.list().size(); i++) {
+                        Long id = latinQuery.list().get(i).getId();
+                        taxaIDs.add(id);
                     }
 
                     // Query native names
-                    QueryBuilder<TaxaTranslationData> nativeQuery = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
+                    QueryBuilder<TaxaTranslationData> nativeQuery =
+                            App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
 
                     // For Serbian language we should also search for Latin and Cyrillic names
                     if (locale_script.equals("sr")) {
@@ -330,25 +316,42 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
 
                     nativeQuery.limit(10);
-                    List<TaxaTranslationData> nativeNames = nativeQuery.list();
-                    for (int i = 0; i < nativeNames.size(); i++) {
-                        Long id = nativeNames.get(i).getTaxonId();
-                        QueryBuilder<TaxonData> translationQuery = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                        translationQuery.where(TaxonDataDao.Properties.Id.eq(id));
-                        List<TaxonData> translation = translationQuery.list();
-                        if (translation.size() >= 1) {
-                            String name = translation.get(0).getLatinName();
-                            if (name != null) {
-                                taxaNames.add(name + " (" + nativeNames.get(i).getNativeName() + ")");
+                    for (int i = 0; i < nativeQuery.list().size(); i++) {
+                        Long id = nativeQuery.list().get(i).getTaxonId();
+                        taxaIDs.add(id);
+                    }
+
+                    // Finally get the names from the IDs
+                    List<Long> uniqueTaxaIDs = new ArrayList<>(new HashSet<>(taxaIDs));
+                    List<String> taxaNames = new ArrayList<>();
+                    for (int i = 0; i < uniqueTaxaIDs.size(); i++) {
+                        Long id = uniqueTaxaIDs.get(i);
+                        // Get the latin and native name of the taxa
+                        QueryBuilder<TaxaTranslationData> taxaTranslation =
+                                App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
+                        taxaTranslation.where(
+                                taxaTranslation.and(TaxaTranslationDataDao.Properties.TaxonId.eq(id),
+                                        TaxaTranslationDataDao.Properties.Locale.eq(locale_script)));
+                        if (taxaTranslation.list().size() >= 1) {
+                            String latin_name = taxaTranslation.list().get(0).getLatinName();
+                            String native_name = taxaTranslation.list().get(0).getNativeName();
+                            if (native_name != null) {
+                                taxaNames.add(latin_name + " (" + native_name + ")");
+                            } else {
+                                taxaNames.add(latin_name);
                             }
                         } else {
-                            // Should not be called at all, but I will live it just in case...
-                            taxaNames.add(nativeNames.get(i).getNativeName());
+                            // If there is no native name, just use the latin one
+                            QueryBuilder<TaxonData> translationQuery =
+                                    App.get().getDaoSession().getTaxonDataDao().queryBuilder();
+                            translationQuery.where(TaxonDataDao.Properties.Id.eq(id));
+                            taxaNames.add(translationQuery.list().get(0).getLatinName());
                         }
                     }
 
                     // Add the Query to the drop down list
-                    ArrayAdapter<String> adapter1 = new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
+                    ArrayAdapter<String> adapter1 =
+                            new ArrayAdapter<>(EntryActivity.this, android.R.layout.simple_dropdown_item_1line, taxaNames);
                     acTextView.setAdapter(adapter1);
                     adapter1.notifyDataSetChanged();
 
@@ -1564,15 +1567,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private int[] removeFromArray(int[] observation_type_ids, int id) {
-        int len = observation_type_ids.length;
-        List<Integer> new_list = new ArrayList<>(len - 1);
+        List<Integer> new_list = new ArrayList<>();
         for (int observation_type_id : observation_type_ids) {
             if (observation_type_id != id) {
                 new_list.add(observation_type_id);
             }
         }
-        int[] new_array = new int[len - 1];
-        for (int i = 0; i < len - 1; i++) {
+        int length = new_list.size();
+        int[] new_array = new int[length];
+        for (int i = 0; i < length; i++) {
             new_array[i] = new_list.get(i);
         }
         return new_array;

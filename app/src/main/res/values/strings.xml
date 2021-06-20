@@ -10,7 +10,7 @@
     <string name="wrong_creds">Wrong email or password</string>
     <string name="no_account1">You can</string>
     <string name="no_account2">register here</string>
-    <string name="no_account3">if you don’t have an account.</string>
+    <string name="no_account3">if you don’t have an account</string>
     <string name="pass_forgotten">Reset forgotten password online!</string>
     <string name="email_wrong_format">Wrong email format</string>
     <string name="devDatabase">This is only for developers!</string>
@@ -295,7 +295,7 @@
     <string name="no_map_fragment">Map fragment could not be loaded for some reason.</string>
     <string name="accuracy_a1">Coordinate accuracy:</string>
     <string name="drag_marker">Drag marker to change.</string>
-    <string name="export_to_csv_success">"Export was successfull. File is saved in: "</string>
+    <string name="export_to_csv_success">"Export was successful. File is saved in: "</string>
     <string name="dataset">Biologer Android Application</string>
     <string name="taxon">Taxon</string>
     <string name="year">Year</string>
@@ -328,5 +328,7 @@
     <string name="already_fetching_taxa">Biologer is already downloading taxa! You should wait for this process to finish and download taxa from Biologer Preferences.</string>
     <string name="message_should_download">You have selected new taxonomic group and Biologer should download it from the network. It is recommended that you do this now, but it can also be accomplished from the Preferences once you rich stable network connection.</string>
     <string name="download">Download</string>
+    <string name="serbian_flag">Serbian flag</string>
+    <string name="biologer_org_url">https://biologer.org</string>
 
 </resources>

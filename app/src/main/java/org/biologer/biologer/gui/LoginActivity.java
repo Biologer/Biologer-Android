@@ -157,6 +157,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void updateDrawState(@NonNull TextPaint ds) {
                 super.updateDrawState(ds);
+                ds.setFakeBoldText(true);
                 ds.setUnderlineText(false);
             }
         };
