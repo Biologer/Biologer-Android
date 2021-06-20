@@ -13,15 +13,17 @@ public class TaxaTranslationData {
     private String locale;
     private String nativeName;
     private String latinName;
+    private boolean useAtlasCode;
     private String description;
 
-    @Generated(hash = 1660920489)
-    public TaxaTranslationData(Long Id, Long taxonId, String locale, String nativeName, String latinName, String description) {
+    @Generated(hash = 980357117)
+    public TaxaTranslationData(Long Id, Long taxonId, String locale, String nativeName, String latinName, boolean useAtlasCode, String description) {
         this.Id = Id;
         this.taxonId = taxonId;
         this.locale = locale;
         this.nativeName = nativeName;
         this.latinName = latinName;
+        this.useAtlasCode = useAtlasCode;
         this.description = description;
     }
 
@@ -75,5 +77,17 @@ public class TaxaTranslationData {
 
     public void setLatinName(String latinName) {
         this.latinName = latinName;
+    }
+
+    public boolean isUseAtlasCode() {
+        return useAtlasCode;
+    }
+
+    public void setUseAtlasCode(boolean useAtlasCode) {
+        this.useAtlasCode = useAtlasCode;
+    }
+
+    public boolean getUseAtlasCode() {
+        return this.useAtlasCode;
     }
 }

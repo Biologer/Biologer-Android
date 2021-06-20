@@ -90,7 +90,7 @@ public class FetchTaxa extends Service {
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
                     boolean checked = preferences.getBoolean(allTaxaGroups.get(i).getId().toString(), true);
                     if (checked) {
-                        //Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
+                        // Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
                         taxa_groups.add(String.valueOf(id));
                     }
                 }
@@ -258,6 +258,7 @@ public class FetchTaxa extends Service {
                             taxaTranslation.getLocale(),
                             taxaTranslation.getNativeName(),
                             taxon_latin_name,
+                            taxon.isUses_atlas_codes(),
                             taxaTranslation.getDescription());
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");

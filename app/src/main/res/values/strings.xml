@@ -330,5 +330,6 @@
     <string name="download">Download</string>
     <string name="serbian_flag">Serbian flag</string>
     <string name="biologer_org_url">https://biologer.org</string>
+    <string name="flag_image">Flag image</string>
 
 </resources>

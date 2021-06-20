@@ -1,7 +1,9 @@
 package org.biologer.biologer.gui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
+import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.User;
@@ -20,6 +23,8 @@ import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
+
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -62,11 +67,14 @@ public class SplashActivity extends AppCompatActivity {
                         if (SettingsManager.isSqlUpdated()) {
                             Log.i(TAG, "SQL database must be updated!");
                             Toast.makeText(this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
-                            SettingsManager.setObservationTypesUpdated("0");
-                            SettingsManager.setTaxaUpdatedAt("0");
-                            SettingsManager.setSkipTaxaDatabaseUpdate("0");
-                            SettingsManager.setTaxaLastPageFetched("1");
-                            User.deleteTaxaTables();
+                            User.resetTaxaSettings();
+
+                            // First get the existing groups of taxa so we can fetch them again
+                            ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                            if (Objects.requireNonNull(connectivitymanager.getActiveNetworkInfo()).isConnected()) {
+                                final Intent getTaxaGroups = new Intent(SplashActivity.this, GetTaxaGroups.class);
+                                startService(getTaxaGroups);
+                            }
 
                             Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
                             service.enqueue(new Callback<UserDataResponse>() {
