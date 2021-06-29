@@ -77,6 +77,7 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -251,6 +252,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         acTextView.setAdapter(adapter);
         acTextView.setThreshold(2);
 
+        acTextView.setOnItemClickListener((parent, view, position, id) -> {
+            TaxaList taxaList = (TaxaList) parent.getItemAtPosition(position);
+            acTextView.setText(taxaList.getTaxonName());
+            selectedTaxon = new TaxaList(taxaList.getTaxonName(), taxaList.getTaxonID(), taxaList.isAtlasCode());
+            showStagesAndAtlasCode(preferences);
+        });
+
         // When user type taxon name...
         acTextView.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler();
@@ -269,6 +277,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                     // Remove atlas code and stages on text change
                     if (selectedTaxon != null)  {
+                        if (selectedTaxon.isAtlasCode()) {
+                            textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                        }
+                        textInputStages.setVisibility(View.VISIBLE);
                         if (!acTextView.getText().toString().equals(selectedTaxon.getTaxonName())) {
                             selectedTaxon = null;
                             hideStagesAndAtlasCode();
@@ -387,25 +399,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                if (selectedTaxon != null) {
-                    if (selectedTaxon.isAtlasCode()) {
-                        textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
-                    }
-                    textInputStages.setVisibility(View.VISIBLE);
-                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
             }
-        });
-
-        acTextView.setOnItemClickListener((parent, view, position, id) -> {
-            TaxaList taxaList = (TaxaList) parent.getItemAtPosition(position);
-            acTextView.setText(taxaList.getTaxonName());
-            selectedTaxon = new TaxaList(taxaList.getTaxonName(), taxaList.getTaxonID(), taxaList.isAtlasCode());
-
-            showStagesAndAtlasCode(preferences);
         });
 
         // Define locationListener and locationManager in order to
