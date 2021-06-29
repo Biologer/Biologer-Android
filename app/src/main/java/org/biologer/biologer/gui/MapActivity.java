@@ -321,7 +321,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // Forward the result to previous Activity
         Intent returnLocation = new Intent();
         returnLocation.putExtra("google_map_accuracy", accuracy);
-        returnLocation.putExtra("google_map_latlong", latLong);
+        returnLocation.putExtra("google_map_latLong", latLong);
         returnLocation.putExtra("google_map_elevation", elevation);
         setResult(3, returnLocation);
 

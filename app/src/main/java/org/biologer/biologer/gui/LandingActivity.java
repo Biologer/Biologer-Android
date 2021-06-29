@@ -231,6 +231,7 @@ public class LandingActivity extends AppCompatActivity
                     }
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                 // Inform the user on failure and write log message

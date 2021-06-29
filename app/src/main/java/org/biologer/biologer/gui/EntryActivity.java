@@ -77,7 +77,6 @@ import org.biologer.biologer.sql.UserData;
 import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -127,6 +126,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     int[] observation_type_ids = null;
     ArrayList<String> list_new_images = new ArrayList<>();
     TaxaList selectedTaxon = null;
+    boolean locationFromTheMap = false;
 
     BroadcastReceiver receiver;
 
@@ -950,21 +950,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             buildAlertMessageNoCoordinates();
         } else {
             // If the location is not precise ask the user to
-            // wait for a precise location, or to go for it anyhow...
-            if (currentLocation.latitude > 0 && acc >= 25) {
-                buildAlertMessageImpreciseCoordinates();
-            }
-        }
-
-        if (currentLocation.latitude > 0 && (acc <= 25)) {
-            if (taxon == null) {
-                Log.d(TAG, "Saving taxon with unknown ID as simple text.");
-                TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(),
-                        null, null, null, false, false, null, null);
-                saveEntry3(taxon_noId);
+            // wait. But, not if the location is taken from the map
+            // or if the user opened existing entry.
+            if (acc <= 25 || locationFromTheMap || !isNewEntry()) {
+                if (taxon == null) {
+                    Log.d(TAG, "Saving taxon with unknown ID as simple text.");
+                    TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(),
+                            null, null, null, false, false, null, null);
+                    saveEntry3(taxon_noId);
+                } else {
+                    Log.d(TAG, "Saving taxon with known ID: " + taxon.getId());
+                    saveEntry3(taxon);
+                }
             } else {
-                Log.d(TAG, "Saving taxon with known ID: " + taxon.getId());
-                saveEntry3(taxon);
+                buildAlertMessageImpreciseCoordinates();
             }
         }
     }
@@ -1265,25 +1264,28 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
         }
 
-        // Get data from Google MapActivity.java and save it as local variables
+        // Get data from Google Map and save it as local variables
         if (requestCode == MAP) {
             Log.d(TAG, "MAP requestCode sent");
             locationManager.removeUpdates(locationListener);
             if (data != null) {
-                currentLocation = data.getParcelableExtra("google_map_latlong");
-                assert currentLocation != null;
-                setLocationValues(currentLocation.latitude, currentLocation.longitude);
-                acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
-                elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
-            }
-            assert data != null;
-            if (Objects.equals(data.getExtras().getString("google_map_accuracy"), "0.0")) {
-                textViewGPSAccuracy.setText(R.string.unknown);
-                textViewMeters.setVisibility(View.GONE);
-            } else {
-                textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
-                textViewMeters.setVisibility(View.VISIBLE);
-                setAccuracyColor();
+                currentLocation = data.getParcelableExtra("google_map_latLong");
+                if (currentLocation != null) {
+                    locationFromTheMap = true;
+                    setLocationValues(currentLocation.latitude, currentLocation.longitude);
+                    acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
+                    elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
+                }
+
+                // Update the coordinate accuracy labels
+                if (acc == 0.0) {
+                    textViewGPSAccuracy.setText(R.string.unknown);
+                    textViewMeters.setVisibility(View.GONE);
+                } else {
+                    textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                    textViewMeters.setVisibility(View.VISIBLE);
+                    setAccuracyColor();
+                }
             }
         }
     }
