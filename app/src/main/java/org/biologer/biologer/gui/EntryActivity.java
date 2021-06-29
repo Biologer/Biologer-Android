@@ -15,6 +15,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -44,7 +45,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -106,7 +110,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
     private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
-    AutoCompleteTextView acTextView;
+    AutoCompleteTextView autoCompleteTextView_speciesName;
     FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
     ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
             imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
@@ -248,19 +252,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Fill in the drop down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this, R.layout.taxa_dropdown_list, new ArrayList<>());
-        acTextView = findViewById(R.id.textview_list_of_taxa);
-        acTextView.setAdapter(adapter);
-        acTextView.setThreshold(2);
+        autoCompleteTextView_speciesName = findViewById(R.id.textview_list_of_taxa);
+        autoCompleteTextView_speciesName.setAdapter(adapter);
+        autoCompleteTextView_speciesName.setThreshold(2);
 
-        acTextView.setOnItemClickListener((parent, view, position, id) -> {
+        autoCompleteTextView_speciesName.setOnItemClickListener((parent, view, position, id) -> {
             TaxaList taxaList = (TaxaList) parent.getItemAtPosition(position);
-            acTextView.setText(taxaList.getTaxonName());
+            autoCompleteTextView_speciesName.setText(taxaList.getTaxonName());
             selectedTaxon = new TaxaList(taxaList.getTaxonName(), taxaList.getTaxonID(), taxaList.isAtlasCode());
             showStagesAndAtlasCode(preferences);
         });
 
         // When user type taxon name...
-        acTextView.addTextChangedListener(new TextWatcher() {
+        autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler();
             Runnable runnable;
 
@@ -281,7 +285,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
                         }
                         textInputStages.setVisibility(View.VISIBLE);
-                        if (!acTextView.getText().toString().equals(selectedTaxon.getTaxonName())) {
+                        if (!autoCompleteTextView_speciesName.getText().toString().equals(selectedTaxon.getTaxonName())) {
                             selectedTaxon = null;
                             hideStagesAndAtlasCode();
                         }
@@ -381,13 +385,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     // Add the Query to the drop down list (adapter)
                     TaxaListAdapter adapter1 =
                             new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, taxaLists);
-                    acTextView.setAdapter(adapter1);
+                    autoCompleteTextView_speciesName.setAdapter(adapter1);
                     adapter1.notifyDataSetChanged();
 
                     // Enable/disable Save button in the Toolbar
-                    if (acTextView.getText().toString().length() > 1) {
+                    if (autoCompleteTextView_speciesName.getText().toString().length() > 1) {
                         save_enabled = true;
-                        Log.d(TAG, "Taxon is set to: " + acTextView.getText());
+                        Log.d(TAG, "Taxon is set to: " + autoCompleteTextView_speciesName.getText());
                     } else {
                         save_enabled = false;
                         Log.d(TAG, "Taxon entry field is empty.");
@@ -405,6 +409,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             public void afterTextChanged(Editable s) {
             }
         });
+
+        // Activate the field for species name and show the keyboard.
+        autoCompleteTextView_speciesName.requestFocus();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
         // Define locationListener and locationManager in order to
         // to receive the Location.
@@ -659,8 +667,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Get the name of the taxon for this entry
-        acTextView.setText(currentItem.getTaxonSuggestion());
-        acTextView.dismissDropDown();
+        autoCompleteTextView_speciesName.setText(currentItem.getTaxonSuggestion());
+        autoCompleteTextView_speciesName.dismissDropDown();
 
         // Get the name of the stage for the entry from the database
         if (currentItem.getStage() != null) {
@@ -955,7 +963,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (acc <= 25 || locationFromTheMap || !isNewEntry()) {
                 if (taxon == null) {
                     Log.d(TAG, "Saving taxon with unknown ID as simple text.");
-                    TaxonData taxon_noId = new TaxonData(null, null, acTextView.getText().toString(),
+                    TaxonData taxon_noId = new TaxonData(null, null, autoCompleteTextView_speciesName.getText().toString(),
                             null, null, null, false, false, null, null);
                     saveEntry3(taxon_noId);
                 } else {
@@ -1560,7 +1568,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private String getLatinName() {
-        String entered_taxon_name = acTextView.getText().toString();
+        String entered_taxon_name = autoCompleteTextView_speciesName.getText().toString();
         return entered_taxon_name.split(" \\(")[0];
     }
 

@@ -117,7 +117,8 @@ public class LandingFragment extends Fragment {
             // Delete the entry
             App.get().getDaoSession().getEntryDao().deleteByKey(entriesList.getItem(index).getId());
             entriesList.removeItem(index);
-            Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + index + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
+            int entryNo = index + 1;
+            Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
             return true;
         }
         if (item.getItemId() == R.id.delete_all) {
