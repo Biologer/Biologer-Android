@@ -357,11 +357,21 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
 
                     nativeQuery.limit(10);
+
                     for (int i = 0; i < nativeQuery.list().size(); i++) {
                         TaxaTranslationData taxaTranslationData = nativeQuery.list().get(i);
-                        allTaxaLists.add(new TaxaList(taxaTranslationData.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")",
-                                taxaTranslationData.getTaxonId(),
-                                taxaTranslationData.isUseAtlasCode()));
+                        // Don’t add taxa if already on the list
+                        boolean duplicated = false;
+                        for (int j = 0; j < allTaxaLists.size(); j++) {
+                            if (allTaxaLists.get(j).getTaxonID().equals(taxaTranslationData.getTaxonId())) {
+                                duplicated = true;
+                            }
+                        }
+                        if (!duplicated) {
+                            allTaxaLists.add(new TaxaList(taxaTranslationData.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")",
+                                    taxaTranslationData.getTaxonId(),
+                                    taxaTranslationData.isUseAtlasCode()));
+                        }
                     }
 
                     // Add the Query to the drop down list (adapter)
