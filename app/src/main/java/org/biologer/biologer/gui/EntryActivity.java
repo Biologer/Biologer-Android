@@ -15,7 +15,6 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -45,10 +44,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -85,7 +82,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -292,7 +288,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
 
                     // This will bee the list of all IDs from all the queries
-                    List<Long> taxaIDs = new ArrayList<>();
+                    List<TaxaList> allTaxaLists = new ArrayList<>();
 
                     // Query latin names
                     QueryBuilder<TaxonData> latinQuery =
@@ -300,8 +296,23 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     latinQuery.where(TaxonDataDao.Properties.LatinName.like("%" + typed_name + "%"));
                     latinQuery.limit(10);
                     for (int i = 0; i < latinQuery.list().size(); i++) {
-                        Long id = latinQuery.list().get(i).getId();
-                        taxaIDs.add(id);
+                        TaxonData taxonData = latinQuery.list().get(i);
+                        QueryBuilder<TaxaTranslationData> taxonName = App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
+                        taxonName.where(taxonName.and(TaxaTranslationDataDao.Properties.TaxonId.eq(taxonData.getId()),
+                                TaxaTranslationDataDao.Properties.Locale.eq(locale_script)));
+
+                        if (taxonName.count() >= 1) {
+                            String native_name = taxonName.list().get(0).getNativeName();
+                            if (native_name != null) {
+                                allTaxaLists.add(new TaxaList(taxonData.getLatinName() + " (" + native_name + ")",
+                                        taxonData.getId(), taxonData.isUseAtlasCode()));
+                            }
+                            else {
+                                allTaxaLists.add(new TaxaList(taxonData.getLatinName(), taxonData.getId(), taxonData.isUseAtlasCode()));
+                            }
+                        } else {
+                            allTaxaLists.add(new TaxaList(taxonData.getLatinName(), taxonData.getId(), taxonData.isUseAtlasCode()));
+                        }
                     }
 
                     // Query native names
@@ -347,44 +358,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                     nativeQuery.limit(10);
                     for (int i = 0; i < nativeQuery.list().size(); i++) {
-                        Long id = nativeQuery.list().get(i).getTaxonId();
-                        taxaIDs.add(id);
-                    }
-
-                    // Finally get the names from the IDs
-                    List<Long> uniqueTaxaIDs = new ArrayList<>(new HashSet<>(taxaIDs));
-                    List<TaxaList> taxaLists = new ArrayList<>();
-                    for (int i = 0; i < uniqueTaxaIDs.size(); i++) {
-                        Long id = uniqueTaxaIDs.get(i);
-                        // Get the latin and native name of the taxa
-                        QueryBuilder<TaxaTranslationData> taxaTranslation =
-                                App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder();
-                        taxaTranslation.where(
-                                taxaTranslation.and(TaxaTranslationDataDao.Properties.TaxonId.eq(id),
-                                        TaxaTranslationDataDao.Properties.Locale.eq(locale_script)));
-                        if (taxaTranslation.list().size() >= 1) {
-                            String latin_name = taxaTranslation.list().get(0).getLatinName();
-                            String native_name = taxaTranslation.list().get(0).getNativeName();
-                            boolean atlasCode = taxaTranslation.list().get(0).isUseAtlasCode();
-                            if (native_name != null) {
-                                taxaLists.add(new TaxaList(latin_name + " (" + native_name + ")", id, atlasCode));
-                            } else {
-                                taxaLists.add(new TaxaList(latin_name, id, atlasCode));
-                            }
-                        } else {
-                            // If there is no native name, just use the latin one
-                            QueryBuilder<TaxonData> taxa =
-                                    App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                            taxa.where(TaxonDataDao.Properties.Id.eq(id));
-                            String latin_name = taxa.list().get(0).getLatinName();
-                            boolean atlasCode = taxa.list().get(0).isUseAtlasCode();
-                            taxaLists.add(new TaxaList(latin_name, id, atlasCode));
-                        }
+                        TaxaTranslationData taxaTranslationData = nativeQuery.list().get(i);
+                        allTaxaLists.add(new TaxaList(taxaTranslationData.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")",
+                                taxaTranslationData.getTaxonId(),
+                                taxaTranslationData.isUseAtlasCode()));
                     }
 
                     // Add the Query to the drop down list (adapter)
                     TaxaListAdapter adapter1 =
-                            new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, taxaLists);
+                            new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, allTaxaLists);
                     autoCompleteTextView_speciesName.setAdapter(adapter1);
                     adapter1.notifyDataSetChanged();
 
@@ -996,8 +978,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
         if (checkBox_males.isChecked() && checkBox_females.isChecked()) {
             Log.d(TAG, "Both male and female individuals selected.");
-                entrySaver(taxon, specimens_number_1, "male", 1);
-                entrySaver(taxon, specimens_number_2, "female", 2);
+            entrySaver(taxon, specimens_number_1, "male", 1);
+            entrySaver(taxon, specimens_number_2, "female", 2);
         }
     }
 
