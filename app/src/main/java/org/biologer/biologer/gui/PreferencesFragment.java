@@ -24,6 +24,7 @@ import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.UpdateLicenses;
+import org.biologer.biologer.network.InternetConnection;
 
 import java.util.Objects;
 
@@ -67,8 +68,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         // Fetch taxa groups from server
         Activity activity = getActivity();
         if (activity != null) {
-            ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (Objects.requireNonNull(connectivitymanager.getActiveNetworkInfo()).isConnected()) {
+            if (InternetConnection.isConnected(activity)) {
                 final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
                 Activity getGroups = getActivity();
                 getGroups.startService(getTaxaGroups);

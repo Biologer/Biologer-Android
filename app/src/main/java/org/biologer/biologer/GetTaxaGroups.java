@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.TaxaGroups;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsTranslations;
@@ -54,9 +55,8 @@ public class GetTaxaGroups extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Fetching taxa groups started!");
 
-        ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivitymanager.getActiveNetworkInfo().isConnected()) {
-            Log.d(TAG, "Network available.");
+        if (InternetConnection.isConnected(this)) {
+            Log.d(TAG, "Network is available.");
             Call<TaxaGroupsResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxaGroupsResponse();
             call.enqueue(new Callback<TaxaGroupsResponse>() {
                 @Override
@@ -76,6 +76,7 @@ public class GetTaxaGroups extends Service {
                 }
             });
         } else {
+            Log.d(TAG, "Network is not available.");
             sendResult("no_network");
         }
 

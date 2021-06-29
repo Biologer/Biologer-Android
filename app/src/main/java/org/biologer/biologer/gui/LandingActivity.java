@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import com.google.android.material.navigation.NavigationView;
 import com.opencsv.CSVWriter;
@@ -46,11 +44,11 @@ import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageLocalization;
+import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.ObservationTypes;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.sql.StageDao;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
@@ -121,8 +119,8 @@ public class LandingActivity extends AppCompatActivity
             how_to_use_network = preferences.getString("auto_download", "wifi");
 
             // Check if there is network available and run the commands...
-            String network_type = networkType();
-            if (network_type.equals("connected") || network_type.equals("wifi")) {
+            String network_type = InternetConnection.networkType(this);
+            if (network_type != null) {
                 updateLicenses();
                 updateObservationTypes();
                 // AUTO upload/download if the right preferences are selected...
@@ -685,23 +683,6 @@ public class LandingActivity extends AppCompatActivity
         } else {
             return "Could not get email address.";
         }
-    }
-
-    private String networkType() {
-        ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        assert connectivitymanager != null;
-        NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
-        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
-            NetworkInfo wifiNetworkInfo = connectivitymanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (wifiNetworkInfo != null && wifiNetworkInfo.isConnected()) {
-                Log.d(TAG, "You are connected to the WiFi network.");
-                return "wifi";
-            }
-            Log.d(TAG, "You are connected to the mobile network.");
-            return "connected";
-        }
-        Log.d(TAG, "You are not connected to the network.");
-        return "not_connected";
     }
 
     private void setUploadIconVisibility() {
