@@ -10,7 +10,7 @@
     <string name="wrong_creds">Pogrešna e-pošta ili lozinka</string>
     <string name="no_account1">Možete</string>
     <string name="no_account2">se registrovati ovde</string>
-    <string name="no_account3">ukoliko nemate nalog.</string>
+    <string name="no_account3">ukoliko nemate nalog</string>
     <string name="pass_forgotten">Povratite zaboravljenu lozinku preko mreže!</string>
     <string name="email_wrong_format">Nije ispravan format e-adrese</string>
     <string name="devDatabase">Ovo je samo za programere!</string>
@@ -119,6 +119,7 @@
     <string name="title_setup_activity">Podešavanja Biologera</string>
     <string name="license10">Slobodna (CC BY-SA)</string>
     <string name="license_default">Preuzmi sa servera</string>
+    <string name="license_timed">Privremeno zatvorena (objavi za 3 godine kao slobodno)</string>
     <string name="license20">Slobodna, nekomercijalna (CC BY-SA-NC)</string>
     <string name="license30">Delimično otvorena (ograničena na od 10km)</string>
     <string name="license40">Zatvorena (dostupno vama i urednicima)</string>
@@ -127,8 +128,6 @@
     <string name="choose_ilicense">Omogućava izbor drugačije licence za fotografije koje šaljete iz Biologer aplikacije.</string>
     <string name="choose_project">Postavlja ime projekta ukoliko su vaši podaci prikupljeni tokom reazlizacije nekog projekta.</string>
     <string name="project_name">Naziv projekta</string>
-    <string name="license_public">Odmah objavi</string>
-    <string name="license_timed">Zatvorena, a nakon 3 godine otvorena</string>
     <string name="channel_description">Prikazuje obaveštenja vezana za taksonomske izmene.</string>
     <string name="channel_name">Ažuriranje taksona</string>
     <string name="notify_title_taxa">Ažuriranje taksona</string>
@@ -290,7 +289,7 @@
     <string name="deselect_all_groups">Isključi sve grupe</string>
     <string name="license_image_30">Zadrži autorstvo i deli sa vodenim žigom</string>
     <string name="license_image_10">Deli slobodno (CC-BY-SA)</string>
-    <string name="license_image_20">Deli slobodno, nekomercijalno (CC-BY-SA-NC)</string>
+    <string name="license_image_20">Deli slike nekomercijalno (CC-BY-SA-NC)</string>
     <string name="license_image_40">Zadrži autorstvo i zabrani prikaz slika u javnom delu</string>
     <string name="no_map_activity">Aktivnost za karte ne može biti učitana iz nekog razloga.</string>
     <string name="no_map_fragment">Fragment za mape ne može biti učitan iz nekog razloga.</string>
@@ -327,7 +326,17 @@
     <string name="yes_delete">Da, obriši sve</string>
     <string name="no_delete">Ne</string>
     <string name="already_fetching_taxa">Biologer već preuzima podatke o taksonima! Sačekajte da se taj proces završi, a zatim preuzmite preostale podatke iz Postavki Biologera.</string>
-    <string name="message_should_download">Dodali ste novu taksonomsku grupu i Biologer treba da preuzme podatke o njoj sa interneta. Preporučujemo da to uradite odmah, ali možete to učiniti i kada dođete do stabilne internet veze, preko Postavki Biologera.</string>
+    <string name="message_should_download">Označili ste novu taksonomsku grupu koju Biologer treba da preuzme sa mreže. Preporučujemo da to uradite odmah, ali možete osvežiti celu listu iz Podešavanja, kada dođete do stabilne mreže.</string>
     <string name="download">Preuzmi</string>
+    <string name="serbian_flag">Srpska zastava</string>
+    <string name="biologer_org_url">https://biologer.org</string>
+    <string name="flag_image">Slika sa zastavom</string>
+    <string name="export_licence_10">CC BY-SA 4.0</string>
+    <string name="export_licence_20">CC BY-SA-NC 4.0</string>
+    <string name="export_licence_30">Delimično otvorena</string>
+    <string name="export_licence_40">Zatvorena</string>
+    <string name="export_licence_11">Zatvorena na 3 godine</string>
+    <string name="failed">Neuspešno!</string>
+    <string name="upload_not_succesfull">Nije uspelo slanje unosa na server.</string>
 
 </resources>

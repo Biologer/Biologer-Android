@@ -336,5 +336,7 @@
     <string name="export_licence_30">Partially open</string>
     <string name="export_licence_40">Closed</string>
     <string name="export_licence_11">Closed 3 years</string>
+    <string name="failed">Failed!</string>
+    <string name="upload_not_succesfull">Uploading of entry was not successful!</string>
 
 </resources>

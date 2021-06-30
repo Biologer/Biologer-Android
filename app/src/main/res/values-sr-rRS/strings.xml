@@ -10,7 +10,7 @@
     <string name="wrong_creds">Погрешна е-пошта или лозинка</string>
     <string name="no_account1">Можете</string>
     <string name="no_account2">се регистровати овде</string>
-    <string name="no_account3">уколико немате налог.</string>
+    <string name="no_account3">уколико немате налог</string>
     <string name="pass_forgotten">Повратите заборављену лозинку преко мреже!</string>
     <string name="email_wrong_format">Није исправан формат е-адресе</string>
     <string name="devDatabase">Ово је само за програмере!</string>
@@ -119,6 +119,7 @@
     <string name="title_setup_activity">Подешавања Биологера</string>
     <string name="license10">Слободна (CC BY-SA)</string>
     <string name="license_default">Преузми са сервера</string>
+    <string name="license_timed">Привремено затворена (објави за 3 године као слободно)</string>
     <string name="license20">Слободна, некомерцијална (CC BY-SA-NC)</string>
     <string name="license30">Делимично отворена (ограничена на од 10km)</string>
     <string name="license40">Затворена (доступно вама и уредницима)</string>
@@ -127,8 +128,6 @@
     <string name="choose_ilicense">Омогућава избор другачије лиценце за фотографије које шаљете из Биологер апликације.</string>
     <string name="choose_project">Поставља име пројекта уколико су ваши подаци прикупљени током реазлизације неког пројекта.</string>
     <string name="project_name">Назив пројекта</string>
-    <string name="license_public">Одмах објави</string>
-    <string name="license_timed">Затворена, а након 3 године отворена</string>
     <string name="channel_description">Приказује обавештења везана за таксономске измене.</string>
     <string name="channel_name">Ажурирање таксона</string>
     <string name="notify_title_taxa">Ажурирање таксона</string>
@@ -290,7 +289,7 @@
     <string name="deselect_all_groups">Искључи све групе</string>
     <string name="license_image_30">Задржи ауторство и дели са воденим жигом</string>
     <string name="license_image_10">Дели слободно (CC-BY-SA)</string>
-    <string name="license_image_20">Дели слободно, некомерцијално (CC-BY-SA-NC)</string>
+    <string name="license_image_20">Дели слике некомерцијално (CC-BY-SA-NC)</string>
     <string name="license_image_40">Задржи ауторство и забрани приказ слика у јавном делу</string>
     <string name="no_map_activity">Активност за карте не може бити учитана из неког разлога.</string>
     <string name="no_map_fragment">Фрагмент за мапе не може бити учитан из неког разлога.</string>
@@ -327,7 +326,17 @@
     <string name="yes_delete">Да, обриши све</string>
     <string name="no_delete">Не</string>
     <string name="already_fetching_taxa">Биологер већ преузима податке о таксонима! Сачекајте да се тај процес заврши, а затим преузмите преостале податке из Поставки Биологера.</string>
-    <string name="message_should_download">Додали сте нову таксономску групу и Биологер треба да преузме податке о њој са интернета. Препоручујемо да то урадите одмах, али можете то учинити и када дођете до стабилне интернет везе, преко Поставки Биологера.</string>
+    <string name="message_should_download">Означили сте нову таксономску групу коју Биологер треба да преузме са мреже. Препоручујемо да то урадите одмах, али можете освежити целу листу из Подешавања, када дођете до стабилне мреже.</string>
     <string name="download">Преузми</string>
+    <string name="serbian_flag">Српска застава</string>
+    <string name="biologer_org_url">https://biologer.org</string>
+    <string name="flag_image">Слика са заставом</string>
+    <string name="export_licence_10">CC BY-SA 4.0</string>
+    <string name="export_licence_20">CC BY-SA-NC 4.0</string>
+    <string name="export_licence_30">Делимично отворена</string>
+    <string name="export_licence_40">Затворена</string>
+    <string name="export_licence_11">Затворена на 3 године</string>
+    <string name="failed">Неуспешно!</string>
+    <string name="upload_not_succesfull">Није успело слање уноса на сервер.</string>
 
 </resources>

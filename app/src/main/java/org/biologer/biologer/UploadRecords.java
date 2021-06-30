@@ -304,7 +304,7 @@ public class UploadRecords extends Service {
             @Override
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
-                cancelUpload("Failed!", "Uploading of entry was not successful!");
+                cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
                 stopSelf();
             }
         });
