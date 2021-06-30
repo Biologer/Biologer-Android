@@ -1,9 +1,8 @@
 package org.biologer.biologer.gui;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
@@ -19,12 +18,11 @@ import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.User;
+import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
-
-import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,7 +32,7 @@ public class SplashActivity extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Splash";
 
-    int SPLASH_TIME_OUT = 500;
+    int SPLASH_TIME_OUT = 800;
     SharedPreferences prefs = null;
     Call<RefreshTokenResponse> refresh;
 
@@ -47,7 +45,8 @@ public class SplashActivity extends AppCompatActivity {
         String database_name = SettingsManager.getDatabaseName();
         boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
 
-        new Handler().postDelayed(() -> {
+        Handler handler = new Handler();
+        Runnable runnable = () -> {
 
             // On the first run show some help
             if (prefs.getBoolean("firstrun", true)) {
@@ -66,12 +65,11 @@ public class SplashActivity extends AppCompatActivity {
                         // If SQL is updated we will try to login in the user
                         if (SettingsManager.isSqlUpdated()) {
                             Log.i(TAG, "SQL database must be updated!");
-                            Toast.makeText(this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
+                            Toast.makeText(SplashActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
                             User.resetTaxaSettings();
 
                             // First get the existing groups of taxa so we can fetch them again
-                            ConnectivityManager connectivitymanager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                            if (Objects.requireNonNull(connectivitymanager.getActiveNetworkInfo()).isConnected()) {
+                            if (InternetConnection.isConnected(SplashActivity.this)) {
                                 final Intent getTaxaGroups = new Intent(SplashActivity.this, GetTaxaGroups.class);
                                 startService(getTaxaGroups);
                             }
@@ -92,14 +90,16 @@ public class SplashActivity extends AppCompatActivity {
                                             Intent intent = new Intent(SplashActivity.this, LandingActivity.class);
                                             startActivity(intent);
                                         } else {
-                                            dialogMessage(getString(R.string.login_after_sql_update_fail));
+                                            handler.removeCallbacksAndMessages(null);
+                                            dialogMessage(getString(R.string.login_after_sql_update_fail), SplashActivity.this);
                                         }
                                     }
                                 }
                                 @Override
                                 public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
                                     Log.e(TAG, "Cannot get response from the server (test taxa response)");
-                                    dialogMessage(getString(R.string.login_after_sql_update_fail));
+                                    handler.removeCallbacksAndMessages(null);
+                                    dialogMessage(getString(R.string.login_after_sql_update_fail), SplashActivity.this);
                                 }
                             });
                         }
@@ -139,10 +139,10 @@ public class SplashActivity extends AppCompatActivity {
                             public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                                 if(response.isSuccessful()) {
                                     if (response.body() != null) {
-                                        String token = response.body().getAccessToken();
+                                        String token1 = response.body().getAccessToken();
                                         String refresh_token = response.body().getRefreshToken();
-                                        Log.d(TAG, "Token value is: " + token);
-                                        SettingsManager.setAccessToken(token);
+                                        Log.d(TAG, "Token value is: " + token1);
+                                        SettingsManager.setAccessToken(token1);
                                         SettingsManager.setRefreshToken(refresh_token);
                                         long expire = response.body().getExpiresIn();
                                         long expire_date = (System.currentTimeMillis() / 1000) + expire;
@@ -174,12 +174,13 @@ public class SplashActivity extends AppCompatActivity {
                 }
                 finish();
             }
-        }, SPLASH_TIME_OUT);
+        };
 
+        handler.postDelayed(runnable, SPLASH_TIME_OUT);
     }
 
-    private void dialogMessage(String message) {
-        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(SplashActivity.this);
+    private void dialogMessage(String message, Activity activity) {
+        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(activity);
         builder_taxon.setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.OK), (dialog, id) -> {

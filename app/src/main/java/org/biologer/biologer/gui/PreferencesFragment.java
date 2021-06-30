@@ -69,7 +69,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         Activity activity = getActivity();
         if (activity != null) {
             if (InternetConnection.isConnected(activity)) {
-                final Intent getTaxaGroups = new Intent(getActivity(), GetTaxaGroups.class);
+                final Intent getTaxaGroups = new Intent(activity, GetTaxaGroups.class);
                 Activity getGroups = getActivity();
                 getGroups.startService(getTaxaGroups);
             }
