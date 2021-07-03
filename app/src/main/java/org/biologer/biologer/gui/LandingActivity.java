@@ -36,7 +36,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.FetchTaxa;
+import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.UpdateLicenses;
@@ -46,6 +48,8 @@ import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageLocalization;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.ObservationTypes;
+import org.biologer.biologer.network.JSON.RefreshTokenResponse;
+import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
@@ -69,8 +73,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LandingActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class LandingActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Biologer.Landing";
 
@@ -89,6 +92,10 @@ public class LandingActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
 
+        String token = SettingsManager.getAccessToken();
+        String database_name = SettingsManager.getDatabaseName();
+        boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -104,18 +111,113 @@ public class LandingActivity extends AppCompatActivity
         TextView tv_username = header.findViewById(R.id.tv_username);
         TextView tv_email = header.findViewById(R.id.tv_email);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+
         // Set the text for side panel
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
+        // Ensure this is run only once in each instance
         if (savedInstanceState == null) {
+
+            // If SQL is updated we will try to login in the user
+            if (SettingsManager.isSqlUpdated()) {
+                Log.i(TAG, "SQL database must be updated!");
+                Toast.makeText(LandingActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
+                User.resetTaxaSettings();
+
+                // First get the existing groups of taxa so we can fetch them again
+                if (InternetConnection.isConnected(LandingActivity.this)) {
+                    final Intent getTaxaGroups = new Intent(LandingActivity.this, GetTaxaGroups.class);
+                    startService(getTaxaGroups);
+
+                    Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
+                    service.enqueue(new Callback<UserDataResponse>() {
+                        @Override
+                        public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
+                            if (response.isSuccessful()) {
+                                if (response.body() != null) {
+                                    String email = response.body().getData().getEmail();
+                                    String name = response.body().getData().getFullName();
+                                    int data_license = response.body().getData().getSettings().getDataLicense();
+                                    int image_license = response.body().getData().getSettings().getImageLicense();
+                                    UserData user = new UserData(null, name, email, data_license, image_license);
+                                    App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                                    SettingsManager.setSqlUpdated(false);
+                                } else {
+                                    alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
+                            Log.e(TAG, "Cannot get response from the server (test taxa response)");
+                            alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
+                        }
+                    });
+                }
+            }
+            else {
+                Log.i(TAG, "SQL is up to date!");
+            }
+
+            if (token != null && MAIL_CONFIRMED) {
+
+                if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
+                    Log.d(TAG, "Token is still OK, email is confirmed. Token will expire on " + SettingsManager.getTokenExpire());
+                } else {
+                    Log.d(TAG, "Token expired. Refreshing login token.");
+                    if (InternetConnection.isConnected(LandingActivity.this)) {
+
+                        String refreshToken = SettingsManager.getRefreshToken();
+                        String rsKey = BuildConfig.BiologerRS_Key;
+                        String hrKey = BuildConfig.BiologerHR_Key;
+                        String baKey = BuildConfig.BiologerBA_Key;
+
+                        if (database_name.equals("https://biologer.org")) {
+                            Log.d(TAG, "Serbian database selected.");
+                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
+                            RefreshToken(refresh);
+                        }
+                        if (database_name.equals("https://biologer.hr")) {
+                            Log.d(TAG, "Croatian database selected.");
+                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
+                            RefreshToken(refresh);
+                        }
+                        if (database_name.equals("https://biologer.ba")) {
+                            Log.d(TAG, "Bosnian database selected.");
+                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
+                            RefreshToken(refresh);
+                        }
+                        if (database_name.equals("https://dev.biologer.org")) {
+                            Log.d(TAG, "Developmental database selected.");
+                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken,"*");
+                            RefreshToken(refresh);
+                        }
+                        Log.d(TAG, "Logging into " + database_name + " using refresh token.");
+                    }
+                    else {
+                        alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+                    }
+                }
+            }
+
+            else {
+                Log.d(TAG, "No token or email address not confirmed..");
+                Log.d(TAG, "TOKEN: " + token);
+                Log.d(TAG, "Is mail confirmed: " + MAIL_CONFIRMED);
+                Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
+                intent.putExtra("TOKEN_EXPIRED", false);
+                startActivity(intent);
+            }
+
             // Check if notifications are enabled, if not warn the user!
             areNotificationsEnabled();
 
             showLandingFragment();
 
             // Get the user settings from preferences
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
             how_to_use_network = preferences.getString("auto_download", "wifi");
 
             // Check if there is network available and run the commands...
@@ -155,6 +257,35 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
         };
+    }
+
+    private void RefreshToken(Call<RefreshTokenResponse> refresh_call) {
+        refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
+                if(response.isSuccessful()) {
+                    if (response.body() != null) {
+                        String token1 = response.body().getAccessToken();
+                        String refresh_token = response.body().getRefreshToken();
+                        Log.d(TAG, "New token value is: " + token1);
+                        SettingsManager.setAccessToken(token1);
+                        SettingsManager.setRefreshToken(refresh_token);
+                        long expire = response.body().getExpiresIn();
+                        long expire_date = (System.currentTimeMillis() / 1000) + expire;
+                        SettingsManager.setTokenExpire(String.valueOf(expire_date));
+                        Log.d(TAG, "Token will expire on timestamp: " + expire_date);
+                    }
+                } else {
+                    alertWarnAndExit(getString(R.string.refresh_token_failed));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<RefreshTokenResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Cannot get response from the server (refresh token)" + t);
+                alertWarnAndExit(getString(R.string.refresh_token_failed));
+            }
+        });
     }
 
     private void updateEntryListView() {
@@ -648,6 +779,19 @@ public class LandingActivity extends AppCompatActivity
         builder.setMessage(message)
                 .setCancelable(false)
                 .setNeutralButton(getString(R.string.OK), (dialog, id) -> dialog.cancel());
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    protected void alertWarnAndExit(String message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // intent used to start service for fetching taxa
+        builder.setMessage(message)
+                .setCancelable(false)
+                .setNeutralButton(getString(R.string.OK), (dialog, id) -> {
+                    dialog.cancel();
+                    this.finishAffinity();
+                });
         final AlertDialog alert = builder.create();
         alert.show();
     }

@@ -609,11 +609,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             getLocation(100, 2);
 
             // Always add Observation Type for observed specimen
-            int id_for_observed_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+            List<ObservationTypesData> observationTypesData = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
                     .where(ObservationTypesDataDao.Properties.Slug.eq("observed"))
-                    .list().get(0).getObservationId().intValue();
-            Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
-            observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
+                    .list();
+            if (!observationTypesData.isEmpty()) {
+                int id_for_observed_tag = observationTypesData.get(0).getObservationId().intValue();
+                Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
+                observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
+            }
 
         } else {
 
