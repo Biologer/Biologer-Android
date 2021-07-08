@@ -64,7 +64,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CameraActivity;
 import org.biologer.biologer.adapters.PreparePhotos;
-import org.biologer.biologer.adapters.StageLocalization;
+import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesDataDao;
@@ -670,7 +670,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
                     .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
                     .list().get(1).getStageId());
-            String stageName = StageLocalization.getStageLocaleFromID(this, stage_id);
+            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
             Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
             textViewStage.setTag(stage);
             textViewStage.setText(stageName);
@@ -1107,7 +1107,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             final String[] taxon_stages = new String[stageList.size()];
             for (int i = 0; i < stageList.size(); i++) {
                 // Translate the stages to the app language
-                taxon_stages[i] = StageLocalization.getStageLocale(this, stageList.get(i).getName());
+                taxon_stages[i] = StageAndSexLocalization.getStageLocale(this, stageList.get(i).getName());
             }
             if (taxon_stages.length == 0) {
                 Log.d(TAG, "No stages are available for " + getLatinName() + ".");

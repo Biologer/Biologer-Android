@@ -96,7 +96,7 @@ public class EntriesList extends BaseAdapter {
         if (taxon_entry.getStage() != null) {
             long i = taxon_entry.getStage();
             Stage s = App.get().getDaoSession().getStageDao().queryBuilder().where(StageDao.Properties.StageId.eq(i)).limit(1).unique();
-            viewHolder.stage.setText(StageLocalization.getStageLocale(mContext, s.getName()));
+            viewHolder.stage.setText(StageAndSexLocalization.getStageLocale(mContext, s.getName()));
         } else {
             viewHolder.stage.setText("");
         }

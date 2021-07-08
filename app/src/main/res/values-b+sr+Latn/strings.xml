@@ -338,5 +338,8 @@
     <string name="export_licence_11">Zatvorena na 3 godine</string>
     <string name="failed">Neuspešno!</string>
     <string name="upload_not_succesfull">Nije uspelo slanje unosa na server.</string>
+    <string name="refresh_token_no_internet">Vaš žeton za prijavu je istekao nakon jedne godine. Biologer će biti zatvoren, pošto nema veze sa internetom za preuzimanje novog žetona.</string>
+    <string name="male_text">Mužjak</string>
+    <string name="female_text">Ženka</string>
 
 </resources>

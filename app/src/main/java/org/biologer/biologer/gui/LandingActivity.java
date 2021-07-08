@@ -45,7 +45,7 @@ import org.biologer.biologer.UpdateLicenses;
 import org.biologer.biologer.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
-import org.biologer.biologer.adapters.StageLocalization;
+import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.ObservationTypes;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
@@ -659,12 +659,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     entry.getCauseOfDeath(),
                     u,
                     u,
-                    entry.getSex(),
+                    StageAndSexLocalization.getSexLocale(this, entry.getSex()),
                     removeNullInteger(entry.getNoSpecimens()),
                     entry.getProjectId(),
                     entry.getHabitat(),
                     entry.getFoundOn(),
-                    StageLocalization.getStageLocaleFromID(this, entry.getStage()),
+                    StageAndSexLocalization.getStageLocaleFromID(this, entry.getStage()),
                     entry.getTaxonSuggestion(),
                     getString(R.string.dataset),
                     translateLicence(entry.getData_licence()),
