@@ -650,6 +650,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     entry.getDay(),
                     String.format(Locale.ENGLISH, "%.6f", entry.getLattitude()),
                     String.format(Locale.ENGLISH, "%.6f", entry.getLongitude()),
+                    String.format(Locale.ENGLISH, "%.0f", entry.getElevation()),
                     String.format(Locale.ENGLISH, "%.0f", entry.getAccuracy()),
                     entry.getLocation(),
                     entry.getTime(),
