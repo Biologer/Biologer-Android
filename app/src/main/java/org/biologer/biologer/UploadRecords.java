@@ -19,6 +19,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
@@ -240,7 +241,7 @@ public class UploadRecords extends Service {
         apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
         apiEntry.setDataLicense(entry.getData_licence());
         apiEntry.setTime(entry.getTime());
-        apiEntry.setTypes(getArrayFromText(entry.getObservation_type_ids()));
+        apiEntry.setTypes(ArrayHelper.getArrayFromText(entry.getObservation_type_ids()));
         for (int i = 0; i < n; i++) {
             APIEntry.Photo p = new APIEntry.Photo();
             p.setPath(images_array.get(i));
@@ -308,15 +309,6 @@ public class UploadRecords extends Service {
                 stopSelf();
             }
         });
-    }
-
-    private int[] getArrayFromText(String observation_type_ids) {
-        String[] strings = observation_type_ids.replace("[", "").replace("]", "").split(", ");
-        int[] new_array = new int[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            new_array[i] = Integer.parseInt(strings[i]);
-        }
-        return new_array;
     }
 
     private void uploadPhoto(File image) {

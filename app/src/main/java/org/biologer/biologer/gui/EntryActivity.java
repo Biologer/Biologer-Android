@@ -18,7 +18,6 @@ import android.os.Handler;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.common.util.ArrayUtils;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
@@ -62,6 +61,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.adapters.CameraActivity;
 import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
@@ -615,7 +615,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (!observationTypesData.isEmpty()) {
                 int id_for_observed_tag = observationTypesData.get(0).getObservationId().intValue();
                 Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
-                observation_type_ids = insertIntoArray(observation_type_ids, id_for_observed_tag);
+                observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, id_for_observed_tag);
             }
 
         } else {
@@ -754,13 +754,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Load observation types and delete tag for photographed.
         observation_type_ids_string = currentItem.getObservation_type_ids();
         Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
-        observation_type_ids = getArrayFromText(observation_type_ids_string);
+        observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
         if (image1 != null || image2 != null || image3 != null) {
             Log.d(TAG, "Removing image tag just in case images got deleted.");
             int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
                     .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
                     .list().get(0).getObservationId().intValue();
-            observation_type_ids = removeFromArray(observation_type_ids, id_photo_tag);
+            observation_type_ids = ArrayHelper.removeFromArray(observation_type_ids, id_photo_tag);
         }
     }
 
@@ -1070,7 +1070,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
                     .list().get(0).getObservationId().intValue();
             Log.d(TAG, "Photographed tag has ID: " + id_photo_tag);
-            observation_type_ids = insertIntoArray(observation_type_ids, id_photo_tag);
+            observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, id_photo_tag);
         }
     }
 
@@ -1605,67 +1605,22 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 chip.setId(observation_id);
                 chip.setTag(slug);
                 chip.setText(observation_type.getName());
-                chip.setChecked(arrayContainsNumber(observation_type_ids, observation_id));
+                chip.setChecked(ArrayHelper.arrayContainsNumber(observation_type_ids, observation_id));
                 chip.setOnCheckedChangeListener((compoundButton, b) -> {
                     String text = (String) compoundButton.getTag();
                     int id = compoundButton.getId();
                     if (compoundButton.isChecked()) {
                         Log.d(TAG, "Chip button \"" + text + "\" selected, ID: " + id);
-                        observation_type_ids = insertIntoArray(observation_type_ids, id);
+                        observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, id);
                     } else {
                         Log.d(TAG, "Chip button \"" + text + "\" deselected, ID: " + id);
-                        observation_type_ids = removeFromArray(observation_type_ids, id);
+                        observation_type_ids = ArrayHelper.removeFromArray(observation_type_ids, id);
                     }
                 });
                 observation_types.addView(chip);
             }
 
         }
-    }
-
-    public boolean arrayContainsNumber(final int[] array, final int key) {
-        boolean value = ArrayUtils.contains(array, key);
-        Log.d(TAG, "Array " + Arrays.toString(array) + " is compared against number " + key + " and returned " + value);
-        return value;
-    }
-
-    private int[] insertIntoArray(int[] observation_type_ids, int new_id) {
-        if (observation_type_ids == null) {
-            int[] new_array = {new_id};
-            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
-            return new_array;
-        } else {
-            int len = observation_type_ids.length;
-            int[] new_array = new int[len + 1];
-            System.arraycopy(observation_type_ids, 0, new_array, 0, len);
-            new_array[len] = new_id;
-            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
-            return new_array;
-        }
-    }
-
-    private int[] removeFromArray(int[] observation_type_ids, int id) {
-        List<Integer> new_list = new ArrayList<>();
-        for (int observation_type_id : observation_type_ids) {
-            if (observation_type_id != id) {
-                new_list.add(observation_type_id);
-            }
-        }
-        int length = new_list.size();
-        int[] new_array = new int[length];
-        for (int i = 0; i < length; i++) {
-            new_array[i] = new_list.get(i);
-        }
-        return new_array;
-    }
-
-    private int[] getArrayFromText(String string) {
-        String[] strings = string.replace("[", "").replace("]", "").split(", ");
-        int[] new_array = new int[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            new_array[i] = Integer.parseInt(strings[i]);
-        }
-        return new_array;
     }
 
     private void resizeAndViewImage(Uri uri) {

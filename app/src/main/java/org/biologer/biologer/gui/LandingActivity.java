@@ -124,7 +124,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (SettingsManager.isSqlUpdated()) {
                 Log.i(TAG, "SQL database must be updated!");
                 Toast.makeText(LandingActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
-                User.resetTaxaSettings();
 
                 // First get the existing groups of taxa so we can fetch them again
                 if (InternetConnection.isConnected(LandingActivity.this)) {

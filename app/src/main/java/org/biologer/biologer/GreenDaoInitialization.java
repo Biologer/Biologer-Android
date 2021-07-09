@@ -21,6 +21,7 @@ public class GreenDaoInitialization extends DaoMaster.DevOpenHelper {
         //User.resetSettings();
         // TODO Send data to server before updating the database
         SettingsManager.setSqlUpdated(true);
+        User.resetTaxaSettings();
         dropAllTables(db, true);
         onCreate(db);
     }
