@@ -41,9 +41,11 @@ import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 
@@ -489,7 +491,9 @@ public class LoginActivity extends AppCompatActivity {
                     int image_license = response.body().getData().getSettings().getImageLicense();
                     UserData user = new UserData(null, name, email, data_license, image_license);
                     App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+
                     Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+                    intent.putExtra("fromLoginScreen", true);
                     startActivity(intent);
                 }
             }

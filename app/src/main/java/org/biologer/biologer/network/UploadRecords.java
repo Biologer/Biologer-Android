@@ -1,4 +1,4 @@
-package org.biologer.biologer;
+package org.biologer.biologer.network;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -19,12 +19,14 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.biologer.biologer.App;
+import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.sql.Entry;
-import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.greenrobot.eventbus.EventBus;
@@ -280,7 +282,7 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        App.get().getDaoSession().getEntryDao().delete(entryList.get(0));
+                        App.get().getDaoSession().getEntryDao().delete(entry);
                         entryList.remove(0);
                         EventBus.getDefault().post(new DeleteEntryFromList());
                         // Delete image files from internal storage

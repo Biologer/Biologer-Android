@@ -390,7 +390,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
                     invalidateOptionsMenu();
                 };
-                handler.postDelayed(runnable, 400);
+                handler.postDelayed(runnable, 300);
             }
 
             @Override

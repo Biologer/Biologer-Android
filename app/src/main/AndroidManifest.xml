@@ -80,7 +80,8 @@
         <activity
             android:name=".adapters.CameraActivity">
         </activity>
-        <activity android:name=".gui.SplashActivity">
+        <activity android:name=".gui.SplashActivity"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -109,8 +110,8 @@
 
         <service android:name="org.biologer.biologer.FetchTaxa"/>
         <service android:name="org.biologer.biologer.GetTaxaGroups"/>
-        <service android:name="org.biologer.biologer.UploadRecords"/>
-        <service android:name="org.biologer.biologer.UpdateLicenses"/>
+        <service android:name="org.biologer.biologer.network.UploadRecords"/>
+        <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>
 
     </application>

@@ -1,6 +1,8 @@
 package org.biologer.biologer.adapters;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.util.ArrayUtils;
 
@@ -12,20 +14,32 @@ public class ArrayHelper {
 
     private static final String TAG = "Biologer.ArrayHelper";
 
-    public static int[] getArrayFromText(String observation_type_ids) {
-        String[] strings = observation_type_ids.replace("[", "").replace("]", "").split(", ");
-        ArrayList<Integer> temporary_array = new ArrayList<>();
-        for (String string : strings) {
-            if (!string.equals("")) {
-                temporary_array.add(Integer.parseInt(string));
+    public static int[] getArrayFromText(String string) {
+
+        String[] strings = string.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\s", "").split(",");
+
+        // If observation types are not retrieved from server we need to handle this.
+        // In those cases we save „[0]“ in SQL.
+        int[] ints;
+        if (strings[0].equals("0")) {
+            ints = new int[1];
+            ints[0] = 1;
+        }
+
+        // If everything is OK
+        else {
+            ints = new int[strings.length];
+
+            for (int i = 0; i < strings.length; i++) {
+                try {
+                    ints[i] = Integer.parseInt(strings[i]);
+                } catch (NumberFormatException nfe) {
+                    Log.e(TAG, "Wrong ID number in Observation Types: " + strings[i]);
+                }
             }
         }
 
-        int[] final_array = new int[temporary_array.size()];
-        for (int i = 0; i < temporary_array.size(); i++) {
-            final_array[i] = temporary_array.get(i);
-        }
-        return final_array;
+        return ints;
     }
 
     public static int[] removeFromArray(int[] observation_type_ids, int id) {

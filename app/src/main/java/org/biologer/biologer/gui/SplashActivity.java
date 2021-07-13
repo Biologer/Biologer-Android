@@ -1,32 +1,13 @@
 package org.biologer.biologer.gui;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
-
-import org.biologer.biologer.App;
-import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
-import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.User;
-import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.RefreshTokenResponse;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.sql.UserData;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class SplashActivity extends AppCompatActivity {
 

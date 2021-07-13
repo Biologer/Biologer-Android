@@ -1,4 +1,4 @@
-package org.biologer.biologer;
+package org.biologer.biologer.network;
 
 import android.app.Service;
 import android.content.Intent;
@@ -9,6 +9,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
+import org.biologer.biologer.App;
+import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.User;
 import org.biologer.biologer.gui.LoginActivity;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;

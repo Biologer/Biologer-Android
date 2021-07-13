@@ -41,21 +41,18 @@ import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.UpdateLicenses;
-import org.biologer.biologer.UploadRecords;
+import org.biologer.biologer.network.UpdateLicenses;
+import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.ObservationTypes;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
+import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.sql.Entry;
-import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
-import org.biologer.biologer.network.JSON.ObservationTypesResponse;
-import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.jetbrains.annotations.NotNull;
 
@@ -117,8 +114,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
-        // Ensure this is run only once in each instance
-        if (savedInstanceState == null) {
+        // Ensure this is run only once in each instance or just after login screen
+        boolean fromLoginScreen = false;
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            fromLoginScreen = bundle.getBoolean("fromLoginScreen");
+        }
+        if (savedInstanceState == null || fromLoginScreen) {
 
             // If SQL is updated we will try to login in the user
             if (SettingsManager.isSqlUpdated()) {
@@ -223,7 +225,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             String network_type = InternetConnection.networkType(this);
             if (network_type != null) {
                 updateLicenses();
-                updateObservationTypes();
+                UpdateObservationTypes.updateObservationTypes();
                 // AUTO upload/download if the right preferences are selected...
                 if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                     uploadRecords();
@@ -429,54 +431,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         // Check if the licence has changed on the server and update if needed
         final Intent update_licenses = new Intent(this, UpdateLicenses.class);
         startService(update_licenses);
-    }
-
-    private void updateObservationTypes() {
-        String system_time = String.valueOf(System.currentTimeMillis()/1000);
-        String updated_at = SettingsManager.getObservationTypesUpdated();
-
-        Call<ObservationTypesResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
-        call.enqueue(new Callback<ObservationTypesResponse>() {
-
-            @Override
-            public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
-                ObservationTypesResponse observationsResponse = response.body();
-                if (observationsResponse != null) {
-                    if (observationsResponse.getData().length == 0) {
-                        Log.d(TAG, "Recent observation types are already downloaded from server.");
-                    } else {
-                        ObservationTypes[] obs = observationsResponse.getData();
-                        for (ObservationTypes ob : obs) {
-                            Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
-
-                            // Save translations in a separate table...
-                            List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
-                            ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
-                            for (int j = 0; j < observation_translations.size(); j++) {
-                                ObservationTypesData localization = new ObservationTypesData();
-                                localization.setObservationId(ob.getId().longValue());
-                                localization.setSlug(ob.getSlug());
-                                localization.setLocaleId(observation_translations.get(j).getId());
-                                localization.setLocale(observation_translations.get(j).getLocale());
-                                localization.setName(observation_translations.get(j).getName());
-                                localizations[j] = localization;
-                            }
-                            App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
-
-                        }
-                        Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
-                        SettingsManager.setObservationTypesUpdated(system_time);
-                        Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ObservationTypesResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Observation types could not be retrieved from server: " + t.getLocalizedMessage());
-            }
-        });
     }
 
     @Override

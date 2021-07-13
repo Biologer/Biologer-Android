@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -23,10 +22,8 @@ import android.view.View;
 import org.biologer.biologer.FetchTaxa;
 import org.biologer.biologer.GetTaxaGroups;
 import org.biologer.biologer.R;
-import org.biologer.biologer.UpdateLicenses;
+import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.InternetConnection;
-
-import java.util.Objects;
 
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
