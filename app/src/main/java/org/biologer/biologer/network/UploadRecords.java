@@ -243,7 +243,16 @@ public class UploadRecords extends Service {
         apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
         apiEntry.setDataLicense(entry.getData_licence());
         apiEntry.setTime(entry.getTime());
-        apiEntry.setTypes(ArrayHelper.getArrayFromText(entry.getObservation_type_ids()));
+        int[] observation_types = ArrayHelper.getArrayFromText(entry.getObservation_type_ids());
+        // Handle situations when observation types are not downloaded from server
+        if (observation_types == null) {
+            Log.e(TAG, "Observation types are null!");
+            int[] null_observation_types = new int[1];
+            null_observation_types[0] = 1;
+            apiEntry.setTypes(null_observation_types);
+        } else {
+            apiEntry.setTypes(observation_types);
+        }
         for (int i = 0; i < n; i++) {
             APIEntry.Photo p = new APIEntry.Photo();
             p.setPath(images_array.get(i));

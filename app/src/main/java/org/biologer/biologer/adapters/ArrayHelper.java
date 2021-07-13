@@ -1,8 +1,6 @@
 package org.biologer.biologer.adapters;
 
-import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.util.ArrayUtils;
 
@@ -18,24 +16,14 @@ public class ArrayHelper {
 
         String[] strings = string.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\s", "").split(",");
 
-        // If observation types are not retrieved from server we need to handle this.
-        // In those cases we save „[0]“ in SQL.
-        int[] ints;
-        if (strings[0].equals("0")) {
-            ints = new int[1];
-            ints[0] = 1;
-        }
+        int [] ints = new int[strings.length];
 
-        // If everything is OK
-        else {
-            ints = new int[strings.length];
-
-            for (int i = 0; i < strings.length; i++) {
-                try {
-                    ints[i] = Integer.parseInt(strings[i]);
-                } catch (NumberFormatException nfe) {
-                    Log.e(TAG, "Wrong ID number in Observation Types: " + strings[i]);
-                }
+        for (int i = 0; i < strings.length; i++) {
+            try {
+                ints[i] = Integer.parseInt(strings[i]);
+            } catch (NumberFormatException nfe) {
+                Log.e(TAG, "Wrong ID number in Observation Types: " + strings[i]);
+                return null;
             }
         }
 
