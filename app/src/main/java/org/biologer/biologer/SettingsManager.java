@@ -125,7 +125,7 @@ public class SettingsManager {
         editor.apply();
     }
 
-    static String getTaxaLastPageFetched() {
+    public static String getTaxaLastPageFetched() {
         return prefs.getString(KEY.TAXA_LAST_PAGE_FETCHED.toString(),"1");
     }
 

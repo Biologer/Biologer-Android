@@ -37,8 +37,8 @@ import android.widget.Toast;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.FetchTaxa;
-import org.biologer.biologer.GetTaxaGroups;
+import org.biologer.biologer.network.FetchTaxa;
+import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.UpdateLicenses;

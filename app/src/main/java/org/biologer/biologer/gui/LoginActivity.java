@@ -38,14 +38,12 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.GetTaxaGroups;
+import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 

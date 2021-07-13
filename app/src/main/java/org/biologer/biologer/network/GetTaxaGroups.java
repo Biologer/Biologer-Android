@@ -1,4 +1,4 @@
-package org.biologer.biologer;
+package org.biologer.biologer.network;
 
 import android.app.Service;
 import android.content.Context;
@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import org.biologer.biologer.App;
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.TaxaGroups;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
@@ -34,7 +36,7 @@ public class GetTaxaGroups extends Service {
 
     private static final String TAG = "Biologer.GetTaxaGroups";
 
-    static final String TASK_COMPLETED = "org.biologer.biologer.GetTaxaGroups.TASK_COMPLETED";
+    static final String TASK_COMPLETED = "org.biologer.biologer.network.GetTaxaGroups.TASK_COMPLETED";
 
     LocalBroadcastManager broadcaster;
 

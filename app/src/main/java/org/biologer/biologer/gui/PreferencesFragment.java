@@ -19,8 +19,8 @@ import androidx.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.View;
 
-import org.biologer.biologer.FetchTaxa;
-import org.biologer.biologer.GetTaxaGroups;
+import org.biologer.biologer.network.FetchTaxa;
+import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.InternetConnection;
@@ -35,7 +35,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent != null) {
-                String message = intent.getStringExtra("org.biologer.biologer.FetchTaxa.TASK_COMPLETED");
+                String message = intent.getStringExtra("org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED");
                 if (message != null) {
                     Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
                     if (message.equals("fetched") || message.equals("paused") || message.equals("canceled")) {
@@ -203,7 +203,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         super.onResume();
         if (getActivity() != null) {
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
-                    new IntentFilter("org.biologer.biologer.FetchTaxa.TASK_COMPLETED"));
+                    new IntentFilter("org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED"));
         }
         Log.d(TAG, "Resuming Preferences Fragment.");
         toggleFetchTaxaButton(preferenceButton);

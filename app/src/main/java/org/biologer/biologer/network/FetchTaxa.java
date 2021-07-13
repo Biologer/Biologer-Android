@@ -1,4 +1,4 @@
-package org.biologer.biologer;
+package org.biologer.biologer.network;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -11,12 +11,14 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.biologer.biologer.App;
+import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.TaxaStages;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.Taxa;
 import org.biologer.biologer.network.JSON.TaxaTranslations;
-import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxaTranslationData;
@@ -48,7 +50,7 @@ public class FetchTaxa extends Service {
     public static final String ACTION_RESUME = "ACTION_RESUME";
     private String stop_fetching;
     private static FetchTaxa instance = null;
-    static final String TASK_COMPLETED = "org.biologer.biologer.FetchTaxa.TASK_COMPLETED";
+    static final String TASK_COMPLETED = "org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED";
     int retry_number = 1;
     ArrayList<String> taxa_groups = new ArrayList<>();
 
