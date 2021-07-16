@@ -156,7 +156,7 @@ public class Register extends FragmentActivity {
         // Change image of the state... don't confuse users
         flag = findViewById(R.id.flag);
         if (database.equals("https://biologer.ba")) {
-            flag.setImageResource(R.drawable.flag_bih);
+            flag.setImageResource(R.drawable.flag_bosnia);
             clientKey = BuildConfig.BiologerBA_Key;
         }
         if (database.equals("https://biologer.org")) {

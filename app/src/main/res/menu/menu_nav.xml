@@ -25,7 +25,7 @@
             <item
                 android:id="@+id/nav_help"
                 android:title="@string/help"
-                android:icon="@drawable/ic_help_outline_black_24dp"/>
+                android:icon="@drawable/ic_help"/>
         </menu>
     </item>
 </menu>

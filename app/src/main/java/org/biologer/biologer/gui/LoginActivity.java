@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
         Integer[] Icons = {
                 R.drawable.flag_serbia,
                 R.drawable.flag_croatia,
-                R.drawable.flag_bih,
+                R.drawable.flag_bosnia,
                 R.drawable.ic_hammer_developers};
         ImageArrayAdapter ourDatabases = new ImageArrayAdapter(this, Icons, Databases);
         spinner.setAdapter(ourDatabases);
