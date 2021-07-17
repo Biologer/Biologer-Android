@@ -127,7 +127,6 @@
     <string name="choose_ilicense">Odaberi različitu licencu za svoje fotografije</string>
     <string name="choose_project">Postavlja ime projekta ako su vaši podaci prikupljeni tijekom projekta.</string>
     <string name="project_name">Ime projekta</string>
-    <string name="license_public">Odmah objavi</string>
     <string name="license_timed">Zatvorena, objavljuje se kao otvorena za 3 godine</string>
     <string name="channel_description">Ovo služi za primanje obavijesti o taksonomskim ažuriranjma.</string>
     <string name="channel_name">Ažuriraj taksone</string>

@@ -124,7 +124,6 @@
     <string name="choose_ilicense">Fotóink jogvédettégi fokozatának kiválasztása</string>
     <string name="choose_project">Itt jelölhető meg, ha az adatgyűjtés projekt keretében történik.</string>
     <string name="project_name">Projekt neve</string>
-    <string name="license_public">Az adataimat azonnal közöld</string>
     <string name="license_timed">Csak 3 év múlva legyen nyilvános</string>
     <string name="channel_description">Itt jelennek meg a taxonómiai bázis frissítésének üzenetei.</string>
     <string name="channel_name">Frissítsd a taxonómiát</string>

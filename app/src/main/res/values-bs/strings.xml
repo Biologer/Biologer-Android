@@ -127,7 +127,6 @@
     <string name="choose_ilicense">Omogućava izbor drugačije licence za fotografije koje šaljete iz Biologer aplikacije.</string>
     <string name="choose_project">Postavlja ime projekta ukoliko su vaši podaci prikupljeni tokom reazlizacije nekog projekta.</string>
     <string name="project_name">Naziv projekta</string>
-    <string name="license_public">Odmah objavi</string>
     <string name="license_timed">Zatvorena, otvorena nakon 3 godine</string>
     <string name="channel_description">Prikazuje obavještenja vezana za taksonomske izmjene.</string>
     <string name="channel_name">Ažuriranje taksona</string>

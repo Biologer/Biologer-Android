@@ -1,6 +1,8 @@
-apply plugin: 'com.android.application'
-apply plugin: 'org.greenrobot.greendao'
-apply plugin: 'com.google.gms.google-services'
+plugins {
+    id 'com.android.application' apply true
+    id 'org.greenrobot.greendao' apply true
+    id 'com.google.gms.google-services' apply true
+}
 
 repositories {
     google()
@@ -15,13 +17,22 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 102
-        versionName "3.0.4"
+        versionCode 103
+        versionName "3.0.5"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
             sourceCompatibility JavaVersion.VERSION_1_8
             targetCompatibility JavaVersion.VERSION_1_8
+        }
+    }
+
+    // Notify on deprecated api
+    allprojects {
+        gradle.projectsEvaluated {
+            tasks.withType(JavaCompile) {
+                options.compilerArgs.add("-Xlint:deprecation")
+            }
         }
     }
 
@@ -42,7 +53,7 @@ greendao {
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
+            resValue 'string', "MAP_KEY", GoogleMAP_KEY
         }
         release {
             // Set if code shrinking should be enabled
@@ -59,7 +70,7 @@ greendao {
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            // resValue 'string', "biologer_hr_key", Biologer_BiologerHR_client_secret
+            resValue 'string', "MAP_KEY", GoogleMAP_KEY
 
 
         }
