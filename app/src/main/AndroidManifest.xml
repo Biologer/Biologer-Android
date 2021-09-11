@@ -81,7 +81,8 @@
             android:name=".adapters.CameraActivity">
         </activity>
         <activity android:name=".gui.SplashActivity"
-            android:noHistory="true">
+            android:noHistory="true"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -93,7 +94,8 @@
             android:noHistory="true"/>
         <activity
             android:name=".gui.LandingActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
