@@ -120,12 +120,14 @@ public class PreparePhotos extends Service {
         }
         if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
             Log.d(TAG, "The image fits perfectly! Returning image without resize");
-            return saveBitmap(rotateImage(input_image, rotation));
+            Bitmap rotatedBitmap = rotateImage(input_image, rotation);
+            return saveBitmap(rotatedBitmap);
         }
         else {
             Log.d(TAG, "Resizing image...");
             Bitmap resizedBitmap = resizeBitmap(input_image, 1024);
-            return saveBitmap(rotateImage(resizedBitmap, rotation));
+            Bitmap rotatedBitmap = rotateImage(resizedBitmap, rotation);
+            return saveBitmap(rotatedBitmap);
         }
     }
 
@@ -135,7 +137,7 @@ public class PreparePhotos extends Service {
             // Save the file in internal Biologer storage
             String filename = getImageFileName() + ".jpg";
             FileOutputStream fos = openFileOutput(filename, Context.MODE_PRIVATE);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 73, fos);
             fos.flush();
             fos.close();
 
@@ -157,7 +159,6 @@ public class PreparePhotos extends Service {
         return null;
 
     }
-
 
     // Set the filename for image taken through the Camera
     private String getImageFileName() {
@@ -244,8 +245,6 @@ public class PreparePhotos extends Service {
     private static Bitmap rotateImage(Bitmap image, int degree) {
         Matrix matrix = new Matrix();
         matrix.postRotate(degree);
-        Bitmap rotatedImg = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
-        image.recycle();
-        return rotatedImg;
+        return Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
     }
 }
