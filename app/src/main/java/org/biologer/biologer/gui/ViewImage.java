@@ -9,7 +9,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.github.chrisbanes.photoview.PhotoView;
+import com.ortiz.touchview.TouchImageView;
 
 import org.biologer.biologer.R;
 
@@ -34,8 +34,8 @@ public class ViewImage extends AppCompatActivity {
         Intent intent = getIntent();
         String image = intent.getStringExtra("image");
 
-        PhotoView photoView = (PhotoView) findViewById(R.id.photo_view);
-        photoView.setImageURI(Uri.parse(image));
+        TouchImageView imageView = findViewById(R.id.imageViewZoom);
+        imageView.setImageURI(Uri.parse(image));
     }
 
     // Process running after clicking the toolbar buttons (back and save)

@@ -14,9 +14,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-        <com.github.chrisbanes.photoview.PhotoView
-            android:id="@+id/photo_view"
+        <com.ortiz.touchview.TouchImageView
+            android:id="@+id/imageViewZoom"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent">
+        </com.ortiz.touchview.TouchImageView>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
