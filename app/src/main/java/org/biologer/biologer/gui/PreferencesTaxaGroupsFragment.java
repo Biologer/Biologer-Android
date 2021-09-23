@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +20,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
+import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.sql.TaxaTranslationData;
 import org.biologer.biologer.sql.TaxaTranslationDataDao;
 import org.biologer.biologer.sql.TaxonData;
@@ -309,20 +308,23 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             } else {
                 if (!add_to_sql.isEmpty()) {
                     // Check if there is network available and download the data...
-                    String network_type = networkType();
-                    if (network_type != null) {
-                        if (network_type.equals("connected") || network_type.equals("wifi")) {
-                            if (how_to_use_network.equals("all") ||
-                                    (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
-                                fetchTaxa(activity);
+                    Context context = getContext();
+                    if (context != null) {
+                        String network_type = InternetConnection.networkType(context);
+                        if (network_type != null) {
+                            if (InternetConnection.isConnected(context) || network_type.equals("wifi")) {
+                                if (how_to_use_network.equals("all") ||
+                                        (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                                    fetchTaxa(activity);
+                                } else {
+                                    buildAlertMessage(getString(R.string.message_should_download),
+                                            getString(R.string.download),
+                                            getString(R.string.skip),
+                                            activity);
+                                }
                             } else {
-                                buildAlertMessage(getString(R.string.message_should_download),
-                                        getString(R.string.download),
-                                        getString(R.string.skip),
-                                        activity);
+                                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
                             }
-                        } else {
-                            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
                         }
                     }
                 }
@@ -345,27 +347,6 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         super.onStart();
         remove_from_sql = new ArrayList<>();
         add_to_sql = new ArrayList<>();
-    }
-
-    private String networkType() {
-        Activity activity = getActivity();
-        if (activity != null) {
-            ConnectivityManager connectivitymanager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-            assert connectivitymanager != null;
-            NetworkInfo activeNetworkInfo = connectivitymanager.getActiveNetworkInfo();
-            if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
-                NetworkInfo wifiNetworkInfo = connectivitymanager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                if (wifiNetworkInfo != null && wifiNetworkInfo.isConnected()) {
-                    Log.d(TAG, "You are connected to the WiFi network.");
-                    return "wifi";
-                }
-                Log.d(TAG, "You are connected to the mobile network.");
-                return "connected";
-            }
-            Log.d(TAG, "You are not connected to the network.");
-            return "not_connected";
-        }
-        return null;
     }
 
     protected void buildAlertOKMessage(String message) {

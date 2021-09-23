@@ -543,11 +543,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void setAccuracyColor() {
         if (acc != null) {
             if (acc <= 25) {
-                textViewMeters.setTextColor(getResources().getColor(R.color.checkBox_text));
-                textViewGPSAccuracy.setTextColor(getResources().getColor(R.color.checkBox_text));
+                textViewMeters.setTextColor(ContextCompat.getColor(this, R.color.checkBox_text));
+                textViewGPSAccuracy.setTextColor(ContextCompat.getColor(this, R.color.checkBox_text));
             } else {
-                textViewMeters.setTextColor(getResources().getColor(R.color.warningRed));
-                textViewGPSAccuracy.setTextColor(getResources().getColor(R.color.warningRed));
+                textViewMeters.setTextColor(ContextCompat.getColor(this, R.color.warningRed));
+                textViewGPSAccuracy.setTextColor(ContextCompat.getColor(this, R.color.warningRed));
             }
         }
     }

@@ -1,6 +1,5 @@
 package org.biologer.biologer.gui;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -21,6 +20,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -71,7 +71,7 @@ public class Register extends FragmentActivity {
     String clientKey;
     MaterialCheckBox checkBox;
 
-    ProgressDialog progressDialog;
+    ProgressBar progressBar;
 
     Handler handler = new Handler(Looper.getMainLooper());
     Runnable runnable;
@@ -111,7 +111,7 @@ public class Register extends FragmentActivity {
 
         String locale_script = Localisation.getLocaleScript();
 
-        progressDialog = new ProgressDialog(Register.this);
+        progressBar = findViewById(R.id.register_progressBar);
 
         // This is intro text which should contain a link to privacy policy to click on
         String intro_string = getString(R.string.register_intro1)
@@ -314,9 +314,7 @@ public class Register extends FragmentActivity {
 
     private void onRegister(View view) {
         button.setEnabled(false);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.registering));
-        progressDialog.show();
+        displayProgressBar(true);
 
         if (surname.getText().length() > 2 &&
                 name.getText().length() > 2 &&
@@ -340,29 +338,27 @@ public class Register extends FragmentActivity {
                         emailLayout.setError(getString(R.string.email_already_exist));
                         registerResponseCall.cancel();
                         button.setEnabled(true);
-                        progressDialog.dismiss();
+                        displayProgressBar(false);
                     }
                     if (response.code() == 500) {
                         Log.e(TAG, "Error 500: Server could not send email to the given address.");
                         emailLayout.setError(getString(R.string.email_domain_wrong));
                         registerResponseCall.cancel();
                         button.setEnabled(true);
-                        progressDialog.dismiss();
+                        displayProgressBar(false);
                     }
                     if (response.code() == 404) {
                         Log.e(TAG, "Error 404: Server could not send email to the given address.");
                         emailLayout.setError(getString(R.string.email_domain_wrong));
                         registerResponseCall.cancel();
                         button.setEnabled(true);
-                        progressDialog.dismiss();
+                        displayProgressBar(false);
                     }
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             Log.d(TAG, "Successful registration!");
                             String token = response.body().getAccessToken();
                             String refresh_token = response.body().getRefreshToken();
-                            Log.d(TAG, "Access token value is: " + token);
-                            Log.d(TAG, "Refresh token value is: " + refresh_token);
 
                             SettingsManager.setAccessToken(token);
                             SettingsManager.setRefreshToken(refresh_token);
@@ -372,7 +368,7 @@ public class Register extends FragmentActivity {
                             SettingsManager.setTokenExpire(String.valueOf(expire_date));
                             Log.d(TAG, "Token will expire on timestamp: " + expire_date);
 
-                            progressDialog.dismiss();
+                            progressBar.setVisibility(View.GONE);
                             saveUserData();
                         } else {
                             Log.e(TAG, "Register response is null!");
@@ -387,7 +383,7 @@ public class Register extends FragmentActivity {
                 public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
                     Log.e(TAG, "Network failure!" + t);
                     registerResponseCall.cancel();
-                    progressDialog.dismiss();
+                    displayProgressBar(false);
                     button.setEnabled(true);
                 }
             });
@@ -454,6 +450,18 @@ public class Register extends FragmentActivity {
                 });
         final AlertDialog alert = builder_taxon.create();
         alert.show();
+    }
+
+    private void displayProgressBar(Boolean value) {
+        if (value) {
+            button.setEnabled(false);
+            button.setVisibility(View.GONE);
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            button.setVisibility(View.VISIBLE);
+            button.setEnabled(true);
+        }
     }
 
     @Override

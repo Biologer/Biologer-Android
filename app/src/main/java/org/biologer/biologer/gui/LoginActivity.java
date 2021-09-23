@@ -1,6 +1,5 @@
 package org.biologer.biologer.gui;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -9,6 +8,8 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,6 +31,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView tv_devDatabase;
     Button loginButton;
     String database_name;
-    ProgressDialog progressDialog;
+    ProgressBar progressBar;
     TextView forgotPassTextView;
 
     String old_username;
@@ -83,6 +85,7 @@ public class LoginActivity extends AppCompatActivity {
     String rsKey = BuildConfig.BiologerRS_Key;
     String hrKey = BuildConfig.BiologerHR_Key;
     String baKey = BuildConfig.BiologerBA_Key;
+    String devKey = BuildConfig.BiologerDEV_Key;
 
     Call <LoginResponse> login;
 
@@ -172,7 +175,7 @@ public class LoginActivity extends AppCompatActivity {
         forgotPassTextView = findViewById(R.id.ctv_forgotPass);
         forgotPassTextView.setOnClickListener(this::onForgotPass);
 
-        progressDialog = new ProgressDialog(LoginActivity.this);
+        progressBar = findViewById(R.id.login_progressBar);
 
         et_username.setOnFocusChangeListener((v, hasFocus) -> {
             Log.d(TAG, "Username focus changed!");
@@ -375,9 +378,9 @@ public class LoginActivity extends AppCompatActivity {
             String hint_text = getString(R.string.URL_address) + " " + database_name;
             tv_devDatabase.setText(hint_text);
             if (database_name.equals("https://dev.biologer.org")) {
-                tv_devDatabase.setTextColor(getResources().getColor(R.color.warningRed));
+                tv_devDatabase.setTextColor(ContextCompat.getColor(LoginActivity.this, R.color.warningRed));
             } else {
-                tv_devDatabase.setTextColor(getResources().getColor(R.color.colorPrimary));
+                tv_devDatabase.setTextColor(ContextCompat.getColor(LoginActivity.this, R.color.colorPrimary));
             }
         }
 
@@ -406,9 +409,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getToken() {
 
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.logging_in));
-        progressDialog.show();
+        displayProgressBar(true);
 
         // Change the call according to the database selected
         if (database_name.equals("https://biologer.org")) {
@@ -425,7 +426,7 @@ public class LoginActivity extends AppCompatActivity {
         }
         if (database_name.equals("https://dev.biologer.org")) {
             Log.d(TAG, "Developmental database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
+            login = RetrofitClient.getService(database_name).login("password", "6", devKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
 
         Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
@@ -440,7 +441,6 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 if(response.isSuccessful()) {
                     if(response.body() != null) {
-                        progressDialog.dismiss();
                         String token = response.body().getAccessToken();
                         String refresh_token = response.body().getRefreshToken();
                         //Log.d(TAG, "Token value is: " + token);
@@ -461,16 +461,14 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     til_password.setError(getString(R.string.wrong_creds));
                     til_username.setError(getString(R.string.wrong_creds));
-                    loginButton.setEnabled(true);
-                    progressDialog.dismiss();
+                    displayProgressBar(false);
                     Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
                 }
             }
             @Override
             public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
-                loginButton.setEnabled(true);
-                progressDialog.dismiss();
+                displayProgressBar(false);
                 Log.e(TAG, "Cannot get response from the server (token)");
             }
         });
@@ -509,27 +507,25 @@ public class LoginActivity extends AppCompatActivity {
 
     private void logInTest() {
         Log.d(TAG, "Logging in attempt.");
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.logging_in));
-        progressDialog.show();
+        displayProgressBar(true);
         Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0, false, null, true);
         service.enqueue(new Callback<TaxaResponse>() {
             @Override
             public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
                 if (response.code() == 403) {
                     SettingsManager.setMailConfirmed(false);
-                    progressDialog.dismiss();
+                    displayProgressBar(false);
                     dialogConfirmMail(getString(R.string.confirm_email));
                 }
                 if (response.code() == 401) {
                     tv_devDatabase.setText(getString(R.string.check_database));
-                    progressDialog.dismiss();
+                    displayProgressBar(false);
                     dialogConfirmMail(getString(R.string.unauthorised));
                 }
                 else {
                     if (response.body() != null) {
                         SettingsManager.setMailConfirmed(true);
-                        progressDialog.dismiss();
+                        displayProgressBar(false);
                         Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
                         startActivity(intent);
                     }
@@ -539,8 +535,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
                 Log.e(TAG, "Cannot get response from the server (test taxa response)");
-                progressDialog.dismiss();
-                loginButton.setEnabled(true);
+                displayProgressBar(false);
             }
         });
     }
@@ -549,6 +544,17 @@ public class LoginActivity extends AppCompatActivity {
         return (!TextUtils.isEmpty(target) && Patterns.EMAIL_ADDRESS.matcher(target).matches());
     }
 
+    private void displayProgressBar(Boolean value) {
+        if (value) {
+            loginButton.setEnabled(false);
+            loginButton.setVisibility(View.GONE);
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            loginButton.setVisibility(View.VISIBLE);
+            loginButton.setEnabled(true);
+        }
+    }
 
     private void dialogConfirmMail(String message) {
         // Show the message if registration was successful

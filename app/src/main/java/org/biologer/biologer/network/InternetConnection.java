@@ -3,7 +3,6 @@ package org.biologer.biologer.network;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.util.Log;
 
@@ -11,6 +10,7 @@ public class InternetConnection {
 
     private static final String TAG = "Biologer.Internet";
 
+    @SuppressWarnings("deprecation")
     public static boolean isConnected(Context context){
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -34,7 +34,7 @@ public class InternetConnection {
 
         // For older Android version
         else {
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             if (activeNetworkInfo != null) {
                 boolean connected = activeNetworkInfo.isConnected();
                 if (connected) {
@@ -53,6 +53,7 @@ public class InternetConnection {
     }
 
     // Will return four strings: cellular, wifi, bluetooth or ethernet
+    @SuppressWarnings("deprecation")
     public static String networkType(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -86,13 +87,13 @@ public class InternetConnection {
 
         // For older Android version
         else {
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             if (activeNetworkInfo != null) {
                 if (activeNetworkInfo.isConnected()) {
-                    NetworkInfo networkInfo_cellular = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-                    NetworkInfo networkInfo_wifi = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                    NetworkInfo networkInfo_bluetooth = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
-                    NetworkInfo networkInfo_ethernet = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
+                    android.net.NetworkInfo networkInfo_cellular = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                    android.net.NetworkInfo networkInfo_wifi = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                    android.net.NetworkInfo networkInfo_bluetooth = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_BLUETOOTH);
+                    android.net.NetworkInfo networkInfo_ethernet = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
                     if (networkInfo_cellular != null) {
                         if (networkInfo_cellular.isConnected()) {
                             Log.d(TAG, "You are connected to cellular network.");

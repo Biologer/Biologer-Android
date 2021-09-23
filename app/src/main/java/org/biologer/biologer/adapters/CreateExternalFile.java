@@ -68,6 +68,7 @@ public class CreateExternalFile {
     }
 
     // This will create image on Android <= 9.0
+    @SuppressWarnings("deprecation")
     private static File createFile(String filename, String extension) throws IOException {
 
         if (extension.equals(".jpg")) {

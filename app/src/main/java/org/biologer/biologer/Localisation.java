@@ -9,6 +9,7 @@ public class Localisation {
 
     private static final String TAG = "Biologer.Entry";
 
+    @SuppressWarnings("deprecation")
     private static Locale getCurrentLocale() {
         Locale locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

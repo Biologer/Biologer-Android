@@ -1,7 +1,7 @@
 package org.biologer.biologer;
 
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 
 /**
  * Created by brjovanovic on 12/24/2017.

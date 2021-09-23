@@ -1,29 +1,21 @@
 package org.biologer.biologer.network;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.TaxaGroups;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsTranslations;
-import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsDataDao;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
 import org.biologer.biologer.sql.TaxonGroupsTranslationDataDao;
-import org.greenrobot.greendao.query.QueryBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
