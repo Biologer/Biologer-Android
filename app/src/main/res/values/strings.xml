@@ -341,5 +341,6 @@
     <string name="refresh_token_no_internet">Your login token expired after one year of use. Biologer will exit not since there is no internet connection to refresh the login token!</string>
     <string name="male_text">Male</string>
     <string name="female_text">Female</string>
+    <string name="exit">Exit</string>
 
 </resources>
