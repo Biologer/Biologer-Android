@@ -77,9 +77,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-        <activity
-            android:name=".adapters.CameraActivity">
-        </activity>
         <activity android:name=".gui.SplashActivity"
             android:noHistory="true"
             android:exported="true">

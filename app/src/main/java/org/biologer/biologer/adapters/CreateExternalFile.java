@@ -13,12 +13,20 @@ import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class CreateExternalFile {
 
     private static final String TAG = "Biologer.ExternalFile";
 
     public static Uri newDocumentFile(Context context, String filename, String extension) {
+
+        if (filename == null) {
+            filename = "JPEG_" + getFileNameFromDate();
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentResolver resolver = context.getContentResolver();
             ContentValues contentValues = new ContentValues();
@@ -48,7 +56,7 @@ public class CreateExternalFile {
             try {
                 file = createFile(filename, extension);
             } catch (IOException ex) {
-                Log.e(TAG, "Could not create file.");
+                Log.e(TAG, "Could not create file: " + ex);
             }
             // Continue only if the File was successfully created
             if (file != null) {
@@ -106,6 +114,10 @@ public class CreateExternalFile {
         else {
             return null;
         }
+    }
+
+    private static String getFileNameFromDate() {
+        return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
     }
 
 }

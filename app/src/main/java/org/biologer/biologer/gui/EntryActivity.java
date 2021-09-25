@@ -24,6 +24,9 @@ import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -62,7 +65,7 @@ import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
-import org.biologer.biologer.adapters.CameraActivity;
+import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.sql.Entry;
@@ -84,14 +87,13 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "Biologer.Entry";
 
-    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL = 1005;
-    private static final int MY_PERMISSIONS_REQUEST_CAMERA = 1006;
     private static final int REQUEST_LOCATION = 1;
 
     private LocationManager locationManager;
@@ -100,7 +102,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private double elev = 0.0;
     private LatLng currentLocation = new LatLng(0.0, 0.0);
     private Double acc = 0.0;
-    private final int CAMERA = 2;
     private final int MAP = 3;
     private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment, textInputStages;
     private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
@@ -114,6 +115,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     LinearLayout detailedEntry, layoutCoordinates, layoutUnknownCoordinates;
     private boolean save_enabled = false;
     private String image1, image2, image3;
+    private Uri current_image;
     private SwipeRefreshLayout swipeRefreshLayout;
     private Entry currentItem;
     private String locale_script = "en";
@@ -145,9 +147,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             actionbar.setDisplayShowHomeEnabled(true);
         }
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            checkWriteStoragePermission();
-        }
         // Get the system locale to translate names of the taxa
         locale_script = Localisation.getLocaleScript();
 
@@ -1231,40 +1230,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
                 }
             }
-
-        } else if (requestCode == CAMERA) {
-            Log.d(TAG, "CAMERA requestCode sent");
-            if (data != null) {
-                String image_uri_string = data.getStringExtra("image_string");
-                entryAddPic(image_uri_string);
-                if (image1 == null) {
-                    image1 = image_uri_string;
-                    Glide.with(this)
-                            .load(image1)
-                            .override(100, 100)
-                            .into(imageViewPicture1);
-                    list_new_images.add(image1);
-                    frameLayoutPicture1.setVisibility(View.VISIBLE);
-                } else if (image2 == null) {
-                    image2 = image_uri_string;
-                    Glide.with(this)
-                            .load(image2)
-                            .override(100, 100)
-                            .into(imageViewPicture2);
-                    list_new_images.add(image2);
-                    frameLayoutPicture2.setVisibility(View.VISIBLE);
-                } else if (image3 == null) {
-                    image3 = image_uri_string;
-                    Glide.with(this)
-                            .load(image3)
-                            .override(100, 100)
-                            .into(imageViewPicture3);
-                    list_new_images.add(image3);
-                    frameLayoutPicture3.setVisibility(View.VISIBLE);
-                    disablePhotoButtons(true);
-                }
-            }
-            Toast.makeText(EntryActivity.this, "Image Saved!", Toast.LENGTH_SHORT).show();
         }
 
         // Get data from Google Map and save it as local variables
@@ -1328,13 +1293,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         return images;
     }
 
-    private void entryAddPic(String string) {
-        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        Uri uri = Uri.parse(string);
-        intent.setData(uri);
-        this.sendBroadcast(intent);
-    }
-
     public void showDeadComment() {
         if (checkBox_dead.isChecked()) {
             textViewDeathComment.setVisibility(View.VISIBLE);
@@ -1347,56 +1305,82 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Permission to write external storage granted.");
-                    getLocation(100, 2); // Ensure that EntryActivity ask for location permission.
-                } else {
-                    Log.d(TAG, "Not possible to get permission to write external storage.");
-                }
-                return;
-            }
-
-            case MY_PERMISSIONS_REQUEST_CAMERA: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Permission to take camera granted, taking photo now…");
-                    takePhotoFromCamera();
-                } else {
-                    Log.d(TAG, "Not possible to get permission to use camera.");
-                }
-            }
-
-            case REQUEST_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    getLocation(100, 2);
-                    Log.d(TAG, "Permission to request location granted.");
-                } else {
-                    Log.d(TAG, "Not possible to get permission to use camera.");
-                }
+        if (requestCode == REQUEST_LOCATION) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLocation(100, 2);
+                Log.d(TAG, "Permission to request location granted.");
+            } else {
+                Log.d(TAG, "Not possible to get permission to use camera.");
             }
         }
     }
 
     private void takePhoto() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                Log.d(TAG, "Could not show camera permission dialog.");
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        // For Android <= P we need permission to write external storage
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            // If permission already granted
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                takePhotoFromCamera();
             }
-        } else {
-            takePhotoFromCamera();
+
+            // If permission was denied before
+            else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.request_file_camera_permissions)
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                            String[] perm = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+                            requestPermissionsLauncher.launch(perm);
+                        })
+                        .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+
+            // If permission is asked for the first time
+            else {
+                String[] perm = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
+                requestPermissionsLauncher.launch(perm);
+            }
+        }
+
+        // For recent android we don’t need permit for external storage
+        else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                takePhotoFromCamera();
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.request_camera_permissions)
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.yes), (dialog, id) -> requestCameraPermission.launch(Manifest.permission.CAMERA))
+                        .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
+                AlertDialog alert = builder.create();
+                alert.show();
+            } else {
+                requestCameraPermission.launch(Manifest.permission.CAMERA);
+            }
         }
     }
 
+    // Taking pictures from camera
+    private final ActivityResultLauncher<Uri> takePictureFromCamera = registerForActivityResult(
+            new ActivityResultContracts.TakePicture(),
+            new ActivityResultCallback<Boolean>() {
+                @Override
+                public void onActivityResult(Boolean result) {
+                    if (result) {
+                        Log.i(TAG, "Camera returned picture.");
+                        resizeAndViewImage(current_image);
+                    }
+                }
+            });
+
     private void takePhotoFromCamera() {
-        Intent camera = new Intent(this, CameraActivity.class);
-        startActivityForResult(camera, CAMERA);
+        current_image = CreateExternalFile.newDocumentFile(this, null, ".jpg");
+        takePictureFromCamera.launch(current_image);
     }
 
     // Function used to retrieve the location
@@ -1514,21 +1498,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    // Check for permissions and add them if required
-    private void checkWriteStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "No permission to write external storage");
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                Log.d(TAG, "User does not allow to set write permission for this application.");
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL);
-                Log.d(TAG, "Requesting permission to write external storage.");
-            }
-        } else {
-            Log.d(TAG, "Permission to write external storage was already granted");
-        }
-    }
-
     private int getGreenDaoDataLicense() {
         if (userDataList != null) {
             if (!userDataList.isEmpty()) {
@@ -1629,4 +1598,24 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         resizeImage.putExtra("image_uri", String.valueOf(uri));
         startService(resizeImage);
     }
+
+    private final ActivityResultLauncher<String> requestCameraPermission =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    takePhotoFromCamera();
+                } else {
+                    Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                }
+            });
+
+    private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), (Map<String, Boolean> isGranted) -> {
+                boolean flag = isGranted.containsValue(false);
+                if (!flag) {
+                    takePhotoFromCamera();
+                } else {
+                    Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                }
+            });
+
 }

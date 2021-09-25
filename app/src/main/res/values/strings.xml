@@ -342,5 +342,7 @@
     <string name="male_text">Male</string>
     <string name="female_text">Female</string>
     <string name="exit">Exit</string>
+    <string name="request_file_camera_permissions">Biologer could not take a photo without permission to access your file system and camera. Would you like to enable this permissions?</string>
+    <string name="request_camera_permissions">Biologer could not take a photo without your permission to access camera. Would you like to enable this permissions?</string>
 
 </resources>
