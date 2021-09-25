@@ -3,7 +3,6 @@ package org.biologer.biologer.gui;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
-import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -93,8 +92,6 @@ import java.util.Objects;
 public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "Biologer.Entry";
-
-    private static final int REQUEST_LOCATION = 1;
 
     private LocationManager locationManager;
     private LocationListener locationListener;
@@ -560,7 +557,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Log.d(TAG, "Resize Images returned code: " + s);
 
                     if (s.equals("error")) {
-                        Log.d(TAG, "Unknown error. Can not get resized image!");
+                        Toast.makeText(EntryActivity.this, "Unknown error occurred! Couldn't get resized image.", Toast.LENGTH_LONG).show();
                     } else {
                         if (image1 == null) {
                             image1 = s;
@@ -792,8 +789,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         int id = item.getItemId();
         if (id == android.R.id.home) {
             onBackPressed();
-            //this.finish();
-            //return true;
         }
         if (id == R.id.action_save) {
             saveEntry1();
@@ -879,7 +874,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 takePhoto();
                 break;
             case R.id.image_view_take_photo_gallery:
-                takePhotoFromGallery();
+                takeGalleryPhoto();
                 break;
         }
     }
@@ -1174,62 +1169,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         startActivityForResult(intent, MAP);
     }
 
-    public void takePhotoFromGallery() {
-        Log.i(TAG, "Taking photo from the Gallery.");
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        }
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_CANCELED) {
             return;
-        }
-
-        int GALLERY = 1;
-        if (requestCode == GALLERY) {
-            Log.d(TAG, "GALLERY requestCode sent");
-            if (data != null) {
-                // If a single image is selected we cen get it directly...
-                if (data.getData() != null) {
-                    Uri currentPhotoUri = data.getData();
-                    Log.i(TAG, "You have selected this image from Gallery: " + currentPhotoUri);
-                    resizeAndViewImage(currentPhotoUri);
-                    // entryAddPic(resized_image); // Not sure if I need this...
-                } else {
-                    // If multiple images are selected we have a workaround...
-                    if (data.getClipData() != null) {
-                        ClipData clipData = data.getClipData();
-                        int count_selected = clipData.getItemCount();
-                        int count_free = countEmptyImageFrames();
-                        Log.d(TAG, count_selected + " images selected from Gallery; " + count_free + " image placeholders are free...");
-
-                        if (count_free < count_selected) {
-                            Toast.makeText(this,
-                                    getString(R.string.limit_photo1) + " " + count_selected + " " +
-                                            getString(R.string.limit_photo2) + " " + count_free + " " +
-                                            getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
-                        }
-
-                        for (int i = 0; i < Math.min(count_free, count_selected); i++) {
-                            ClipData.Item item = clipData.getItemAt(i);
-                            Uri uri = item.getUri();
-                            resizeAndViewImage(uri);
-                        }
-
-                    } else {
-                        Toast.makeText(this, getString(R.string.no_photo_selected),
-                                Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
         }
 
         // Get data from Google Map and save it as local variables
@@ -1272,47 +1217,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private int countEmptyImageFrames() {
-
-        String[] images = getImagesArray();
-
-        int count = 0;
-        for (Object obj : images) {
-            if ( obj == null ) count++;
-        }
-
-        return count;
-    }
-
-    private String[] getImagesArray() {
-        String[] images = new String[3];
-        images[0] = image1;
-        images[1] = image2;
-        images[2] = image3;
-
-        return images;
-    }
-
     public void showDeadComment() {
         if (checkBox_dead.isChecked()) {
             textViewDeathComment.setVisibility(View.VISIBLE);
         } else {
             textViewDeathComment.setVisibility(View.GONE);
             editTextDeathComment.setText("");
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_LOCATION) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLocation(100, 2);
-                Log.d(TAG, "Permission to request location granted.");
-            } else {
-                Log.d(TAG, "Not possible to get permission to use camera.");
-            }
         }
     }
 
@@ -1333,7 +1243,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         .setCancelable(false)
                         .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
                             String[] perm = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
-                            requestPermissionsLauncher.launch(perm);
+                            requestCameraAndWriteExternalStoragePermissions.launch(perm);
                         })
                         .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
                 AlertDialog alert = builder.create();
@@ -1343,7 +1253,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // If permission is asked for the first time
             else {
                 String[] perm = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA};
-                requestPermissionsLauncher.launch(perm);
+                requestCameraAndWriteExternalStoragePermissions.launch(perm);
             }
         }
 
@@ -1373,23 +1283,105 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 public void onActivityResult(Boolean result) {
                     if (result) {
                         Log.i(TAG, "Camera returned picture.");
-                        resizeAndViewImage(current_image);
+                        resizeAndDisplayImage(current_image);
                     }
                 }
-            });
+            }
+    );
 
     private void takePhotoFromCamera() {
         current_image = CreateExternalFile.newDocumentFile(this, null, ".jpg");
         takePictureFromCamera.launch(current_image);
     }
 
+    private void takeGalleryPhoto() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            takePictureFromGallery.launch("image/*");
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.request_read_external_permission)
+                    .setCancelable(false)
+                    .setPositiveButton(getString(R.string.yes), (dialog, id) -> requestReadExternalPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE))
+                    .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
+            AlertDialog alert = builder.create();
+            alert.show();
+        } else {
+            requestReadExternalPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+    }
+
+    // Getting the image from Gallery
+    private final ActivityResultLauncher<String> takePictureFromGallery = registerForActivityResult(
+            new ActivityResultContracts.GetMultipleContents(),
+            result -> {
+                Log.d(TAG, "Gallery returned this images: " + result);
+                int image_slots = getEmptyImageSlots();
+                if(!result.isEmpty()) {
+                    if (result.size() < image_slots) {
+                        image_slots = result.size();
+                    }
+                    for (int i = 0; i < image_slots; i++) {
+                        Log.d(TAG, "Getting and preparing image " + result.get(i) + ".");
+                        resizeAndDisplayImage(result.get(i));
+                    }
+                    if (result.size() > image_slots) {
+                        Toast.makeText(this,
+                                getString(R.string.limit_photo1) + " " + result.size() + " " +
+                                        getString(R.string.limit_photo2) + " " + image_slots + " " +
+                                        getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(this, getString(R.string.no_photo_selected), Toast.LENGTH_LONG).show();
+                }
+            }
+    );
+
+    private int getEmptyImageSlots() {
+        int emptySlots = 0;
+        if (image1 == null) {
+            emptySlots = emptySlots + 1;
+        } if (image2 == null) {
+            emptySlots = emptySlots + 1;
+        } if (image3 == null) {
+            emptySlots = emptySlots + 1;
+        }
+        return emptySlots;
+    }
+
     // Function used to retrieve the location
     private void getLocation(int time, int distance) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(EntryActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-        } else {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, time, distance, locationListener);
+        }
+
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            Log.d(TAG, "User already selected permissions for GPS location.");
+            if (preferences.getBoolean("ask_location", true)) {
+                Log.d(TAG, "Asking user weather to use location or not.");
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(R.string.request_location_permissions)
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                            String[] perm = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+                            requestLocationPermissions.launch(perm);
+                        })
+                        .setNegativeButton(getString(R.string.no), (dialog, id) -> {
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putBoolean("ask_location", false);
+                            editor.apply();
+                            dialog.dismiss();
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        }
+
+        else {
+            String[] perm = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
+            requestLocationPermissions.launch(perm);
         }
     }
 
@@ -1592,30 +1584,52 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private void resizeAndViewImage(Uri uri) {
+    private void resizeAndDisplayImage(Uri uri) {
         // Start another Activity to resize captured image.
         Intent resizeImage = new Intent(this, PreparePhotos.class);
         resizeImage.putExtra("image_uri", String.valueOf(uri));
         startService(resizeImage);
     }
 
+    private final ActivityResultLauncher<String[]> requestLocationPermissions =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), (Map<String, Boolean> isGranted) -> {
+                        boolean flag = isGranted.containsValue(false);
+                        if (!flag) {
+                            getLocation(100, 2);
+                        } else {
+                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
+
     private final ActivityResultLauncher<String> requestCameraPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    takePhotoFromCamera();
-                } else {
-                    Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
-                }
-            });
+                        if (isGranted) {
+                            takePhotoFromCamera();
+                        } else {
+                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
 
-    private final ActivityResultLauncher<String[]> requestPermissionsLauncher =
+    private final ActivityResultLauncher<String[]> requestCameraAndWriteExternalStoragePermissions =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), (Map<String, Boolean> isGranted) -> {
-                boolean flag = isGranted.containsValue(false);
-                if (!flag) {
-                    takePhotoFromCamera();
-                } else {
-                    Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
-                }
-            });
+                        boolean flag = isGranted.containsValue(false);
+                        if (!flag) {
+                            takePhotoFromCamera();
+                        } else {
+                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
 
+    private final ActivityResultLauncher<String> requestReadExternalPermission =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                        if (isGranted) {
+                            takePictureFromGallery.launch("image/*");
+                        } else {
+                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
 }
