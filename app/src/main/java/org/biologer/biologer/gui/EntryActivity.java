@@ -23,6 +23,7 @@ import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -99,7 +100,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private double elev = 0.0;
     private LatLng currentLocation = new LatLng(0.0, 0.0);
     private Double acc = 0.0;
-    private final int MAP = 3;
     private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment, textInputStages;
     private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
     private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
@@ -1166,41 +1166,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         bundle.putDouble("ACCURACY", acc);
         bundle.putDouble("ELEVATION", elev);
         intent.putExtras(bundle);
-        startActivityForResult(intent, MAP);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_CANCELED) {
-            return;
-        }
-
-        // Get data from Google Map and save it as local variables
-        if (requestCode == MAP) {
-            Log.d(TAG, "MAP requestCode sent");
-            locationManager.removeUpdates(locationListener);
-            if (data != null) {
-                currentLocation = data.getParcelableExtra("google_map_latLong");
-                if (currentLocation != null) {
-                    locationFromTheMap = true;
-                    setLocationValues(currentLocation.latitude, currentLocation.longitude);
-                    acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(data.getExtras()).getString("google_map_accuracy")));
-                    elev = Double.parseDouble(Objects.requireNonNull(data.getExtras().getString("google_map_elevation")));
-                }
-
-                // Update the coordinate accuracy labels
-                if (acc == 0.0) {
-                    textViewGPSAccuracy.setText(R.string.unknown);
-                    textViewMeters.setVisibility(View.GONE);
-                } else {
-                    textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
-                    textViewMeters.setVisibility(View.VISIBLE);
-                    setAccuracyColor();
-                }
-            }
-        }
+        openMap.launch(intent);
     }
 
     private void disablePhotoButtons(Boolean value) {
@@ -1335,6 +1301,32 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 }
             }
     );
+
+    private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    locationManager.removeUpdates(locationListener);
+                    if (result.getData() != null) {
+                        currentLocation = result.getData().getExtras().getParcelable("google_map_latLong");
+                        Log.d(TAG, "Map returned this result: " + currentLocation);
+                        locationFromTheMap = true;
+                        setLocationValues(currentLocation.latitude, currentLocation.longitude);
+                        acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(result.getData().getExtras()).getString("google_map_accuracy")));
+                        elev = Double.parseDouble(Objects.requireNonNull(result.getData().getExtras().getString("google_map_elevation")));
+                    }
+
+                    // Update the coordinate accuracy labels
+                    if (acc == 0.0) {
+                        textViewGPSAccuracy.setText(R.string.unknown);
+                        textViewMeters.setVisibility(View.GONE);
+                    } else {
+                        textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", acc));
+                        textViewMeters.setVisibility(View.VISIBLE);
+                        setAccuracyColor();
+                    }
+                }
+            });
 
     private int getEmptyImageSlots() {
         int emptySlots = 0;
