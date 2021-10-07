@@ -320,6 +320,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void saveAndExit() {
         // Forward the result to previous Activity
         Intent returnLocation = new Intent();
+        // If the coordinate accuracy is too large, set it to 100000
+        if (Integer.parseInt(accuracy) > 100000) {
+            accuracy = "100000";
+        }
         returnLocation.putExtra("google_map_accuracy", accuracy);
         returnLocation.putExtra("google_map_latLong", latLong);
         returnLocation.putExtra("google_map_elevation", elevation);
