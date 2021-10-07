@@ -129,6 +129,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     TaxaList selectedTaxon = null;
     boolean locationFromTheMap = false;
     boolean taxonSelectedFromTheList = false;
+    boolean callTagAutochecked = false;
+    Integer callTagIndexNumber = null;
 
     BroadcastReceiver receiver;
 
@@ -688,7 +690,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Long code = currentItem.getAtlas_code();
             Log.d(TAG, "Setting the spinner to atlas code: " + code);
             textViewAtlasCode.setText(setAtlasCode(code.intValue()));
-
         }
 
         if (currentItem.getDeadOrAlive().equals("true")) {
@@ -1060,11 +1061,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
-            int id_photo_tag = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
+            int photo_tag_id = App.get().getDaoSession().getObservationTypesDataDao().queryBuilder()
                     .where(ObservationTypesDataDao.Properties.Slug.eq("photographed"))
                     .list().get(0).getObservationId().intValue();
-            Log.d(TAG, "Photographed tag has ID: " + id_photo_tag);
-            observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, id_photo_tag);
+            Log.d(TAG, "Photographed tag has ID: " + photo_tag_id);
+            observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, photo_tag_id);
         }
     }
 
@@ -1132,6 +1133,38 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(atlas_codes, (dialogInterface, i) -> textViewAtlasCode.setText(atlas_codes[i]));
         builder.show();
+
+        // If user select atlas code 2, the "call" tag should also be checked.
+        textViewAtlasCode.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Long atlas_code_id = getAtlasCode();
+                if (callTagIndexNumber != null) {
+                    Chip chip = (Chip) observation_types.getChildAt(callTagIndexNumber);
+                        if (atlas_code_id != null && atlas_code_id == 2) {
+                            Log.d(TAG, "This atlas code assume that the bird was calling...");
+                            chip.setChecked(true);
+                            callTagAutochecked = true;
+                        } else {
+                            if (callTagAutochecked) {
+                                chip.setChecked(false);
+                                callTagAutochecked = false;
+                            }
+                        }
+                    }
+                }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+
     }
 
     private String setAtlasCode(int index) {
@@ -1572,6 +1605,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     }
                 });
                 observation_types.addView(chip);
+                if (slug.equals("call")) {
+                    callTagIndexNumber = observation_types.getChildCount() - 1;
+                    Log.d(TAG, "The index number of the call chip is " + callTagIndexNumber);
+                }
             }
 
         }
