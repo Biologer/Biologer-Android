@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -14,6 +15,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 
 import com.bumptech.glide.Glide;
@@ -126,6 +128,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     ArrayList<String> list_new_images = new ArrayList<>();
     TaxaList selectedTaxon = null;
     boolean locationFromTheMap = false;
+    boolean taxonSelectedFromTheList = false;
 
     BroadcastReceiver receiver;
 
@@ -252,12 +255,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             TaxaList taxaList = (TaxaList) parent.getItemAtPosition(position);
             autoCompleteTextView_speciesName.setText(taxaList.getTaxonName());
             selectedTaxon = new TaxaList(taxaList.getTaxonName(), taxaList.getTaxonID(), taxaList.isAtlasCode());
+            taxonSelectedFromTheList = true;
             showStagesAndAtlasCode(preferences);
         });
 
         // When user type taxon name...
         autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
-            final Handler handler = new Handler();
+            final Handler handler = new Handler(Looper.getMainLooper());
             Runnable runnable;
 
             @Override
@@ -271,17 +275,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Get the list of taxa from the GreenDao database
                      */
 
-                    // Remove atlas code and stages on text change
-                    if (selectedTaxon != null)  {
-                        if (selectedTaxon.isAtlasCode()) {
-                            textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
-                        }
-                        textInputStages.setVisibility(View.VISIBLE);
-                        if (!autoCompleteTextView_speciesName.getText().toString().equals(selectedTaxon.getTaxonName())) {
-                            selectedTaxon = null;
-                            hideStagesAndAtlasCode();
-                        }
+                    // Remove atlas code and stage for taxa not selected from the list
+                    if (!taxonSelectedFromTheList) {
+                        hideStagesAndAtlasCode();
                     }
+                    taxonSelectedFromTheList = false;
 
                     // This will bee the list of all IDs from all the queries
                     List<TaxaList> allTaxaLists = new ArrayList<>();
@@ -992,7 +990,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
     private void entrySaver(TaxonData taxon, String specimens, String sex, int entry_id) {
-        Stage stage = (textViewStage.getTag() != null) ? (Stage) textViewStage.getTag() : null;
+        Stage stage;
+        if (textViewStage.getTag() != null) stage = (Stage) textViewStage.getTag();
+        else stage = null;
         String comment = editTextComment.getText().toString();
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
         Long selectedStage = (stage != null) ? stage.getStageId() : null;
@@ -1098,22 +1098,23 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 .where(StageDao.Properties.TaxonId.eq(selectedTaxon.getTaxonID()))
                 .list();
         if (stageList != null) {
-            final String[] taxon_stages = new String[stageList.size()];
+            final String[] taxon_stages = new String[stageList.size() + 1];
+            taxon_stages[0] = getString(R.string.not_selected);
             for (int i = 0; i < stageList.size(); i++) {
                 // Translate the stages to the app language
-                taxon_stages[i] = StageAndSexLocalization.getStageLocale(this, stageList.get(i).getName());
+                taxon_stages[i + 1] = StageAndSexLocalization.getStageLocale(this, stageList.get(i).getName());
             }
-            if (taxon_stages.length == 0) {
-                Log.d(TAG, "No stages are available for " + getLatinName() + ".");
-            } else {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setItems(taxon_stages, (dialogInterface, i) -> {
-                    textViewStage.setText(taxon_stages[i]);
-                    textViewStage.setTag(stageList.get(i));
-                });
-                builder.show();
-                Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
-            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setItems(taxon_stages, (DialogInterface dialogInterface, int i) -> {
+                textViewStage.setText(taxon_stages[i]);
+                if (i == 0) {
+                    textViewStage.setTag(null); // If no stage selected
+                } else {
+                    textViewStage.setTag(stageList.get(i - 1));
+                }
+            });
+            builder.show();
+            Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
         } else {
             textViewStage.setEnabled(false);
             Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
