@@ -346,5 +346,6 @@
     <string name="request_camera_permissions">Biologer could not take a photo without your permission to access camera. Would you like to enable this permissions?</string>
     <string name="request_location_permissions">Biologer is intended to collect species occurrences in the field, thus the geographic location is very important for each record. It is highly recomended that you allow Biologer to access your location, but you can also manually pick a location using map.</string>
     <string name="request_read_external_permission">Biologer needs a permission to access your image files from gallery. Would you like to give it a permit to read storage on your phone?</string>
+    <string name="database_birdloger">Birdloger (DZPPS)</string>
 
 </resources>

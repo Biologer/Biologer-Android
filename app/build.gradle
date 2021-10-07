@@ -17,8 +17,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 106
-        versionName "4.0 beta 1"
+        versionCode 107
+        versionName "4.0 beta 2"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
@@ -52,6 +52,7 @@ greendao {
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
+            buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             resValue 'string', "MAP_KEY", GoogleMAP_KEY
@@ -70,6 +71,7 @@ greendao {
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
             buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
+            buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             resValue 'string', "MAP_KEY", GoogleMAP_KEY
