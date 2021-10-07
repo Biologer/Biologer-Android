@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
@@ -32,7 +34,6 @@ import java.util.ArrayList;
 
 public class LandingFragment extends Fragment {
 
-    private static final int REQ_CODE_NEW_ENTRY = 1001;
     private EntriesList entriesList;
     private ArrayList<Entry> entries;
     ListView listView;
@@ -70,7 +71,7 @@ public class LandingFragment extends Fragment {
         floatingActionButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), EntryActivity.class);
             intent.putExtra("IS_NEW_ENTRY", "YES");
-            startActivityForResult(intent, REQ_CODE_NEW_ENTRY);
+            openEntry.launch(intent);
         });
 
         return rootView;
@@ -158,4 +159,10 @@ public class LandingFragment extends Fragment {
             alert.show();
         }
     }
+
+    private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // If we need to do something with the result after EntryActivity...
+            });
+
 }

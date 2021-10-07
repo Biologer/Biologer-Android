@@ -418,10 +418,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
 
             @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-            }
-
-            @Override
             public void onProviderEnabled(@NonNull String s) {
             }
 

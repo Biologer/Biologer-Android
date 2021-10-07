@@ -6,6 +6,7 @@ import android.os.Handler;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import org.biologer.biologer.R;
 
@@ -22,7 +23,7 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         prefs = getSharedPreferences("org.biologer.biologer", MODE_PRIVATE);
 
-        Handler handler = new Handler();
+        Handler handler = new Handler(Looper.getMainLooper());
         Runnable runnable = () -> {
 
             // On the first run show some help
