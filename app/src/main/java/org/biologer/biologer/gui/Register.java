@@ -159,9 +159,13 @@ public class Register extends FragmentActivity {
             flag.setImageResource(R.drawable.flag_bosnia);
             clientKey = BuildConfig.BiologerBA_Key;
         }
-        if (database.equals("https://biologer.org")) {
+        if (database.equals("https://biologer.rs")) {
             flag.setImageResource(R.drawable.flag_serbia);
             clientKey = BuildConfig.BiologerRS_Key;
+        }
+        if (database.equals("https://birdloger.biologer.org")) {
+            flag.setImageResource(R.drawable.flag_serbia);
+            clientKey = BuildConfig.Birdloger_Key;
         }
         if (database.equals("https://dev.biologer.org")) {
             flag.setImageResource(R.drawable.flag_serbia);

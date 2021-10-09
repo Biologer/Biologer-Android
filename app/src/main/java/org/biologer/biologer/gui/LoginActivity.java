@@ -315,10 +315,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private int getSpinnerIdFromUrl(String url) {
-        if (url.equals("https://biologer.org")) {return 0;}
+        if (url.equals("https://biologer.rs")) {return 0;}
         if (url.equals("https://biologer.hr")) {return 1;}
         if (url.equals("https://biologer.ba")) {return 2;}
-        if (url.equals("http://nvasic.zapto.org:81")) {return 3;}
+        if (url.equals("https://birdloger.biologer.org")) {return 3;}
         return 4;
     }
 
@@ -365,10 +365,10 @@ public class LoginActivity extends AppCompatActivity {
             long database_id = database.getItemIdAtPosition(pos);
             String old_database = database_name;
             database_name = database.getItemAtPosition(pos).toString();
-            if (database_id == 0) {database_name = "https://biologer.org";}
+            if (database_id == 0) {database_name = "https://biologer.rs";}
             if (database_id == 1) {database_name = "https://biologer.hr";}
             if (database_id == 2) {database_name = "https://biologer.ba";}
-            if (database_id == 3) {database_name = "http://nvasic.zapto.org:81";}
+            if (database_id == 3) {database_name = "https://birdloger.biologer.org";}
             if (database_id == 4) {database_name = "https://dev.biologer.org";}
 
             Log.i(TAG, "Database No. " + database_id + " selected: " + database_name);
@@ -417,7 +417,7 @@ public class LoginActivity extends AppCompatActivity {
         displayProgressBar(true);
 
         // Change the call according to the database selected
-        if (database_name.equals("https://biologer.org")) {
+        if (database_name.equals("https://biologer.rs")) {
             Log.d(TAG, "Serbian database selected.");
             login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
@@ -429,7 +429,7 @@ public class LoginActivity extends AppCompatActivity {
             Log.d(TAG, "Bosnian database selected.");
             login = RetrofitClient.getService(database_name).login("password", "2", baKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
-        if (database_name.equals("http://nvasic.zapto.org:81")) {
+        if (database_name.equals("https://birdloger.biologer.org")) {
             Log.d(TAG, "Birdloger database selected.");
             login = RetrofitClient.getService(database_name).login("password", "3", birdKey, "*", et_username.getText().toString(), et_password.getText().toString());
         }
