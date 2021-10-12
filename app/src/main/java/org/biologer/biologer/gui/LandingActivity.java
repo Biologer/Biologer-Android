@@ -91,6 +91,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         String token = SettingsManager.getAccessToken();
         String database_name = SettingsManager.getDatabaseName();
+
+        // Users from Serbia should switch to RS domain.
+        if(database_name.equals("https://biologer.org")) {
+            database_name = "https://biologer.rs";
+            SettingsManager.setDatabaseName("https://biologer.rs");
+        }
+
         boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -163,40 +170,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.i(TAG, "SQL is up to date!");
             }
 
+            // Check if token is still valid and refresh if needed
             if (token != null && MAIL_CONFIRMED) {
-
                 if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
                     Log.d(TAG, "Token is still OK, email is confirmed. Token will expire on " + SettingsManager.getTokenExpire());
                 } else {
                     Log.d(TAG, "Token expired. Refreshing login token.");
                     if (InternetConnection.isConnected(LandingActivity.this)) {
-
-                        String refreshToken = SettingsManager.getRefreshToken();
-                        String rsKey = BuildConfig.BiologerRS_Key;
-                        String hrKey = BuildConfig.BiologerHR_Key;
-                        String baKey = BuildConfig.BiologerBA_Key;
-
-                        if (database_name.equals("https://biologer.org")) {
-                            Log.d(TAG, "Serbian database selected.");
-                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
-                            RefreshToken(refresh);
-                        }
-                        if (database_name.equals("https://biologer.hr")) {
-                            Log.d(TAG, "Croatian database selected.");
-                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
-                            RefreshToken(refresh);
-                        }
-                        if (database_name.equals("https://biologer.ba")) {
-                            Log.d(TAG, "Bosnian database selected.");
-                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
-                            RefreshToken(refresh);
-                        }
-                        if (database_name.equals("https://dev.biologer.org")) {
-                            Log.d(TAG, "Developmental database selected.");
-                            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken,"*");
-                            RefreshToken(refresh);
-                        }
-                        Log.d(TAG, "Logging into " + database_name + " using refresh token.");
+                        StartRefreshToken(database_name);
                     }
                     else {
                         alertWarnAndExit(getString(R.string.refresh_token_no_internet));
@@ -258,6 +239,42 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             }
         };
+    }
+
+    private void StartRefreshToken(String database_name) {
+        String refreshToken = SettingsManager.getRefreshToken();
+        String rsKey = BuildConfig.BiologerRS_Key;
+        String hrKey = BuildConfig.BiologerHR_Key;
+        String baKey = BuildConfig.BiologerBA_Key;
+        String devKey = BuildConfig.BiologerDEV_Key;
+        String birdKey = BuildConfig.Birdloger_Key;
+
+        if (database_name.equals("https://biologer.rs")) {
+            Log.d(TAG, "Serbian database selected.");
+            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
+            RefreshToken(refresh);
+        }
+        if (database_name.equals("https://biologer.hr")) {
+            Log.d(TAG, "Croatian database selected.");
+            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
+            RefreshToken(refresh);
+        }
+        if (database_name.equals("https://biologer.ba")) {
+            Log.d(TAG, "Bosnian database selected.");
+            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
+            RefreshToken(refresh);
+        }
+        if (database_name.equals("https://birdloger.biologer.org")) {
+            Log.d(TAG, "Birdloger database selected.");
+            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken,"*");
+            RefreshToken(refresh);
+        }
+        if (database_name.equals("https://dev.biologer.org")) {
+            Log.d(TAG, "Developmental database selected.");
+            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken,"*");
+            RefreshToken(refresh);
+        }
+        Log.d(TAG, "Logging into " + database_name + " using refresh token.");
     }
 
     private void RefreshToken(Call<RefreshTokenResponse> refresh_call) {

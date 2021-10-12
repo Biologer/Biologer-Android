@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
+
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -15,21 +17,22 @@ public class SplashActivity extends AppCompatActivity {
     private static final String TAG = "Biologer.Splash";
 
     int SPLASH_TIME_OUT = 600;
-    SharedPreferences prefs = null;
+    SharedPreferences sharedPreferences = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-        prefs = getSharedPreferences("org.biologer.biologer", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("org.biologer.biologer", MODE_PRIVATE);
+
 
         Handler handler = new Handler(Looper.getMainLooper());
         Runnable runnable = () -> {
 
             // On the first run show some help
-            if (prefs.getBoolean("firstrun", true)) {
+            if (sharedPreferences.getBoolean("first run", true)) {
                 Log.d(TAG, "This is first run of the program.");
-                prefs.edit().putBoolean("firstrun", false).apply();
+                sharedPreferences.edit().putBoolean("first run", false).apply();
                 Intent intent = new Intent(SplashActivity.this, IntroActivity.class);
                 startActivity(intent);
             }
