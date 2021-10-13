@@ -24,7 +24,6 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
-import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.network.JSON.UploadFileResponse;

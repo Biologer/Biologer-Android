@@ -1,25 +1,22 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="BiologerTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Biologer.Main" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorSecondary">@color/colorPrimary</item>
-
-        <!--
-                <item name="colorAccent">@color/colorAccent</item>
-                <item name="chipIconTint">@color/colorChips</item>
-                -->
     </style>
 
-    <style name="BiologerToolbar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+    <!-- Splash Screen theme. -->
+    <style name="Theme.Biologer.Splash" parent="Theme.SplashScreen">
+        <item name="postSplashScreenTheme">@style/Theme.Biologer.Main</item>
+    </style>
+
+    <!-- Toolbar theme. -->
+    <style name="Theme.Biologer.Toolbar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColor">@color/black_on_light_white_on_night</item>
-    </style>`
-    <!--
-        <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+    </style>
 
-        <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
-    -->
     </resources>

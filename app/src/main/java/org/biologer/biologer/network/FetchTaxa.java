@@ -14,7 +14,6 @@ import android.util.Log;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.SplashActivity;
 import org.biologer.biologer.network.JSON.TaxaStages;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.Taxa;

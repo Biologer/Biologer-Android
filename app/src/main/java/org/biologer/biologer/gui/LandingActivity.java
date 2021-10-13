@@ -90,15 +90,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         setContentView(R.layout.activity_landing);
 
         String token = SettingsManager.getAccessToken();
-        String database_name = SettingsManager.getDatabaseName();
-
-        // Users from Serbia should switch to RS domain.
-        if(database_name.equals("https://biologer.org")) {
-            database_name = "https://biologer.rs";
-            SettingsManager.setDatabaseName("https://biologer.rs");
-        }
-
-        boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
+        String database_url = SettingsManager.getDatabaseName();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -115,109 +107,43 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         TextView tv_username = header.findViewById(R.id.tv_username);
         TextView tv_email = header.findViewById(R.id.tv_email);
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
-
         // Set the text for side panel
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
-        // Ensure this is run only once in each instance or just after login screen
-        boolean fromLoginScreen = false;
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            fromLoginScreen = bundle.getBoolean("fromLoginScreen");
-        }
-        if (savedInstanceState == null || fromLoginScreen) {
+        // On the first run show some help
+        if (SettingsManager.firstRun()) {
+            Log.d(TAG, "This is first run of the program.");
+            SettingsManager.setFirstRun(false);
+            Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
+            startActivity(intent);
+        } else {
 
-            // If SQL is updated we will try to login in the user
-            if (SettingsManager.isSqlUpdated()) {
-                Log.i(TAG, "SQL database must be updated!");
-                Toast.makeText(LandingActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
-
-                // First get the existing groups of taxa so we can fetch them again
-                if (InternetConnection.isConnected(LandingActivity.this)) {
-                    final Intent getTaxaGroups = new Intent(LandingActivity.this, GetTaxaGroups.class);
-                    startService(getTaxaGroups);
-
-                    Call<UserDataResponse> service = RetrofitClient.getService(database_name).getUserData();
-                    service.enqueue(new Callback<UserDataResponse>() {
-                        @Override
-                        public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
-                            if (response.isSuccessful()) {
-                                if (response.body() != null) {
-                                    String email = response.body().getData().getEmail();
-                                    String name = response.body().getData().getFullName();
-                                    int data_license = response.body().getData().getSettings().getDataLicense();
-                                    int image_license = response.body().getData().getSettings().getImageLicense();
-                                    UserData user = new UserData(null, name, email, data_license, image_license);
-                                    App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
-                                    SettingsManager.setSqlUpdated(false);
-                                } else {
-                                    alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
-                            Log.e(TAG, "Cannot get response from the server (test taxa response)");
-                            alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
-                        }
-                    });
-                }
-            }
-            else {
-                Log.i(TAG, "SQL is up to date!");
-            }
-
-            // Check if token is still valid and refresh if needed
-            if (token != null && MAIL_CONFIRMED) {
-                if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
-                    Log.d(TAG, "Token is still OK, email is confirmed. Token will expire on " + SettingsManager.getTokenExpire());
-                } else {
-                    Log.d(TAG, "Token expired. Refreshing login token.");
-                    if (InternetConnection.isConnected(LandingActivity.this)) {
-                        StartRefreshToken(database_name);
-                    }
-                    else {
-                        alertWarnAndExit(getString(R.string.refresh_token_no_internet));
-                    }
-                }
-            }
-
-            else {
-                Log.d(TAG, "No token or email address not confirmed..");
-                Log.d(TAG, "TOKEN: " + token);
-                Log.d(TAG, "Is mail confirmed: " + MAIL_CONFIRMED);
-                Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-                intent.putExtra("TOKEN_EXPIRED", false);
-                startActivity(intent);
-            }
-
-            // Check if notifications are enabled, if not warn the user!
-            areNotificationsEnabled();
-
-            showLandingFragment();
-
-            // Get the user settings from preferences
-            how_to_use_network = preferences.getString("auto_download", "wifi");
-
-            // Check if there is network available and run the commands...
-            String network_type = InternetConnection.networkType(this);
-            if (network_type != null) {
-                updateLicenses();
-                UpdateObservationTypes.updateObservationTypes();
-                // AUTO upload/download if the right preferences are selected...
-                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
-                    uploadRecords();
-                    should_ask = "download";
-                } else {
-                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                    should_ask = "ask";
-                }
-                updateTaxa();
+            // If there is no url, falling back to the login screen
+            if (database_url == null) {
+                Log.d(TAG, "Null database URL selected.");
+                ShowUserLoginScreen();
             } else {
-                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
+
+                // Users from Serbia should switch to RS domain.
+                if (database_url.equals("https://biologer.org")) {
+                    database_url = "https://biologer.rs";
+                    SettingsManager.setDatabaseName("https://biologer.rs");
+                }
+
+                // If the user just logged in
+                Bundle bundle = getIntent().getExtras();
+                if (bundle != null) {
+                    if (bundle.getBoolean("fromLoginScreen", false) || savedInstanceState == null) {
+                        Log.d(TAG, "User came from the login screen.");
+                        runServices(token, database_url);
+                    }
+                } else {
+                    if (savedInstanceState == null) {
+                        Log.d(TAG, "savedInstanceState is null");
+                        runServices(token, database_url);
+                    }
+                }
             }
         }
 
@@ -239,6 +165,109 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             }
         };
+    }
+
+    private void runServices(String token, String database_url) {
+        boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
+
+        // If SQL is updated we will try to login in the user
+        if (SettingsManager.isSqlUpdated()) {
+            onSqlUpdated(database_url);
+        } else {
+            Log.i(TAG, "SQL is up to date!");
+        }
+
+        if (token == null) {
+            Log.d(TAG, "No user token.");
+            ShowUserLoginScreen();
+        } else {
+            // Check if token is still valid and refresh if needed
+            if (MAIL_CONFIRMED) {
+                Log.d(TAG, "Email is confirmed.");
+                if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
+                    Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
+                } else {
+                    Log.d(TAG, "Token expired. Refreshing login token.");
+                    if (InternetConnection.isConnected(LandingActivity.this)) {
+                        StartRefreshToken(database_url);
+                    }
+                    else {
+                        alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+                    }
+                }
+            } else {
+                Log.d(TAG, "Email is not confirmed.");
+            }
+
+            // Check if notifications are enabled, if not warn the user!
+            areNotificationsEnabled();
+
+            showLandingFragment();
+
+            // Get the user settings from preferences
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+            how_to_use_network = preferences.getString("auto_download", "wifi");
+
+            // Check if there is network available and run the commands...
+            String network_type = InternetConnection.networkType(this);
+            if (network_type != null) {
+                updateLicenses();
+                UpdateObservationTypes.updateObservationTypes();
+                // AUTO upload/download if the right preferences are selected...
+                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                    uploadRecords();
+                    should_ask = "download";
+                } else {
+                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                    should_ask = "ask";
+                }
+                updateTaxa();
+            } else {
+                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
+            }
+        }
+    }
+
+    private void ShowUserLoginScreen() {
+        Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
+        startActivity(intent);
+    }
+
+    private void onSqlUpdated(String database_url) {
+        Log.i(TAG, "SQL database must be updated!");
+        Toast.makeText(LandingActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
+
+        // First get the existing groups of taxa so we can fetch them again
+        if (InternetConnection.isConnected(LandingActivity.this)) {
+            final Intent getTaxaGroups = new Intent(LandingActivity.this, GetTaxaGroups.class);
+            startService(getTaxaGroups);
+
+            Call<UserDataResponse> service = RetrofitClient.getService(database_url).getUserData();
+            service.enqueue(new Callback<UserDataResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            String email = response.body().getData().getEmail();
+                            String name = response.body().getData().getFullName();
+                            int data_license = response.body().getData().getSettings().getDataLicense();
+                            int image_license = response.body().getData().getSettings().getImageLicense();
+                            UserData user = new UserData(null, name, email, data_license, image_license);
+                            App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                            SettingsManager.setSqlUpdated(false);
+                        } else {
+                            alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
+                    Log.e(TAG, "Cannot get response from the server (test taxa response)");
+                    alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
+                }
+            });
+        }
     }
 
     private void StartRefreshToken(String database_name) {
@@ -310,7 +339,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
         for (int i = 0; i < fragmentList.size(); i++) {
             if (fragmentList.get(i) instanceof LandingFragment) {
-                Log.d(TAG, "Updating entries list after upload to server.");
+                Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
                 ArrayList<Entry> entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
                 ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
             }

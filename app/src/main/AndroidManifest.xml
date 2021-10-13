@@ -2,11 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.biologer.biologer">
 
-    <!--
-         The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
-         Google Maps Android API v2, but you must specify either coarse or fine
-         location permissions for the 'MyLocation' functionality. 
-    -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -42,7 +37,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/BiologerTheme"
+        android:theme="@style/Theme.Biologer.Splash"
         android:fullBackupContent="@xml/backup_descriptor">
 
         <uses-library
@@ -64,7 +59,18 @@
         </provider>
 
         <activity
+            android:name=".gui.LandingActivity"
+            android:theme="@style/Theme.Biologer.Main"
+            android:launchMode="standard"
+            android:exported="true">
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN"/>
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".gui.MapActivity"
+            android:theme="@style/Theme.Biologer.Main"
             android:label="@string/title_activity_map">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -72,39 +78,29 @@
         </activity>
         <activity
             android:name=".gui.EntryActivity"
+            android:theme="@style/Theme.Biologer.Main"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-        <activity android:name=".gui.SplashActivity"
-            android:noHistory="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".gui.LoginActivity"
+            android:theme="@style/Theme.Biologer.Main"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize"
-            android:noHistory="true"/>
-        <activity
-            android:name=".gui.LandingActivity"
-            android:launchMode="singleTask"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="biologer.org" />
-            </intent-filter>
+            android:noHistory="true" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-        <activity android:name=".gui.IntroActivity" />
-        <activity android:name=".gui.ViewImage"/>
+        <activity
+            android:name=".gui.IntroActivity"
+            android:theme="@style/Theme.Biologer.Main" />
+        <activity
+            android:name=".gui.ViewImage"
+            android:theme="@style/Theme.Biologer.Main" />
         <activity android:name=".gui.Register"
+            android:theme="@style/Theme.Biologer.Main"
             android:noHistory="true"/>
 
         <service android:name="org.biologer.biologer.network.FetchTaxa"/>

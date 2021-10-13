@@ -14,7 +14,7 @@ public class SettingsManager {
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, DATABASE_NAME, GOOGLE_MAP_TYPE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
-        OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED
+        OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN
     }
 
     public static void deleteAccessToken() {
@@ -76,7 +76,7 @@ public class SettingsManager {
     }
 
     public static String getDatabaseName() {
-        return prefs.getString(KEY.DATABASE_NAME.toString(),"https://biologer.org");
+        return prefs.getString(KEY.DATABASE_NAME.toString(),null);
     }
 
     public static void setGoogleMapType(String google_map_type) {
@@ -137,6 +137,15 @@ public class SettingsManager {
 
     public static Boolean isSqlUpdated() {
         return prefs.getBoolean(KEY.SQL_UPDATED.toString(),false);
+    }
+    public static void setFirstRun(boolean firstRun) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean(KEY.FIRST_RUN.toString(), firstRun);
+        editor.apply();
+    }
+
+    public static Boolean firstRun() {
+        return prefs.getBoolean(KEY.FIRST_RUN.toString(), true);
     }
 
 }

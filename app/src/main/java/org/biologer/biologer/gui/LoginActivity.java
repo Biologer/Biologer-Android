@@ -119,7 +119,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
                 et_username.setText(user.get(0).getEmail());
                 // Just display anything, no mather what...
-                et_password.setText("random_string");
+                et_password.setText(R.string.random_string);
             }
         }
 
@@ -129,15 +129,19 @@ public class LoginActivity extends AppCompatActivity {
                 getString(R.string.database_serbia),
                 getString(R.string.database_croatia),
                 getString(R.string.database_bih),
+                getString(R.string.database_birdloger),
                 getString(R.string.database_dev_version)};
         Integer[] Icons = {
                 R.drawable.flag_serbia,
                 R.drawable.flag_croatia,
                 R.drawable.flag_bosnia,
+                R.drawable.flag_serbia,
                 R.drawable.ic_hammer_developers};
         ImageArrayAdapter ourDatabases = new ImageArrayAdapter(this, Icons, Databases);
         spinner.setAdapter(ourDatabases);
-        spinner.setSelection(getSpinnerIdFromUrl(database_name));
+        if (database_name != null) {
+            spinner.setSelection(getSpinnerIdFromUrl(database_name));
+        }
         spinner.setOnItemSelectedListener(new getDatabaseURL());
 
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
@@ -373,9 +377,11 @@ public class LoginActivity extends AppCompatActivity {
 
             SettingsManager.setDatabaseName(database_name);
 
-            if (!old_database.equals(database_name)) {
+            if (old_database != null) {
+                if (!old_database.equals(database_name)) {
                 Log.d(TAG, "User selected different database, so we should delete token.");
                 SettingsManager.deleteAccessToken();
+            }
             }
 
             String hint_text = getString(R.string.URL_address) + " " + database_name;
@@ -443,11 +449,11 @@ public class LoginActivity extends AppCompatActivity {
         login.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
-                if(response.code() == 404) {
+                if (response.code() == 404) {
                     Log.e(TAG, "Error 404: This response is not implemented on a server.");
                 }
-                if(response.isSuccessful()) {
-                    if(response.body() != null) {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
                         String token = response.body().getAccessToken();
                         String refresh_token = response.body().getRefreshToken();
                         //Log.d(TAG, "Token value is: " + token);
@@ -534,6 +540,7 @@ public class LoginActivity extends AppCompatActivity {
                         SettingsManager.setMailConfirmed(true);
                         displayProgressBar(false);
                         Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+                        intent.putExtra("fromLoginScreen", true);
                         startActivity(intent);
                     }
                 }
@@ -591,4 +598,9 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(defaultBrowser);
     }
 
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "Back button is pressed in login activity, closing the app!");
+        finishAffinity();
+    }
 }

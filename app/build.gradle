@@ -109,6 +109,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:19.0.2'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.core:core-splashscreen:1.0.0-alpha02'
     annotationProcessor 'androidx.annotation:annotation:1.2.0'
 
     // Non Google
