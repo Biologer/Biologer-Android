@@ -1,5 +1,6 @@
 package org.biologer.biologer.network;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -14,6 +15,7 @@ import android.util.Log;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.JSON.TaxaStages;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.Taxa;
@@ -311,15 +313,21 @@ public class FetchTaxa extends Service {
         }
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationInitiate() {
         // Start the fetching and display notification
         Log.i(TAG, "Service for fetching taxa started.");
 
         // Create initial notification to be set to Foreground
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
                 .setSmallIcon(R.mipmap.ic_notification)
@@ -338,23 +346,39 @@ public class FetchTaxa extends Service {
 
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateProgress(int progressStatus) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         // Add Pause button intent in notification.
         Intent pauseIntent = new Intent(this, FetchTaxa.class);
         pauseIntent.setAction(ACTION_PAUSE);
-        PendingIntent pendingPauseIntent = PendingIntent.getService(this, 0, pauseIntent, 0);
+        PendingIntent pendingPauseIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingPauseIntent = PendingIntent.getService(this, 0, pauseIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingPauseIntent = PendingIntent.getService(this, 0, pauseIntent, 0);
+        }
         NotificationCompat.Action pauseAction = new NotificationCompat.Action(android.R.drawable.ic_media_pause, getString(R.string.pause_action), pendingPauseIntent);
 
         // Add Cancel button intent in notification.
         Intent cancelIntent = new Intent(this, FetchTaxa.class);
         cancelIntent.setAction(ACTION_CANCEL);
-        PendingIntent pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        PendingIntent pendingCancelIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        }
         NotificationCompat.Action cancelAction = new NotificationCompat.Action(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.cancel), pendingCancelIntent);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
@@ -377,23 +401,39 @@ public class FetchTaxa extends Service {
         mNotificationManager.notify(1, notification);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationResumeFetchButton(int progressStatus, String title, String description, String resume) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         // Add Resume button intent in notification.
         Intent resumeIntent = new Intent(this, FetchTaxa.class);
         resumeIntent.setAction(ACTION_RESUME);
-        PendingIntent pendingResumeIntent = PendingIntent.getService(this, 0, resumeIntent, 0);
+        PendingIntent pendingResumeIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingResumeIntent = PendingIntent.getService(this, 0, resumeIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingResumeIntent = PendingIntent.getService(this, 0, resumeIntent, 0);
+        }
         NotificationCompat.Action resumeAction = new NotificationCompat.Action(android.R.drawable.ic_media_play, resume, pendingResumeIntent);
 
         // Add Cancel button intent in notification.
         Intent cancelIntent = new Intent(this, FetchTaxa.class);
         cancelIntent.setAction(ACTION_CANCEL_PAUSED);
-        PendingIntent pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        PendingIntent pendingCancelIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        }
         NotificationCompat.Action cancelAction = new NotificationCompat.Action(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.cancel), pendingCancelIntent);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
@@ -416,12 +456,18 @@ public class FetchTaxa extends Service {
         mNotificationManager.notify(1, notification);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateText(String title, String description) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
                 .setSmallIcon(R.mipmap.ic_notification)

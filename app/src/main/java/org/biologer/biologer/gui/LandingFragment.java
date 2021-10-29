@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -11,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
+import android.os.CountDownTimer;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -18,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -31,6 +34,8 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class LandingFragment extends Fragment {
 
@@ -150,12 +155,41 @@ public class LandingFragment extends Fragment {
             builder.setMessage(getString(R.string.confirm_delete_all))
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
-                        Toast.makeText(getContext(), getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
                         App.get().getDaoSession().getEntryDao().deleteAll();
                         entriesList.removeAll();
                     })
                     .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
             final AlertDialog alert = builder.create();
+
+            alert.setOnShowListener(new DialogInterface.OnShowListener() {
+                private static final int AUTO_DISMISS_MILLIS = 10000;
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+                    defaultButton.setEnabled(false);
+                    final CharSequence negativeButtonText = defaultButton.getText();
+                    new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
+                        @Override
+                        public void onTick(long l) {
+                            defaultButton.setText(String.format(
+                                    Locale.getDefault(), "%s (%d)",
+                                    negativeButtonText,
+                                    TimeUnit.MILLISECONDS.toSeconds(l) + 1
+                            ));
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if (alert.isShowing()) {
+                                defaultButton.setEnabled(true);
+                                defaultButton.setText(negativeButtonText);
+                            }
+                        }
+                    }.start();
+                }
+            });
+
             alert.show();
         }
     }

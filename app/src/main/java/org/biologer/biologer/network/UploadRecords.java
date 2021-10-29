@@ -1,5 +1,6 @@
 package org.biologer.biologer.network;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -24,6 +25,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
+import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
@@ -124,15 +126,21 @@ public class UploadRecords extends Service {
         }
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationInitiate() {
         // Start the uploading and display notification
         Log.i(TAG, "Displaying notification for uploading service.");
 
         // Create initial notification to be set to Foreground
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_entries")
                 .setSmallIcon(R.mipmap.ic_notification)
@@ -372,17 +380,28 @@ public class UploadRecords extends Service {
         });
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateProgress(int maxValue, int currentValue, String descriptionText) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         // Add Cancel button intent in notification.
         Intent cancelIntent = new Intent(this, UploadRecords.class);
         cancelIntent.setAction(ACTION_CANCEL);
-        PendingIntent pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        PendingIntent pendingCancelIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
+        }
         NotificationCompat.Action cancelAction = new NotificationCompat.Action(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.cancel), pendingCancelIntent);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_entries")
@@ -404,12 +423,18 @@ public class UploadRecords extends Service {
         mNotificationManager.notify(1, notification);
     }
 
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateText(String title, String description) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, LandingActivity.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        PendingIntent pendingIntent;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+        }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
                 .setSmallIcon(R.mipmap.ic_notification)
