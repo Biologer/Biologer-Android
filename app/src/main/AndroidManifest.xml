@@ -37,7 +37,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Biologer.Splash"
+        android:theme="@style/Theme.Biologer.Main"
         android:fullBackupContent="@xml/backup_descriptor">
 
         <uses-library
@@ -60,7 +60,6 @@
 
         <activity
             android:name=".gui.LandingActivity"
-            android:theme="@style/Theme.Biologer.Main"
             android:launchMode="standard"
             android:exported="true">
             <intent-filter>
@@ -70,7 +69,6 @@
         </activity>
         <activity
             android:name=".gui.MapActivity"
-            android:theme="@style/Theme.Biologer.Main"
             android:label="@string/title_activity_map">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -78,7 +76,6 @@
         </activity>
         <activity
             android:name=".gui.EntryActivity"
-            android:theme="@style/Theme.Biologer.Main"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -86,7 +83,6 @@
         </activity>
         <activity
             android:name=".gui.LoginActivity"
-            android:theme="@style/Theme.Biologer.Main"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize"
             android:noHistory="true" >
             <meta-data
@@ -94,13 +90,10 @@
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
         <activity
-            android:name=".gui.IntroActivity"
-            android:theme="@style/Theme.Biologer.Main" />
+            android:name=".gui.IntroActivity" />
         <activity
-            android:name=".gui.ViewImage"
-            android:theme="@style/Theme.Biologer.Main" />
+            android:name=".gui.ViewImage" />
         <activity android:name=".gui.Register"
-            android:theme="@style/Theme.Biologer.Main"
             android:noHistory="true"/>
 
         <service android:name="org.biologer.biologer.network.FetchTaxa"/>

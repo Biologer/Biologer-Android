@@ -8,15 +8,10 @@
         <item name="colorSecondary">@color/colorPrimary</item>
     </style>
 
-    <!-- Splash Screen theme. -->
-    <style name="Theme.Biologer.Splash" parent="Theme.SplashScreen">
-        <item name="postSplashScreenTheme">@style/Theme.Biologer.Main</item>
-    </style>
-
     <!-- Toolbar theme. -->
     <style name="Theme.Biologer.Toolbar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColor">@color/black_on_light_white_on_night</item>
     </style>
 
-    </resources>
+</resources>
