@@ -1,5 +1,6 @@
 package org.biologer.biologer.gui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -93,6 +94,7 @@ public class LoginActivity extends AppCompatActivity {
     // Initialise list for Database selection
     Spinner spinner;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,7 +121,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
                 et_username.setText(user.get(0).getEmail());
                 // Just display anything, no mather what...
-                et_password.setText(R.string.random_string);
+                et_password.setText("random string");
             }
         }
 

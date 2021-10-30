@@ -137,6 +137,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     if (bundle.getBoolean("fromLoginScreen", false) || savedInstanceState == null) {
                         Log.d(TAG, "User came from the login screen.");
                         runServices(token, database_url);
+                        TextView textView = findViewById(R.id.list_entries_info_text);
+                        textView.setText(R.string.entry_info_first_run);
+                        textView.setVisibility(View.VISIBLE);
                     }
                 } else {
                     if (savedInstanceState == null) {
@@ -156,6 +159,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 // This will be executed after upload is completed
                 if (s != null) {
                     Log.d(TAG, "Uploading records returned the code: " + s);
+                    TextView textView = findViewById(R.id.list_entries_info_text);
+                    textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
+                    textView.setVisibility(View.VISIBLE);
                     setUploadIconVisibility();
                     updateEntryListView();
 
@@ -503,11 +509,16 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if(id == R.id.nav_about) {
             Log.d(TAG, "User clicked about icon.");
             fragment = new AboutFragment();
+
         }
         if (id == R.id.nav_help) {
             startActivity(new Intent(LandingActivity.this, IntroActivity.class));
             drawer.closeDrawer(GravityCompat.START);
         }
+
+        // Hide the info text if user moves away from landing fragment
+        TextView textView = findViewById(R.id.list_entries_info_text);
+        textView.setVisibility(View.GONE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.content_frame, fragment);
@@ -745,6 +756,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             updateEntryListView();
+            TextView textView = findViewById(R.id.list_entries_info_text);
+            textView.setVisibility(View.GONE);
         }
         // Change the visibility of the Upload Icon
         setUploadIconVisibility();

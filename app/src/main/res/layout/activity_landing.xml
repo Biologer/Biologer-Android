@@ -16,6 +16,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <TextView
+            android:id="@+id/list_entries_info_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textSize="20sp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="24dp">
+        </TextView>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -25,20 +36,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-            </FrameLayout>
-
-            <FrameLayout
-                android:id="@+id/progress"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:alpha="0.3"
-                android:visibility="gone"
-                android:background="@color/colorPrimary">
-                <ProgressBar
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    />
             </FrameLayout>
 
         </FrameLayout>
