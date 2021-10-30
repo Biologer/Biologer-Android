@@ -18,7 +18,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 31
         versionCode 110
-        versionName "4.0.0 beta 4"
+        versionName "4.0.0 beta 5"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
@@ -109,6 +109,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:19.0.2'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.core:core:1.7.0'
     annotationProcessor 'androidx.annotation:annotation:1.2.0'
 
     // Non Google

@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
@@ -33,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.location.LocationListenerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.ActionBar;
@@ -97,7 +97,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private static final String TAG = "Biologer.Entry";
 
     private LocationManager locationManager;
-    private LocationListener locationListener;
+    private LocationListenerCompat locationListener;
     String latitude = "0", longitude = "0";
     private double elev = 0.0;
     private LatLng currentLocation = new LatLng(0.0, 0.0);
@@ -404,8 +404,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Define locationListener and locationManager in order to
         // to receive the Location.
-        // Call the function updateLocation() to do all the magic...
-        locationListener = new LocationListener() {
+        locationListener = new LocationListenerCompat() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
@@ -419,12 +418,19 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void onProviderEnabled(@NonNull String s) {
+                Log.i(TAG, "Location provider is enabled.");
             }
 
             @Override
             public void onProviderDisabled(@NonNull String s) {
-                //buildAlertMessageNoGps();
-                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                Log.i(TAG, "Location provider is disabled.");
+                AlertDialog.Builder builder = new AlertDialog.Builder(EntryActivity.this);
+                builder.setMessage("Location is currently disabled on this device. Would you like to turn it on?")
+                        .setCancelable(true)
+                        .setPositiveButton(R.string.yes, (dialog, id) -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                        .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
+                AlertDialog alert = builder.create();
+                alert.show();
             }
         };
 
