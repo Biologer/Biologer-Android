@@ -351,6 +351,30 @@
     <string name="entry_info_uploaded">Congratulations! Your data is now safely uploaded on %1$s server. You can access, edit and export them by logging in the web page using web browser.</string>
     <string name="global_location_disabled">Location is currently disabled on this device. Would you like to turn it on?</string>
     <string name="register_database_info">You are about to register to database hosted at %1$s. Note that Biologer application can be used with variety of biologer communities in different regions.</string>
-    <string name="register_privacy_info">Your privacy and data sharing preferences are very important for every Biologer community! In order to use this platform, you must read privacy policy and understand how we use your personal data to validate each species observation from the field. Also, feel free to choose how to share your field observations and photos with the rest of the world by defining licensing options.</string>
+    <string name="register_privacy_info1">Your privacy and data sharing preferences are very important for every Biologer community! In order to use this platform,</string>
+    <string name="register_privacy_info2">you must read privacy policy and understand how we use your personal data</string>
+    <string name="register_privacy_info3">to validate each species observation from the field.</string>
+    <string name="register_privacy_licenses1">Also, feel free to choose how to share your field observations and photos with the rest of the world by</string>
+    <string name="register_privacy_licenses2">defining licensing options</string>
+    <string name="community_bosnia">Local Biologer community in Bosnia and Herzegovina</string>
+    <string name="community_serbia">Local Biologer community in Serbia</string>
+    <string name="community_dzpps">Database of Bird protection and study society of Serbia</string>
+    <string name="community_developers">Developmental database, only for playing and testing</string>
+    <string name="community_croatia">Local Biologer community in Croatia</string>
+    <string name="change_db">Change database</string>
+    <string name="privacy_policy">User’s personal information includes: first name, last name, e-mail address, institution and GPS location given as geographical coordinates of the place where a particular taxon has bean recorded.\n\nBy selecting the default data license the user can chose what to share with others. Biologer supports open software and open, scientifically verifiable data and we do not recommend users to use closed licenses. Good scientific practice must ensure that the all records from the field can be verifiable, thus for each observation Biologer shows who (name, surname and institution), where (geographic coordinates or UTM square) and when (date) certain taxa has bean recorded. To ensure verifiability, users are required to correctly enter personal information, while providing false information can lead to deletion of the user account. If you would like to restrict access of your personal data for people outside of the editorial board (administrators and taxonomic experts for a particular group), you can choose the closed license.\n\nBiologer is committed to maintaining your privacy and will not distribute or sell personal information to third parties, except with the permission of the user. Biologer reserves the right to use these data in case of violations and illegal use of the site by users.\n\nBiologer may, in accordance with the law, collect certain data about its users obtained during the website usage. This information can be used for displaying user activity statistics, and for improving and customizing the website and its content. In this case, contact information of the user will not be displayed.\n\nCollected personal information can be accessed by developers and administrators of the Biologer web site, state authorities and persons who engage in processing the information on our behalf for the purposes specified in this policy.\n\nIf you have any questions about Biologer web site or Android app, you can contact the administrators at admin@biologer.org</string>
+    <string name="privacy_policy_title">Personal information</string>
+    <string name="available_licenses">Available licenses</string>
+    <string name="data_licenses">Data licenses</string>
+    <string name="data_license1">• Open (CC BY-SA 4.0)</string>
+    <string name="data_license2">• Open, non-commercial (CC BY-NC-SA 4.0)</string>
+    <string name="data_license3">• Partially open</string>
+    <string name="data_license4">• Closed for 3 years</string>
+    <string name="data_license5">• Closed</string>
+    <string name="image_license1">• Open (CC BY-SA 4.0)</string>
+    <string name="image_license2">• Open, non-commercial (CC BY-NC-SA 4.0)</string>
+    <string name="image_license3">• Copyrighted</string>
+    <string name="image_license4">• Closed</string>
+    <string name="image_licenses">Image licenses</string>
 
 </resources>

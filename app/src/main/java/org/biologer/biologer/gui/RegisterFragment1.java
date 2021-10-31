@@ -22,7 +22,8 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.R;
 
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
 
 public class RegisterFragment1 extends Fragment {
 
@@ -31,8 +32,8 @@ public class RegisterFragment1 extends Fragment {
     Button buttonNext;
     EditText editTextName, editTextSurname, editTextInstitution;
     TextInputLayout nameLayout, surnameLayout;
-    TextView textViewDatabase;
-    ImageView flag;
+    TextView textViewDatabaseText, textViewDatabaseInfo;
+    ImageView flag, rightArrow;
 
     @Nullable
     @Override
@@ -60,29 +61,33 @@ public class RegisterFragment1 extends Fragment {
                 surnameLayout = activity.findViewById(R.id.editTextLayout_family_name);
                 editTextInstitution = activity.findViewById(R.id.editText_institution_name);
 
-                textViewDatabase = activity.findViewById(R.id.register_database_text);
-                String database = ((LoginActivity)activity).database_name;
-                textViewDatabase.setText(getString(R.string.register_database_info, database));
+                textViewDatabaseText = activity.findViewById(R.id.register_database_text);
+
+                textViewDatabaseInfo = activity.findViewById(R.id.register_database_description);
 
                 enableButton();
 
-                // Change image of the state... don't confuse users
-                flag = activity.findViewById(R.id.database_flag);
-                if (database.equals("https://biologer.ba")) {
-                    flag.setImageResource(R.drawable.flag_bosnia);
-                }
-                if (database.equals("https://biologer.rs")) {
-                    flag.setImageResource(R.drawable.flag_serbia);
-                }
-                if (database.equals("https://birdloger.biologer.org")) {
-                    flag.setImageResource(R.drawable.flag_serbia);
-                }
-                if (database.equals("https://dev.biologer.org")) {
-                    flag.setImageResource(R.drawable.flag_serbia);
-                }
-                if (database.equals("https://biologer.hr")) {
-                    flag.setImageResource(R.drawable.flag_croatia);
-                }
+                rightArrow = activity.findViewById(R.id.register_right_arrow);
+                rightArrow.setOnClickListener(view1 -> {
+                    String current_database = ((LoginActivity) requireActivity()).database_name;
+                    String[] databases = ((LoginActivity) requireActivity()).allDatabases;
+                    List<String> databasesList = Arrays.asList(databases);
+                    int index = databasesList.indexOf(current_database);
+                    index++;
+                    if (databasesList.size() == index) {
+                        index = 0;
+                    }
+                    String new_database = databases[index];
+                    Log.i(TAG, "User selected " + new_database + " as a database.");
+
+                    ((LoginActivity) requireActivity()).database_name = new_database;
+                    int spinnerID = LoginActivity.getSpinnerIdFromUrl(new_database);
+                    ((LoginActivity) requireActivity()).spinner.setSelection(spinnerID);
+
+                    updateDatabaseView(activity, new_database);
+                });
+
+                updateDatabaseView(activity, ((LoginActivity)activity).database_name);
 
                 editTextName.addTextChangedListener(new TextWatcher() {
                     @Override
@@ -135,6 +140,34 @@ public class RegisterFragment1 extends Fragment {
             }
         }
 
+    }
+
+    private void updateDatabaseView(Activity activity, String database) {
+
+        textViewDatabaseText.setText(getString(R.string.register_database_info, database));
+
+        flag = activity.findViewById(R.id.database_flag);
+
+        if (database.equals("https://biologer.ba")) {
+            flag.setImageResource(R.drawable.flag_bosnia);
+            textViewDatabaseInfo.setText(R.string.community_bosnia);
+        }
+        if (database.equals("https://biologer.rs")) {
+            flag.setImageResource(R.drawable.flag_serbia);
+            textViewDatabaseInfo.setText(R.string.community_serbia);
+        }
+        if (database.equals("https://birdloger.biologer.org")) {
+            flag.setImageResource(R.drawable.flag_dzpps);
+            textViewDatabaseInfo.setText(R.string.community_dzpps);
+        }
+        if (database.equals("https://dev.biologer.org")) {
+            flag.setImageResource(R.drawable.flag_dev);
+            textViewDatabaseInfo.setText(R.string.community_developers);
+        }
+        if (database.equals("https://biologer.hr")) {
+            flag.setImageResource(R.drawable.flag_croatia);
+            textViewDatabaseInfo.setText(R.string.community_croatia);
+        }
     }
 
     private void enableButton() {

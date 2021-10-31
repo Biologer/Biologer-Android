@@ -76,6 +76,11 @@ public class LoginActivity extends AppCompatActivity {
 
     String old_username, old_password,
             register_name, register_surname, register_institution;
+    String[] allDatabases = {"https://biologer.rs",
+            "https://biologer.hr",
+            "https://biologer.ba",
+            "https://birdloger.biologer.org",
+            "https://dev.biologer.org"};
 
     Call <LoginResponse> login;
 
@@ -125,8 +130,8 @@ public class LoginActivity extends AppCompatActivity {
                 R.drawable.flag_serbia,
                 R.drawable.flag_croatia,
                 R.drawable.flag_bosnia,
-                R.drawable.flag_serbia,
-                R.drawable.ic_hammer_developers};
+                R.drawable.flag_dzpps,
+                R.drawable.flag_dev};
         ImageArrayAdapter ourDatabases = new ImageArrayAdapter(this, Icons, Databases);
         spinner.setAdapter(ourDatabases);
         if (database_name != null) {
@@ -306,7 +311,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setEnabled(et_password.getText().length() >= 8 && isValidEmail(et_username.getText().toString()));
     }
 
-    private int getSpinnerIdFromUrl(String url) {
+    public static int getSpinnerIdFromUrl(String url) {
         if (url.equals("https://biologer.rs")) {return 0;}
         if (url.equals("https://biologer.hr")) {return 1;}
         if (url.equals("https://biologer.ba")) {return 2;}

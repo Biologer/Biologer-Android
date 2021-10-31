@@ -117,6 +117,13 @@ public class RegisterFragment2 extends Fragment {
                             } else {
                                 passwordRepeatLayout.setError("Passwords did not match");
                             }
+
+                            if (!(editTextPassword.getText().length() > 8)) {
+                                passwordLayout.setError("Password too short");
+                            } else {
+                                passwordLayout.setError(null);
+                            }
+
                             enableButton();
                         };
                         ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);

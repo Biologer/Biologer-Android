@@ -1,7 +1,14 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeechService;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -61,6 +69,65 @@ public class RegisterFragment3 extends Fragment {
                 buttonRegister = activity.findViewById(R.id.buttonRegisterUser);
                 buttonRegister.setOnClickListener(this::onRegisterClicked);
                 buttonRegister.setEnabled(false);
+
+                // Privacy policy text
+                TextView textViewPrivacy = activity.findViewById(R.id.register_privacy_general_info);
+                String privacy = getString(R.string.register_privacy_info1) + " " +
+                        getString(R.string.register_privacy_info2) + " " +
+                        getString(R.string.register_privacy_info3);
+                // Hyperlink a part of the text
+                SpannableString spannableString = new SpannableString(privacy);
+                ClickableSpan clickableSpan = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View textView) {
+                        Fragment fragment = new RegisterPrivacyPolicy();
+                        FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.replace(R.id.login_frame, fragment);
+                        fragmentTransaction.addToBackStack("Register fragment privacy");
+                        fragmentTransaction.commit();
+                    }
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setFakeBoldText(true);
+                        ds.setUnderlineText(false);
+                    }
+                };
+                int start = privacy.indexOf(getString(R.string.register_privacy_info2));
+                int end = privacy.lastIndexOf(getString(R.string.register_privacy_info2)) + getString(R.string.register_privacy_info2).length();
+                spannableString.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                textViewPrivacy.setText(spannableString);
+                textViewPrivacy.setMovementMethod(LinkMovementMethod.getInstance());
+                textViewPrivacy.setHighlightColor(Color.TRANSPARENT);
+
+                // License policy text
+                TextView textViewLicense = activity.findViewById(R.id.register_privacy_license_info);
+                String license = getString(R.string.register_privacy_licenses1) + " " +
+                        getString(R.string.register_privacy_licenses2) + ".";
+                // Hyperlink a part of the text
+                SpannableString spannableStringLicense = new SpannableString(license);
+                ClickableSpan clickableSpanLicense = new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View textView) {
+                        Fragment fragment = new LicenseFragment();
+                        FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.replace(R.id.login_frame, fragment);
+                        fragmentTransaction.addToBackStack("License Fragment");
+                        fragmentTransaction.commit();
+                    }
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setFakeBoldText(true);
+                        ds.setUnderlineText(false);
+                    }
+                };
+                int startLicense = license.indexOf(getString(R.string.register_privacy_licenses2));
+                int endLicense = license.lastIndexOf(getString(R.string.register_privacy_licenses2)) + getString(R.string.register_privacy_licenses2).length();
+                spannableStringLicense.setSpan(clickableSpanLicense, startLicense, endLicense, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                textViewLicense.setText(spannableStringLicense);
+                textViewLicense.setMovementMethod(LinkMovementMethod.getInstance());
+                textViewLicense.setHighlightColor(Color.TRANSPARENT);
 
                 checkBox = activity.findViewById(R.id.checkBox_privacy_policy);
                 dataLicense = activity.findViewById(R.id.autoComplete_register_dataLicense);

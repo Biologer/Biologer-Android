@@ -3,15 +3,12 @@
     android:id="@+id/parent_linear"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/fragment_background">
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:gravity="top"
-        android:orientation="vertical">
+    android:paddingTop="24dp"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:clickable="true"
+    android:background="@color/fragment_background"
+    android:focusable="true">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/editTextLayout_register_email"
@@ -23,8 +20,6 @@
                 android:id="@+id/editText_register_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
                 android:hint="@string/email"
                 android:maxLength="100" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -33,14 +28,14 @@
             android:id="@+id/editTextLayout_register_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/editTextLayout_register_email"
             app:boxBackgroundColor="@android:color/transparent">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editText_register_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
                 android:hint="@string/password"
                 android:inputType="textPassword"
                 android:maxLength="100" />
@@ -50,14 +45,14 @@
             android:id="@+id/editTextLayout_register_password_confirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/editTextLayout_register_password"
+            android:layout_alignParentStart="true"
             app:boxBackgroundColor="@android:color/transparent">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editText_register_password_confirm"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
                 android:hint="@string/password2"
                 android:inputType="textPassword"
                 android:maxLength="100" />
@@ -67,13 +62,9 @@
             android:id="@+id/buttonRegisterNext2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginStart="6dp"
-            android:layout_marginEnd="6dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginTop="24dp"
+            android:layout_below="@+id/editTextLayout_register_password_confirm"
+            android:layout_centerHorizontal="true"
             android:text="@string/app_intro_next_button" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
 
 </RelativeLayout>
