@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -65,29 +67,15 @@ public class LoginActivity extends AppCompatActivity {
     Handler handler = new Handler(Looper.getMainLooper());
     Runnable runnable;
 
-    EditText et_username;
-    EditText et_password;
-    TextInputLayout til_username;
-    TextInputLayout til_password;
-    TextView tv_devDatabase;
+    EditText et_username, et_password;
+    TextInputLayout til_username, til_password;
+    TextView tv_devDatabase, forgotPassTextView;
     Button loginButton;
-    String database_name;
+    public String database_name;
     ProgressBar progressBar;
-    TextView forgotPassTextView;
 
-    String old_username;
-    String old_password;
-
-    /*
-     Get the keys for client applications. Separate client key should be given for each Biologer server
-     application. This workaround is used to hide secret client_key from the source code. The developers
-     should put the key in ~/.gradle/gradle.properties.
-      */
-    String rsKey = BuildConfig.BiologerRS_Key;
-    String hrKey = BuildConfig.BiologerHR_Key;
-    String baKey = BuildConfig.BiologerBA_Key;
-    String devKey = BuildConfig.BiologerDEV_Key;
-    String birdKey = BuildConfig.Birdloger_Key;
+    String old_username, old_password,
+            register_name, register_surname, register_institution;
 
     Call <LoginResponse> login;
 
@@ -422,27 +410,7 @@ public class LoginActivity extends AppCompatActivity {
 
         displayProgressBar(true);
 
-        // Change the call according to the database selected
-        if (database_name.equals("https://biologer.rs")) {
-            Log.d(TAG, "Serbian database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "2", rsKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        }
-        if (database_name.equals("https://biologer.hr")) {
-            Log.d(TAG, "Croatian database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "2", hrKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        }
-        if (database_name.equals("https://biologer.ba")) {
-            Log.d(TAG, "Bosnian database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "2", baKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        }
-        if (database_name.equals("https://birdloger.biologer.org")) {
-            Log.d(TAG, "Birdloger database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "3", birdKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        }
-        if (database_name.equals("https://dev.biologer.org")) {
-            Log.d(TAG, "Developmental database selected.");
-            login = RetrofitClient.getService(database_name).login("password", "6", devKey, "*", et_username.getText().toString(), et_password.getText().toString());
-        }
+        login = RetrofitClient.getService(database_name).login("password", getClientIdForDatabase(database_name), getClientKeyForDatabase(database_name), "*", et_username.getText().toString(), et_password.getText().toString());
 
         Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
 
@@ -586,11 +554,18 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRegister(View view) {
+        /*
         Intent registerIntent = new Intent(LoginActivity.this, Register.class);
         registerIntent.putExtra("database", database_name);
         registerIntent.putExtra("username", et_username.getText().toString());
         registerIntent.putExtra("password", et_password.getText().toString());
         startActivity(registerIntent);
+         */
+        Fragment fragment = new RegisterFragment1();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.login_frame, fragment);
+        fragmentTransaction.addToBackStack("Register fragment 1");
+        fragmentTransaction.commit();
     }
 
     public void onForgotPass(View view) {
@@ -600,9 +575,56 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(defaultBrowser);
     }
 
+    /*
+         Get the keys for client applications. Separate client key should be given for each Biologer server
+         application. This workaround is used to hide secret client_key from the source code. The developers
+         should put the key in ~/.gradle/gradle.properties.
+    */
+    public String getClientKeyForDatabase(String database) {
+        if (database.equals("https://biologer.ba")) {
+            return BuildConfig.BiologerBA_Key;
+        }
+        if (database.equals("https://biologer.rs")) {
+            return BuildConfig.BiologerRS_Key;
+        }
+        if (database.equals("https://birdloger.biologer.org")) {
+            return BuildConfig.Birdloger_Key;
+        }
+        if (database.equals("https://dev.biologer.org")) {
+            return BuildConfig.BiologerDEV_Key;
+        }
+        if (database.equals("https://biologer.hr")) {
+            return BuildConfig.BiologerHR_Key;
+        } else {
+            return null;
+        }
+    }
+
+    public String getClientIdForDatabase(String database) {
+        if (database.equals("https://biologer.ba")) {
+            return "2";
+        }
+        if (database.equals("https://biologer.rs")) {
+            return "2";
+        }
+        if (database.equals("https://birdloger.biologer.org")) {
+            return "3";
+        }
+        if (database.equals("https://dev.biologer.org")) {
+            return "6";
+        }
+        if (database.equals("https://biologer.hr")) {
+            return "2";
+        } else {
+            return null;
+        }
+    }
+
+/*
     @Override
     public void onBackPressed() {
         Log.d(TAG, "Back button is pressed in login activity, closing the app!");
         finishAffinity();
     }
+ */
 }

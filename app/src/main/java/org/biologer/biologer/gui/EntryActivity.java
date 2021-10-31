@@ -425,7 +425,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             public void onProviderDisabled(@NonNull String s) {
                 Log.i(TAG, "Location provider is disabled.");
                 AlertDialog.Builder builder = new AlertDialog.Builder(EntryActivity.this);
-                builder.setMessage("Location is currently disabled on this device. Would you like to turn it on?")
+                builder.setMessage(getString(R.string.global_location_disabled))
                         .setCancelable(true)
                         .setPositiveButton(R.string.yes, (dialog, id) -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
                         .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());

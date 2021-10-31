@@ -36,28 +36,28 @@ public class LogoutFragment extends Fragment {
         View view = getView();
 
         if (view != null) {
-            AppCompatButton btn_logout = Objects.requireNonNull(getActivity()).findViewById(R.id.btn_logout);
-            TextView tv_database = getActivity().findViewById(R.id.currentDatabase);
-            TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
-            TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
+            Activity activity = getActivity();
+            if (activity != null) {
+                AppCompatButton btn_logout = getActivity().findViewById(R.id.btn_logout);
+                TextView tv_database = getActivity().findViewById(R.id.currentDatabase);
+                TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
+                TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
 
-            List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
-            UserData ud = list.get(0);
-            String username = ud.getUsername();
-            Log.i(TAG, "Current user: " + username);
-            tv_database.setText(SettingsManager.getDatabaseName());
-            tv_username.setText(username);
-            tv_email.setText(ud.getEmail());
+                List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
+                UserData ud = list.get(0);
+                String username = ud.getUsername();
+                Log.i(TAG, "Current user: " + username);
+                tv_database.setText(SettingsManager.getDatabaseName());
+                tv_username.setText(username);
+                tv_email.setText(ud.getEmail());
 
-            btn_logout.setOnClickListener(v -> {
-                Activity activity = getActivity();
-                if(activity != null) {
+                btn_logout.setOnClickListener(v -> {
                     Log.d(TAG, "Deleting all user data upon logout.");
                     User.clearUserData(activity);
-                }
-                // Kill the app on logout, since new login request does not work on normal logout... :/
-                loginActivity();
-            });
+                    // Kill the app on logout, since new login request does not work on normal logout... :/
+                    loginActivity();
+                });
+            }
         }
     }
 

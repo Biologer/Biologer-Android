@@ -344,10 +344,13 @@
     <string name="exit">Exit</string>
     <string name="request_file_camera_permissions">Biologer could not take a photo without permission to access your file system and camera. Would you like to enable this permissions?</string>
     <string name="request_camera_permissions">Biologer could not take a photo without your permission to access camera. Would you like to enable this permissions?</string>
-    <string name="request_location_permissions">Biologer is intended to collect species occurrences in the field, thus the geographic location is very important for each record. It is highly recomended that you allow Biologer to access your location, but you can also manually pick a location using map.</string>
+    <string name="request_location_permissions">Biologer is intended to collect species occurrences in the field, thus the geographic location is very important for each record. It is highly recommended that you allow Biologer to access your location, but you can also manually pick a location using map.</string>
     <string name="request_read_external_permission">Biologer needs a permission to access your image files from gallery. Would you like to give it a permit to read storage on your phone?</string>
     <string name="database_birdloger">Birdloger (DZPPS)</string>
     <string name="entry_info_first_run">Your field records will appear here. To add new observation of a species, just use the “+” sign and fill in the form. After you rich the stable internet connection, use the upload button to send all your records on the server.</string>
     <string name="entry_info_uploaded">Congratulations! Your data is now safely uploaded on %1$s server. You can access, edit and export them by logging in the web page using web browser.</string>
+    <string name="global_location_disabled">Location is currently disabled on this device. Would you like to turn it on?</string>
+    <string name="register_database_info">You are about to register to database hosted at %1$s. Note that Biologer application can be used with variety of biologer communities in different regions.</string>
+    <string name="register_privacy_info">Your privacy and data sharing preferences are very important for every Biologer community! In order to use this platform, you must read privacy policy and understand how we use your personal data to validate each species observation from the field. Also, feel free to choose how to share your field observations and photos with the rest of the world by defining licensing options.</string>
 
 </resources>

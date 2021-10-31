@@ -93,8 +93,6 @@
             android:name=".gui.IntroActivity" />
         <activity
             android:name=".gui.ViewImage" />
-        <activity android:name=".gui.Register"
-            android:noHistory="true"/>
 
         <service android:name="org.biologer.biologer.network.FetchTaxa"/>
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
