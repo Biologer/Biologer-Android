@@ -14,8 +14,6 @@ import android.widget.TextView;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 
-import java.util.Objects;
-
 public class AboutFragment extends Fragment {
 
     @Override
@@ -30,12 +28,12 @@ public class AboutFragment extends Fragment {
 
         // Get the name of the database currently in use
         if (view != null) {
-            TextView tv_database = Objects.requireNonNull(getActivity()).findViewById(R.id.currentDatabase);
+            TextView tv_database = requireActivity().findViewById(R.id.currentDatabase);
             tv_database.setText(SettingsManager.getDatabaseName());
         }
 
         // Add onClick to the biologer.org link
-        TextView address = Objects.requireNonNull(getActivity()).findViewById(R.id.biologerorg_url);
+        TextView address = requireActivity().findViewById(R.id.biologerorg_url);
         address.setOnClickListener(view1 -> {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://biologer.org"));
             startActivity(browserIntent);

@@ -476,9 +476,7 @@ public class LoginActivity extends AppCompatActivity {
                     UserData user = new UserData(null, name, email, data_license, image_license);
                     App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
 
-                    Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
-                    intent.putExtra("fromLoginScreen", true);
-                    startActivity(intent);
+                    startLandingActivity();
                 }
             }
 
@@ -514,9 +512,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (response.body() != null) {
                         SettingsManager.setMailConfirmed(true);
                         displayProgressBar(false);
-                        Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
-                        intent.putExtra("fromLoginScreen", true);
-                        startActivity(intent);
+                        startLandingActivity();
                     }
                 }
             }
@@ -527,6 +523,13 @@ public class LoginActivity extends AppCompatActivity {
                 displayProgressBar(false);
             }
         });
+    }
+
+    private void startLandingActivity() {
+        Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("fromLoginScreen", true);
+        startActivity(intent);
     }
 
     public static boolean isValidEmail(CharSequence target) {

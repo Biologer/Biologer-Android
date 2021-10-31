@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.AppCompatButton;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.User;
+import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.sql.UserData;
 
 import java.util.List;
@@ -52,22 +54,40 @@ public class LogoutFragment extends Fragment {
                 tv_email.setText(ud.getEmail());
 
                 btn_logout.setOnClickListener(v -> {
-                    Log.d(TAG, "Deleting all user data upon logout.");
-                    User.clearUserData(activity);
-                    // Kill the app on logout, since new login request does not work on normal logout... :/
-                    loginActivity();
+                    // If download process is active, stop it first
+                    if (FetchTaxa.isInstanceCreated()) {
+                        final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
+                        fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
+                        requireActivity().startService(fetchTaxa);
+
+                        final Handler handler = new Handler();
+                        final Runnable runnable = new Runnable() {
+                            public void run() {
+                                // need to do tasks on the UI thread
+                                Log.d(TAG, "Waiting for downloading to finish...");
+                                if (FetchTaxa.isInstanceCreated()) {
+                                    handler.postDelayed(this, 2000);
+                                } else {
+                                    deleteDataAndLogout(activity);
+                                }
+                            }
+                        };
+                        handler.post(runnable);
+                    } else {
+                        deleteDataAndLogout(activity);
+                    }
                 });
             }
         }
     }
 
-    private void loginActivity() {
-        Activity activity = getActivity();
+    private void deleteDataAndLogout(Activity activity) {
+        Log.d(TAG, "Deleting all user data upon logout.");
+        User.clearUserData(activity);
+
         Intent intent = new Intent(activity, LoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-        // But also close previous activity!
-        assert activity != null;
-        activity.finish();
     }
+
 }
