@@ -554,13 +554,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRegister(View view) {
-        /*
-        Intent registerIntent = new Intent(LoginActivity.this, Register.class);
-        registerIntent.putExtra("database", database_name);
-        registerIntent.putExtra("username", et_username.getText().toString());
-        registerIntent.putExtra("password", et_password.getText().toString());
-        startActivity(registerIntent);
-         */
         Fragment fragment = new RegisterFragment1();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.login_frame, fragment);
@@ -620,11 +613,14 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-/*
     @Override
     public void onBackPressed() {
         Log.d(TAG, "Back button is pressed in login activity, closing the app!");
-        finishAffinity();
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if (fragments.size() == 0) {
+            finishAffinity();
+        } else {
+            getSupportFragmentManager().popBackStack();
+        }
     }
- */
 }
