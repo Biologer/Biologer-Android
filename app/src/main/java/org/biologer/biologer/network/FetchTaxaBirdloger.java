@@ -16,9 +16,9 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
+import org.biologer.biologer.network.JSON.TaxaDataBirdloger;
+import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.TaxaStages;
-import org.biologer.biologer.network.JSON.TaxaResponse;
-import org.biologer.biologer.network.JSON.TaxaData;
 import org.biologer.biologer.network.JSON.TaxaTranslations;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.TaxonData;
@@ -39,7 +39,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class FetchTaxa extends Service {
+public class FetchTaxaBirdloger extends Service {
 
     private static final String TAG = "Biologer.FetchTaxa";
 
@@ -50,7 +50,7 @@ public class FetchTaxa extends Service {
     public static final String ACTION_CANCEL_PAUSED = "ACTION_CANCEL_PAUSED";
     public static final String ACTION_RESUME = "ACTION_RESUME";
     private String stop_fetching;
-    private static FetchTaxa instance = null;
+    private static FetchTaxaBirdloger instance = null;
     static final String TASK_COMPLETED = "org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED";
     int retry_number = 1;
     ArrayList<String> taxa_groups = new ArrayList<>();
@@ -161,27 +161,24 @@ public class FetchTaxa extends Service {
                 stopSelf();
                 break;
             case "keep_going":
-                int[] taxa_groups_int = new int[taxa_groups.size()];
-                for (int i = 0; i < taxa_groups.size(); i++) {
-                    taxa_groups_int[i] = Integer.parseInt(taxa_groups.get(i));
-                }
 
-                Call<TaxaResponse> call = RetrofitClient.getService(
-                        SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at, true, taxa_groups_int, true);
+                Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
+                        SettingsManager.getDatabaseName()).getBirdlogerTaxa(current_page, 100, updated_at);
 
-                call.enqueue(new Callback<TaxaResponse>() {
+                call.enqueue(new Callback<TaxaResponseBirdloger>() {
 
                     @Override
-                    public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
+                    public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
                         if (response.isSuccessful()) {
-                            TaxaResponse taxaResponse = response.body();
-                            assert taxaResponse != null;
-                            saveFetchedPage(taxaResponse);
+                            TaxaResponseBirdloger taxaResponseBirdloger = response.body();
+                            if (taxaResponseBirdloger != null) {
+                                saveFetchedPage(taxaResponseBirdloger);
+                            }
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Throwable t) {
                         Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
 
                         if (retry_number == 4) {
@@ -200,14 +197,14 @@ public class FetchTaxa extends Service {
         }
     }
 
-    private void saveFetchedPage(TaxaResponse taxaResponse) {
+    private void saveFetchedPage(TaxaResponseBirdloger taxaResponseBirdloger) {
 
         if (totalPages == 0) {
-            totalPages = taxaResponse.getMeta().getLastPage();
-            Log.d(TAG, "Last page: " + taxaResponse.getMeta().getLastPage() +
-                    "; to: " + taxaResponse.getMeta().getTo() + "; total: " + taxaResponse.getMeta().getTotal());
+            totalPages = taxaResponseBirdloger.getMeta().getLastPage();
+            Log.d(TAG, "Last page: " + taxaResponseBirdloger.getMeta().getLastPage() +
+                    "; to: " + taxaResponseBirdloger.getMeta().getTo() + "; total: " + taxaResponseBirdloger.getMeta().getTotal());
         }
-        List<TaxaData> taxaData = taxaResponse.getData();
+        List<TaxaDataBirdloger> taxaData = taxaResponseBirdloger.getData();
 
         // Variables used to update the Progress Bar status
         progressStatus = (current_page * 100 / totalPages);
@@ -217,7 +214,7 @@ public class FetchTaxa extends Service {
 
         TaxonData[] final_taxa = new TaxonData[taxaData.size()];
         for (int i = 0; i < taxaData.size(); i++) {
-            TaxaData taxon = taxaData.get(i);
+            TaxaDataBirdloger taxon = taxaData.get(i);
             Long taxon_id = taxon.getId();
             String taxon_latin_name = taxon.getName();
             // Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
@@ -232,11 +229,6 @@ public class FetchTaxa extends Service {
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
-            StringBuilder  stringBuilder = new StringBuilder();
-            for (String string: taxon.getGroups()) {
-                stringBuilder.append(string).append(";");
-            }
-
             // Write taxon data in SQL database
             final_taxa[i] = new TaxonData(
                     taxon_id,
@@ -245,10 +237,10 @@ public class FetchTaxa extends Service {
                     taxon.getRank(),
                     taxon.getRankLevel(),
                     taxon.getAuthor(),
-                    taxon.isRestricted(),
+                    !taxon.getRestricted().equals("0"),
                     taxon.isUses_atlas_codes(),
                     taxon.getAncestors_names(),
-                    stringBuilder.toString());
+                    "Birds");
             Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table

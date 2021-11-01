@@ -13,21 +13,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "meta"
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TaxaResponse {
+public class TaxaResponseBirdloger {
 
     @JsonProperty("data")
-    private List<TaxaData> data = null;
+    private List<TaxaDataBirdloger> data = null;
 
     @JsonProperty("meta")
     private TaxaMeta meta = null;
 
     @JsonProperty("data")
-    public List<TaxaData> getData() {
+    public List<TaxaDataBirdloger> getData() {
         return data;
     }
 
     @JsonProperty("data")
-    public void setData(List<TaxaData> data) {
+    public void setData(List<TaxaDataBirdloger> data) {
         this.data = data;
     }
 

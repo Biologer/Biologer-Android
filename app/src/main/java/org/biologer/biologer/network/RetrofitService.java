@@ -7,6 +7,7 @@ import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.RegisterResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
+import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
@@ -70,6 +71,12 @@ public interface RetrofitService {
                                @Query("withGroupsIds") boolean withGroupsIds,
                                @Query("groups[]") int[] groups,
                                @Query("ungrouped") boolean fetch_ungrouped);
+
+    @Headers({"Accept: application/json"})
+    @GET("api/taxa")
+    Call<TaxaResponseBirdloger> getBirdlogerTaxa(@Query("page") int page_number,
+                                                 @Query("per_page") int per_page,
+                                                 @Query("updated_after") int updated_after);
 
     @Multipart
     @Headers({"Accept: application/json"})

@@ -249,7 +249,7 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="thumbnail">Thumbnail</string>
     <string name="map_type">Map type</string>
     <string name="defaults_to_adult">Set as adult by default</string>
-    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxaData.</string>
     <string name="location_is_not_available">Location is not available</string>
     <string name="north">° N;</string>
     <string name="east">° E</string>
@@ -283,7 +283,7 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or insects) it will be more simple to find species for data entry.</string>
     <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
-    <string name="groups_of_taxa">Available groups of taxa</string>
+    <string name="groups_of_taxa">Available groups of taxaData</string>
     <string name="deselect_all_groups">Unselect all groups</string>
 
 </resources>

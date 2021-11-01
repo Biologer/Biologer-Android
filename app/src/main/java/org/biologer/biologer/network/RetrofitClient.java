@@ -25,7 +25,7 @@ public class RetrofitClient {
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .readTimeout(15, TimeUnit.SECONDS)

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Taxa {
+public class TaxaDataBirdloger {
 
     @JsonProperty("id")
     private Long id;
@@ -24,15 +24,53 @@ public class Taxa {
     @JsonProperty("fe_id")
     private Object feId;
     @JsonProperty("restricted")
-    private boolean restricted;
+    private String restricted;
     @JsonProperty("allochthonous")
-    private boolean allochthonous;
+    private String allochthonous;
     @JsonProperty("invasive")
-    private boolean invasive;
+    private String invasive;
     @JsonProperty("uses_atlas_codes")
     private boolean uses_atlas_codes;
     @JsonProperty("ancestors_names")
     private String ancestors_names;
+    @JsonProperty("type")
+    private String type;
+    @JsonProperty("spid")
+    private String spid;
+    @JsonProperty("strictly_protected")
+    private boolean strictly_protected_species;
+    @JsonProperty("strictly_note")
+    private String strictly_note;
+    @JsonProperty("protected")
+    private boolean protected_species;
+    @JsonProperty("protected_note")
+    private String protected_note;
+    @JsonProperty("iucn_cat")
+    private String iucn_cat;
+    @JsonProperty("birdlife_seq")
+    private Long birdlife_seq;
+    @JsonProperty("birdlife_id")
+    private Long birdlife_id;
+    @JsonProperty("ebba_code")
+    private Long ebba_code;
+    @JsonProperty("euring_code")
+    private Long euring_code;
+    @JsonProperty("euring_sci_name")
+    private String euring_sci_name;
+    @JsonProperty("refer")
+    private boolean refer;
+    @JsonProperty("prior")
+    private boolean prior;
+    @JsonProperty("gn_status")
+    private String gn_status;
+    @JsonProperty("bioras_sci_name")
+    private String bioras_sci_name;
+    @JsonProperty("full_sci_name")
+    private String full_sci_name;
+    @JsonProperty("family_id")
+    private Long family_id;
+    @JsonProperty("order_id")
+    private Long order_id;
     @JsonProperty("can_edit")
     private boolean can_edit;
     @JsonProperty("can_delete")
@@ -112,66 +150,6 @@ public class Taxa {
     @JsonProperty("author")
     public void setAuthor(String author) {
         this.author = author;
-    }
-
-    @JsonProperty("fe_old_id")
-    public Object getFeOldId() {
-        return feOldId;
-    }
-
-    @JsonProperty("fe_old_id")
-    public void setFeOldId(Object feOldId) {
-        this.feOldId = feOldId;
-    }
-
-    @JsonProperty("fe_id")
-    public Object getFeId() {
-        return feId;
-    }
-
-    @JsonProperty("fe_id")
-    public void setFeId(Object feId) {
-        this.feId = feId;
-    }
-
-    @JsonProperty("restricted")
-    public boolean isRestricted() {
-        return restricted;
-    }
-
-    @JsonProperty("restricted")
-    public void setRestricted(boolean restricted) {
-        this.restricted = restricted;
-    }
-
-    @JsonProperty("allochthonous")
-    public boolean isAllochthonous() {
-        return allochthonous;
-    }
-
-    @JsonProperty("allochthonous")
-    public void setAllochthonous(boolean allochthonous) {
-        this.allochthonous = allochthonous;
-    }
-
-    @JsonProperty("invasive")
-    public boolean isInvasive() {
-        return invasive;
-    }
-
-    @JsonProperty("invasive")
-    public void setInvasive(boolean invasive) {
-        this.invasive = invasive;
-    }
-
-    @JsonProperty("rank_translation")
-    public String getRankTranslation() {
-        return rankTranslation;
-    }
-
-    @JsonProperty("rank_translation")
-    public void setRankTranslation(String rankTranslation) {
-        this.rankTranslation = rankTranslation;
     }
 
     @JsonProperty("native_name")
@@ -274,5 +252,13 @@ public class Taxa {
     @JsonProperty("groups")
     public void setGroups(List<String> groups) {
         this.groups = groups;
+    }
+
+    public String getRestricted() {
+        return restricted;
+    }
+
+    public void setRestricted(String restricted) {
+        this.restricted = restricted;
     }
 }

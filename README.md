@@ -3,7 +3,7 @@ Android application to be used together with Biologer web software.
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 
-Biologer is a tool for collecting data on species distribution with the help of community. It started as an effort to collect data on reptiles, amphibians and butterflies in Serbia, but can and will be used for other taxa. It can also can be extended for other territories, as it already has been for Croatia.
+Biologer is a tool for collecting data on species distribution with the help of community. It started as an effort to collect data on reptiles, amphibians and butterflies in Serbia, but can and will be used for other taxaData. It can also can be extended for other territories, as it already has been for Croatia.
 
 Biologer is made od Biologer (the web software built using [Laravel framework](https://laravel.com) and this Biologer application for Andoid device. Android versio of Biologer is written in Java, using Android Studio environment.
 

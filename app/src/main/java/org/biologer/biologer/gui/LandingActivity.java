@@ -38,9 +38,11 @@ import android.widget.Toast;
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.network.FetchTaxa;
+import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.adapters.CreateExternalFile;
@@ -53,7 +55,6 @@ import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.TaxaResponse;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -421,83 +422,85 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
         String updated_at = SettingsManager.getTaxaUpdatedAt();
+        String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
+        String timestamp = updated_at;
+        if (Long.parseLong(skip_this) > Long.parseLong(updated_at)) {
+            timestamp = skip_this;
+        }
 
-        Call<TaxaResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(updated_at), false, null, true);
-        call.enqueue(new Callback<TaxaResponse>() {
+        // For Birdloger database we need to send different call
+        String database = SettingsManager.getDatabaseName();
+        int finalTimestamp = Integer.parseInt(timestamp);
+        if (database.equals("https://birdloger.biologer.org")) {
+            Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
+                    database).getBirdlogerTaxa(1, 1, finalTimestamp);
+            call.enqueue(new Callback<TaxaResponseBirdloger>() {
 
-            @Override
-            public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
-                if (response.isSuccessful()) {
-                    // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                    TaxaResponse taxaResponse = response.body();
-                    if (taxaResponse != null) {
-                        if (taxaResponse.getData().isEmpty()) {
-                            Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                        } else {
-                            Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                            String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
-
-                            // Workaround to skip the update if user chooses so...
-                            if (!skip_this.equals("0")) {
-                                updateTaxaOnSkip(skip_this);
-                            }
-                            else {
-                                updateTaxa2();
+                @Override
+                public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
+                    if (response.isSuccessful()) {
+                        // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                        TaxaResponseBirdloger taxaResponseBirdloger = response.body();
+                        if (taxaResponseBirdloger != null) {
+                            if (taxaResponseBirdloger.getData().isEmpty()) {
+                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                            } else {
+                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                updateTaxa2(finalTimestamp);
                             }
                         }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
-                // Inform the user on failure and write log message
-                //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
-            }
-        });
-    }
+                @Override
+                public void onFailure(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Throwable t) {
+                    // Inform the user on failure and write log message
+                    //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                }
+            });
+        }
 
-    private void updateTaxaOnSkip(String skip_this) {
+        // For other Biologer databases just do the regular stuff...
+        else {
+            Call<TaxaResponse> call = RetrofitClient.getService(
+                    database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
+            call.enqueue(new Callback<TaxaResponse>() {
 
-        Log.i(TAG, "User chooses to skip updating taxonomic database on timestamp: " + skip_this);
-
-        Call<TaxaResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getTaxa(1, 1, Integer.parseInt(skip_this), true, null, true);
-        call.enqueue(new Callback<TaxaResponse>() {
-
-            @Override
-            public void onResponse(@NotNull Call<TaxaResponse> call, @NotNull Response<TaxaResponse> response) {
-                if (response.isSuccessful()) {
-                    TaxaResponse taxaResponse = response.body();
-                    if (taxaResponse != null) {
-                        if (taxaResponse.getData().isEmpty()) {
-                            Log.i(TAG, "No new taxonomic database since the last time you skipped an update. Nothing to do here!");
-                        } else {
-                            updateTaxa2();
+                @Override
+                public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
+                    if (response.isSuccessful()) {
+                        // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                        TaxaResponse taxaResponse = response.body();
+                        if (taxaResponse != null) {
+                            if (taxaResponse.getData().isEmpty()) {
+                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                            } else {
+                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                updateTaxa2(finalTimestamp);
+                            }
                         }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(@NotNull Call<TaxaResponse> call, @NotNull Throwable t) {
-                Log.e("Taxa database: ", "Application could not get taxon version data from a server!");
-            }
-        });
+                @Override
+                public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
+                    // Inform the user on failure and write log message
+                    //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                }
+            });
+        }
     }
 
-    private void updateTaxa2 () {
-        int updated_at = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
-
+    private void updateTaxa2 (int timestamp) {
         // If user choose to update data on any network, just do it!
         if (should_ask.equals("download")) {
             Log.d(TAG, "The user chooses to update taxa without asking. Fetching automatically.");
             startFetchingTaxa();
         } else {
             Log.d(TAG, "There is NO WiFi network, we should ask user for large download on mobile network.");
-            if (updated_at == 0) {
+            if (timestamp == 0) {
                 // If the online database is empty and user skips updating ask him on the next program startup
                 buildAlertUpdateTaxa(getString(R.string.database_empty),
                         getString(R.string.contin),
@@ -813,10 +816,18 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void startFetchingTaxa() {
-        if (!FetchTaxa.isInstanceCreated()) {
-            final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
-            fetchTaxa.setAction(FetchTaxa.ACTION_START);
-            startService(fetchTaxa);
+        if (SettingsManager.getDatabaseName().equals("https://birdloger.biologer.org")) {
+            if (!FetchTaxaBirdloger.isInstanceCreated()) {
+                final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxaBirdloger.class);
+                fetchTaxa.setAction(FetchTaxa.ACTION_START);
+                startService(fetchTaxa);
+            }
+        } else {
+            if (!FetchTaxa.isInstanceCreated()) {
+                final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
+                fetchTaxa.setAction(FetchTaxa.ACTION_START);
+                startService(fetchTaxa);
+            }
         }
     }
 

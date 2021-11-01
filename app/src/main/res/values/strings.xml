@@ -90,8 +90,8 @@
     <string name="realy">Do you want to logout from this Biologer database?</string>
 
     <!--Setup-->
-    <string name="note">Here you can update the list of taxa.</string>
-    <string name="button_update">Update taxa</string>
+    <string name="note">Here you can update the list of taxaData.</string>
+    <string name="button_update">Update taxaData</string>
     <string name="database_updated">Taxon database is updated.</string>
     <string name="database_connect_error">Application was unable to connect with database!</string>
 
@@ -106,7 +106,7 @@
     <string name="fourth_slide">Adding data is easy! Suggest the species, add some photos and Biologer will do the rest. Advanced options can also be unlocked from the Preferences.</string>
     <string name="unprecise_coordinates">The coordinate precision is less than 25 m. Would you like to wait for precise location?</string>
     <string name="save_anyway">Save anyway</string>
-    <string name="database_empty">Biologer’s taxa database is not downloaded from the server yet. Ensure that you have a stable internet connection to continue.</string>
+    <string name="database_empty">Biologer’s taxaData database is not downloaded from the server yet. Ensure that you have a stable internet connection to continue.</string>
     <string name="contin">Download</string>
     <string name="skip">Skip for now</string>
     <string name="google_maps_title">Google Map</string>
@@ -129,8 +129,8 @@
     <string name="choose_project">Sets the project title if your data was collected during a project.</string>
     <string name="project_name">Project name</string>
     <string name="channel_description">Displays notifications related with taxonomic updates.</string>
-    <string name="channel_name">Update taxa</string>
-    <string name="notify_title_taxa">Updating taxa</string>
+    <string name="channel_name">Update taxaData</string>
+    <string name="notify_title_taxa">Updating taxaData</string>
     <string name="notify_desc_taxa">Downloading new taxonomic database.</string>
     <string name="notify_title_taxa_updated">Up to date</string>
     <string name="notify_desc_taxa_updated">Taxonomic database is now updated.</string>
@@ -152,7 +152,7 @@
     <string name="image_license">Image license</string>
     <string name="retry_licence_from_server">Biologer could not retrieve data about your image and data licences from server. Having stable internet you can retry this operation, or you can setup custom data licenses from the Biologer Preferences.</string>
     <string name="go_to_preferences">Open preferences</string>
-    <string name="update_taxa">Download all taxa</string>
+    <string name="update_taxa">Download all taxaData</string>
     <string name="update_taxa_desc">Re-downloads entire taxonomic tree in your application from Biologer server.</string>
     <string name="data_synchronisation">Data synchronisation</string>
     <string name="additional_options">Additional options</string>
@@ -250,7 +250,7 @@
     <string name="thumbnail">Thumbnail</string>
     <string name="map_type">Map type</string>
     <string name="defaults_to_adult">Set as adult by default</string>
-    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
+    <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxaData.</string>
     <string name="location_is_not_available">Waiting for the coordinates…</string>
     <string name="north">° N;</string>
     <string name="east">° E</string>
@@ -286,7 +286,7 @@
     <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or plants) it will be easier to find species for data entry. Other species will not pop up in the drop down menu.</string>
     <string name="sql_updated_message">SQL database structure changed. Biologer will log you back in and download user data from server.</string>
     <string name="login_after_sql_update_fail">Could not login after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
-    <string name="groups_of_taxa">Available groups of taxa</string>
+    <string name="groups_of_taxa">Available groups of taxaData</string>
     <string name="deselect_all_groups">Deselect all groups</string>
     <string name="license_image_30">Keep authorship and share online with watermark</string>
     <string name="license_image_10">Share images for free (CC-BY-SA)</string>
@@ -326,7 +326,7 @@
     <string name="confirm_delete_all">You are about to delete every single data collected on the field! Are you sure about this?</string>
     <string name="yes_delete">Delete everything</string>
     <string name="no_delete">No</string>
-    <string name="already_fetching_taxa">Biologer is already downloading taxa! You should wait for this process to finish and download taxa from Biologer Preferences.</string>
+    <string name="already_fetching_taxa">Biologer is already downloading taxaData! You should wait for this process to finish and download taxaData from Biologer Preferences.</string>
     <string name="message_should_download">You have selected new taxonomic group and Biologer should download it from the network. It is recommended that you do this now, but it can also be accomplished from the Preferences once you rich stable network connection.</string>
     <string name="download">Download</string>
     <string name="serbian_flag">Serbian flag</string>
@@ -363,7 +363,7 @@
     <string name="community_developers">Developmental database, only for playing and testing</string>
     <string name="community_croatia">Local Biologer community in Croatia</string>
     <string name="change_db">Change database</string>
-    <string name="privacy_policy">User’s personal information includes: first name, last name, e-mail address, institution and GPS location given as geographical coordinates of the place where a particular taxon has bean recorded.\n\nBy selecting the default data license the user can chose what to share with others. Biologer supports open software and open, scientifically verifiable data and we do not recommend users to use closed licenses. Good scientific practice must ensure that the all records from the field can be verifiable, thus for each observation Biologer shows who (name, surname and institution), where (geographic coordinates or UTM square) and when (date) certain taxa has bean recorded. To ensure verifiability, users are required to correctly enter personal information, while providing false information can lead to deletion of the user account. If you would like to restrict access of your personal data for people outside of the editorial board (administrators and taxonomic experts for a particular group), you can choose the closed license.\n\nBiologer is committed to maintaining your privacy and will not distribute or sell personal information to third parties, except with the permission of the user. Biologer reserves the right to use these data in case of violations and illegal use of the site by users.\n\nBiologer may, in accordance with the law, collect certain data about its users obtained during the website usage. This information can be used for displaying user activity statistics, and for improving and customizing the website and its content. In this case, contact information of the user will not be displayed.\n\nCollected personal information can be accessed by developers and administrators of the Biologer web site, state authorities and persons who engage in processing the information on our behalf for the purposes specified in this policy.\n\nIf you have any questions about Biologer web site or Android app, you can contact the administrators at admin@biologer.org</string>
+    <string name="privacy_policy">User’s personal information includes: first name, last name, e-mail address, institution and GPS location given as geographical coordinates of the place where a particular taxon has bean recorded.\n\nBy selecting the default data license the user can chose what to share with others. Biologer supports open software and open, scientifically verifiable data and we do not recommend users to use closed licenses. Good scientific practice must ensure that the all records from the field can be verifiable, thus for each observation Biologer shows who (name, surname and institution), where (geographic coordinates or UTM square) and when (date) certain taxaData has bean recorded. To ensure verifiability, users are required to correctly enter personal information, while providing false information can lead to deletion of the user account. If you would like to restrict access of your personal data for people outside of the editorial board (administrators and taxonomic experts for a particular group), you can choose the closed license.\n\nBiologer is committed to maintaining your privacy and will not distribute or sell personal information to third parties, except with the permission of the user. Biologer reserves the right to use these data in case of violations and illegal use of the site by users.\n\nBiologer may, in accordance with the law, collect certain data about its users obtained during the website usage. This information can be used for displaying user activity statistics, and for improving and customizing the website and its content. In this case, contact information of the user will not be displayed.\n\nCollected personal information can be accessed by developers and administrators of the Biologer web site, state authorities and persons who engage in processing the information on our behalf for the purposes specified in this policy.\n\nIf you have any questions about Biologer web site or Android app, you can contact the administrators at admin@biologer.org</string>
     <string name="privacy_policy_title">Personal information</string>
     <string name="available_licenses">Available licenses</string>
     <string name="data_licenses">Data licenses</string>
