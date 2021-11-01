@@ -3,7 +3,6 @@ package org.biologer.biologer.gui;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeechService;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;

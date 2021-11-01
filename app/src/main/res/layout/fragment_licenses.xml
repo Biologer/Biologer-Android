@@ -13,7 +13,7 @@
         android:id="@+id/textView_licenses_main_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="24sp"
+        android:textSize="36sp"
         android:layout_marginBottom="12dp"
         android:textAlignment="center"
         android:text="@string/available_licenses"/>
@@ -25,43 +25,111 @@
         android:layout_below="@+id/textView_licenses_main_title"
         android:layout_marginBottom="6dp"
         android:text="@string/data_licenses"
+        android:textSize="24sp" />
+
+    <TextView
+        android:id="@+id/bullet1"
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_licenses_data_title"
+        android:text="@string/bullet"
         android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_data_license1"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/textView_licenses_data_title"
-        android:text="@string/data_license1"/>
+        android:layout_toEndOf="@+id/bullet1"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
+        android:text="@string/data_license1"
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_data_license1"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_data_license2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_data_license1"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/data_license2"/>
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_data_license2"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_data_license3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_data_license2"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/data_license3"/>
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_data_license3"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_data_license4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_data_license3"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/data_license4"/>
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_data_license4"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_data_license5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_data_license4"
         android:layout_marginBottom="12dp"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/data_license5"/>
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_licenses_image_title"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_licenses_image_title"
@@ -70,6 +138,13 @@
         android:layout_below="@+id/textView_data_license5"
         android:layout_marginBottom="6dp"
         android:text="@string/image_licenses"
+        android:textSize="24sp" />
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_image_license1"
+        android:text="@string/bullet"
         android:textSize="18sp" />
 
     <TextView
@@ -77,27 +152,71 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/textView_licenses_image_title"
-        android:text="@string/image_license1"/>
+        android:layout_toEndOf="@+id/bullet1"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
+        android:text="@string/image_license1"
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_image_license2"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_image_license2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_image_license1"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/image_license2"/>
 
     <TextView
         android:id="@+id/textView_image_license3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_image_license2"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/image_license3"/>
+
+    <TextView
+        android:layout_width="24dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/textView_image_license3"
+        android:text="@string/bullet"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textView_image_license4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/bullet1"
         android:layout_below="@id/textView_image_license3"
+        android:textSize="18sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:textColor="@color/colorPrimary"
         android:text="@string/image_license4"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_licenses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView_image_license4"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/app_intro_back_button" />
 
 </RelativeLayout>

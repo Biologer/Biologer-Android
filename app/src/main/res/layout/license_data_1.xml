@@ -1,0 +1,45 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/parent_linear"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="24dp"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:clickable="true"
+    android:background="@color/fragment_background"
+    android:focusable="true">
+
+    <TextView
+        android:id="@+id/textView_data_license_title1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/license_title_1"
+        android:textSize="24sp" />
+
+    <ScrollView
+        android:id="@+id/scrollView_data_license1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/button_data_license1"
+        android:layout_below="@+id/textView_data_license_title1"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:id="@+id/textView_data_license_description_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autoLink="web"
+            android:text="@string/open_license_text" />
+    </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_data_license1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:text="@string/app_intro_back_button" />
+</RelativeLayout>
