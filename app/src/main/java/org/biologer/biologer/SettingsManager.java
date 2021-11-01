@@ -144,7 +144,7 @@ public class SettingsManager {
         editor.apply();
     }
 
-    public static Boolean firstRun() {
+    public static Boolean isFirstRun() {
         return prefs.getBoolean(KEY.FIRST_RUN.toString(), true);
     }
 

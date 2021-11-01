@@ -52,6 +52,7 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -76,7 +77,7 @@ public class LoginActivity extends AppCompatActivity {
 
     String old_username, old_password,
             register_name, register_surname, register_institution;
-    String[] allDatabases = {"https://biologer.rs",
+    static String[] allDatabases = {"https://biologer.rs",
             "https://biologer.hr",
             "https://biologer.ba",
             "https://birdloger.biologer.org",
@@ -312,11 +313,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public static int getSpinnerIdFromUrl(String url) {
-        if (url.equals("https://biologer.rs")) {return 0;}
-        if (url.equals("https://biologer.hr")) {return 1;}
-        if (url.equals("https://biologer.ba")) {return 2;}
-        if (url.equals("https://birdloger.biologer.org")) {return 3;}
-        return 4;
+        List<String> databasesList = Arrays.asList(allDatabases);
+        return databasesList.indexOf(url);
     }
 
     public static class ImageArrayAdapter extends ArrayAdapter<Integer> {
@@ -361,12 +359,7 @@ public class LoginActivity extends AppCompatActivity {
             // Change the preference according to the user selection
             long database_id = database.getItemIdAtPosition(pos);
             String old_database = database_name;
-            database_name = database.getItemAtPosition(pos).toString();
-            if (database_id == 0) {database_name = "https://biologer.rs";}
-            if (database_id == 1) {database_name = "https://biologer.hr";}
-            if (database_id == 2) {database_name = "https://biologer.ba";}
-            if (database_id == 3) {database_name = "https://birdloger.biologer.org";}
-            if (database_id == 4) {database_name = "https://dev.biologer.org";}
+            database_name = allDatabases[(int) database_id];
 
             Log.i(TAG, "Database No. " + database_id + " selected: " + database_name);
 
@@ -407,7 +400,7 @@ public class LoginActivity extends AppCompatActivity {
         else {
             Log.d(TAG, "TOKEN: " + token);
             Log.d(TAG, "There is a token. Trying to log in without username/password.");
-            logInTest();
+            logInWithToken();
         }
     }
 
@@ -468,13 +461,14 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                 if (response.isSuccessful()) {
-                    assert response.body() != null;
-                    String email = response.body().getData().getEmail();
-                    String name = response.body().getData().getFullName();
-                    int data_license = response.body().getData().getSettings().getDataLicense();
-                    int image_license = response.body().getData().getSettings().getImageLicense();
-                    UserData user = new UserData(null, name, email, data_license, image_license);
-                    App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                    if (response.body() != null) {
+                        String email = response.body().getData().getEmail();
+                        String name = response.body().getData().getFullName();
+                        int data_license = response.body().getData().getSettings().getDataLicense();
+                        int image_license = response.body().getData().getSettings().getImageLicense();
+                        UserData user = new UserData(null, name, email, data_license, image_license);
+                        App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                    }
 
                     startLandingActivity();
                 }
@@ -491,8 +485,9 @@ public class LoginActivity extends AppCompatActivity {
         startService(getTaxaGroups);
     }
 
-    private void logInTest() {
-        Log.d(TAG, "Logging in attempt.");
+    // TODO it should be more simple to check confirmed email
+    private void logInWithToken() {
+        Log.d(TAG, "Login attempt.");
         displayProgressBar(true);
         Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0, false, null, true);
         service.enqueue(new Callback<TaxaResponse>() {
@@ -519,7 +514,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Cannot get response from the server (test taxa response)");
+                Log.e(TAG, "Cannot get response from the server (test token login response)");
                 displayProgressBar(false);
             }
         });

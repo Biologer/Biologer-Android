@@ -224,7 +224,7 @@ public class RegisterFragment3 extends Fragment {
                 }
                 if (response.code() == 500) {
                     Log.e(TAG, "Error 500: Server could not send email to the given address.");
-                    textViewError.setText(getString(R.string.email_domain_wrong));
+                    textViewError.setText(getString(R.string.email_domain_wrong_500));
                     textViewError.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
                     registerResponseCall.cancel();
@@ -232,7 +232,7 @@ public class RegisterFragment3 extends Fragment {
                 }
                 if (response.code() == 404) {
                     Log.e(TAG, "Error 404: Server could not send email to the given address.");
-                    textViewError.setText(getString(R.string.email_domain_wrong));
+                    textViewError.setText(getString(R.string.email_domain_wrong_404));
                     textViewError.setVisibility(View.VISIBLE);
                     progressBar.setVisibility(View.GONE);
                     registerResponseCall.cancel();

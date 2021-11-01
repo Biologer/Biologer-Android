@@ -70,7 +70,7 @@ public class RegisterFragment1 extends Fragment {
                 rightArrow = activity.findViewById(R.id.register_right_arrow);
                 rightArrow.setOnClickListener(view1 -> {
                     String current_database = ((LoginActivity) requireActivity()).database_name;
-                    String[] databases = ((LoginActivity) requireActivity()).allDatabases;
+                    String[] databases = LoginActivity.allDatabases;
                     List<String> databasesList = Arrays.asList(databases);
                     int index = databasesList.indexOf(current_database);
                     index++;

@@ -21,7 +21,6 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.sql.UserData;
 
 import java.util.List;
-import java.util.Objects;
 
 public class LogoutFragment extends Fragment {
 

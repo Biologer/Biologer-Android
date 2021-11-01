@@ -43,7 +43,6 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.InternetConnection;
@@ -112,7 +111,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         tv_email.setText(getUserEmail());
 
         // On the first run show some help
-        if (SettingsManager.firstRun()) {
+        if (SettingsManager.isFirstRun()) {
             Log.d(TAG, "This is first run of the program.");
             SettingsManager.setFirstRun(false);
             Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
@@ -122,7 +121,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // If there is no url, falling back to the login screen
             if (database_url == null) {
                 Log.d(TAG, "Null database URL selected.");
-                ShowUserLoginScreen();
+                showUserLoginScreen();
             } else {
 
                 // Users from Serbia should switch to RS domain.
@@ -134,7 +133,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 // If the user just logged in
                 Bundle bundle = getIntent().getExtras();
                 if (bundle != null) {
-                    if (bundle.getBoolean("fromLoginScreen", false) || savedInstanceState == null) {
+                    if (bundle.getBoolean("fromLoginScreen", false)) {
                         Log.d(TAG, "User came from the login screen.");
                         runServices(token, database_url);
                         TextView textView = findViewById(R.id.list_entries_info_text);
@@ -143,8 +142,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
                 } else {
                     if (savedInstanceState == null) {
+                        // If Landing activity is started for the first time run the online services
                         Log.d(TAG, "savedInstanceState is null");
                         runServices(token, database_url);
+                    } else {
+                        // If the landing activity is restarted, just update GIU
+                        Log.d(TAG, "savedInstanceState is not null");
+                        checkMailConfirmed(database_url);
                     }
                 }
             }
@@ -185,7 +189,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         if (token == null) {
             Log.d(TAG, "No user token.");
-            ShowUserLoginScreen();
+            showUserLoginScreen();
         } else {
             // Check if token is still valid and refresh if needed
             if (MAIL_CONFIRMED) {
@@ -203,6 +207,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             } else {
                 Log.d(TAG, "Email is not confirmed.");
+                checkMailConfirmed(database_url);
             }
 
             // Check if notifications are enabled, if not warn the user!
@@ -234,7 +239,36 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void ShowUserLoginScreen() {
+    // TODO it should be more simple to check confirmed email
+    private void checkMailConfirmed(String database_url) {
+        TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
+        textView_confirmEmail.setVisibility(View.VISIBLE);
+
+        Log.d(TAG, "Logging in attempt.");
+        Call<TaxaResponse> service = RetrofitClient.getService(database_url).getTaxa(1,1,0, false, null, true);
+        service.enqueue(new Callback<TaxaResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
+                if (response.code() == 403) {
+                    SettingsManager.setMailConfirmed(false);
+                    textView_confirmEmail.setVisibility(View.VISIBLE);
+                }
+                else {
+                    if (response.body() != null) {
+                        SettingsManager.setMailConfirmed(true);
+                        textView_confirmEmail.setVisibility(View.GONE);
+                    }
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
+                Toast.makeText(LandingActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Cannot get response from the server (test confirmed mail response)");
+            }
+        });
+    }
+
+    private void showUserLoginScreen() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
         startActivity(intent);
     }
@@ -815,10 +849,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         List<UserData> userdata_list = App.get().getDaoSession().getUserDataDao().loadAll();
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
-            // Delete user data
-            User.clearUserData(this);
-            // Go to login screen
-            userLogOut();
             return null;
         } else {
             return userdata_list.get(0);
@@ -830,7 +860,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (userdata != null) {
             return userdata.getUsername();
         } else {
-            return "User is not logged in";
+            return getString(R.string.not_logged_in);
         }
     }
 
@@ -839,7 +869,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (userdata != null) {
             return userdata.getEmail();
         } else {
-            return "Could not get email address.";
+            return getString(R.string.not_logged_in);
         }
     }
 
@@ -859,11 +889,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 uploadMenu.getItem(0).getIcon().setAlpha(255);
             }
         }
-    }
-
-    private void userLogOut() {
-        Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-        startActivity(intent);
     }
 
     private void showLandingFragment() {
