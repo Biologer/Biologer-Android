@@ -537,6 +537,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             drawer.closeDrawer(GravityCompat.START);
             return true;
         }
+        if (id == R.id.nav_help) {
+            startActivity(new Intent(LandingActivity.this, IntroActivity.class));
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
+        }
         if (id == R.id.nav_setup) {
             fragment = new PreferencesFragment();
         }
@@ -546,11 +551,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if(id == R.id.nav_about) {
             Log.d(TAG, "User clicked about icon.");
             fragment = new AboutFragment();
-
-        }
-        if (id == R.id.nav_help) {
-            startActivity(new Intent(LandingActivity.this, IntroActivity.class));
-            drawer.closeDrawer(GravityCompat.START);
         }
 
         // Hide the info text if user moves away from landing fragment
