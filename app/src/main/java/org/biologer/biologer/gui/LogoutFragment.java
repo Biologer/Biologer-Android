@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.AppCompatButton;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,7 +60,7 @@ public class LogoutFragment extends Fragment {
                         fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
                         requireActivity().startService(fetchTaxa);
 
-                        final Handler handler = new Handler();
+                        final Handler handler = new Handler(Looper.getMainLooper());
                         final Runnable runnable = new Runnable() {
                             public void run() {
                                 // need to do tasks on the UI thread
