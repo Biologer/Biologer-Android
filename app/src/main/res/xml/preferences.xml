@@ -13,6 +13,20 @@
             android:summary="@string/species_groups_desc"
             app:iconSpaceReserved="false"
             android:defaultValue="false"/>
+        <EditTextPreference
+            android:key="project_name"
+            android:title="@string/project_name"
+            android:dialogTitle="@string/project_name"
+            android:summary="@string/choose_project"
+            app:iconSpaceReserved="false"
+            android:defaultValue="" />
+        <EditTextPreference
+            android:key="location_name"
+            android:title="@string/location_name"
+            android:dialogTitle="@string/location_name"
+            android:summary="@string/location_name_description"
+            app:iconSpaceReserved="false"
+            android:defaultValue=""/>
         <CheckBoxPreference
             android:key="english_names"
             android:title="@string/allow_english_names"
@@ -36,13 +50,6 @@
     <PreferenceCategory
         android:title="@string/preferences_user_settings"
         app:iconSpaceReserved="false">
-        <EditTextPreference
-            android:key="project_name"
-            android:title="@string/project_name"
-            android:dialogTitle="@string/project_name"
-            android:summary="@string/choose_project"
-            app:iconSpaceReserved="false"
-            android:defaultValue="" />
         <ListPreference
             android:key="data_license"
             android:title="@string/data_license"

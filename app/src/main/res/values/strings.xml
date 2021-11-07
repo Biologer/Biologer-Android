@@ -407,5 +407,11 @@
     <string name="privacy_policy10">Users should enter correct data on the species observations from the field, while forged entries are considered strict offence of our terms of use. Wrong data on species distribution are not good for anything and our editorial board is trying to minimise the number of such records.</string>
     <string name="privacy_policy11">Users should respect other person’ opinion and use proper language in online communication.</string>
     <string name="privacy_policy12">In case of violation of these rules, responsible persons can warn the user or, in the final case, exclude the user from Biologer community. Biologer reserves the right to keep the users data in case of violations of the terms of use and illegal use of the site by users.</string>
+    <string name="location_name">Location name</string>
+    <string name="location_name_description">Adds location name along with observations from the field. This location will be used while you are within the same area.</string>
+    <string name="location_changed">It looks like you move away from \"%1$s\"? If you are somewhere else now the location name should be updated or deleted.</string>
+    <string name="update_location_name">Update</string>
+    <string name="keep_location_name">Keep current</string>
+    <string name="remove_location_name">Delete</string>
 
 </resources>

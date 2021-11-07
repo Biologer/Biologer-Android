@@ -407,5 +407,11 @@
     <string name="privacy_policy10">Korisnici su dužni da unose tačne podatke o nalazima vrste sa terene, a unos lažnih podataka smatramo najstrožim prekršajem. Pogrešni nalazi o rasprostranjenju vrsta nikome ne idu u prilog i naš urednički tim se trudi da takve podatke svede na minimum.</string>
     <string name="privacy_policy11">Korisnici su dužni da uvažavaju mišljenja drugih i da koriste primeren rečnik.</string>
     <string name="privacy_policy12">U slučaju da se ne poštuju ovi uslovi korišćenja, ovlašćene osobe mogu opomenuti korisnika ili ga, u krajnjem slučaju, isključiti iz rada Biologer zajednice. Biologer zadržava pravo korišćenja podataka korisnika u slučaju kršenja uslova korišćenja sajta i nezakonitog korišćenja od strane korisnika.</string>
+    <string name="location_name">Ime lokacije</string>
+    <string name="location_name_description">Dodaje naziv mesta uz sva posmatranja sa terena. Ova lokacija će biti korišćena sve dok se nalazite u istoj oblasti.</string>
+    <string name="location_changed">Izgleda da više niste na lokaciji „%1$s“? Ukoliko ste negde drugde promenite ili obrišite ime ove lokacije.</string>
+    <string name="update_location_name">Promeni</string>
+    <string name="keep_location_name">Zadrži trenutno</string>
+    <string name="remove_location_name">Obriši</string>
 
 </resources>

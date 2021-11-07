@@ -243,6 +243,7 @@ public class UploadRecords extends Service {
         apiEntry.setSex(entry.getSex());
         apiEntry.setNumber(entry.getNoSpecimens());
         apiEntry.setProject(entry.getProjectId());
+        apiEntry.setLocation(entry.getLocation());
         apiEntry.setFoundOn(entry.getFoundOn());
         apiEntry.setStageId(entry.getStage());
         apiEntry.setAtlasCode(entry.getAtlasCode());

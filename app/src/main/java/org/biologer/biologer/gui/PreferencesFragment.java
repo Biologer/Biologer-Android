@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -19,6 +20,7 @@ import androidx.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.View;
 
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
@@ -82,6 +84,19 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 fragmentTransaction.addToBackStack("new fragment");
                 fragmentTransaction.commit();
                 return true;
+            });
+        }
+
+        // Check if the location name is null and if true null the previous location
+        EditTextPreference locationName = findPreference("location_name");
+        if (locationName != null) {
+            locationName.setOnPreferenceChangeListener((preference, newValue) -> {
+                if (newValue.toString().trim().equals("")) {
+                    Log.d(TAG, "Setting previous location to null");
+                    SettingsManager.setPreviousLocationLong(null);
+                    SettingsManager.setPreviousLocationLat(null);
+                }
+                    return true;
             });
         }
 

@@ -17,8 +17,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 113
-        versionName "4.0.0 beta 8"
+        versionCode 114
+        versionName "3.2.0"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         compileOptions {
@@ -106,11 +106,11 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation 'com.google.android.gms:play-services-maps:18.0.0'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
-    implementation 'com.google.firebase:firebase-core:19.0.2'
+    implementation 'com.google.firebase:firebase-core:20.0.0'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.core:core:1.7.0'
-    annotationProcessor 'androidx.annotation:annotation:1.2.0'
+    annotationProcessor 'androidx.annotation:annotation:1.3.0'
 
     // Non Google
     implementation 'org.greenrobot:greendao-generator:3.3.0'

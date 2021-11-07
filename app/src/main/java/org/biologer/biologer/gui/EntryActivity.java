@@ -42,6 +42,7 @@ import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -967,9 +968,105 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     /*
-    /  PART 3: Check if both male and female entries should be created
+    /  PART 3: Check if the location has been changed and ask the user to update location name
     */
-    private void saveEntry3(TaxonData taxon) {
+    private void saveEntry3 (TaxonData taxon) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String location_name = sharedPreferences.getString("location_name", null);
+        if (location_name == null) {
+            saveEntry4(taxon);
+        } else {
+            if (location_name.equals("")) {
+                saveEntry4(taxon);
+            } else {
+                Location old_location = new Location("");
+                if (SettingsManager.getPreviousLocationLong() == null) {
+                    SettingsManager.setPreviousLocationLong(String.valueOf(currentLocation.longitude));
+                    SettingsManager.setPreviousLocationLat(String.valueOf(currentLocation.latitude));
+                    saveEntry4(taxon);
+                } else {
+                    old_location.setLongitude(Double.parseDouble(SettingsManager.getPreviousLocationLong()));
+                    old_location.setLatitude(Double.parseDouble(SettingsManager.getPreviousLocationLat()));
+                    Location current_location = new Location("");
+                    current_location.setLongitude(currentLocation.longitude);
+                    current_location.setLatitude(currentLocation.latitude);
+                    double distance = old_location.distanceTo(current_location);
+
+                    if (distance > 3000) {
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setMessage(getString(R.string.location_changed, location_name))
+                                .setCancelable(false)
+                                .setTitle("Location changed!")
+
+                                // If a user choose to update location name
+                                .setPositiveButton(getString(R.string.update_location_name), (dialog, id) -> {
+                                    SettingsManager.setPreviousLocationLong(String.valueOf(currentLocation.longitude));
+                                    SettingsManager.setPreviousLocationLat(String.valueOf(currentLocation.latitude));
+                                    dialog.dismiss();
+
+                                    AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+                                    builder1.setTitle("Location");
+                                    final EditText input = new EditText(this);
+                                    FrameLayout container = new FrameLayout(this);
+                                    FrameLayout.LayoutParams params = new  FrameLayout.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.WRAP_CONTENT);
+                                    params.leftMargin = getResources().getDimensionPixelSize(R.dimen.edit_text_dialog_margin);
+                                    params.rightMargin = getResources().getDimensionPixelSize(R.dimen.edit_text_dialog_margin);
+                                    input.setLayoutParams(params);
+                                    input.setInputType(InputType.TYPE_CLASS_TEXT);
+                                    container.addView(input);
+                                    builder1.setView(container);
+                                    builder1.setCancelable(false);
+                                    builder1.setPositiveButton("OK", (dialog1, which) -> {
+                                        String new_location_name = input.getText().toString();
+                                        if (new_location_name.equals("")) {
+                                            SettingsManager.setPreviousLocationLong(null);
+                                            SettingsManager.setPreviousLocationLat(null);
+                                        }
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        editor.putString("location_name", new_location_name);
+                                        editor.apply();
+                                        dialog1.dismiss();
+                                        saveEntry4(taxon);
+                                    });
+                                    builder1.show();
+                                })
+
+                                // If a user chooses to keep the current location name
+                                .setNeutralButton(getString(R.string.keep_location_name), (dialog, id) -> {
+                                    // Update location within the settings to the current one
+                                    SettingsManager.setPreviousLocationLong(String.valueOf(currentLocation.longitude));
+                                    SettingsManager.setPreviousLocationLat(String.valueOf(currentLocation.latitude));
+                                    dialog.dismiss();
+                                    saveEntry4(taxon);
+                                })
+
+                                // If the user chooses to remove location name
+                                .setNegativeButton(getString(R.string.remove_location_name), (dialog, id) -> {
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    editor.putString("location_name", null);
+                                    editor.apply();
+                                    SettingsManager.setPreviousLocationLong(null);
+                                    SettingsManager.setPreviousLocationLat(null);
+                                    dialog.dismiss();
+                                    saveEntry4(taxon);
+                                });
+                        final AlertDialog alert = builder.create();
+                        alert.show();
+                    } else {
+                        saveEntry4(taxon);
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+    /  PART 4: Check if both male and female entries should be created
+    */
+    private void saveEntry4(TaxonData taxon) {
         String specimens_number_1 = editTextSpecimensNo1.getText().toString();
         String specimens_number_2 = editTextSpecimensNo2.getText().toString();
         if (checkBox_males.isChecked() && !checkBox_females.isChecked()) {
@@ -1014,6 +1111,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Long taxon_id = taxon.getId();
             String taxon_name = taxon.getLatinName();
             String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
+            String location = PreferenceManager.getDefaultSharedPreferences(this).getString("location_name", "");
             getPhotoTag();
             observation_type_ids_string = Arrays.toString(observation_type_ids);
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
@@ -1025,7 +1123,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.longitude)),
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", acc)),
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
-                    "", image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
+                    location, image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             App.get().getDaoSession().getEntryDao().insertOrReplace(entry1);
         }
