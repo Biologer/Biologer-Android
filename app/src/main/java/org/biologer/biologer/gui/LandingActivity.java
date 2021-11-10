@@ -550,6 +550,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return true;
     }
 
+    private void showLandingFragment() {
+        Log.d(TAG, "Showing LandingFragment");
+        Fragment landingFragment = new LandingFragment();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.add(R.id.content_frame, landingFragment);
+        ft.addToBackStack("Landing fragment");
+        ft.commit();
+    }
+
     private void showAboutFragment() {
         Log.d(TAG, "User clicked about icon.");
         Fragment aboutFragment = new AboutFragment();
@@ -910,15 +919,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 uploadMenu.getItem(0).getIcon().setAlpha(255);
             }
         }
-    }
-
-    private void showLandingFragment() {
-        Log.d(TAG, "Showing LandingFragment");
-        Fragment landingFragment = new LandingFragment();
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, landingFragment);
-        ft.addToBackStack("Landing fragment");
-        ft.commit();
     }
 
 }

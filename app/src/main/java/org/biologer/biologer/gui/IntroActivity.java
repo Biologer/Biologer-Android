@@ -34,20 +34,16 @@ public class IntroActivity extends AppIntro2 {
     @Override
     protected void onSkipPressed(@Nullable Fragment currentFragment) {
         super.onSkipPressed(currentFragment);
-        if (User.getUser().tokenPresent()) {
-            Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
-            startActivity(intent);
-        } else {
-            Intent intent = new Intent(IntroActivity.this, LoginActivity.class);
-            startActivity(intent);
-        }
-        finish();
+        launchNextActivity();
     }
 
     @Override
     protected void onDonePressed(@Nullable Fragment currentFragment) {
         super.onDonePressed(currentFragment);
-        // Do something when users tap on Done button.
+        launchNextActivity();
+    }
+
+    private void launchNextActivity() {
         if (User.getUser().tokenPresent()) {
             Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
             startActivity(intent);
