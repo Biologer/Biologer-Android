@@ -79,8 +79,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     String how_to_use_network;
     String should_ask;
 
-    Fragment fragment = null;
-
     // Define upload menu so that we can hide it if required
     Menu uploadMenu;
 
@@ -110,6 +108,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         // Set the text for side panel
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
+
+        showLandingFragment();
 
         // On the first run show some help
         if (SettingsManager.isFirstRun()) {
@@ -213,8 +213,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
             // Check if notifications are enabled, if not warn the user!
             areNotificationsEnabled();
-
-            showLandingFragment();
 
             // Get the user settings from preferences
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
@@ -529,40 +527,52 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
         if (id == R.id.nav_list) {
-            fragment = new LandingFragment();
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.content_frame, fragment);
-            fragmentTransaction.addToBackStack("Landing fragment");
-            fragmentTransaction.commit();
-            drawer.closeDrawer(GravityCompat.START);
-            return true;
+            showLandingFragment();
         }
         if (id == R.id.nav_help) {
             startActivity(new Intent(LandingActivity.this, IntroActivity.class));
-            drawer.closeDrawer(GravityCompat.START);
-            return true;
         }
         if (id == R.id.nav_setup) {
-            fragment = new PreferencesFragment();
+            showSetupFragment();
         }
         if (id == R.id.nav_logout) {
-            fragment = new LogoutFragment();
+            showLogoutFragment();
         }
         if(id == R.id.nav_about) {
-            Log.d(TAG, "User clicked about icon.");
-            fragment = new AboutFragment();
+            showAboutFragment();
         }
 
         // Hide the info text if user moves away from landing fragment
         TextView textView = findViewById(R.id.list_entries_info_text);
         textView.setVisibility(View.GONE);
 
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, fragment);
-        fragmentTransaction.addToBackStack("new fragment");
-        fragmentTransaction.commit();
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showAboutFragment() {
+        Log.d(TAG, "User clicked about icon.");
+        Fragment aboutFragment = new AboutFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.content_frame, aboutFragment);
+        fragmentTransaction.addToBackStack("About fragment");
+        fragmentTransaction.commit();
+    }
+
+    private void showLogoutFragment() {
+        Fragment logoutFragment = new LogoutFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.content_frame, logoutFragment);
+        fragmentTransaction.addToBackStack("Logout fragment");
+        fragmentTransaction.commit();
+    }
+
+    private void showSetupFragment() {
+        Fragment preferencesFragment = new PreferencesFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.content_frame, preferencesFragment);
+        fragmentTransaction.addToBackStack("Preferences fragment");
+        fragmentTransaction.commit();
     }
 
     @Override
@@ -903,10 +913,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void showLandingFragment() {
-        fragment = new LandingFragment();
+        Log.d(TAG, "Showing LandingFragment");
+        Fragment landingFragment = new LandingFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, fragment);
-        ft.addToBackStack("landing fragment");
+        ft.add(R.id.content_frame, landingFragment);
+        ft.addToBackStack("Landing fragment");
         ft.commit();
     }
 
