@@ -46,6 +46,7 @@ public class IntroActivity extends AppIntro2 {
     private void launchNextActivity() {
         if (User.getUser().tokenPresent()) {
             Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         } else {
             Intent intent = new Intent(IntroActivity.this, LoginActivity.class);

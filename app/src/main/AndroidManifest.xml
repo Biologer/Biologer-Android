@@ -60,7 +60,6 @@
 
         <activity
             android:name=".gui.LandingActivity"
-            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER"/>
