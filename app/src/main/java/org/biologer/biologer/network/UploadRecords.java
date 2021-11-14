@@ -27,6 +27,9 @@ import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
+import org.biologer.biologer.network.JSON.APIEntryBirdloger;
+import org.biologer.biologer.network.JSON.APIEntryPhotos;
+import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
@@ -58,7 +61,7 @@ public class UploadRecords extends Service {
     int totalEntries = 0;
     int remainingEntries = 0;
     ArrayList<String> images_array = new ArrayList<>();
-    List<APIEntry.Photo> photos = null;
+    List<APIEntryPhotos> photos = null;
     LocalBroadcastManager broadcaster;
     String[] filenames = new String[3]; // save image names to be deleted on success
 
@@ -221,6 +224,14 @@ public class UploadRecords extends Service {
     // Upload the entries, one by one Record
     private void uploadStep2() {
         Log.d(TAG, "Upload data step 2 started...");
+        if (SettingsManager.getDatabaseName().equals("https://birdloger.biologer.org")) {
+            uploadStep2Birdloger();
+        } else {
+            uploadStep2Biologer();
+        }
+    }
+
+    private void uploadStep2Biologer() {
         APIEntry apiEntry = new APIEntry();
         photos = new ArrayList<>();
         // Create apiEntry object
@@ -262,7 +273,7 @@ public class UploadRecords extends Service {
             apiEntry.setTypes(observation_types);
         }
         for (int i = 0; i < n; i++) {
-            APIEntry.Photo p = new APIEntry.Photo();
+            APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
             p.setLicense(entry.getImage_licence());
             photos.add(p);
@@ -323,6 +334,140 @@ public class UploadRecords extends Service {
 
             @Override
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
+                Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
+                cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
+                stopSelf();
+            }
+        });
+    }
+
+    private void uploadStep2Birdloger() {
+        APIEntryBirdloger apiEntry = new APIEntryBirdloger();
+        photos = new ArrayList<>();
+        // Create apiEntry object
+        Entry entry = entryList.get(0);
+        apiEntry.setTaxonId(entry.getTaxonId() != null ? entry.getTaxonId().intValue() : null);
+        apiEntry.setTaxonSuggestion(entry.getTaxonSuggestion());
+        apiEntry.setYear(entry.getYear());
+        apiEntry.setMonth(entry.getMonth());
+        apiEntry.setDay(entry.getDay());
+        apiEntry.setLatitude(entry.getLattitude());
+        apiEntry.setLongitude(entry.getLongitude());
+        if (entry.getAccuracy() == 0.0) {
+            apiEntry.setAccuracy(null);
+        } else {
+            apiEntry.setAccuracy((int) entry.getAccuracy());
+        }
+        apiEntry.setLocation(entry.getLocation());
+        apiEntry.setElevation((int) entry.getElevation());
+        apiEntry.setNote(entry.getComment());
+        String sex = entry.getSex();
+        if (sex.equals("")) {
+            apiEntry.setSex(null);
+        } else {
+            apiEntry.setSex(sex);
+        }
+        apiEntry.setNumber(entry.getNoSpecimens());
+        apiEntry.setProject(entry.getProjectId());
+        apiEntry.setLocation(entry.getLocation());
+        apiEntry.setFoundOn(entry.getFoundOn());
+        apiEntry.setStageId(entry.getStage());
+        apiEntry.setAtlasCode(entry.getAtlasCode());
+        apiEntry.setFoundDead(!entry.getDeadOrAlive().equals("true"));
+        apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
+        //apiEntry.setDataLicense(entry.getData_licence());
+        apiEntry.setDataLicense(null);
+        apiEntry.setTime(entry.getTime());
+        int[] observation_types = ArrayHelper.getArrayFromText(entry.getObservation_type_ids());
+        // Handle situations when observation types are not downloaded from server
+        if (observation_types == null) {
+            Log.e(TAG, "Observation types are null!");
+            int[] null_observation_types = new int[1];
+            null_observation_types[0] = 1;
+            apiEntry.setTypes(null_observation_types);
+        } else {
+            apiEntry.setTypes(observation_types);
+        }
+        for (int i = 0; i < n; i++) {
+            APIEntryPhotos p = new APIEntryPhotos();
+            p.setPath(images_array.get(i));
+            p.setLicense(entry.getImage_licence());
+            photos.add(p);
+        }
+        apiEntry.setPhotos(photos);
+        apiEntry.setHabitat(entry.getHabitat());
+        apiEntry.setObserver("");
+        apiEntry.setIdentifier("");
+        apiEntry.setNote("");
+        apiEntry.setNumberOf("individual");
+        String[] empty = {};
+        apiEntry.setTypesField(empty);
+        apiEntry.setObservers(empty);
+        List<APIEntryBirdloger.FieldObservers> observers = new ArrayList<>();
+        APIEntryBirdloger.FieldObservers fielObserver1 = new APIEntryBirdloger.FieldObservers();
+        fielObserver1.setFirstName("");
+        fielObserver1.setLastName("");
+        observers.add(fielObserver1);
+        apiEntry.setFieldObservers(observers);
+        apiEntry.setDescription("");
+        apiEntry.setComment("");
+        apiEntry.setFid("");
+        apiEntry.setDataLimit("");
+        apiEntry.setIdentifiedById(1);
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String s = mapper.writeValueAsString(apiEntry);
+            Log.i(TAG, "Upload Entry " + s);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        Call<APIEntryResponseBirdloger> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
+        call.enqueue(new Callback<APIEntryResponseBirdloger>() {
+            @Override
+            public void onResponse(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Response<APIEntryResponseBirdloger> response) {
+
+                // Retry if server deny your access
+                if (response.code() == 429) {
+                    String retry_after = response.headers().get("Retry-After");
+                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
+                    if (retry_after != null) {
+                        int wait = Integer.parseInt(retry_after) * 1000;
+                        SystemClock.sleep(wait);
+                        uploadStep2();
+                    }
+                }
+
+                if (response.isSuccessful()) {
+                    if (keep_going) {
+                        // Wait... Don’t send too many requests to the server!
+                        SystemClock.sleep(300);
+                        // Delete uploaded entry
+                        App.get().getDaoSession().getEntryDao().delete(entry);
+                        entryList.remove(0);
+                        EventBus.getDefault().post(new DeleteEntryFromList());
+                        // Delete image files from internal storage
+                        for (String filename: filenames) {
+                            if (filename != null) {
+                                final File file = new File(getFilesDir(), filename);
+                                boolean b = file.delete();
+                                Log.d(TAG, "Deleting image " + filename + " returned: " + b);
+                            }
+                        }
+                        filenames = new String[3];
+                        // Reset the counter
+                        m = 0;
+                        // All done! Upload next entry :)
+                        uploadStep1();
+                    } else {
+                        Log.i(TAG, "Uploading has bean canceled by the user.");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
                 stopSelf();

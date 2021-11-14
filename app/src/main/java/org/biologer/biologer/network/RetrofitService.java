@@ -1,6 +1,8 @@
 package org.biologer.biologer.network;
 
 import org.biologer.biologer.network.JSON.APIEntry;
+import org.biologer.biologer.network.JSON.APIEntryBirdloger;
+import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
@@ -87,6 +89,11 @@ public interface RetrofitService {
     ,"content-type: application/json"})
     @POST("api/field-observations")
     Call<APIEntryResponse> uploadEntry(@Body APIEntry apiEntry);
+
+    @Headers({"Accept: application/json"
+            ,"content-type: application/json"})
+    @POST("api/field-observations")
+    Call<APIEntryResponseBirdloger> uploadEntry(@Body APIEntryBirdloger apiEntryBirdloger);
 
     @Headers({"Accept: application/json"})
     @GET("/api/my/profile")

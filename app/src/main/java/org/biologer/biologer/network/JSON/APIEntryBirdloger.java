@@ -4,11 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-/**
- * Created by brjovanovic on 3/12/2018.
- */
-
-public class APIEntry {
+public class APIEntryBirdloger {
 
     @JsonProperty("taxon_id")
     private Integer taxonId;
@@ -32,32 +28,68 @@ public class APIEntry {
     private String location;
     @JsonProperty("photos")
     private List<APIEntryPhotos> photos;
+    @JsonProperty("observer")
+    private String observer;
+    @JsonProperty("identifier")
+    private String identifier;
     @JsonProperty("note")
     private String note;
     @JsonProperty("sex")
     private String sex;
     @JsonProperty("number")
     private Integer number;
+    @JsonProperty("number_of")
+    private String numberOf;
     @JsonProperty("project")
     private String project;
+    @JsonProperty("habitat")
+    private String habitat;
     @JsonProperty("found_on")
     private String foundOn;
     @JsonProperty("stage_id")
     private Long stageId;
-    @JsonProperty("atlas_code")
-    private Long atlas_code;
     @JsonProperty("found_dead")
-    private int foundDead;
+    private boolean foundDead;
     @JsonProperty("found_dead_note")
     private String foundDeadNote;
     @JsonProperty("data_license")
     private String dataLicense;
+    @JsonProperty("image_license")
+    private String imageLicense;
     @JsonProperty("time")
     private String time;
+    @JsonProperty("types")
+    private String[] typesField;
+    @JsonProperty("observers")
+    private String[] observers;
+    @JsonProperty("field_observers")
+    private List<APIEntryBirdloger.FieldObservers> fieldObservers;
+    @JsonProperty("observed_by_id")
+    private Integer observedById;
+    @JsonProperty("observed_by")
+    private String observedBy;
+    @JsonProperty("identified_by_id")
+    private Integer identifiedById;
+    @JsonProperty("dataset")
+    private String dataset;
+    @JsonProperty("atlas_code")
+    private Long atlas_code;
+    @JsonProperty("description")
+    private String description;
+    @JsonProperty("comment")
+    private String comment;
+    @JsonProperty("fid")
+    private String fid;
+    @JsonProperty("rid")
+    private String rid;
+    @JsonProperty("data_provider")
+    private String dataProvider;
+    @JsonProperty("data_limit")
+    private String dataLimit;
     @JsonProperty("observation_types_ids")
     private int[] observation_types_ids;
-    @JsonProperty("habitat")
-    private String habitat;
+    @JsonProperty("reason")
+    private String reason;
 
     @JsonProperty("taxon_id")
     public Integer getTaxonId() {
@@ -219,16 +251,6 @@ public class APIEntry {
         this.stageId = stageId;
     }
 
-    @JsonProperty("found_dead")
-    public int getFoundDead() {
-        return foundDead;
-    }
-
-    @JsonProperty("found_dead")
-    public void setFoundDead(int foundDead) {
-        this.foundDead = foundDead;
-    }
-
     @JsonProperty("found_dead_note")
     public String getFoundDeadNote() {
         return foundDeadNote;
@@ -287,6 +309,150 @@ public class APIEntry {
         this.atlas_code = atlas_code;
     }
 
+    public String getObserver() {
+        return observer;
+    }
+
+    public void setObserver(String observer) {
+        this.observer = observer;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getNumberOf() {
+        return numberOf;
+    }
+
+    public void setNumberOf(String numberOf) {
+        this.numberOf = numberOf;
+    }
+
+    public Integer getIdentifiedById() {
+        return identifiedById;
+    }
+
+    public void setIdentifiedById(Integer identifiedById) {
+        this.identifiedById = identifiedById;
+    }
+
+    public String getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getFid() {
+        return fid;
+    }
+
+    public void setFid(String fid) {
+        this.fid = fid;
+    }
+
+    public String getRid() {
+        return rid;
+    }
+
+    public void setRid(String rid) {
+        this.rid = rid;
+    }
+
+    public String getDataProvider() {
+        return dataProvider;
+    }
+
+    public void setDataProvider(String dataProvider) {
+        this.dataProvider = dataProvider;
+    }
+
+    public String getDataLimit() {
+        return dataLimit;
+    }
+
+    public void setDataLimit(String dataLimit) {
+        this.dataLimit = dataLimit;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public String getObservedBy() {
+        return observedBy;
+    }
+
+    public Integer getObservedById() {
+        return observedById;
+    }
+
+    public List<FieldObservers> getFieldObservers() {
+        return fieldObservers;
+    }
+
+    public void setFieldObservers(List<FieldObservers> fieldObservers) {
+        this.fieldObservers = fieldObservers;
+    }
+
+    public String[] getObservers() {
+        return observers;
+    }
+
+    public void setObservers(String[] observers) {
+        this.observers = observers;
+    }
+
+    public void setObservedBy(String observedBy) {
+        this.observedBy = observedBy;
+    }
+
+    public void setObservedById(Integer observedById) {
+        this.observedById = observedById;
+    }
+
+    public String getImageLicense() {
+        return imageLicense;
+    }
+
+    public void setImageLicense(String imageLicense) {
+        this.imageLicense = imageLicense;
+    }
+
+    public String[] getTypesField() {
+        return typesField;
+    }
+
+    public void setTypesField(String[] typesField) {
+        this.typesField = typesField;
+    }
+
     public List<APIEntryPhotos> getPhotos() {
         return photos;
     }
@@ -294,4 +460,38 @@ public class APIEntry {
     public void setPhotos(List<APIEntryPhotos> photos) {
         this.photos = photos;
     }
+
+    public boolean isFoundDead() {
+        return foundDead;
+    }
+
+    public void setFoundDead(boolean foundDead) {
+        this.foundDead = foundDead;
+    }
+
+    public static class FieldObservers {
+
+        @JsonProperty("firstName")
+        private String firstName;
+
+        @JsonProperty("lastName")
+        private String lastName;
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
+    }
+
 }
