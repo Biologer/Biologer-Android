@@ -404,10 +404,10 @@ public class UploadRecords extends Service {
         apiEntry.setTypesField(empty);
         apiEntry.setObservers(empty);
         List<APIEntryBirdloger.FieldObservers> observers = new ArrayList<>();
-        APIEntryBirdloger.FieldObservers fielObserver1 = new APIEntryBirdloger.FieldObservers();
-        fielObserver1.setFirstName("");
-        fielObserver1.setLastName("");
-        observers.add(fielObserver1);
+        //APIEntryBirdloger.FieldObservers fielObserver1 = new APIEntryBirdloger.FieldObservers();
+        //fielObserver1.setFirstName("Milan");
+        //fielObserver1.setLastName("Ivković");
+        //observers.add(fielObserver1);
         apiEntry.setFieldObservers(observers);
         apiEntry.setDescription("");
         apiEntry.setComment("");
