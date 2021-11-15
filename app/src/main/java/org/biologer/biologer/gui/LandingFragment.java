@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.EntriesList;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.sql.Entry;
@@ -73,6 +74,14 @@ public class LandingFragment extends Fragment {
         registerForContextMenu(listView);
 
         FloatingActionButton floatingActionButton = rootView.findViewById(R.id.fbtn_add);
+        if (SettingsManager.isMailConfirmed()) {
+            floatingActionButton.setEnabled(true);
+            floatingActionButton.setAlpha(1f);
+        } else {
+            floatingActionButton.setEnabled(false);
+            floatingActionButton.setAlpha(0.25f);
+        }
+
         floatingActionButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), EntryActivity.class);
             intent.putExtra("IS_NEW_ENTRY", "YES");

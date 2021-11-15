@@ -23,7 +23,9 @@ import java.util.Map;
         "email",
         "institution",
         "settings",
+        "deleted_at",
         "full_name",
+        "is_verified",
         "roles"
 })
 public class UserDataSer {
@@ -40,8 +42,12 @@ public class UserDataSer {
     private Object institution;
     @JsonProperty("settings")
     private UserSettings settings;
+    @JsonProperty ("deleted_at")
+    private String deletedAt;
     @JsonProperty("full_name")
     private String fullName;
+    @JsonProperty("is_verified")
+    private boolean isEmailVerified;
     @JsonProperty("roles")
     private List<Object> roles = null;
     @JsonIgnore
@@ -135,5 +141,9 @@ public class UserDataSer {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public boolean isEmailVerified() {
+        return isEmailVerified;
     }
 }

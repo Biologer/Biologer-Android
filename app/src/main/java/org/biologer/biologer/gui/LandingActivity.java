@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.opencsv.CSVWriter;
 
@@ -87,7 +88,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
 
-        String token = SettingsManager.getAccessToken();
         String database_url = SettingsManager.getDatabaseName();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -111,44 +111,47 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         showLandingFragment();
 
-        // On the first run show some help
-        if (SettingsManager.isFirstRun()) {
-            Log.d(TAG, "This is first run of the program.");
-            SettingsManager.setFirstRun(false);
-            Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
-            startActivity(intent);
+        // If there is no token, falling back to the login screen
+        if (SettingsManager.getAccessToken() == null) {
+            Log.d(TAG, "No login token, falling back to login screen.");
+            showUserLoginScreen();
         } else {
 
-            // If there is no url, falling back to the login screen
-            if (database_url == null) {
-                Log.d(TAG, "Null database URL selected.");
-                showUserLoginScreen();
+            // On the first run (after the user came from the login screen) show some help
+            if (SettingsManager.isFirstRun()) {
+                Log.d(TAG, "This is first run of the program.");
+                SettingsManager.setFirstRun(false);
+                Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
+                startActivity(intent);
             } else {
 
-                // Users from Serbia should switch to RS domain.
+                // Users from Serbia should switch to RS domain!
                 if (database_url.equals("https://biologer.org")) {
                     database_url = "https://biologer.rs";
                     SettingsManager.setDatabaseName("https://biologer.rs");
                 }
 
-                // If the user just logged in
-                Bundle bundle = getIntent().getExtras();
-                if (bundle != null) {
-                    if (bundle.getBoolean("fromLoginScreen", false)) {
-                        Log.d(TAG, "User came from the login screen.");
-                        runServices(token, database_url);
-                        TextView textView = findViewById(R.id.list_entries_info_text);
-                        textView.setText(R.string.entry_info_first_run);
-                        textView.setVisibility(View.VISIBLE);
+                if (savedInstanceState == null) {
+
+                    // If Landing activity is started for the first time in the session run all the online services
+                    Log.d(TAG, "savedInstanceState is null");
+                    runServices(database_url);
+
+                    // If the user just logged in, show a short help
+                    Bundle bundle = getIntent().getExtras();
+                    if (bundle != null) {
+                        if (bundle.getBoolean("fromLoginScreen", false)) {
+                            Log.d(TAG, "User came from the login screen.");
+                            TextView textView = findViewById(R.id.list_entries_info_text);
+                            textView.setText(R.string.entry_info_first_run);
+                            textView.setVisibility(View.VISIBLE);
+                        }
                     }
+
                 } else {
-                    if (savedInstanceState == null) {
-                        // If Landing activity is started for the first time run the online services
-                        Log.d(TAG, "savedInstanceState is null");
-                        runServices(token, database_url);
-                    } else {
-                        // If the landing activity is restarted, just update GIU
-                        Log.d(TAG, "savedInstanceState is not null");
+                    // If the landing activity is restarted, just update GUI
+                    Log.d(TAG, "savedInstanceState is not null");
+                    if (!SettingsManager.isMailConfirmed()) {
                         checkMailConfirmed(database_url);
                     }
                 }
@@ -178,8 +181,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
     }
 
-    private void runServices(String token, String database_url) {
-        boolean MAIL_CONFIRMED = SettingsManager.isMailConfirmed();
+    private void runServices(String database_url) {
+        Log.d(TAG, "Running online services");
 
         // If SQL is updated we will try to login in the user
         if (SettingsManager.isSqlUpdated()) {
@@ -188,87 +191,97 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Log.i(TAG, "SQL is up to date!");
         }
 
-        if (token == null) {
-            Log.d(TAG, "No user token.");
-            showUserLoginScreen();
+        // Check if token is still valid and refresh if needed
+        if (SettingsManager.isMailConfirmed()) {
+            Log.d(TAG, "Email is confirmed.");
+            if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
+                Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
+            } else {
+                Log.d(TAG, "Token expired. Refreshing login token.");
+                if (InternetConnection.isConnected(LandingActivity.this)) {
+                    StartRefreshToken(database_url);
+                }
+                else {
+                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+                }
+            }
         } else {
-            // Check if token is still valid and refresh if needed
-            if (MAIL_CONFIRMED) {
-                Log.d(TAG, "Email is confirmed.");
-                if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
-                    Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
-                } else {
-                    Log.d(TAG, "Token expired. Refreshing login token.");
-                    if (InternetConnection.isConnected(LandingActivity.this)) {
-                        StartRefreshToken(database_url);
-                    }
-                    else {
-                        alertWarnAndExit(getString(R.string.refresh_token_no_internet));
-                    }
-                }
+            Log.d(TAG, "Email is not confirmed.");
+            checkMailConfirmed(database_url);
+        }
+
+        // Check if notifications are enabled, if not warn the user!
+        areNotificationsEnabled();
+
+        // Get the user settings from preferences
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+        how_to_use_network = preferences.getString("auto_download", "wifi");
+
+        // Check if there is network available and run the commands...
+        String network_type = InternetConnection.networkType(this);
+        if (network_type != null) {
+            updateLicenses();
+            UpdateObservationTypes.updateObservationTypes();
+            // AUTO upload/download if the right preferences are selected...
+            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                uploadRecords();
+                should_ask = "download";
             } else {
-                Log.d(TAG, "Email is not confirmed.");
-                checkMailConfirmed(database_url);
+                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                should_ask = "ask";
             }
-
-            // Check if notifications are enabled, if not warn the user!
-            areNotificationsEnabled();
-
-            // Get the user settings from preferences
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
-            how_to_use_network = preferences.getString("auto_download", "wifi");
-
-            // Check if there is network available and run the commands...
-            String network_type = InternetConnection.networkType(this);
-            if (network_type != null) {
-                updateLicenses();
-                UpdateObservationTypes.updateObservationTypes();
-                // AUTO upload/download if the right preferences are selected...
-                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
-                    uploadRecords();
-                    should_ask = "download";
-                } else {
-                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                    should_ask = "ask";
-                }
-                updateTaxa();
-            } else {
-                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
-            }
+            updateTaxa();
+        } else {
+            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
     }
 
-    // TODO it should be more simple to check confirmed email
     private void checkMailConfirmed(String database_url) {
-        TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
-        textView_confirmEmail.setVisibility(View.VISIBLE);
 
-        Log.d(TAG, "Logging in attempt.");
-        Call<TaxaResponse> service = RetrofitClient.getService(database_url).getTaxa(1,1,0, false, null, true);
-        service.enqueue(new Callback<TaxaResponse>() {
+        Call<UserDataResponse> userData = RetrofitClient.getService(database_url).getUserData();
+        userData.enqueue(new Callback<UserDataResponse>() {
+
             @Override
-            public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
-                if (response.code() == 403) {
-                    SettingsManager.setMailConfirmed(false);
-                    textView_confirmEmail.setVisibility(View.VISIBLE);
-                }
-                else {
+            public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
+                if (response.isSuccessful()) {
                     if (response.body() != null) {
-                        SettingsManager.setMailConfirmed(true);
-                        textView_confirmEmail.setVisibility(View.GONE);
+
+                        if (response.body().getData().isEmailVerified()) {
+                            updateGuiOnMailConfirmed(true);
+                            SettingsManager.setMailConfirmed(true);
+                            TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
+                            textView_confirmEmail.setVisibility(View.GONE);
+                        } else {
+                            updateGuiOnMailConfirmed(false);
+                        }
                     }
                 }
             }
+
             @Override
-            public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
                 Toast.makeText(LandingActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Cannot get response from the server (test confirmed mail response)");
+                updateGuiOnMailConfirmed(false);
             }
         });
     }
 
+    private void updateGuiOnMailConfirmed(boolean mail_confirmed) {
+        TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
+        FloatingActionButton floatingActionButton = findViewById(R.id.fbtn_add);
+        floatingActionButton.setEnabled(mail_confirmed);
+        if (mail_confirmed) {
+            textView_confirmEmail.setVisibility(View.GONE);
+            floatingActionButton.setAlpha(1f);
+        } else {
+            textView_confirmEmail.setVisibility(View.VISIBLE);
+            floatingActionButton.setAlpha(0.25f);
+        }
+    }
+
     private void showUserLoginScreen() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
 
@@ -419,76 +432,81 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
-        String updated_at = SettingsManager.getTaxaUpdatedAt();
-        String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
-        String timestamp = updated_at;
-        if (Long.parseLong(skip_this) > Long.parseLong(updated_at)) {
-            timestamp = skip_this;
-        }
 
-        // For Birdloger database we need to send different call
-        String database = SettingsManager.getDatabaseName();
-        int finalTimestamp = Integer.parseInt(timestamp);
-        if (database.equals("https://birdloger.biologer.org")) {
-            Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
-                    database).getBirdlogerTaxa(1, 1, finalTimestamp);
-            call.enqueue(new Callback<TaxaResponseBirdloger>() {
+        if (!FetchTaxa.isInstanceCreated()) {
 
-                @Override
-                public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
-                    if (response.isSuccessful()) {
-                        // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                        TaxaResponseBirdloger taxaResponseBirdloger = response.body();
-                        if (taxaResponseBirdloger != null) {
-                            if (taxaResponseBirdloger.getData().isEmpty()) {
-                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                            } else {
-                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                                updateTaxa2(finalTimestamp);
+            String updated_at = SettingsManager.getTaxaUpdatedAt();
+            String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
+            String timestamp = updated_at;
+            if (Long.parseLong(skip_this) > Long.parseLong(updated_at)) {
+                timestamp = skip_this;
+            }
+
+            // For Birdloger database we need to send different call
+            String database = SettingsManager.getDatabaseName();
+            int finalTimestamp = Integer.parseInt(timestamp);
+            if (database.equals("https://birdloger.biologer.org")) {
+                Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
+                        database).getBirdlogerTaxa(1, 1, finalTimestamp);
+                call.enqueue(new Callback<TaxaResponseBirdloger>() {
+
+                    @Override
+                    public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
+                        if (response.isSuccessful()) {
+                            // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                            TaxaResponseBirdloger taxaResponseBirdloger = response.body();
+                            if (taxaResponseBirdloger != null) {
+                                if (taxaResponseBirdloger.getData().isEmpty()) {
+                                    Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                                } else {
+                                    Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                    updateTaxa2(finalTimestamp);
+                                }
                             }
                         }
                     }
-                }
 
-                @Override
-                public void onFailure(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Throwable t) {
-                    // Inform the user on failure and write log message
-                    //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                    Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
-                }
-            });
-        }
+                    @Override
+                    public void onFailure(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Throwable t) {
+                        // Inform the user on failure and write log message
+                        //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                    }
+                });
+            }
 
-        // For other Biologer databases just do the regular stuff...
-        else {
-            Call<TaxaResponse> call = RetrofitClient.getService(
-                    database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
-            call.enqueue(new Callback<TaxaResponse>() {
+            // For other Biologer databases just do the regular stuff...
+            else {
+                Call<TaxaResponse> call = RetrofitClient.getService(
+                        database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
+                call.enqueue(new Callback<TaxaResponse>() {
 
-                @Override
-                public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
-                    if (response.isSuccessful()) {
-                        // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                        TaxaResponse taxaResponse = response.body();
-                        if (taxaResponse != null) {
-                            if (taxaResponse.getData().isEmpty()) {
-                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                            } else {
-                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                                updateTaxa2(finalTimestamp);
+                    @Override
+                    public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
+                        if (response.isSuccessful()) {
+                            // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                            TaxaResponse taxaResponse = response.body();
+                            if (taxaResponse != null) {
+                                if (taxaResponse.getData().isEmpty()) {
+                                    Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                                } else {
+                                    Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                    updateTaxa2(finalTimestamp);
+                                }
                             }
                         }
                     }
-                }
 
-                @Override
-                public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
-                    // Inform the user on failure and write log message
-                    //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                    Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
-                }
-            });
+                    @Override
+                    public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
+                        // Inform the user on failure and write log message
+                        //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                    }
+                });
+            }
         }
+
     }
 
     private void updateTaxa2 (int timestamp) {

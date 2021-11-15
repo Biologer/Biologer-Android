@@ -47,7 +47,7 @@ import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.LoginResponse;
-import org.biologer.biologer.network.JSON.TaxaResponse;
+import org.biologer.biologer.network.JSON.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.UserDataResponse;
@@ -104,19 +104,12 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Database URL written in the settings is: " + database_name);
 
         // Just display the username in order to make app nice
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null && bundle.getString("email") != null) {
-            Log.d(TAG, "Filling user data from register dialog.");
-            et_username.setText(bundle.getString("email"));
-            et_password.setText(bundle.getString("password"));
-        } else {
-            List<UserData> user = App.get().getDaoSession().getUserDataDao().loadAll();
-            if (!user.isEmpty()) {
-                Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
-                et_username.setText(user.get(0).getEmail());
-                // Just display anything, no mather what...
-                et_password.setText("random string");
-            }
+        List<UserData> user = App.get().getDaoSession().getUserDataDao().loadAll();
+        if (!user.isEmpty()) {
+            Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
+            et_username.setText(user.get(0).getEmail());
+            // Just display anything, no mather what...
+            et_password.setText("random string");
         }
 
         // Fill in the data for database list
@@ -400,7 +393,7 @@ public class LoginActivity extends AppCompatActivity {
         else {
             Log.d(TAG, "TOKEN: " + token);
             Log.d(TAG, "There is a token. Trying to log in without username/password.");
-            logInWithToken();
+            getUserData();
         }
     }
 
@@ -427,7 +420,6 @@ public class LoginActivity extends AppCompatActivity {
                         //Log.d(TAG, "Token value is: " + token);
                         SettingsManager.setAccessToken(token);
                         SettingsManager.setRefreshToken(refresh_token);
-                        SettingsManager.setMailConfirmed(true);
                         long expire = response.body().getExpiresIn();
                         long expire_date = (System.currentTimeMillis()/1000) + expire;
                         SettingsManager.setTokenExpire(String.valueOf(expire_date));
@@ -458,24 +450,42 @@ public class LoginActivity extends AppCompatActivity {
     private void getUserData() {
         Call<UserDataResponse> userData = RetrofitClient.getService(database_name).getUserData();
         userData.enqueue(new Callback<UserDataResponse>() {
+
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
-                        String email = response.body().getData().getEmail();
-                        String name = response.body().getData().getFullName();
-                        int data_license = response.body().getData().getSettings().getDataLicense();
-                        int image_license = response.body().getData().getSettings().getImageLicense();
+
+                        if (response.code() == 401) {
+                            tv_devDatabase.setText(getString(R.string.check_database));
+                            displayProgressBar(false);
+                            dialogConfirmMail(getString(R.string.unauthorised));
+                        }
+
+                        UserDataSer userdata = response.body().getData();
+                        String email = userdata.getEmail();
+                        String name = userdata.getFullName();
+                        int data_license = userdata.getSettings().getDataLicense();
+                        int image_license = userdata.getSettings().getImageLicense();
+
+                        // Check if email is confirmed
+                        if (userdata.isEmailVerified()) {
+                            SettingsManager.setMailConfirmed(true);
+                        }
+
+                        // Write data in SQL
                         UserData user = new UserData(null, name, email, data_license, image_license);
                         App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
                     }
 
                     startLandingActivity();
+
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
+                Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
                 Log.e(TAG, "User data could not be taken from server!");
             }
         });
@@ -483,41 +493,6 @@ public class LoginActivity extends AppCompatActivity {
         // Fetch Taxa groups for preferences
         final Intent getTaxaGroups = new Intent(this, GetTaxaGroups.class);
         startService(getTaxaGroups);
-    }
-
-    // TODO it should be more simple to check confirmed email
-    private void logInWithToken() {
-        Log.d(TAG, "Login attempt.");
-        displayProgressBar(true);
-        Call<TaxaResponse> service = RetrofitClient.getService(database_name).getTaxa(1,1,0, false, null, true);
-        service.enqueue(new Callback<TaxaResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<TaxaResponse> service, @NonNull Response<TaxaResponse> response) {
-                if (response.code() == 403) {
-                    SettingsManager.setMailConfirmed(false);
-                    displayProgressBar(false);
-                    dialogConfirmMail(getString(R.string.confirm_email));
-                }
-                if (response.code() == 401) {
-                    tv_devDatabase.setText(getString(R.string.check_database));
-                    displayProgressBar(false);
-                    dialogConfirmMail(getString(R.string.unauthorised));
-                }
-                else {
-                    if (response.body() != null) {
-                        SettingsManager.setMailConfirmed(true);
-                        displayProgressBar(false);
-                        startLandingActivity();
-                    }
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<TaxaResponse> service, @NonNull Throwable t) {
-                Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
-                Log.e(TAG, "Cannot get response from the server (test token login response)");
-                displayProgressBar(false);
-            }
-        });
     }
 
     private void startLandingActivity() {

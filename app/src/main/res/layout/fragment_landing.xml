@@ -5,7 +5,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="org.biologer.biologer.gui.LandingFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,6 +28,7 @@
         android:layout_gravity="end|bottom"
         android:layout_marginBottom="16dp"
         android:layout_marginEnd="16dp"
+        android:enabled="false"
         android:contentDescription="@string/add_new_observetion"
         app:backgroundTint="@color/colorPrimary"/>
 
