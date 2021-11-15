@@ -81,7 +81,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     String should_ask;
 
     // Define upload menu so that we can hide it if required
-    Menu uploadMenu;
+    static Menu uploadMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,7 +170,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     TextView textView = findViewById(R.id.list_entries_info_text);
                     textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
                     textView.setVisibility(View.VISIBLE);
-                    setUploadIconVisibility();
+                    setMenuIconVisibility();
                     updateEntryListView();
 
                     if (s.equals("no image")) {
@@ -640,7 +640,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.upload_menu, menu);
         uploadMenu = menu;
-        setUploadIconVisibility();
+        setMenuIconVisibility();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -657,8 +657,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
         if (item.getItemId() == R.id.export_csv) {
             Log.d(TAG, "CSV export button clicked.");
-            // Disable the upload button to avoid double taps
-            //item.setEnabled(false);
             exportCSV();
             return true;
         }
@@ -834,7 +832,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             textView.setVisibility(View.GONE);
         }
         // Change the visibility of the Upload Icon
-        setUploadIconVisibility();
+        setMenuIconVisibility();
     }
 
     protected void buildAlertUpdateTaxa(String message, String yes_string, String no_string, int should_skip_next) {
@@ -921,20 +919,27 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void setUploadIconVisibility() {
+    private static Menu getMenu() {
+        return uploadMenu;
+    }
+
+    public static void setMenuIconVisibility() {
         long numberOfItems = App.get().getDaoSession().getEntryDao().count();
         Log.d(TAG, "There are " + numberOfItems + " items in the list.");
+
         if (numberOfItems == 0) {
             // Disable the upload button
-            if (uploadMenu != null) {
+            if (getMenu() != null) {
                 uploadMenu.getItem(0).setEnabled(false);
                 uploadMenu.getItem(0).getIcon().setAlpha(100);
+                uploadMenu.getItem(1).setVisible(false);
             }
         } else {
             // Disable the upload button
             if (uploadMenu != null) {
                 uploadMenu.getItem(0).setEnabled(true);
                 uploadMenu.getItem(0).getIcon().setAlpha(255);
+                uploadMenu.getItem(1).setVisible(true);
             }
         }
     }

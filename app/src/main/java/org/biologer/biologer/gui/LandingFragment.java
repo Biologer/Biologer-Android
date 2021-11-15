@@ -134,6 +134,7 @@ public class LandingFragment extends Fragment {
             entriesList.removeItem(index);
             int entryNo = index + 1;
             Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
+            LandingActivity.setMenuIconVisibility();
             return true;
         }
         if (item.getItemId() == R.id.delete_all) {
@@ -167,6 +168,7 @@ public class LandingFragment extends Fragment {
                         Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
                         App.get().getDaoSession().getEntryDao().deleteAll();
                         entriesList.removeAll();
+                        LandingActivity.setMenuIconVisibility();
                     })
                     .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
             final AlertDialog alert = builder.create();
