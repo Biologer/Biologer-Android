@@ -614,10 +614,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Log.d(TAG, "Back button pressed, while LandingFragment is active.");
             getSupportFragmentManager().popBackStack();
             super.onBackPressed();
+            finishAffinity();
             return;
         }
 
         super.onBackPressed();
+        finishAffinity();
     }
 
     @Override
