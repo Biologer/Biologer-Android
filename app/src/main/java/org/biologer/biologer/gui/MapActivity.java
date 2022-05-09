@@ -189,7 +189,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         mMap.setOnMapClickListener(latLng -> {
             setLatLong(latLng.latitude, latLng.longitude);
-            marker.setPosition(latLng);
+            if (marker == null) {
+                marker = mMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true));
+                if (marker != null) {
+                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+                }
+            } else {
+                marker.setPosition(latLng);
+            }
             circle.setCenter(latLng);
         });
 

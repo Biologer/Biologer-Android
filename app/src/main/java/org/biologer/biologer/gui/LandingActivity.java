@@ -619,7 +619,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
 
         super.onBackPressed();
-        finishAffinity();
     }
 
     @Override

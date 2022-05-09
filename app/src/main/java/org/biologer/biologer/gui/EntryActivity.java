@@ -425,13 +425,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onProviderDisabled(@NonNull String s) {
                 Log.i(TAG, "Location provider is disabled.");
-                AlertDialog.Builder builder = new AlertDialog.Builder(EntryActivity.this);
-                builder.setMessage(getString(R.string.global_location_disabled))
+                if (!isFinishing()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(EntryActivity.this);
+                    builder.setMessage(getString(R.string.global_location_disabled))
                         .setCancelable(true)
                         .setPositiveButton(R.string.yes, (dialog, id) -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
                         .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
-                AlertDialog alert = builder.create();
-                alert.show();
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
             }
         };
 
