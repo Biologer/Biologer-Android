@@ -17,6 +17,7 @@ import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.StageDao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.biologer.biologer.R.id.slika;
@@ -37,6 +38,9 @@ public class EntriesList extends BaseAdapter {
     public void addAll(List<Entry> list, boolean clean) {
         if (clean)
             mList.clear();
+        // Reorder list to display new entries at the top
+        Collections.reverse(list);
+
         mList.addAll(list);
         notifyDataSetChanged();
     }
@@ -78,7 +82,7 @@ public class EntriesList extends BaseAdapter {
 
             viewHolder.taxon = convertView.findViewById(R.id.taxon_name);
             viewHolder.stage = convertView.findViewById(R.id.stage);
-            viewHolder.slika = convertView.findViewById(slika);
+            viewHolder.image = convertView.findViewById(slika);
 
             convertView.setTag(viewHolder);
 
@@ -118,9 +122,9 @@ public class EntriesList extends BaseAdapter {
         if (useImage != null && useImage.trim().length() > 0) {
             Glide.with(convertView)
                     .load(useImage)
-                    .into(viewHolder.slika);
+                    .into(viewHolder.image);
         } else {
-            viewHolder.slika.setImageResource(R.mipmap.ic_kornjaca_kocka);
+            viewHolder.image.setImageResource(R.mipmap.ic_kornjaca_kocka);
         }
         return convertView;
     }
@@ -128,7 +132,7 @@ public class EntriesList extends BaseAdapter {
     private static class ViewHolder {
         TextView taxon;
         TextView stage;
-        ImageView slika;
+        ImageView image;
     }
 
 }

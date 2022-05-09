@@ -637,6 +637,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         currentItem = App.get().getDaoSession().getEntryDao().load(existing_entry_id);
         Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
 
+        // Check if the taxa is selected from the list = it has an ID.
+        if (currentItem.getTaxonId() != null) {
+            taxonSelectedFromTheList = true;
+        }
+
         // Get the latitude, longitude, coordinate precision and elevation...
         currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
         elev = currentItem.getElevation();
@@ -656,6 +661,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (use_atlas_code) {
                 Log.d(TAG, "There is an atlas code ID: " + currentItem.getAtlas_code());
                 use_atlas_code = true;
+                textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
             }
             selectedTaxon = new TaxaList(currentItem.getTaxonSuggestion(), currentItem.getTaxonId(), use_atlas_code);
         }
@@ -666,6 +672,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Get the name of the stage for the entry from the database
         if (currentItem.getStage() != null) {
+            Log.d(TAG, "There is a stage already selected for this entry!");
             long stage_id = (App.get().getDaoSession().getStageDao().queryBuilder()
                     .where(StageDao.Properties.StageId.eq(currentItem.getStage()))
                     .list().get(1).getStageId());
@@ -673,8 +680,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Stage stage = new Stage(null, stageName, stage_id, currentItem.getTaxonId());
             textViewStage.setTag(stage);
             textViewStage.setText(stageName);
+            textInputStages.setVisibility(View.VISIBLE);
         } else {
-            textInputStages.setVisibility(View.GONE);
+            if (isStageAvailable(currentItem.getTaxonId())) {
+                textInputStages.setVisibility(View.VISIBLE);
+            } else {
+                textInputStages.setVisibility(View.GONE);
+            }
         }
 
         // Get the selected sex. If not selected set spinner to default...

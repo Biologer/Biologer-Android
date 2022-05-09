@@ -9,7 +9,6 @@ public class Localisation {
 
     private static final String TAG = "Biologer.Entry";
 
-    @SuppressWarnings("deprecation")
     private static Locale getCurrentLocale() {
         Locale locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -25,12 +24,8 @@ public class Localisation {
     public static String getLocaleScript() {
         Locale locale = getCurrentLocale();
         // Workaround for Serbian Latin script
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
-                return "sr-Latn";
-            } else {
-                return locale.getLanguage();
-            }
+        if (locale.getLanguage().equals("sr") && locale.getScript().equals("Latn")) {
+            return "sr-Latn";
         } else {
             return locale.getLanguage();
         }
