@@ -130,7 +130,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     TaxaList selectedTaxon = null;
     boolean locationFromTheMap = false;
     boolean taxonSelectedFromTheList = false;
-    boolean callTagAutochecked = false;
+    boolean callTagAutoChecked = false;
     Integer callTagIndexNumber = null;
 
     BroadcastReceiver receiver;
@@ -1270,11 +1270,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (atlas_code_id != null && atlas_code_id == 2) {
                             Log.d(TAG, "This atlas code assume that the bird was calling...");
                             chip.setChecked(true);
-                            callTagAutochecked = true;
+                            callTagAutoChecked = true;
                         } else {
-                            if (callTagAutochecked) {
+                            if (callTagAutoChecked) {
                                 chip.setChecked(false);
-                                callTagAutochecked = false;
+                                callTagAutoChecked = false;
                             }
                         }
                     }
@@ -1463,7 +1463,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 public void onActivityResult(ActivityResult result) {
                     locationManager.removeUpdates(locationListener);
                     if (result.getData() != null) {
-                        currentLocation = result.getData().getExtras().getParcelable("google_map_latLong");
+                        currentLocation = Objects.requireNonNull(result.getData().getExtras()).getParcelable("google_map_latLong");
                         Log.d(TAG, "Map returned this result: " + currentLocation);
                         locationFromTheMap = true;
                         setLocationValues(currentLocation.latitude, currentLocation.longitude);
