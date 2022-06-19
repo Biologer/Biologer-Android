@@ -1202,10 +1202,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private Boolean isStageAvailable(Long taxonID) {
-        stageList = App.get().getDaoSession().getStageDao().queryBuilder()
-                .where(StageDao.Properties.TaxonId.eq(taxonID))
-                .list();
-        return stageList.size() != 0;
+        // When the taxon is not selected from the list its value is null and there is no stage.
+        if (taxonID == null) {
+            return false;
+        }
+        // When the taxon is selected from the list we should query SQL to see if there is a stage.
+        else {
+            stageList = App.get().getDaoSession().getStageDao().queryBuilder()
+                    .where(StageDao.Properties.TaxonId.eq(taxonID))
+                    .list();
+            return stageList.size() != 0;
+        }
     }
 
     private void getStageForTaxon() {
