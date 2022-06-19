@@ -562,7 +562,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Log.d(TAG, "Resize Images returned code: " + s);
 
                     if (s.equals("error")) {
-                        Toast.makeText(EntryActivity.this, "Unknown error occurred! Couldn't get resized image.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(EntryActivity.this, getString(R.string.image_resize_error), Toast.LENGTH_LONG).show();
                     } else {
                         if (image1 == null) {
                             image1 = s;

@@ -93,41 +93,46 @@ public class PreparePhotos extends Service {
             fileDescriptor = parcelFileDescriptor.getFileDescriptor();
         }
 
-        // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
-        int inSampleSize;
+        if (fileDescriptor != null) {
+            // Memory leak workaround = don’t load whole image for resizing, but use inSampleSize.
+            int inSampleSize;
 
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
-        BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
-        inSampleSize = getInSampleSize(options, 1024);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true; // just to get image dimensions, don’t load into memory
+            BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+            inSampleSize = getInSampleSize(options, 1024);
 
-        options.inSampleSize = inSampleSize;
-        options.inJustDecodeBounds = false; // now load the image into memory
-        input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
+            options.inSampleSize = inSampleSize;
+            options.inJustDecodeBounds = false; // now load the image into memory
+            input_image = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
 
-        //  Finally close the FileDescriptor
-        try {
-            if (parcelFileDescriptor != null) {
+            //  Finally close the FileDescriptor
+            try {
                 parcelFileDescriptor.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        if (input_image == null) {
-            Log.e(TAG, "It looks like input image does not exist!");
+            if (input_image == null) {
+                Log.e(TAG, "It looks like input image does not exist!");
+                return null;
+            }
+
+            if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
+                Log.d(TAG, "The image fits perfectly! Returning image without resize");
+                Bitmap rotatedBitmap = rotateImage(input_image, rotation);
+                return saveBitmap(rotatedBitmap);
+            }
+            else {
+                Log.d(TAG, "Resizing image...");
+                Bitmap resizedBitmap = resizeBitmap(input_image, 1024);
+                Bitmap rotatedBitmap = rotateImage(resizedBitmap, rotation);
+                return saveBitmap(rotatedBitmap);
+            }
+
+        } else {
+            Log.e(TAG, "It looks like input image does not exist. fileDescriptor is null!");
             return null;
-        }
-        if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
-            Log.d(TAG, "The image fits perfectly! Returning image without resize");
-            Bitmap rotatedBitmap = rotateImage(input_image, rotation);
-            return saveBitmap(rotatedBitmap);
-        }
-        else {
-            Log.d(TAG, "Resizing image...");
-            Bitmap resizedBitmap = resizeBitmap(input_image, 1024);
-            Bitmap rotatedBitmap = rotateImage(resizedBitmap, rotation);
-            return saveBitmap(rotatedBitmap);
         }
     }
 

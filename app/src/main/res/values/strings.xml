@@ -413,5 +413,6 @@
     <string name="update_location_name">Update</string>
     <string name="keep_location_name">Keep current</string>
     <string name="remove_location_name">Delete</string>
+    <string name="image_resize_error">Unknown error occurred! Couldn\'t get resized image.</string>
 
 </resources>
