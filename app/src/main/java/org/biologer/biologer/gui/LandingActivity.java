@@ -194,17 +194,30 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         // Check if token is still valid and refresh if needed
         if (SettingsManager.isMailConfirmed()) {
             Log.d(TAG, "Email is confirmed.");
-            if (Long.parseLong(SettingsManager.getTokenExpire()) >= System.currentTimeMillis() / 1000) {
+
+            long expire_in = Long.parseLong(SettingsManager.getTokenExpire());
+
+            // Refresh the token if it expired
+            if (expire_in >= System.currentTimeMillis() / 1000) {
                 Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
+                // Refresh token 3 months before the expiration
+                if (expire_in > ((System.currentTimeMillis() / 1000) + 7889229)) {
+                    Log.d(TAG, "...and there is no need to refresh token now.");
+                } else {
+                    Log.d(TAG, "...but token is about to expire soon. Trying to refresh login token.");
+                    if (InternetConnection.isConnected(LandingActivity.this)) {
+                        RefreshToken(database_url, false);
+                    }
+                }
             } else {
                 Log.d(TAG, "Token expired. Refreshing login token.");
                 if (InternetConnection.isConnected(LandingActivity.this)) {
-                    StartRefreshToken(database_url);
+                    RefreshToken(database_url, true);
                 }
                 else {
                     alertWarnAndExit(getString(R.string.refresh_token_no_internet));
                 }
-            }
+           }
         } else {
             Log.d(TAG, "Email is not confirmed.");
             checkMailConfirmed(database_url);
@@ -322,7 +335,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void StartRefreshToken(String database_name) {
+    private void RefreshToken(String database_name, boolean warn_user) {
         String refreshToken = SettingsManager.getRefreshToken();
         String rsKey = BuildConfig.BiologerRS_Key;
         String hrKey = BuildConfig.BiologerHR_Key;
@@ -330,61 +343,64 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         String devKey = BuildConfig.BiologerDEV_Key;
         String birdKey = BuildConfig.Birdloger_Key;
 
+        Call<RefreshTokenResponse> refresh_call = null;
+
         if (database_name.equals("https://biologer.rs")) {
             Log.d(TAG, "Serbian database selected.");
-            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
-            RefreshToken(refresh);
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
         }
         if (database_name.equals("https://biologer.hr")) {
             Log.d(TAG, "Croatian database selected.");
-            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
-            RefreshToken(refresh);
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
         }
         if (database_name.equals("https://biologer.ba")) {
             Log.d(TAG, "Bosnian database selected.");
-            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
-            RefreshToken(refresh);
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
         }
         if (database_name.equals("https://birdloger.biologer.org")) {
             Log.d(TAG, "Birdloger database selected.");
-            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken,"*");
-            RefreshToken(refresh);
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken,"*");
         }
         if (database_name.equals("https://dev.biologer.org")) {
             Log.d(TAG, "Developmental database selected.");
-            Call<RefreshTokenResponse> refresh = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken,"*");
-            RefreshToken(refresh);
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken,"*");
         }
+
         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
-    }
 
-    private void RefreshToken(Call<RefreshTokenResponse> refresh_call) {
-        refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
-                if(response.isSuccessful()) {
-                    if (response.body() != null) {
-                        String token1 = response.body().getAccessToken();
-                        String refresh_token = response.body().getRefreshToken();
-                        Log.d(TAG, "New token value is: " + token1);
-                        SettingsManager.setAccessToken(token1);
-                        SettingsManager.setRefreshToken(refresh_token);
-                        long expire = response.body().getExpiresIn();
-                        long expire_date = (System.currentTimeMillis() / 1000) + expire;
-                        SettingsManager.setTokenExpire(String.valueOf(expire_date));
-                        Log.d(TAG, "Token will expire on timestamp: " + expire_date);
+        if (refresh_call != null) {
+            refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            String token1 = response.body().getAccessToken();
+                            String refresh_token = response.body().getRefreshToken();
+                            Log.d(TAG, "New token value is: " + token1);
+                            SettingsManager.setAccessToken(token1);
+                            SettingsManager.setRefreshToken(refresh_token);
+                            long expire = response.body().getExpiresIn();
+                            long expire_date = (System.currentTimeMillis() / 1000) + expire;
+                            SettingsManager.setTokenExpire(String.valueOf(expire_date));
+                            Log.d(TAG, "Token will expire on timestamp: " + expire_date);
+                        }
+                    } else {
+                        if (warn_user) {
+                            alertWarnAndExit(getString(R.string.refresh_token_failed));
+                        }
                     }
-                } else {
-                    alertWarnAndExit(getString(R.string.refresh_token_failed));
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<RefreshTokenResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Cannot get response from the server (refresh token)" + t);
-                alertWarnAndExit(getString(R.string.refresh_token_failed));
-            }
-        });
+                @Override
+                public void onFailure(@NonNull Call<RefreshTokenResponse> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Cannot get response from the server (refresh token)" + t);
+                    if (warn_user) {
+                        alertWarnAndExit(getString(R.string.refresh_token_failed));
+                    }
+                }
+            });
+        }
+
     }
 
     private void updateEntryListView() {
