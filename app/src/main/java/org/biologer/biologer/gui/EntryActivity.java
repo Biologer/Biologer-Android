@@ -1317,7 +1317,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 currentLocation = new LatLng(44.3, 17.9);
             }
         }
-        intent.putExtra("LAT_LONG", currentLocation);
+        bundle.putDouble("LAT", currentLocation.latitude);
+        bundle.putDouble("LONG", currentLocation.latitude);
         bundle.putDouble("ACCURACY", acc);
         bundle.putDouble("ELEVATION", elev);
         intent.putExtras(bundle);
@@ -1399,7 +1400,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Taking pictures from camera
     private final ActivityResultLauncher<Uri> takePictureFromCamera = registerForActivityResult(
             new ActivityResultContracts.TakePicture(),
-            new ActivityResultCallback<Boolean>() {
+            new ActivityResultCallback<>() {
                 @Override
                 public void onActivityResult(Boolean result) {
                     if (result) {
@@ -1458,17 +1459,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     );
 
     private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
+            new ActivityResultCallback<>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     locationManager.removeUpdates(locationListener);
                     if (result.getData() != null) {
-                        currentLocation = Objects.requireNonNull(result.getData().getExtras()).getParcelable("google_map_latLong");
+                        currentLocation = getLatLongFromMap(result);
                         Log.d(TAG, "Map returned this result: " + currentLocation);
                         locationFromTheMap = true;
                         setLocationValues(currentLocation.latitude, currentLocation.longitude);
-                        acc = Double.parseDouble(Objects.requireNonNull(Objects.requireNonNull(result.getData().getExtras()).getString("google_map_accuracy")));
-                        elev = Double.parseDouble(Objects.requireNonNull(result.getData().getExtras().getString("google_map_elevation")));
+                        acc = getAccuracyFromMap(result);
+                        elev = getElevationFromMap(result);
                     }
 
                     // Update the coordinate accuracy labels
@@ -1783,4 +1784,38 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         }
                     }
             );
+
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
+    public LatLng getLatLongFromMap(ActivityResult result) {
+        if (result.getData() != null) {
+            if (result.getData().getExtras() != null) {
+                String latitude = result.getData().getExtras().getString("google_map_lat");
+                String longitude = result.getData().getExtras().getString("google_map_long");
+                if (latitude != null && longitude != null) {
+                    Log.i(TAG, "LonLat: " + longitude + "; " + latitude + ".");
+                    return new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude));
+                }
+            }
+        }
+        return null;
+    }
+
+    public Double getAccuracyFromMap(ActivityResult result) {
+        if (result.getData() != null) {
+            if (result.getData().getExtras() != null) {
+                return Double.valueOf(result.getData().getExtras().getString("google_map_accuracy"));
+            }
+        }
+        return null;
+    }
+
+    public Double getElevationFromMap(ActivityResult result) {
+        if (result.getData() != null) {
+            if (result.getData().getExtras() != null) {
+                return Double.valueOf(result.getData().getExtras().getString("google_map_elevation"));
+            }
+        }
+        return null;
+    }
+
 }

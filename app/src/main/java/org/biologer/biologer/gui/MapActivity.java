@@ -2,6 +2,7 @@ package org.biologer.biologer.gui;
 
 import android.content.Intent;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -75,7 +76,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            latLong = bundle.getParcelable("LAT_LONG");
+            latLong = new LatLng(bundle.getDouble("LAT"), bundle.getDouble("LONG"));
             double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
             accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
@@ -332,7 +333,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             accuracy = "100000";
         }
         returnLocation.putExtra("google_map_accuracy", accuracy);
-        returnLocation.putExtra("google_map_latLong", latLong);
+        returnLocation.putExtra("google_map_lat", String.valueOf(latLong.latitude));
+        returnLocation.putExtra("google_map_long", String.valueOf(latLong.longitude));
         returnLocation.putExtra("google_map_elevation", elevation);
         setResult(3, returnLocation);
 
@@ -351,4 +353,5 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void setLatLong(double lat, double lon) {
         this.latLong = new LatLng(lat, lon);
     }
+
 }
