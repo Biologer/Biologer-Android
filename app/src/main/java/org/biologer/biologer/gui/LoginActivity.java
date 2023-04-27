@@ -80,6 +80,7 @@ public class LoginActivity extends AppCompatActivity {
     static String[] allDatabases = {"https://biologer.rs",
             "https://biologer.hr",
             "https://biologer.ba",
+            "https://biologer.me",
             "https://birdloger.biologer.org",
             "https://dev.biologer.org"};
 
@@ -407,7 +408,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Get the response from the call
         Log.d(TAG, "Getting Token from server.");
-        login.enqueue(new Callback<LoginResponse>() {
+        login.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
                 if (response.code() == 404) {
@@ -421,14 +422,13 @@ public class LoginActivity extends AppCompatActivity {
                         SettingsManager.setAccessToken(token);
                         SettingsManager.setRefreshToken(refresh_token);
                         long expire = response.body().getExpiresIn();
-                        long expire_date = (System.currentTimeMillis()/1000) + expire;
+                        long expire_date = (System.currentTimeMillis() / 1000) + expire;
                         SettingsManager.setTokenExpire(String.valueOf(expire_date));
                         Log.d(TAG, "Token will expire on timestamp: " + expire_date);
                         getUserData();
                     }
-                }
-                else {
-                    retry_login ++;
+                } else {
+                    retry_login++;
                     if (retry_login >= 4) {
                         forgotPassTextView.setVisibility(View.VISIBLE);
                     }
@@ -438,6 +438,7 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
                 Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
@@ -449,7 +450,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getUserData() {
         Call<UserDataResponse> userData = RetrofitClient.getService(database_name).getUserData();
-        userData.enqueue(new Callback<UserDataResponse>() {
+        userData.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -498,7 +499,7 @@ public class LoginActivity extends AppCompatActivity {
     private void startLandingActivity() {
         Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("fromLoginScreen", true);
+        intent.putExtra("showHelpMessage", true);
         startActivity(intent);
     }
 
@@ -558,6 +559,9 @@ public class LoginActivity extends AppCompatActivity {
         if (database.equals("https://biologer.rs")) {
             return BuildConfig.BiologerRS_Key;
         }
+        if (database.equals("https://biologer.me")) {
+            return BuildConfig.BiologerME_Key;
+        }
         if (database.equals("https://birdloger.biologer.org")) {
             return BuildConfig.Birdloger_Key;
         }
@@ -576,6 +580,9 @@ public class LoginActivity extends AppCompatActivity {
             return "2";
         }
         if (database.equals("https://biologer.rs")) {
+            return "2";
+        }
+        if (database.equals("https://biologer.me")) {
             return "2";
         }
         if (database.equals("https://birdloger.biologer.org")) {

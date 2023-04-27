@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 121
         versionName "3.2.7"
         multiDexEnabled true
@@ -106,7 +106,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-iid:21.1.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.core:core:1.10.0'
-    annotationProcessor 'androidx.annotation:annotation:1.5.0'
+    annotationProcessor 'androidx.annotation:annotation:1.6.0'
 
     // Non Google
     implementation 'org.greenrobot:greendao-generator:3.3.0'

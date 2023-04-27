@@ -413,5 +413,8 @@
     <string name="update_location_name">Промени</string>
     <string name="keep_location_name">Задржи тренутно</string>
     <string name="remove_location_name">Обриши</string>
+    <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
 
 </resources>

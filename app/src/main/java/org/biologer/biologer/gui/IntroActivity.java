@@ -45,9 +45,21 @@ public class IntroActivity extends AppIntro2 {
 
     private void launchNextActivity() {
         if (User.getUser().tokenPresent()) {
-            Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivity(intent);
+            Bundle bundle = getIntent().getExtras();
+            if (bundle != null) {
+                if (bundle.getBoolean("firstRun", false)) {
+                    Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("showHelpMessage", true);
+                    startActivity(intent);
+                }
+            } else {
+                Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("showHelpMessage", false);
+                startActivity(intent);
+            }
+
         } else {
             Intent intent = new Intent(IntroActivity.this, LoginActivity.class);
             startActivity(intent);

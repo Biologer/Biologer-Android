@@ -285,5 +285,8 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxaData</string>
     <string name="deselect_all_groups">Unselect all groups</string>
+    <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
 
 </resources>

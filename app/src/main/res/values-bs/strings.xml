@@ -325,5 +325,8 @@
     <string name="confirm_delete_all">Ovim ćete obrisati sve podatke koje ste mukotrpno sakupljali na terenu! Da li ste sigurni da to želite?</string>
     <string name="yes_delete">Da, obriši sve</string>
     <string name="no_delete">Ne</string>
+    <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
 
 </resources>

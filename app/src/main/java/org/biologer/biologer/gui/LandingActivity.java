@@ -1,61 +1,64 @@
 package org.biologer.biologer.gui;
 
-import android.app.NotificationManager;
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.opencsv.CSVWriter;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.preference.PreferenceManager;
-import androidx.appcompat.widget.Toolbar;
-
-import android.util.Log;
-import android.view.MenuItem;
-import android.view.Menu;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
+import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.CreateExternalFile;
+import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
-import org.biologer.biologer.R;
-import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
-import org.biologer.biologer.network.UpdateLicenses;
-import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.adapters.CreateExternalFile;
-import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.UpdateObservationTypes;
-import org.biologer.biologer.sql.Entry;
-import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.sql.UserData;
 import org.biologer.biologer.network.JSON.TaxaResponse;
+import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
+import org.biologer.biologer.network.JSON.UserDataResponse;
+import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.UpdateLicenses;
+import org.biologer.biologer.network.UpdateObservationTypes;
+import org.biologer.biologer.network.UploadRecords;
+import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.UserData;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -66,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -74,6 +78,7 @@ import retrofit2.Response;
 public class LandingActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Biologer.Landing";
+    private static final int NOTIFICATION_PERMISSION_CODE = 112;
 
     private DrawerLayout drawer;
     BroadcastReceiver receiver;
@@ -122,9 +127,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.d(TAG, "This is first run of the program.");
                 SettingsManager.setFirstRun(false);
                 Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
+                intent.putExtra("firstRun", true);
                 startActivity(intent);
             } else {
 
+                // TODO Remove this in a year
                 // Users from Serbia should switch to RS domain!
                 if (database_url.equals("https://biologer.org")) {
                     database_url = "https://biologer.rs";
@@ -140,8 +147,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     // If the user just logged in, show a short help
                     Bundle bundle = getIntent().getExtras();
                     if (bundle != null) {
-                        if (bundle.getBoolean("fromLoginScreen", false)) {
-                            Log.d(TAG, "User came from the login screen.");
+                        if (bundle.getBoolean("showHelpMessage", false)) {
+                            Log.d(TAG, "User came from the login or intro screen.");
                             TextView textView = findViewById(R.id.list_entries_info_text);
                             textView.setText(R.string.entry_info_first_run);
                             textView.setVisibility(View.VISIBLE);
@@ -223,9 +230,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             checkMailConfirmed(database_url);
         }
 
-        // Check if notifications are enabled, if not warn the user!
-        areNotificationsEnabled();
-
         // Get the user settings from preferences
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
         how_to_use_network = preferences.getString("auto_download", "wifi");
@@ -235,15 +239,22 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (network_type != null) {
             updateLicenses();
             UpdateObservationTypes.updateObservationTypes();
-            // AUTO upload/download if the right preferences are selected...
-            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
-                uploadRecords();
-                should_ask = "download";
+
+            // Check if notifications are enabled and download/upload data
+            if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+                Log.d(TAG, "Notifications are enabled.");
+                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                    uploadRecords();
+                    should_ask = "download";
+                } else {
+                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                    should_ask = "ask";
+                }
+                updateTaxa();
             } else {
-                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                should_ask = "ask";
+                checkNotificationPermission();
             }
-            updateTaxa();
+
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
@@ -252,7 +263,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void checkMailConfirmed(String database_url) {
 
         Call<UserDataResponse> userData = RetrofitClient.getService(database_url).getUserData();
-        userData.enqueue(new Callback<UserDataResponse>() {
+        userData.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -294,7 +305,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void showUserLoginScreen() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
 
@@ -308,7 +319,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             startService(getTaxaGroups);
 
             Call<UserDataResponse> service = RetrofitClient.getService(database_url).getUserData();
-            service.enqueue(new Callback<UserDataResponse>() {
+            service.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
                     if (response.isSuccessful()) {
@@ -369,7 +380,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
 
         if (refresh_call != null) {
-            refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
+            refresh_call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.isSuccessful()) {
@@ -414,23 +425,51 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void areNotificationsEnabled() {
-        if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            Log.d(TAG, "Global notifications are enabled. Good to know! :-)");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                NotificationManager notificationmanager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-                assert notificationmanager != null;
-                if (notificationmanager.getNotificationChannel("biologer_taxa").getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    alertOKButton(getString(R.string.notifications_disabled1));
-                }
-                if (notificationmanager.getNotificationChannel("biologer_entries").getImportance() == NotificationManager.IMPORTANCE_NONE) {
-                    alertOKButton(getString(R.string.notifications_disabled2));
-                }
+    private void checkNotificationPermission() {
+        // For Android API 33+ we need permissions for Notifications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Notifications are not enabled, requesting permissions.");
+                requestNotificationPermissions.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
-        } else {
-            alertOKButton(getString(R.string.notifications_disabled));
+        }
+        // For Android API 26-32 we just need to notify the user
+        else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.d(TAG, "Notifications are not enabled, notifying user.");
+                alertOKButton(getString(R.string.notifications_disabled));
+            }
         }
     }
+
+    private final ActivityResultLauncher<String> requestNotificationPermissions =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                        if (isGranted) {
+                            Log.d(TAG, "Notification are enabled... It just happened :)");
+                        } else {
+                            Log.d(TAG, "Notification are not enabled... It just happened :)");
+                            // Check if the permit should be asked again
+                            // TODO This does not always work, sometimes it reports false when should be true
+                            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                                Log.d(TAG, "Notifications permit declined temporary.");
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                                builder.setMessage(R.string.notificationPermit)
+                                        .setCancelable(false)
+                                        .setPositiveButton(R.string.enable, (dialog, id) -> {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                                ActivityCompat.requestPermissions(LandingActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
+                                            }
+                                        })
+                                        .setNegativeButton(R.string.disable, (DialogInterface dialog, int id) -> dialog.cancel());
+                                final AlertDialog alert = builder.create();
+                                alert.show();
+                            } else {
+                                Log.d(TAG, "Notifications permit declined permanently.");
+                                alertOKButton(getString(R.string.notifications_disabled));
+                            }
+                        }
+                    }
+            );
 
     @Override
     protected void onStart() {
@@ -448,7 +487,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
-
         if (!FetchTaxa.isInstanceCreated()) {
 
             String updated_at = SettingsManager.getTaxaUpdatedAt();
@@ -464,7 +502,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (database.equals("https://birdloger.biologer.org")) {
                 Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
                         database).getBirdlogerTaxa(1, 1, finalTimestamp);
-                call.enqueue(new Callback<TaxaResponseBirdloger>() {
+                call.enqueue(new Callback<>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
@@ -495,7 +533,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             else {
                 Call<TaxaResponse> call = RetrofitClient.getService(
                         database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
-                call.enqueue(new Callback<TaxaResponse>() {
+                call.enqueue(new Callback<>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
@@ -667,7 +705,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Log.d(TAG, "Upload records button clicked.");
             // Disable the upload button to avoid double taps
             item.setEnabled(false);
-            item.getIcon().setAlpha(100);
+            Objects.requireNonNull(item.getIcon()).setAlpha(100);
             // Upload data to the server
             uploadRecords();
             return true;
@@ -948,14 +986,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // Disable the upload button
             if (getMenu() != null) {
                 uploadMenu.getItem(0).setEnabled(false);
-                uploadMenu.getItem(0).getIcon().setAlpha(100);
+                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
                 uploadMenu.getItem(1).setVisible(false);
             }
         } else {
             // Disable the upload button
             if (uploadMenu != null) {
                 uploadMenu.getItem(0).setEnabled(true);
-                uploadMenu.getItem(0).getIcon().setAlpha(255);
+                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
                 uploadMenu.getItem(1).setVisible(true);
             }
         }

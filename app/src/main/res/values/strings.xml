@@ -414,5 +414,8 @@
     <string name="keep_location_name">Keep current</string>
     <string name="remove_location_name">Delete</string>
     <string name="image_resize_error">Unknown error occurred! Couldn\'t get resized image.</string>
+    <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
 
 </resources>
