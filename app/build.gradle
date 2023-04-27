@@ -46,6 +46,7 @@ android {
             buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
+            buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
             buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
             buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
             // Add the key here if you need to access it from XML files
@@ -65,6 +66,7 @@ android {
             buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
             buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
             buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
+            buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
             buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
             buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
             // Add the key here if you need to access it from XML files

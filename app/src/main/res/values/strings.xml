@@ -417,5 +417,6 @@
     <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
     <string name="enable">Enable</string>
     <string name="disable">Disable</string>
+    <string name="montenegro">Montenegro</string>
 
 </resources>

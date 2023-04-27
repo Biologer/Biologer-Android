@@ -351,6 +351,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         String rsKey = BuildConfig.BiologerRS_Key;
         String hrKey = BuildConfig.BiologerHR_Key;
         String baKey = BuildConfig.BiologerBA_Key;
+        String meKey = BuildConfig.BiologerME_Key;
         String devKey = BuildConfig.BiologerDEV_Key;
         String birdKey = BuildConfig.Birdloger_Key;
 
@@ -367,6 +368,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (database_name.equals("https://biologer.ba")) {
             Log.d(TAG, "Bosnian database selected.");
             refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
+        }
+        if (database_name.equals("https://biologer.me")) {
+            Log.d(TAG, "Montenegrin database selected.");
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", meKey, refreshToken, "*");
         }
         if (database_name.equals("https://birdloger.biologer.org")) {
             Log.d(TAG, "Birdloger database selected.");
