@@ -144,15 +144,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     Log.d(TAG, "savedInstanceState is null");
                     runServices(database_url);
 
-                    // If the user just logged in, show a short help
-                    Bundle bundle = getIntent().getExtras();
-                    if (bundle != null) {
-                        if (bundle.getBoolean("showHelpMessage", false)) {
-                            Log.d(TAG, "User came from the login or intro screen.");
-                            TextView textView = findViewById(R.id.list_entries_info_text);
-                            textView.setText(R.string.entry_info_first_run);
-                            textView.setVisibility(View.VISIBLE);
-                        }
+                    // If the user did not start the EntryActivity show a short help
+                    if (!SettingsManager.isEntryOpen()) {
+                        TextView textView = findViewById(R.id.list_entries_info_text);
+                        textView.setText(R.string.entry_info_first_run);
+                        textView.setVisibility(View.VISIBLE);
                     }
 
                 } else {
@@ -603,7 +599,20 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
+        // Hide the info text if user moves away from landing fragment
+        TextView textView = findViewById(R.id.list_entries_info_text);
+        TextView textView1 = findViewById(R.id.list_entries_email_not_confirmed);
+        textView.setVisibility(View.GONE);
+        textView1.setVisibility(View.GONE);
+
         if (id == R.id.nav_list) {
+            // Show the info text once back to the list
+            if (!SettingsManager.isEntryOpen()) {
+                textView.setVisibility(View.VISIBLE);
+            }
+            if (!SettingsManager.isMailConfirmed()) {
+                textView1.setVisibility(View.VISIBLE);
+            }
             showLandingFragment();
         }
         if (id == R.id.nav_help) {
@@ -618,10 +627,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if(id == R.id.nav_about) {
             showAboutFragment();
         }
-
-        // Hide the info text if user moves away from landing fragment
-        TextView textView = findViewById(R.id.list_entries_info_text);
-        textView.setVisibility(View.GONE);
 
         drawer.closeDrawer(GravityCompat.START);
         return true;

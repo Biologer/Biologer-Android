@@ -13,7 +13,7 @@ public class SettingsManager {
     private static final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
 
     public enum KEY {
-        ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, DATABASE_NAME, GOOGLE_MAP_TYPE,
+        ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME, GOOGLE_MAP_TYPE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
         OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
@@ -67,6 +67,16 @@ public class SettingsManager {
     public static void setMailConfirmed(boolean mailConfirmed) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY.MAIL_CONFIRMED.toString(), mailConfirmed);
+        editor.apply();
+    }
+
+    public static boolean isEntryOpen() {
+        return sharedPreferences.getBoolean(KEY.ENTRY_OPEN.toString(), false);
+    }
+
+    public static void setEntryOpen(boolean entryOpen) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(KEY.ENTRY_OPEN.toString(), entryOpen);
         editor.apply();
     }
 

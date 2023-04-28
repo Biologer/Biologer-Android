@@ -2,21 +2,19 @@ package org.biologer.biologer.gui;
 
 import android.content.Intent;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,10 +31,11 @@ import com.google.android.material.textview.MaterialTextView;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.JSON.ElevationResponse;
+import org.biologer.biologer.network.RetrofitClient;
 
 import java.util.Locale;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -109,7 +108,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.save_menu, menu);
         MenuItem item = menu.findItem(R.id.action_save);
-        item.getIcon().setAlpha(255);
+        Objects.requireNonNull(item.getIcon()).setAlpha(255);
         return true;
     }
 
@@ -144,7 +143,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             if (database_name.equals("https://biologer.ba")) {
                 addMarker(new LatLng(44.3, 17.9), 7);
             }
-            if (database_name.equals("https://biologer.org") || database_name.equals("https://dev.biologer.org")) {
+            if (database_name.equals("https://biologer.me")) {
+                addMarker(new LatLng(42.8, 19.1), 9);
+            }
+            if (database_name.equals("https://biologer.rs") || database_name.equals("https://dev.biologer.org")) {
                 addMarker(new LatLng(44.1, 20.7), 7);
             }
         } else {

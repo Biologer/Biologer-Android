@@ -298,7 +298,7 @@ public class RegisterFragment3 extends Fragment {
                         // Go to the LandingActivity
                         Intent intent = new Intent(requireContext(), LandingActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra("fromLoginScreen", true);
+                        intent.putExtra("fromRegisterScreen", true);
                         startActivity(intent);
 
                 });

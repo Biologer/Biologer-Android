@@ -156,6 +156,10 @@ public class RegisterFragment1 extends Fragment {
             flag.setImageResource(R.drawable.flag_serbia);
             textViewDatabaseInfo.setText(R.string.community_serbia);
         }
+        if (database.equals("https://biologer.me")) {
+            flag.setImageResource(R.drawable.flag_montenegro);
+            textViewDatabaseInfo.setText(R.string.community_montenegro);
+        }
         if (database.equals("https://birdloger.biologer.org")) {
             flag.setImageResource(R.drawable.flag_dzpps);
             textViewDatabaseInfo.setText(R.string.community_dzpps);

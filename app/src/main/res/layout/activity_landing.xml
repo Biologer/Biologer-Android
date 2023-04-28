@@ -16,6 +16,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <TextView
+            android:id="@+id/list_entries_email_not_confirmed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:textSize="20sp"
+            android:text="@string/email_not_confirmed"
+            android:textAlignment="center"
+            android:textColor="@color/design_default_color_error"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="24dp">
+        </TextView>
+
             <TextView
                 android:id="@+id/list_entries_info_text"
                 android:layout_width="match_parent"
@@ -23,20 +37,6 @@
                 android:visibility="gone"
                 android:textSize="20sp"
                 android:textAlignment="center"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_marginTop="24dp">
-            </TextView>
-
-            <TextView
-                android:id="@+id/list_entries_email_not_confirmed"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:textSize="20sp"
-                android:text="@string/email_not_confirmed"
-                android:textAlignment="center"
-                android:textColor="@color/design_default_color_error"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
                 android:layout_marginTop="24dp">
