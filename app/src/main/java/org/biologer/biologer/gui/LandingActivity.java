@@ -78,7 +78,6 @@ import retrofit2.Response;
 public class LandingActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Biologer.Landing";
-    private static final int NOTIFICATION_PERMISSION_CODE = 112;
 
     private DrawerLayout drawer;
     BroadcastReceiver receiver;
@@ -435,7 +434,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setMessage(R.string.notificationPermit)
                             .setCancelable(false)
-                            .setPositiveButton(R.string.enable, (dialog, id) -> ActivityCompat.requestPermissions(LandingActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE))
+                            .setPositiveButton(R.string.enable, (dialog, id) -> requestNotificationPermissions.launch(Manifest.permission.POST_NOTIFICATIONS))
                             .setNegativeButton(R.string.ignore, (DialogInterface dialog, int id) -> dialog.cancel());
                     final AlertDialog alert = builder.create();
                     alert.show();
