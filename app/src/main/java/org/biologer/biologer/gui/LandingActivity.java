@@ -83,7 +83,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private DrawerLayout drawer;
     BroadcastReceiver receiver;
     String how_to_use_network;
-    String should_ask;
 
     // Define upload menu so that we can hide it if required
     static Menu uploadMenu;
@@ -239,12 +238,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // Check if notifications are enabled and download/upload data
             if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d(TAG, "Notifications are enabled.");
-                if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                if (shouldDownload()) {
                     uploadRecords();
-                    should_ask = "download";
-                } else {
-                    Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                    should_ask = "ask";
                 }
                 updateTaxa();
             } else {
@@ -429,9 +424,22 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void checkNotificationPermission() {
         // For Android API 33+ we need permissions for Notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Notifications are not enabled, requesting permissions.");
-                requestNotificationPermissions.launch(Manifest.permission.POST_NOTIFICATIONS);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                    Log.d(TAG, "Notifications are not enabled, requesting permissions.");
+                    // Ask permission for notification if not definitely declined by user
+                    requestNotificationPermissions.launch(Manifest.permission.POST_NOTIFICATIONS);
+                } else {
+                    // Explain user why we need notifications
+                    Log.d(TAG, "Notifications permit declined temporary.");
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage(R.string.notificationPermit)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.enable, (dialog, id) -> ActivityCompat.requestPermissions(LandingActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE))
+                            .setNegativeButton(R.string.ignore, (DialogInterface dialog, int id) -> dialog.cancel());
+                    final AlertDialog alert = builder.create();
+                    alert.show();
+                }
             }
         }
         // For Android API 26-32 we just need to notify the user
@@ -446,28 +454,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private final ActivityResultLauncher<String> requestNotificationPermissions =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                         if (isGranted) {
-                            Log.d(TAG, "Notification are enabled... It just happened :)");
+                            Log.d(TAG, "Notification are just enabled... :)");
+                            updateTaxa();
                         } else {
-                            Log.d(TAG, "Notification are not enabled... It just happened :)");
-                            // Check if the permit should be asked again
-                            // TODO This does not always work, sometimes it reports false when should be true
-                            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
-                                Log.d(TAG, "Notifications permit declined temporary.");
-                                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                                builder.setMessage(R.string.notificationPermit)
-                                        .setCancelable(false)
-                                        .setPositiveButton(R.string.enable, (dialog, id) -> {
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                                ActivityCompat.requestPermissions(LandingActivity.this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
-                                            }
-                                        })
-                                        .setNegativeButton(R.string.disable, (DialogInterface dialog, int id) -> dialog.cancel());
-                                final AlertDialog alert = builder.create();
-                                alert.show();
-                            } else {
-                                Log.d(TAG, "Notifications permit declined permanently.");
-                                alertOKButton(getString(R.string.notifications_disabled));
-                            }
+                            Toast.makeText(this, getString(R.string.notifications_are_disabled), Toast.LENGTH_LONG).show();
                         }
                     }
             );
@@ -486,8 +476,23 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         super.onStop();
     }
 
+    private boolean shouldDownload() {
+        String network_type = InternetConnection.networkType(this);
+        if (network_type != null) {
+            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                return true;
+            } else {
+                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
+
         if (!FetchTaxa.isInstanceCreated()) {
 
             String updated_at = SettingsManager.getTaxaUpdatedAt();
@@ -555,18 +560,17 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     @Override
                     public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                         // Inform the user on failure and write log message
-                        //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                        Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                        Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                        // Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
                     }
                 });
             }
         }
-
     }
 
     private void updateTaxa2 (int timestamp) {
         // If user choose to update data on any network, just do it!
-        if (should_ask.equals("download")) {
+        if (shouldDownload()) {
             Log.d(TAG, "The user chooses to update taxa without asking. Fetching automatically.");
             startFetchingTaxa();
         } else {

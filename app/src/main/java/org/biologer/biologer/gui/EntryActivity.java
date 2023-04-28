@@ -662,7 +662,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     where(TaxonDataDao.Properties.Id.eq(currentItem.getTaxonId())).list().get(0).getUseAtlasCode();
             if (use_atlas_code) {
                 Log.d(TAG, "There is an atlas code ID: " + currentItem.getAtlas_code());
-                use_atlas_code = true;
                 textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
             }
             selectedTaxon = new TaxaList(currentItem.getTaxonSuggestion(), currentItem.getTaxonId(), use_atlas_code);
@@ -790,11 +789,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         MenuItem item = menu.findItem(R.id.action_save);
         if (save_enabled) {
             item.setEnabled(true);
-            item.getIcon().setAlpha(255);
+            Objects.requireNonNull(item.getIcon()).setAlpha(255);
         } else {
             // disabled
             item.setEnabled(false);
-            item.getIcon().setAlpha(30);
+            Objects.requireNonNull(item.getIcon()).setAlpha(30);
         }
         return true;
     }
@@ -1770,7 +1769,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (!flag) {
                             takePhotoFromCamera();
                         } else {
-                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, getString(R.string.no_permission_camera), Toast.LENGTH_LONG).show();
                         }
                     }
             );
@@ -1780,7 +1779,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (isGranted) {
                             takePictureFromGallery.launch("image/*");
                         } else {
-                            Toast.makeText(this, "No permission to take picture from camera, field observations will have no images.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, getString(R.string.no_permission_gallery), Toast.LENGTH_LONG).show();
                         }
                     }
             );
@@ -1803,7 +1802,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public Double getAccuracyFromMap(ActivityResult result) {
         if (result.getData() != null) {
             if (result.getData().getExtras() != null) {
-                return Double.valueOf(result.getData().getExtras().getString("google_map_accuracy"));
+                return Double.valueOf(Objects.requireNonNull(result.getData().getExtras().getString("google_map_accuracy"), "Map accuracy must not be null!"));
             }
         }
         return null;
@@ -1812,7 +1811,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public Double getElevationFromMap(ActivityResult result) {
         if (result.getData() != null) {
             if (result.getData().getExtras() != null) {
-                return Double.valueOf(result.getData().getExtras().getString("google_map_elevation"));
+                return Double.valueOf(Objects.requireNonNull(result.getData().getExtras().getString("google_map_elevation"), "Map elevation must not be null!"));
             }
         }
         return null;

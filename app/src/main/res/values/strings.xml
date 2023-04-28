@@ -419,5 +419,9 @@
     <string name="disable">Disable</string>
     <string name="montenegro">Montenegro</string>
     <string name="community_montenegro">Local Biologer community in Montenegro</string>
+    <string name="ignore">Ignore</string>
+    <string name="notifications_are_disabled">Notifications are disabled. Some basic Biologer features will not work.</string>
+    <string name="no_permission_camera">No permission to take picture from camera. Observations will have no images.</string>
+    <string name="no_permission_gallery">No permission to take picture from gallery. Observations will have no images.</string>
 
 </resources>
