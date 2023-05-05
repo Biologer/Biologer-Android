@@ -14,7 +14,7 @@ public class SettingsManager {
 
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME, GOOGLE_MAP_TYPE,
-        TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, NOTIFICATION_DISABLED,
+        TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP,
         OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
 
@@ -77,16 +77,6 @@ public class SettingsManager {
     public static void setEntryOpen(boolean entryOpen) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY.ENTRY_OPEN.toString(), entryOpen);
-        editor.apply();
-    }
-
-    public static int notificationDisabledNotices() {
-        return sharedPreferences.getInt(KEY.NOTIFICATION_DISABLED.toString(), 1);
-    }
-
-    public static void setNotificationDisabledNotices(int notifies) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(KEY.NOTIFICATION_DISABLED.toString(), notifies);
         editor.apply();
     }
 

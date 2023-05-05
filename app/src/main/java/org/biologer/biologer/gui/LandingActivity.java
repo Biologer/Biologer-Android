@@ -212,12 +212,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             } else {
                 Log.d(TAG, "Token expired. Refreshing login token.");
-                if (InternetConnection.isConnected(LandingActivity.this)) {
+//                if (InternetConnection.isConnected(LandingActivity.this)) {
                     RefreshToken(database_url, true);
-                }
-                else {
-                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
-                }
+//                }
+//                else {
+//                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+//                }
            }
         } else {
             Log.d(TAG, "Email is not confirmed.");
