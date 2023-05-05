@@ -259,7 +259,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
-
                         if (response.body().getData().isEmailVerified()) {
                             updateGuiOnMailConfirmed(true);
                             SettingsManager.setMailConfirmed(true);
@@ -467,6 +466,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
                 new IntentFilter(UploadRecords.TASK_COMPLETED)
         );
+        if (!SettingsManager.isMailConfirmed()) {
+            checkMailConfirmed(SettingsManager.getDatabaseName());
+        }
     }
 
     @Override
