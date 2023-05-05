@@ -27,6 +27,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -889,7 +890,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 takePhoto();
                 break;
             case R.id.image_view_take_photo_gallery:
-                takeGalleryPhoto();
+                pickMultipleImages.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build());
                 break;
         }
     }
@@ -1415,47 +1419,25 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         takePictureFromCamera.launch(current_image);
     }
 
-    private void takeGalleryPhoto() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            takePictureFromGallery.launch("image/*");
-        } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.request_read_external_permission)
-                    .setCancelable(false)
-                    .setPositiveButton(getString(R.string.yes), (dialog, id) -> requestReadExternalPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE))
-                    .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss());
-            AlertDialog alert = builder.create();
-            alert.show();
-        } else {
-            requestReadExternalPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
-    }
-
-    // Getting the image from Gallery
-    private final ActivityResultLauncher<String> takePictureFromGallery = registerForActivityResult(
-            new ActivityResultContracts.GetMultipleContents(),
-            result -> {
-                Log.d(TAG, "Gallery returned this images: " + result);
-                int image_slots = getEmptyImageSlots();
-                if(!result.isEmpty()) {
-                    if (result.size() < image_slots) {
-                        image_slots = result.size();
-                    }
-                    for (int i = 0; i < image_slots; i++) {
-                        Log.d(TAG, "Getting and preparing image " + result.get(i) + ".");
-                        resizeAndDisplayImage(result.get(i));
-                    }
-                    if (result.size() > image_slots) {
+    ActivityResultLauncher<PickVisualMediaRequest> pickMultipleImages = registerForActivityResult(
+            new ActivityResultContracts.PickMultipleVisualMedia(getEmptyImageSlots()), photoPicker -> {
+                if (!photoPicker.isEmpty()) {
+                    Log.d(TAG,getEmptyImageSlots() + " images allowed, " + photoPicker.size() + " selected.");
+                    if (photoPicker.size() > getEmptyImageSlots()) {
                         Toast.makeText(this,
-                                getString(R.string.limit_photo1) + " " + result.size() + " " +
-                                        getString(R.string.limit_photo2) + " " + image_slots + " " +
+                                getString(R.string.limit_photo1) + " " + photoPicker.size() + " " +
+                                        getString(R.string.limit_photo2) + " " + getEmptyImageSlots() + " " +
                                         getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                     }
-                } else {
+                    for (int i = 0; i < photoPicker.size(); i++) {
+                        Log.d(TAG, "Getting and preparing image " + photoPicker.get(i) + ".");
+                        resizeAndDisplayImage(photoPicker.get(i));
+                    }
+                }
+                else {
                     Toast.makeText(this, getString(R.string.no_photo_selected), Toast.LENGTH_LONG).show();
                 }
-            }
-    );
+            });
 
     private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<>() {
@@ -1770,16 +1752,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             takePhotoFromCamera();
                         } else {
                             Toast.makeText(this, getString(R.string.no_permission_camera), Toast.LENGTH_LONG).show();
-                        }
-                    }
-            );
-
-    private final ActivityResultLauncher<String> requestReadExternalPermission =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                        if (isGranted) {
-                            takePictureFromGallery.launch("image/*");
-                        } else {
-                            Toast.makeText(this, getString(R.string.no_permission_gallery), Toast.LENGTH_LONG).show();
                         }
                     }
             );

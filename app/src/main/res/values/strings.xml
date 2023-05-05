@@ -183,7 +183,7 @@
     <string name="no_photo_selected">No photos selected from the Gallery.</string>
     <string name="limit_photo1">You have selected</string>
     <string name="limit_photo2">photos, but only</string>
-    <string name="limit_photo3">could be uploaded. With each record you can upload a maximum of three photos.</string>
+    <string name="limit_photo3">could be added.</string>
     <string name="channel_entries_description">Display notifications for uploading entries to the server.</string>
     <string name="channel_entries_name">Upload entries</string>
     <string name="notify_title_entries">Uploading records</string>
