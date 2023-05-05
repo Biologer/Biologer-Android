@@ -20,6 +20,7 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -295,6 +296,8 @@ public class LoginActivity extends AppCompatActivity {
                 TextView textView = findViewById(R.id.tv_refreshToken);
                 textView.setText(R.string.refresh_token_text);
                 textView.setVisibility(View.VISIBLE);
+                et_password.requestFocus();
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
             }
         }
     }
