@@ -278,7 +278,7 @@
     <string name="confirm_email">Your email address is not confirmed yet! We have sent you an email with confirmation link, just click on it and you are good to go. Depending on the server overload, there could be some delay before you receive the confirmation link.</string>
     <string name="unauthorised">The given user does not exist on this server. Maybe you are trying to connect to the wrong database?</string>
     <string name="cannot_connect_server">Cannot get response from the server!</string>
-    <string name="refresh_token_failed">Your login token has expired, but we could not refresh it from the internet!</string>
+    <string name="refresh_token_failed">Your login token has expired, but we could not refresh it from the internet! Biologer could continue to work, but you could not send the data to the server.</string>
     <string name="check_database">Check if this is correct</string>
     <string name="name_is_obligatory">Name is obligatory</string>
     <string name="password_too_short">Password is too short</string>
@@ -423,5 +423,6 @@
     <string name="notifications_are_disabled">Notifications are disabled. Some basic Biologer features will not work.</string>
     <string name="no_permission_camera">No permission to take picture from camera. Observations will have no images.</string>
     <string name="no_permission_gallery">No permission to take picture from gallery. Observations will have no images.</string>
+    <string name="refresh_token_text">It looks like the login token is invalid or expired. Please enter your password in order to log back into Biologer.</string>
 
 </resources>

@@ -1,18 +1,9 @@
 package org.biologer.biologer.gui;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -34,23 +25,31 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.JSON.LoginResponse;
+import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
-import org.biologer.biologer.network.JSON.UserDataResponse;
 
 import java.util.Arrays;
 import java.util.List;
@@ -89,7 +88,6 @@ public class LoginActivity extends AppCompatActivity {
     // Initialise list for Database selection
     Spinner spinner;
 
-    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,7 +108,7 @@ public class LoginActivity extends AppCompatActivity {
             Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
             et_username.setText(user.get(0).getEmail());
             // Just display anything, no mather what...
-            et_password.setText("random string");
+            et_password.setText("");
         }
 
         // Fill in the data for database list
@@ -285,6 +283,20 @@ public class LoginActivity extends AppCompatActivity {
             loginButton.setEnabled(false);
         }
 
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            if (bundle.getString("refreshToken") != null) {
+                Log.d(TAG, "It looks like login token is not correct. We must use the password.");
+                registerTextView.setText("");
+                LinearLayout linearLayout = findViewById(R.id.linearlayout_databases);
+                linearLayout.setVisibility(View.GONE);
+                View view = findViewById(R.id.underline);
+                view.setVisibility(View.GONE);
+                TextView textView = findViewById(R.id.tv_refreshToken);
+                textView.setText(R.string.refresh_token_text);
+                textView.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     private void setEmailError() {

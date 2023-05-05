@@ -201,23 +201,23 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // Refresh the token if it expired
             if (expire_in >= System.currentTimeMillis() / 1000) {
                 Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
-                // Refresh token 3 months before the expiration
-                if (expire_in > ((System.currentTimeMillis() / 1000) + 7889229)) {
-                    Log.d(TAG, "...and there is no need to refresh token now.");
+                // Refresh token 11 months before the expiration
+                if (expire_in > ((System.currentTimeMillis() / 1000) + 28930000)) {
+                    Log.d(TAG, "There is no need to refresh token now.");
                 } else {
-                    Log.d(TAG, "...but token is about to expire soon. Trying to refresh login token.");
+                    Log.d(TAG, "Trying to refresh login token.");
                     if (InternetConnection.isConnected(LandingActivity.this)) {
                         RefreshToken(database_url, false);
                     }
                 }
             } else {
                 Log.d(TAG, "Token expired. Refreshing login token.");
-//                if (InternetConnection.isConnected(LandingActivity.this)) {
+                if (InternetConnection.isConnected(LandingActivity.this)) {
                     RefreshToken(database_url, true);
-//                }
-//                else {
-//                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
-//                }
+                }
+                else {
+                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+                }
            }
         } else {
             Log.d(TAG, "Email is not confirmed.");
@@ -294,7 +294,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void showUserLoginScreen() {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("refreshToken", "yes");
         startActivity(intent);
     }
 
@@ -364,11 +364,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
         if (database_name.equals("https://birdloger.biologer.org")) {
             Log.d(TAG, "Birdloger database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken,"*");
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken, "*");
         }
         if (database_name.equals("https://dev.biologer.org")) {
             Log.d(TAG, "Developmental database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken,"*");
+            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken, "*");
         }
 
         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
@@ -377,6 +377,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             refresh_call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
+                    if (response.code() == 401) {
+                        Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
+                        showUserLoginScreen();
+                    }
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
                             String token1 = response.body().getAccessToken();
@@ -391,7 +395,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                         }
                     } else {
                         if (warn_user) {
-                            alertWarnAndExit(getString(R.string.refresh_token_failed));
+                            alertTokenExpired();
                         }
                     }
                 }
@@ -400,12 +404,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 public void onFailure(@NonNull Call<RefreshTokenResponse> call, @NonNull Throwable t) {
                     Log.e(TAG, "Cannot get response from the server (refresh token)" + t);
                     if (warn_user) {
-                        alertWarnAndExit(getString(R.string.refresh_token_failed));
+                        alertTokenExpired();
                     }
                 }
             });
         }
-
     }
 
     private void updateEntryListView() {
@@ -954,6 +957,23 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 .setNeutralButton(getString(R.string.OK), (dialog, id) -> {
                     dialog.cancel();
                     this.finishAffinity();
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    protected void alertTokenExpired() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(LandingActivity.this);
+        builder.setMessage(getString(R.string.refresh_token_failed))
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.ignore), (dialog, id) -> {
+                    MenuItem item = findViewById(R.id.action_upload);
+                    item.setEnabled(false);
+                    Objects.requireNonNull(item.getIcon(), "The icon must not be null!").setAlpha(100);
+                })
+                .setNegativeButton(getString(R.string.exit), (dialog, id) -> {
+                    dialog.cancel();
+                    LandingActivity.this.finishAffinity();
                 });
         final AlertDialog alert = builder.create();
         alert.show();
