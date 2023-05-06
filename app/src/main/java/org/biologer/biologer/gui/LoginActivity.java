@@ -409,9 +409,13 @@ public class LoginActivity extends AppCompatActivity {
             getToken();
         }
         else {
-            Log.d(TAG, "TOKEN: " + token);
-            Log.d(TAG, "There is a token. Trying to log in without username/password.");
-            getUserData();
+            if (Long.parseLong(SettingsManager.getTokenExpire()) < System.currentTimeMillis() / 1000) {
+                Log.d(TAG, "There is a token, but it seems to be expired. Trying to log in without username/password.");
+                getToken();
+            } else {
+                Log.d(TAG, "There is a valid token. Trying to log in without username/password.");
+                getUserData();
+            }
         }
     }
 
