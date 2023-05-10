@@ -1320,8 +1320,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 currentLocation = new LatLng(44.3, 17.9);
             }
         }
-        bundle.putDouble("LAT", currentLocation.latitude);
-        bundle.putDouble("LONG", currentLocation.latitude);
+        bundle.putDouble("LATITUDE", currentLocation.latitude);
+        bundle.putDouble("LONGITUDE", currentLocation.longitude);
         bundle.putDouble("ACCURACY", acc);
         bundle.putDouble("ELEVATION", elev);
         intent.putExtras(bundle);

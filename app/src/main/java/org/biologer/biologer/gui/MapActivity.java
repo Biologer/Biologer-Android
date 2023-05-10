@@ -75,7 +75,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            latLong = new LatLng(bundle.getDouble("LONG"), bundle.getDouble("LAT"));
+            latLong = new LatLng(bundle.getDouble("LATITUDE"), bundle.getDouble("LONGITUDE"));
             double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
             accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
