@@ -399,6 +399,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     // Run when user click the login button
+    // TODO check for token should be removed and users could always log in with password from here?
     public void onLogin(View view) {
         loginButton.setEnabled(false);
         String token = SettingsManager.getAccessToken();

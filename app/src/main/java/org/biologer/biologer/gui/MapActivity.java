@@ -75,7 +75,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            latLong = new LatLng(bundle.getDouble("LAT"), bundle.getDouble("LONG"));
+            latLong = new LatLng(bundle.getDouble("LONG"), bundle.getDouble("LAT"));
             double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
             accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
@@ -296,7 +296,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (InternetConnection.isConnected(this)) {
             Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
             Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
-            call.enqueue(new Callback<ElevationResponse>() {
+            call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
                     if (response.body() != null) {
