@@ -16,7 +16,7 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 132
+        versionCode 133
         versionName "4.0_alpha1"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -58,6 +58,9 @@ android {
             proguardFiles getDefaultProguardFile(
                     'proguard-android-optimize.txt'),
                     'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
 
             // Add the key here if it needs to be access from .java files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties

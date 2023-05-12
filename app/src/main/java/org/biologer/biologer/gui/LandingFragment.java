@@ -84,7 +84,7 @@ public class LandingFragment extends Fragment {
         floatingActionButton.setOnClickListener(v -> {
             // When user opens the EntryActivity for the first time set this to true.
             // This is used to display intro message for new users.
-            if (!SettingsManager.isEntryOpen()) {
+            if (!SettingsManager.getEntryOpen()) {
                 SettingsManager.setEntryOpen(true);
             }
             // Start the new Entry Activity.

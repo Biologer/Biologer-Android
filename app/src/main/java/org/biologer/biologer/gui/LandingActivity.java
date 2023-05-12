@@ -138,7 +138,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
 
                     // If the user did not start the EntryActivity show a short help
-                    if (!SettingsManager.isEntryOpen()) {
+                    if (!SettingsManager.getEntryOpen()) {
                         TextView textView = findViewById(R.id.list_entries_info_text);
                         textView.setText(R.string.entry_info_first_run);
                         textView.setVisibility(View.VISIBLE);
@@ -640,7 +640,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         if (id == R.id.nav_list) {
             // Show the info text once back to the list
-            if (!SettingsManager.isEntryOpen()) {
+            if (!SettingsManager.getEntryOpen()) {
                 textView.setVisibility(View.VISIBLE);
             }
             if (!SettingsManager.isMailConfirmed()) {

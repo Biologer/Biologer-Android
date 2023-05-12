@@ -70,7 +70,7 @@ public class SettingsManager {
         editor.apply();
     }
 
-    public static boolean isEntryOpen() {
+    public static boolean getEntryOpen() {
         return sharedPreferences.getBoolean(KEY.ENTRY_OPEN.toString(), false);
     }
 
