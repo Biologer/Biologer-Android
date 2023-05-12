@@ -4,7 +4,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import org.biologer.biologer.App;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
@@ -26,7 +26,7 @@ public class UpdateObservationTypes {
 
         Call<ObservationTypesResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
-        call.enqueue(new Callback<ObservationTypesResponse>() {
+        call.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
@@ -43,18 +43,20 @@ public class UpdateObservationTypes {
                             List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
                             ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
                             for (int j = 0; j < observation_translations.size(); j++) {
-                                ObservationTypesData localization = new ObservationTypesData();
-                                localization.setObservationId(ob.getId().longValue());
-                                localization.setSlug(ob.getSlug());
-                                localization.setLocaleId(observation_translations.get(j).getId());
-                                localization.setLocale(observation_translations.get(j).getLocale());
-                                localization.setName(observation_translations.get(j).getName());
+                                ObservationTypesData localization = new ObservationTypesData(
+                                        0,
+                                        observation_translations.get(j).getId(),
+                                        ob.getId().longValue(),
+                                        ob.getSlug(),
+                                        observation_translations.get(j).getLocale(),
+                                        observation_translations.get(j).getName());
                                 localizations[j] = localization;
                             }
-                            App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
+                            ObjectBox.get().boxFor(ObservationTypesData.class).put(localizations);
+                            //App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
 
                         }
-                        Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getDaoSession().getObservationTypesDataDao().count() + " records");
+                        Log.d(TAG, "Observation types locales written to the database, there are " + ObjectBox.get().boxFor(ObservationTypesData.class).count() + " records");
                         SettingsManager.setObservationTypesUpdated(system_time);
                         Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                     }

@@ -1,24 +1,22 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Generated;
-import org.greenrobot.greendao.annotation.Id;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 @Entity
 public class TaxaTranslationData {
 
-    @Id (autoincrement = true)
-    private Long Id;
-    private Long taxonId;
+    @Id(assignable = true)
+    long id;
+    private long taxonId;
     private String locale;
-    private String nativeName;
-    private String latinName;
-    private boolean useAtlasCode;
+    private final String nativeName;
+    private final String latinName;
+    private final boolean useAtlasCode;
     private String description;
 
-    @Generated(hash = 980357117)
-    public TaxaTranslationData(Long Id, Long taxonId, String locale, String nativeName, String latinName, boolean useAtlasCode, String description) {
-        this.Id = Id;
+    public TaxaTranslationData(long id, long taxonId, String locale, String nativeName, String latinName, boolean useAtlasCode, String description) {
+        this.id = id;
         this.taxonId = taxonId;
         this.locale = locale;
         this.nativeName = nativeName;
@@ -27,23 +25,19 @@ public class TaxaTranslationData {
         this.description = description;
     }
 
-    @Generated(hash = 43108861)
-    public TaxaTranslationData() {
+    public long getId() {
+        return id;
     }
 
-    public Long getId() {
-        return Id;
+    public void setId(long id) {
+        id = id;
     }
 
-    public void setId(Long id) {
-        Id = id;
-    }
-
-    public Long getTaxonId() {
+    public long getTaxonId() {
         return taxonId;
     }
 
-    public void setTaxonId(Long taxonId) {
+    public void setTaxonId(long taxonId) {
         this.taxonId = taxonId;
     }
 
@@ -59,10 +53,6 @@ public class TaxaTranslationData {
         return nativeName;
     }
 
-    public void setNativeName(String nativeName) {
-        this.nativeName = nativeName;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -75,19 +65,8 @@ public class TaxaTranslationData {
         return latinName;
     }
 
-    public void setLatinName(String latinName) {
-        this.latinName = latinName;
-    }
-
     public boolean isUseAtlasCode() {
         return useAtlasCode;
     }
 
-    public void setUseAtlasCode(boolean useAtlasCode) {
-        this.useAtlasCode = useAtlasCode;
-    }
-
-    public boolean getUseAtlasCode() {
-        return this.useAtlasCode;
-    }
 }

@@ -3,9 +3,6 @@ package org.biologer.biologer.gui;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.widget.AppCompatButton;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -14,7 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.biologer.biologer.App;
+import androidx.appcompat.widget.AppCompatButton;
+import androidx.fragment.app.Fragment;
+
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.User;
@@ -45,13 +45,14 @@ public class LogoutFragment extends Fragment {
                 TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
                 TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
 
-                List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
-                UserData ud = list.get(0);
-                String username = ud.getUsername();
+                List<UserData> userDataList = ObjectBox.get().boxFor(UserData.class).getAll();
+                //List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
+                UserData userData = userDataList.get(0);
+                String username = userData.getUsername();
                 Log.i(TAG, "Current user: " + username);
                 tv_database.setText(SettingsManager.getDatabaseName());
                 tv_username.setText(username);
-                tv_email.setText(ud.getEmail());
+                tv_email.setText(userData.getEmail());
 
                 btn_logout.setOnClickListener(v -> {
                     // If download process is active, stop it first

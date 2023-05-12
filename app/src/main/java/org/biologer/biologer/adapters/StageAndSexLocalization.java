@@ -2,16 +2,28 @@ package org.biologer.biologer.adapters;
 
 import android.content.Context;
 
-import org.biologer.biologer.App;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
-import org.biologer.biologer.sql.StageDao;
+import org.biologer.biologer.sql.Stage;
+import org.biologer.biologer.sql.Stage_;
+
+import java.util.List;
+
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 
 public class StageAndSexLocalization {
 
     public static String getStageLocaleFromID(Context context, Long stageID) {
         if (stageID != null) {
-            String stage_name = App.get().getDaoSession().getStageDao().queryBuilder()
-                    .where(StageDao.Properties.StageId.eq(stageID)).list().get(0).getName();
+            Box<Stage> stageBox = ObjectBox.get().boxFor(Stage.class);
+            Query<Stage> query = stageBox
+                    .query(Stage_.stageId.equal(stageID))
+                    .build();
+            List<Stage> results = query.find();
+            String stage_name = results.get(0).getName();
+            query.close();
+
             return StageAndSexLocalization.getStageLocale(context, stage_name);
         } else {
             return "";

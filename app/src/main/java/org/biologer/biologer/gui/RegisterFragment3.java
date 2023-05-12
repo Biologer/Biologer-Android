@@ -27,7 +27,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
-import org.biologer.biologer.App;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.RegisterResponse;
@@ -35,6 +35,7 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserData;
 
 import java.util.List;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -138,7 +139,7 @@ public class RegisterFragment3 extends Fragment {
 
                 String[] dataLicenses = {getString(R.string.license10), getString(R.string.license20), getString(R.string.license30), getString(R.string.license_timed), getString(R.string.license40)};
                 String[] imageLicenses = {getString(R.string.license_image_10), getString(R.string.license_image_20), getString(R.string.license_image_30), getString(R.string.license_image_40)};
-                ArrayAdapter<String> adapterDataLicense = new ArrayAdapter<>(getContext(),
+                ArrayAdapter<String> adapterDataLicense = new ArrayAdapter<>(Objects.requireNonNull(getContext(), "There is no context for Data License adapter."),
                         android.R.layout.simple_dropdown_item_1line, dataLicenses);
                 ArrayAdapter<String> adapterImageLicense = new ArrayAdapter<>(getContext(),
                         android.R.layout.simple_dropdown_item_1line, imageLicenses);
@@ -210,7 +211,7 @@ public class RegisterFragment3 extends Fragment {
                 ((LoginActivity) requireActivity()).register_institution,
                 ((LoginActivity) requireActivity()).et_username.getText().toString(),
                 ((LoginActivity) requireActivity()).et_password.getText().toString());
-        registerResponseCall.enqueue(new Callback<RegisterResponse>() {
+        registerResponseCall.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
@@ -249,7 +250,7 @@ public class RegisterFragment3 extends Fragment {
                         SettingsManager.setRefreshToken(refresh_token);
                         SettingsManager.setMailConfirmed(false);
                         long expire = response.body().getExpiresIn();
-                        long expire_date = (System.currentTimeMillis()/1000) + expire;
+                        long expire_date = (System.currentTimeMillis() / 1000) + expire;
                         SettingsManager.setTokenExpire(String.valueOf(expire_date));
                         Log.d(TAG, "Token will expire on timestamp: " + expire_date);
 
@@ -277,8 +278,8 @@ public class RegisterFragment3 extends Fragment {
     private void saveUserData() {
         String full_name =  ((LoginActivity) requireActivity()).register_name + " " +  ((LoginActivity) requireActivity()).register_surname;
         String email = ((LoginActivity) requireActivity()).et_username.getText().toString();
-        UserData userData = new UserData(null, full_name, email, getDataLicense(), getImageLicense());
-        App.get().getDaoSession().getUserDataDao().insertOrReplace(userData);
+        UserData userData = new UserData(0, full_name, email, getDataLicense(), getImageLicense());
+        ObjectBox.get().boxFor(UserData.class).put(userData);
         displaySuccess();
     }
 

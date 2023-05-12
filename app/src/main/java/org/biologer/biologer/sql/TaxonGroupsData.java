@@ -1,43 +1,37 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Generated;
-import org.greenrobot.greendao.annotation.Id;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 @Entity
 public class TaxonGroupsData {
-    @Id(autoincrement = true)
-    private Long Id;
-    private Long prentId;
+    @Id(assignable = true)
+    long id;
+    private long parentId;
     private String name;
     private String description;
 
-    @Generated(hash = 964810650)
-    public TaxonGroupsData(Long Id, Long prentId, String name, String description) {
-        this.Id = Id;
-        this.prentId = prentId;
+    public TaxonGroupsData(long id, long parentId, String name, String description) {
+        this.id = id;
+        this.parentId = parentId;
         this.name = name;
         this.description = description;
     }
 
-    @Generated(hash = 1005564454)
-    public TaxonGroupsData() {
+    public long getId() {
+        return id;
     }
 
-    public Long getId() {
-        return Id;
+    public void setId(long id) {
+        id = id;
     }
 
-    public void setId(Long id) {
-        Id = id;
+    public long getParentId() {
+        return parentId;
     }
 
-    public Long getPrentId() {
-        return prentId;
-    }
-
-    public void setPrentId(Long prentId) {
-        this.prentId = prentId;
+    public void setParentId(long parentId) {
+        this.parentId = parentId;
     }
 
     public String getName() {

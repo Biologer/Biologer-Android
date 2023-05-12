@@ -5,20 +5,13 @@ import android.app.NotificationManager;
 import android.os.Build;
 import androidx.multidex.MultiDexApplication;
 
-import org.biologer.biologer.sql.DaoMaster;
-import org.biologer.biologer.sql.DaoSession;
-import org.greenrobot.greendao.database.Database;
-
 /**
  * Created by brjovanovic on 12/24/2017.
  */
 
 public class App extends MultiDexApplication {
 
-    private static final String TAG = "Biologer.App";
-
     private static App app;
-    private DaoSession daoSession;
 
     @Override
     public void onCreate() {
@@ -30,10 +23,8 @@ public class App extends MultiDexApplication {
         createNotificationChannelTaxa();
         createNotificationChannelEntries();
 
-        // For initialisation of GreenDAO database
-        GreenDaoInitialization helper = new GreenDaoInitialization(this, "notes-db");
-        Database db = helper.getWritableDb();
-        daoSession = new DaoMaster(db).newSession();
+        // For initialisation of OpenBox database
+        ObjectBox.init(this);
     }
 
     public void createNotificationChannelTaxa() {
@@ -76,5 +67,4 @@ public class App extends MultiDexApplication {
         return app;
     }
 
-    public DaoSession getDaoSession() {return daoSession;}
 }

@@ -8,15 +8,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TaxaData {
 
     @JsonProperty("id")
-    private Long id;
+    private long id;
     @JsonProperty("parent_id")
-    private Long parentId;
+    private long parentId;
     @JsonProperty("name")
     private String name;
     @JsonProperty("rank")
     private String rank;
     @JsonProperty("rank_level")
-    private Long rankLevel;
+    private long rankLevel;
     @JsonProperty("author")
     private String author;
     @JsonProperty("fe_old_id")
@@ -55,22 +55,22 @@ public class TaxaData {
     private List<String> groups;
 
     @JsonProperty("id")
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
     @JsonProperty("parent_id")
-    public Long getParentId() {
+    public long getParentId() {
         return parentId;
     }
 
     @JsonProperty("parent_id")
-    public void setParentId(Long parentId) {
+    public void setParentId(long parentId) {
         this.parentId = parentId;
     }
 
@@ -95,12 +95,12 @@ public class TaxaData {
     }
 
     @JsonProperty("rank_level")
-    public Long getRankLevel() {
+    public long getRankLevel() {
         return rankLevel;
     }
 
     @JsonProperty("rank_level")
-    public void setRankLevel(Long rankLevel) {
+    public void setRankLevel(long rankLevel) {
         this.rankLevel = rankLevel;
     }
 

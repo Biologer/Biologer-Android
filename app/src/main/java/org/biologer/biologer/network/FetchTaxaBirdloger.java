@@ -12,7 +12,12 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.biologer.biologer.App;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
+
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
@@ -21,20 +26,16 @@ import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.TaxaStages;
 import org.biologer.biologer.network.JSON.TaxaTranslations;
 import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxaTranslationData;
+import org.biologer.biologer.sql.TaxonData;
 import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsDataDao;
-import org.greenrobot.greendao.query.QueryBuilder;
+import org.biologer.biologer.sql.TaxonGroupsData_;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.preference.PreferenceManager;
-
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -85,13 +86,16 @@ public class FetchTaxaBirdloger extends Service {
             ArrayList<String> groups_list = intent.getStringArrayListExtra("groups");
             if (groups_list == null) {
                 // Query to get taxa groups that should be used in a query
-                QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-                query.where(TaxonGroupsDataDao.Properties.Id.isNotNull());
-                List<TaxonGroupsData> allTaxaGroups = query.list();
+                Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
+                Query<TaxonGroupsData> query = taxonGroupsDataBox
+                        .query(TaxonGroupsData_.id.notNull())
+                        .build();
+                List<TaxonGroupsData> allTaxaGroups = query.find();
+                query.close();
                 for (int i = 0; i < allTaxaGroups.size(); i++) {
-                    int id = allTaxaGroups.get(i).getId().intValue();
+                    int id = (int)allTaxaGroups.get(i).getId();
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                    boolean checked = preferences.getBoolean(allTaxaGroups.get(i).getId().toString(), true);
+                    boolean checked = preferences.getBoolean(String.valueOf(allTaxaGroups.get(i).getId()), true);
                     if (checked) {
                         // Log.d(TAG, "Checkbox for taxa group ID " + id + " is checked.");
                         taxa_groups.add(String.valueOf(id));
@@ -165,7 +169,7 @@ public class FetchTaxaBirdloger extends Service {
                 Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
                         SettingsManager.getDatabaseName()).getBirdlogerTaxa(current_page, 100, updated_at);
 
-                call.enqueue(new Callback<TaxaResponseBirdloger>() {
+                call.enqueue(new Callback<>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
@@ -186,8 +190,7 @@ public class FetchTaxaBirdloger extends Service {
                             updateNotification(getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry), progressStatus);
                             stopSelf();
                             Log.d(TAG, "Fetching taxa failed!");
-                        }
-                        else {
+                        } else {
                             Log.d(TAG, "Starting retry loop No. " + retry_number + ".");
                             fetchTaxa();
                             retry_number++;
@@ -223,9 +226,10 @@ public class FetchTaxaBirdloger extends Service {
             Stage[] final_stages = new Stage[stages.size()];
             for (int j = 0; j < stages.size(); j++) {
                 TaxaStages stage = stages.get(j);
-                final_stages[j] = new Stage(null, stage.getName(), stage.getId(), taxon_id);
+                final_stages[j] = new Stage(0, stage.getName(), stage.getId(), taxon_id);
             }
-            App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
+            ObjectBox.get().boxFor(Stage.class).put(final_stages);
+            //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
@@ -259,10 +263,12 @@ public class FetchTaxaBirdloger extends Service {
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
-                App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
+                ObjectBox.get().boxFor(TaxaTranslationData.class).put(final_translations);
+                //App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
-        App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
+        ObjectBox.get().boxFor(TaxonData.class).put(final_taxa);
+        //App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
         // loader. Otherwise we continue fetching taxa from the API on the next page.
@@ -493,8 +499,8 @@ public class FetchTaxaBirdloger extends Service {
         updated_at = 0;
         current_page = 1;
         SettingsManager.setTaxaLastPageFetched("1");
-        App.get().getDaoSession().getTaxonDataDao().deleteAll();
-        App.get().getDaoSession().getStageDao().deleteAll();
+        ObjectBox.get().boxFor(TaxonData.class).removeAll();
+        ObjectBox.get().boxFor(Stage.class).removeAll();
     }
 
     public void sendResult(String message) {

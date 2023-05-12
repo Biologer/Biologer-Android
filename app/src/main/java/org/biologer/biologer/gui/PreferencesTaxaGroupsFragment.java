@@ -16,24 +16,26 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
-import org.biologer.biologer.App;
-import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.Localisation;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
+import org.biologer.biologer.adapters.ArrayHelper;
+import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.sql.TaxaTranslationData;
-import org.biologer.biologer.sql.TaxaTranslationDataDao;
+import org.biologer.biologer.sql.TaxaTranslationData_;
 import org.biologer.biologer.sql.TaxonData;
-import org.biologer.biologer.sql.TaxonDataDao;
+import org.biologer.biologer.sql.TaxonData_;
 import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsDataDao;
+import org.biologer.biologer.sql.TaxonGroupsData_;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
-import org.biologer.biologer.sql.TaxonGroupsTranslationDataDao;
-import org.greenrobot.greendao.query.DeleteQuery;
-import org.greenrobot.greendao.query.QueryBuilder;
+import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 
 public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     private static final String TAG = "Biologer.PreferencesT";
@@ -69,9 +71,12 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         how_to_use_network = preferences.getString("auto_download", "wifi");
 
         // Query Parent groups from SQL
-        QueryBuilder<TaxonGroupsData> groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-        groups.where(TaxonGroupsDataDao.Properties.PrentId.isNull());
-        List<TaxonGroupsData> listParents = groups.list();
+        Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
+        Query<TaxonGroupsData> query = taxonGroupsDataBox
+                .query(TaxonGroupsData_.parentId.equal(0))
+                .build();
+        List<TaxonGroupsData> listParents = query.find();
+        query.close();
 
         for (int i = 0; i < listParents.size(); i++) {
             Log.d(TAG, "Parent group: " + listParents.get(i).getName());
@@ -79,12 +84,13 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             String name = listParents.get(i).getName();
 
             // Get the translation for Parent groups
-            QueryBuilder<TaxonGroupsTranslationData> groups_translation = App.get().getDaoSession().getTaxonGroupsTranslationDataDao().queryBuilder();
-            groups_translation.where(
-                    groups_translation.and(
-                            TaxonGroupsTranslationDataDao.Properties.Locale.eq(locale),
-                            TaxonGroupsTranslationDataDao.Properties.ViewGroupId.eq(id)));
-            List<TaxonGroupsTranslationData> listParentTranslation = groups_translation.list();
+            Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
+            Query<TaxonGroupsTranslationData> groups_translation = taxonGroupsTranslationDataBox
+                    .query(TaxonGroupsTranslationData_.locale.equal(locale)
+                            .and(TaxonGroupsTranslationData_.viewGroupId.equal(id)))
+                    .build();
+            List<TaxonGroupsTranslationData> listParentTranslation = groups_translation.find();
+            groups_translation.close();
 
             if (listParentTranslation.size() >= 1) {
                 String localised_name = listParentTranslation.get(0).getNative_name();
@@ -99,9 +105,12 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             }
 
             // List all children within parent
-            QueryBuilder<TaxonGroupsData> children = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-            children.where(TaxonGroupsDataDao.Properties.PrentId.eq(id));
-            List<TaxonGroupsData> listChildren = children.list();
+            Box<TaxonGroupsData> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsData.class);
+            Query<TaxonGroupsData> children = taxonGroupsDataBox1
+                    .query(TaxonGroupsData_.parentId.equal(id))
+                    .build();
+            List<TaxonGroupsData> listChildren = children.find();
+            children.close();
 
             for (int j = 0; j < listChildren.size(); j++) {
                 Long child_id = listChildren.get(j).getId();
@@ -109,13 +118,13 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 Log.d(TAG, "Child group: " + child_name + " (" + child_id + "); parent: " + name + " (" + id + ")");
 
                 // Get the translation for Children groups
-                QueryBuilder<TaxonGroupsTranslationData> children_translation = App.get().
-                        getDaoSession().getTaxonGroupsTranslationDataDao().queryBuilder();
-                children_translation.where(
-                        children_translation.and(
-                                TaxonGroupsTranslationDataDao.Properties.Locale.eq(locale),
-                                TaxonGroupsTranslationDataDao.Properties.ViewGroupId.eq(child_id)));
-                List<TaxonGroupsTranslationData> listChildTranslation = children_translation.list();
+                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
+                Query<TaxonGroupsTranslationData> children_translation = taxonGroupsTranslationDataBox1
+                        .query(TaxonGroupsTranslationData_.locale.equal(locale)
+                                .and(TaxonGroupsTranslationData_.viewGroupId.equal(child_id)))
+                        .build();
+                List<TaxonGroupsTranslationData> listChildTranslation = children_translation.find();
+                children_translation.close();
 
                 if (listChildTranslation.size() >= 1) {
                     String localised_child_name = listChildTranslation.get(0).getNative_name();
@@ -149,10 +158,9 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         preferenceScreen.addPreference(checkBoxes.get(last));
 
         // Query for taxa groups selection before the user selects anything
-        QueryBuilder<TaxonGroupsData> query_groups = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-        List<TaxonGroupsData> allTaxaGroups = query_groups.list();
+        List<TaxonGroupsData> allTaxaGroups = ObjectBox.get().boxFor(TaxonGroupsData.class).getAll();
         for (int i = 0; i < allTaxaGroups.size(); i++) {
-            int id = allTaxaGroups.get(i).getId().intValue();
+            int id = (int)allTaxaGroups.get(i).getId();
             Activity activity = getActivity();
             if (activity != null) {
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -171,25 +179,31 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             Log.d(TAG, "Item " + preference.getTitle() + " (" + id + ") clicked.");
 
             // Query to determine if this is a child or parent checkbox
-            QueryBuilder<TaxonGroupsData> query = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-            query.where(TaxonGroupsDataDao.Properties.Id.eq(id));
-            List<TaxonGroupsData> listSelected = query.list();
+            Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
+            Query<TaxonGroupsData> query = taxonGroupsDataBox
+                    .query(TaxonGroupsData_.id.equal(id))
+                    .build();
+            List<TaxonGroupsData> listSelected = query.find();
+            query.close();
 
             if (!listSelected.isEmpty()) {
-                if (listSelected.get(0).getPrentId() == null) {
+                if (listSelected.get(0).getParentId() == 0) {
                     Log.d(TAG, "This checkbox preference is a parent.");
 
                     // Save the value of the clicked parent
-                    String key_parent = listSelected.get(0).getId().toString();
+                    String key_parent = String.valueOf(listSelected.get(0).getId());
                     saveCheckedState(key_parent);
 
                     // Query to get all the children
-                    QueryBuilder<TaxonGroupsData> children = App.get().getDaoSession().getTaxonGroupsDataDao().queryBuilder();
-                    children.where(TaxonGroupsDataDao.Properties.PrentId.eq(id));
-                    List<TaxonGroupsData> listChildren = children.list();
+                    Box<TaxonGroupsData> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsData.class);
+                    Query<TaxonGroupsData> query1 = taxonGroupsDataBox1
+                            .query(TaxonGroupsData_.parentId.equal(id))
+                            .build();
+                    List<TaxonGroupsData> listChildren = query1.find();
+                    query1.close();
 
                     for (int i = 0; i < listChildren.size(); i++) {
-                        String key1 = listChildren.get(i).getId().toString();
+                        String key1 = String.valueOf(listChildren.get(i).getId());
                         saveCheckedOnParentChangeState(key_parent, key1);
                         CheckBoxPreference temp = findPreference(key1);
                         if (temp != null) {
@@ -202,7 +216,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     Log.d(TAG, "This checkbox preference is a child.");
 
                     // Save the value of the clicked child
-                    String key_child = listSelected.get(0).getId().toString();
+                    String key_child = String.valueOf(listSelected.get(0).getId());
                     saveCheckedState(key_child);
                 }
             }
@@ -267,11 +281,13 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
 
                     // Delete taxa
-                    final QueryBuilder<TaxonData> deleteTaxa = App.get().getDaoSession().getTaxonDataDao().queryBuilder();
-                    deleteTaxa.where(TaxonDataDao.Properties.Groups.like("%" + key + ";%"));
-                    List<TaxonData> deleteTaxaList = deleteTaxa.list();
-                    deleteTaxa.buildDelete().executeDeleteWithoutDetachingEntities();
-                    App.get().getDaoSession().clear();
+                    Box<TaxonData> taxonData = ObjectBox.get().boxFor(TaxonData.class);
+                    Query<TaxonData> query = taxonData
+                            .query(TaxonData_.groups.contains(key))
+                            .build();
+                    List<TaxonData> deleteTaxaList = query.find();
+                    taxonData.remove(deleteTaxaList);
+                    query.close();
 
                     List<Long> deleteThisIds = new ArrayList<>();
 
@@ -333,13 +349,17 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     }
 
     private void deleteTaxaTranslationFromSQL(List<Long> deleteThisIds) {
+
         Log.d(TAG, "List of taxa to be deleted: " + deleteThisIds.toString());
-        final DeleteQuery<TaxaTranslationData> deleteTaxaTranslation =
-                App.get().getDaoSession().getTaxaTranslationDataDao().queryBuilder()
-                        .where(TaxaTranslationDataDao.Properties.TaxonId.in(deleteThisIds))
-                        .buildDelete();
-        deleteTaxaTranslation.executeDeleteWithoutDetachingEntities();
-        App.get().getDaoSession().clear();
+        long[] delete_this_ids = ArrayHelper.listToArray(deleteThisIds);
+
+        Box<TaxaTranslationData> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationData.class);
+        Query<TaxaTranslationData> query = taxaTranslationDataBox
+                .query(TaxaTranslationData_.taxonId.oneOf(delete_this_ids))
+                .build();
+        List<TaxaTranslationData> deleteTaxaList = query.find();
+        taxaTranslationDataBox.remove(deleteTaxaList);
+        query.close();
     }
 
     @Override

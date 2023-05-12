@@ -1,8 +1,7 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Id;
-import org.greenrobot.greendao.annotation.Generated;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 /**
  * Created by brjovanovic on 2/22/2018.
@@ -11,8 +10,8 @@ import org.greenrobot.greendao.annotation.Generated;
 @Entity
 public class Entry {
 
-    @Id(autoincrement = true)
-    private Long id;
+    @Id
+    long id;
     private Long taxonId;
     private String taxonSuggestion;
     private String year;
@@ -33,16 +32,15 @@ public class Entry {
     private String slika1;
     private String slika2;
     private String slika3;
-    private String projectId;
+    private final String projectId;
     private String foundOn;
     private String data_licence;
-    private int image_licence;
+    private final int image_licence;
     private String time;
     private String habitat;
     private String observation_type_ids;
 
-    @Generated(hash = 935327969)
-    public Entry(Long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
+    public Entry(long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
             String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
             String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
             String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
@@ -76,13 +74,11 @@ public class Entry {
         this.habitat = habitat;
         this.observation_type_ids = observation_type_ids;
     }
-    @Generated(hash = 1759844922)
-    public Entry() {
-    }
-    public Long getId() {
+
+    public long getId() {
         return this.id;
     }
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
     public String getYear() {
@@ -190,9 +186,7 @@ public class Entry {
     public String getProjectId() {
         return this.projectId;
     }
-    public void setProjectId(String projectId) {
-        this.projectId = projectId;
-    }
+
     public String getFoundOn() {
         return this.foundOn;
     }
@@ -202,15 +196,11 @@ public class Entry {
     public String getData_licence() {
         return this.data_licence;
     }
-    public void setData_licence(String data_licence) {
-        this.data_licence = data_licence;
-    }
+
     public int getImage_licence() {
         return this.image_licence;
     }
-    public void setImage_licence(int image_licence) {
-        this.image_licence = image_licence;
-    }
+
     public String getTime() {
         return this.time;
     }

@@ -39,10 +39,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.opencsv.CSVWriter;
 
-import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.FetchTaxa;
@@ -112,14 +113,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
-        showLandingFragment();
+        addLandingFragment();
 
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
             Log.d(TAG, "No login token, falling back to login screen.");
-            showUserLoginScreen();
+            showUserLoginScreen(false);
         } else {
-
             // On the first run (after the user came from the login screen) show some help
             if (SettingsManager.isFirstRun()) {
                 Log.d(TAG, "This is first run of the program.");
@@ -128,19 +128,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 intent.putExtra("firstRun", true);
                 startActivity(intent);
             } else {
-
-                // TODO Remove this in a year
-                // Users from Serbia should switch to RS domain!
-                if (database_url.equals("https://biologer.org")) {
-                    database_url = "https://biologer.rs";
-                    SettingsManager.setDatabaseName("https://biologer.rs");
-                }
-
+                // If Landing activity is started for the first time in the session run all the online services
                 if (savedInstanceState == null) {
-
-                    // If Landing activity is started for the first time in the session run all the online services
-                    Log.d(TAG, "savedInstanceState is null");
-                    runServices(database_url);
+                    Log.d(TAG, "LandingActivity started for the first time (savedInstanceState is null).");
+                    if (database_url != null) {
+                        runServices(database_url);
+                    } else {
+                        fallbackToLoginScreen();
+                    }
 
                     // If the user did not start the EntryActivity show a short help
                     if (!SettingsManager.isEntryOpen()) {
@@ -150,10 +145,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
 
                 } else {
-                    // If the landing activity is restarted, just update GUI
-                    Log.d(TAG, "savedInstanceState is not null");
+                    // If the LandingActivity is restarted, just update GUI
+                    Log.d(TAG, "LandingActivity is already running (savedInstanceState is not null)");
                     if (!SettingsManager.isMailConfirmed()) {
-                        checkMailConfirmed(database_url);
+                        database_url = SettingsManager.getDatabaseName();
+                        if (database_url != null) {
+                            checkMailConfirmed(database_url);
+                        } else {
+                            fallbackToLoginScreen();
+                        }
                     }
                 }
             }
@@ -182,6 +182,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
     }
 
+    private void fallbackToLoginScreen() {
+        Log.e(TAG, "Something is wrong, the settings are lost...");
+        User.clearUserData(LandingActivity.this);
+        showUserLoginScreen(false);
+    }
+
     private void runServices(String database_url) {
         Log.d(TAG, "Running online services");
 
@@ -201,8 +207,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // Refresh the token if it expired
             if (expire_in >= System.currentTimeMillis() / 1000) {
                 Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
-                // Refresh token 11 months before the expiration
-                if (expire_in > ((System.currentTimeMillis() / 1000) + 28930000)) {
+                // Refresh token 6 months before the expiration
+                if (expire_in > ((System.currentTimeMillis() / 1000) + 15778800)) {
                     Log.d(TAG, "There is no need to refresh token now.");
                 } else {
                     Log.d(TAG, "Trying to refresh login token.");
@@ -292,9 +298,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void showUserLoginScreen() {
+    // Setting tokenExpired to true will send user to login screen, but without option
+    // to choose database. This is used only to refresh expired token.
+    private void showUserLoginScreen(boolean tokenExpired) {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-        intent.putExtra("refreshToken", "yes");
+        if (tokenExpired) {
+            intent.putExtra("refreshToken", "yes");
+        }
         startActivity(intent);
     }
 
@@ -317,8 +327,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                             String name = response.body().getData().getFullName();
                             int data_license = response.body().getData().getSettings().getDataLicense();
                             int image_license = response.body().getData().getSettings().getImageLicense();
-                            UserData user = new UserData(null, name, email, data_license, image_license);
-                            App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                            UserData user = new UserData(0, name, email, data_license, image_license);
+                            ObjectBox.get().boxFor(UserData.class).removeAll();
+                            ObjectBox.get().boxFor(UserData.class).put(user);
                             SettingsManager.setSqlUpdated(false);
                         } else {
                             alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
@@ -379,7 +390,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
                         Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
-                        showUserLoginScreen();
+                        showUserLoginScreen(true);
                     }
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -416,7 +427,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         for (int i = 0; i < fragmentList.size(); i++) {
             if (fragmentList.get(i) instanceof LandingFragment) {
                 Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
-                ArrayList<Entry> entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+                ArrayList<Entry> entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
                 ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
             }
         }
@@ -469,8 +480,22 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
                 new IntentFilter(UploadRecords.TASK_COMPLETED)
         );
+        // If the email is not confirmed we would like to check this every time the
+        // user restarts the LandingActivity
         if (!SettingsManager.isMailConfirmed()) {
-            checkMailConfirmed(SettingsManager.getDatabaseName());
+            String database = SettingsManager.getDatabaseName();
+            if (database != null) {
+                // Check mail should not be called if the user is not logged in.
+                // The user is not logged in if the SQL UserData is empty.
+                List<UserData> userData = ObjectBox.get().boxFor(UserData.class).getAll();
+                if (!userData.isEmpty()) {
+                    checkMailConfirmed(database);
+                }
+            }
+            // It seems that the user is logged out, thus we need to go to the login screen
+            else {
+                showUserLoginScreen(false);
+            }
         }
     }
 
@@ -621,7 +646,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (!SettingsManager.isMailConfirmed()) {
                 textView1.setVisibility(View.VISIBLE);
             }
-            showLandingFragment();
+            addLandingFragment();
         }
         if (id == R.id.nav_help) {
             startActivity(new Intent(LandingActivity.this, IntroActivity.class));
@@ -640,7 +665,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return true;
     }
 
-    private void showLandingFragment() {
+    private void addLandingFragment() {
         Log.d(TAG, "Showing LandingFragment");
         Fragment landingFragment = new LandingFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -793,7 +818,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
         writer.writeNext(title);
 
-        ArrayList<Entry> entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+        ArrayList<Entry> entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
         String u = getUserName();
 
         for (int i = 0; i < entries.size(); i++) {
@@ -883,7 +908,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void uploadRecords() {
-        if (App.get().getDaoSession().getEntryDao().count() != 0) {
+        if (ObjectBox.get().boxFor(Entry.class).getAll().size() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -982,7 +1007,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Get the data from GreenDao database
     private UserData getLoggedUser() {
         // Get the user data from a GreenDao database
-        List<UserData> userdata_list = App.get().getDaoSession().getUserDataDao().loadAll();
+        List<UserData> userdata_list = ObjectBox.get().boxFor(UserData.class).getAll();
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             return null;
@@ -1014,7 +1039,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     public static void setMenuIconVisibility() {
-        long numberOfItems = App.get().getDaoSession().getEntryDao().count();
+        long numberOfItems = ObjectBox.get().boxFor(Entry.class).getAll().size();
         Log.d(TAG, "There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {

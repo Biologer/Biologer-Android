@@ -1,8 +1,7 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Id;
-import org.greenrobot.greendao.annotation.Generated;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 /**
  * Created by brjovanovic on 2/23/2018.
@@ -10,25 +9,23 @@ import org.greenrobot.greendao.annotation.Generated;
 @Entity
 public class Stage {
 
-    @Id (autoincrement = true)
-    private Long id;
+    @Id
+    long id;
     private String name;
-    private long stageId;
+    private final long stageId;
     private long taxonId;
-    @Generated(hash = 1764394544)
-    public Stage(Long id, String name, long stageId, long taxonId) {
+
+    public Stage(long id, String name, long stageId, long taxonId) {
         this.id = id;
         this.name = name;
         this.stageId = stageId;
         this.taxonId = taxonId;
     }
-    @Generated(hash = 709184509)
-    public Stage() {
-    }
-    public Long getId() {
+
+    public long getId() {
         return this.id;
     }
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
     public String getName() {
@@ -40,9 +37,7 @@ public class Stage {
     public long getStageId() {
         return this.stageId;
     }
-    public void setStageId(long stageId) {
-        this.stageId = stageId;
-    }
+
     public long getTaxonId() {
         return this.taxonId;
     }

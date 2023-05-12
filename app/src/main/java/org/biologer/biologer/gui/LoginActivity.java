@@ -41,8 +41,8 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.textfield.TextInputLayout;
 
-import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.GetTaxaGroups;
@@ -55,6 +55,7 @@ import org.biologer.biologer.sql.UserData;
 import java.util.Arrays;
 import java.util.List;
 
+import io.objectbox.Box;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -104,12 +105,11 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Database URL written in the settings is: " + database_name);
 
         // Just display the username in order to make app nice
-        List<UserData> user = App.get().getDaoSession().getUserDataDao().loadAll();
+        List<UserData> user = ObjectBox.get().boxFor(UserData.class).getAll();
         if (!user.isEmpty()) {
             Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
+            // Just set the user email so that is does not need to be written once again
             et_username.setText(user.get(0).getEmail());
-            // Just display anything, no mather what...
-            et_password.setText("");
         }
 
         // Fill in the data for database list
@@ -287,7 +287,7 @@ public class LoginActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             if (bundle.getString("refreshToken") != null) {
-                Log.d(TAG, "It looks like login token is not correct. We must use the password.");
+                Log.d(TAG, "It looks like login token is expired. We must use the password.");
                 registerTextView.setText("");
                 LinearLayout linearLayout = findViewById(R.id.linearlayout_databases);
                 linearLayout.setVisibility(View.GONE);
@@ -497,8 +497,10 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         // Write data in SQL
-                        UserData user = new UserData(null, name, email, data_license, image_license);
-                        App.get().getDaoSession().getUserDataDao().insertOrReplace(user);
+                        UserData user = new UserData(0, name, email, data_license, image_license);
+                        Box<UserData> userDataBox = ObjectBox.get().boxFor(UserData.class);
+                        userDataBox.removeAll();
+                        userDataBox.put(user);
                     }
 
                     startLandingActivity();

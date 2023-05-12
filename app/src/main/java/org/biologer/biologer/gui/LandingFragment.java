@@ -4,14 +4,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-
 import android.os.CountDownTimer;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -24,19 +16,26 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.biologer.biologer.App;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.EntriesList;
 import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.sql.Entry;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import io.objectbox.Box;
 
 public class LandingFragment extends Fragment {
 
@@ -48,7 +47,7 @@ public class LandingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
         // Load the entries from the database
-        entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+        entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
         // If there are no entries display the empty list
         if (entries == null) {entries = new ArrayList<>();}
         // If there are entries display the list with taxa
@@ -100,12 +99,12 @@ public class LandingFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        EventBus.getDefault().register(this);
+        //EventBus.getDefault().register(this);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    //@Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(DeleteEntryFromList deleteEntryFromList) {
-        entriesList.addAll(App.get().getDaoSession().getEntryDao().loadAll(), true);
+        entriesList.addAll(ObjectBox.get().boxFor(Entry.class).getAll(), true);
     }
 
     void updateEntries(ArrayList<Entry> entries_list) {
@@ -133,10 +132,14 @@ public class LandingFragment extends Fragment {
         if (item.getItemId() == R.id.delete) {
             // Get the clicked item from the listview
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-            int index = info.position;
+            int index = 0;
+            if (info != null) {
+                index = info.position;
+            }
 
             // Delete the entry
-            App.get().getDaoSession().getEntryDao().deleteByKey(entriesList.getItem(index).getId());
+            Box<Entry> entryBox = ObjectBox.get().boxFor(Entry.class);
+            entryBox.remove(entriesList.getItem(index).getId());
             entriesList.removeItem(index);
             int entryNo = index + 1;
             Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
@@ -154,13 +157,13 @@ public class LandingFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        EventBus.getDefault().unregister(this);
+        //EventBus.getDefault().unregister(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        entries = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+        entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
         entriesList.addAll(entries, true);
     }
 
@@ -172,7 +175,7 @@ public class LandingFragment extends Fragment {
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
                         Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
-                        App.get().getDaoSession().getEntryDao().deleteAll();
+                        ObjectBox.get().boxFor(Entry.class).removeAll();
                         entriesList.removeAll();
                         LandingActivity.setMenuIconVisibility();
                     })

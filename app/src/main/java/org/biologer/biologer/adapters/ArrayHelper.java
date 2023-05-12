@@ -65,4 +65,16 @@ public class ArrayHelper {
         Log.d(TAG, "Array " + Arrays.toString(array) + " is compared against number " + key + " and returned " + value);
         return value;
     }
+
+    public static long[] listToArray(List<Long> list) {
+        if (list != null) {
+            long[] result = new long[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                result[i] = list.get(i);
+            }
+            return result;
+        }
+        return null;
+    }
+
 }

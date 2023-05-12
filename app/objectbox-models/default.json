@@ -1,0 +1,438 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:9029898421976646848",
+      "lastPropertyId": "28:2191470310378506177",
+      "name": "Entry",
+      "properties": [
+        {
+          "id": "1:5276289650398004881",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8694275973078920175",
+          "name": "taxonId",
+          "type": 6
+        },
+        {
+          "id": "3:4449212386668452683",
+          "name": "taxonSuggestion",
+          "type": 9
+        },
+        {
+          "id": "4:7555150197482043845",
+          "name": "year",
+          "type": 9
+        },
+        {
+          "id": "5:2343088151409675062",
+          "name": "month",
+          "type": 9
+        },
+        {
+          "id": "6:596033128096402061",
+          "name": "day",
+          "type": 9
+        },
+        {
+          "id": "7:8875756388479514173",
+          "name": "comment",
+          "type": 9
+        },
+        {
+          "id": "8:2179203861929962947",
+          "name": "noSpecimens",
+          "type": 5
+        },
+        {
+          "id": "9:2606752228024659134",
+          "name": "sex",
+          "type": 9
+        },
+        {
+          "id": "10:8689218445577550390",
+          "name": "stage",
+          "type": 6
+        },
+        {
+          "id": "11:5656282849533096619",
+          "name": "atlas_code",
+          "type": 6
+        },
+        {
+          "id": "12:4000320656088896156",
+          "name": "deadOrAlive",
+          "type": 9
+        },
+        {
+          "id": "13:6697442148119000467",
+          "name": "causeOfDeath",
+          "type": 9
+        },
+        {
+          "id": "14:2411163842548865711",
+          "name": "lattitude",
+          "type": 8
+        },
+        {
+          "id": "15:407828279773022396",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "16:5200589062963007657",
+          "name": "accuracy",
+          "type": 8
+        },
+        {
+          "id": "17:8773954703664699019",
+          "name": "elevation",
+          "type": 8
+        },
+        {
+          "id": "18:6227915402160627625",
+          "name": "location",
+          "type": 9
+        },
+        {
+          "id": "19:364104817282522581",
+          "name": "slika1",
+          "type": 9
+        },
+        {
+          "id": "20:1196337274919632285",
+          "name": "slika2",
+          "type": 9
+        },
+        {
+          "id": "21:3472941778036053238",
+          "name": "slika3",
+          "type": 9
+        },
+        {
+          "id": "22:8504858392802904725",
+          "name": "projectId",
+          "type": 9
+        },
+        {
+          "id": "23:1442422600210934300",
+          "name": "foundOn",
+          "type": 9
+        },
+        {
+          "id": "24:4670450044079740724",
+          "name": "data_licence",
+          "type": 9
+        },
+        {
+          "id": "25:4868464334570464066",
+          "name": "image_licence",
+          "type": 5
+        },
+        {
+          "id": "26:2087877987649703949",
+          "name": "time",
+          "type": 9
+        },
+        {
+          "id": "27:4637118835788256595",
+          "name": "habitat",
+          "type": 9
+        },
+        {
+          "id": "28:2191470310378506177",
+          "name": "observation_type_ids",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:7029840033895268922",
+      "lastPropertyId": "7:1495192093561768685",
+      "name": "ObservationTypesData",
+      "properties": [
+        {
+          "id": "1:1659633250605408130",
+          "name": "localeId",
+          "type": 6
+        },
+        {
+          "id": "2:8172012686504148340",
+          "name": "observationId",
+          "type": 6
+        },
+        {
+          "id": "3:4668600318228491451",
+          "name": "slug",
+          "type": 9
+        },
+        {
+          "id": "4:732210800938442495",
+          "name": "locale",
+          "type": 9
+        },
+        {
+          "id": "5:9126921178331935787",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "7:1495192093561768685",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:8151310561400040870",
+      "lastPropertyId": "4:4125095260036966538",
+      "name": "Stage",
+      "properties": [
+        {
+          "id": "1:5292944294585659716",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7638654984569800158",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1685943708696752887",
+          "name": "stageId",
+          "type": 6
+        },
+        {
+          "id": "4:4125095260036966538",
+          "name": "taxonId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:7330716352569191141",
+      "lastPropertyId": "7:5494961782447980754",
+      "name": "TaxaTranslationData",
+      "properties": [
+        {
+          "id": "1:7893819210323113975",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:1217177827747145265",
+          "name": "taxonId",
+          "type": 6
+        },
+        {
+          "id": "3:6164566118812999355",
+          "name": "locale",
+          "type": 9
+        },
+        {
+          "id": "4:272971065870694130",
+          "name": "nativeName",
+          "type": 9
+        },
+        {
+          "id": "5:5881650995362657029",
+          "name": "latinName",
+          "type": 9
+        },
+        {
+          "id": "6:8107427188644751657",
+          "name": "useAtlasCode",
+          "type": 1
+        },
+        {
+          "id": "7:5494961782447980754",
+          "name": "description",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:6601372733143688461",
+      "lastPropertyId": "10:2526809720273104257",
+      "name": "TaxonData",
+      "properties": [
+        {
+          "id": "1:4157062093544325225",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:8381819956832434",
+          "name": "parentId",
+          "type": 6
+        },
+        {
+          "id": "3:8798082488060319702",
+          "name": "latinName",
+          "type": 9
+        },
+        {
+          "id": "4:7001561532474188298",
+          "name": "rank",
+          "type": 9
+        },
+        {
+          "id": "5:8142681807909971016",
+          "name": "rankLevel",
+          "type": 6
+        },
+        {
+          "id": "6:1722138533598190182",
+          "name": "speciesAuthor",
+          "type": 9
+        },
+        {
+          "id": "7:1981456626290040547",
+          "name": "restricted",
+          "type": 1
+        },
+        {
+          "id": "8:4583124867627442625",
+          "name": "useAtlasCode",
+          "type": 1
+        },
+        {
+          "id": "9:766232412474637668",
+          "name": "ancestorNames",
+          "type": 9
+        },
+        {
+          "id": "10:2526809720273104257",
+          "name": "groups",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:5874353726160023535",
+      "lastPropertyId": "5:2656890142459516351",
+      "name": "TaxonGroupsData",
+      "properties": [
+        {
+          "id": "1:2380575649736147577",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "3:7208724713108848558",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:838638567961000595",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "5:2656890142459516351",
+          "name": "parentId",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:4160714141529379114",
+      "lastPropertyId": "5:538337462075283703",
+      "name": "TaxonGroupsTranslationData",
+      "properties": [
+        {
+          "id": "1:7015557323909119318",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:663772822347069923",
+          "name": "viewGroupId",
+          "type": 6
+        },
+        {
+          "id": "3:2394783495475227943",
+          "name": "locale",
+          "type": 9
+        },
+        {
+          "id": "4:1019653800727113008",
+          "name": "native_name",
+          "type": 9
+        },
+        {
+          "id": "5:538337462075283703",
+          "name": "description",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "8:2032654077862712983",
+      "lastPropertyId": "5:605946053329535286",
+      "name": "UserData",
+      "properties": [
+        {
+          "id": "1:3285987025211640439",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:832850055466290802",
+          "name": "username",
+          "type": 9
+        },
+        {
+          "id": "3:1829170352348759169",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "4:8824941153560599562",
+          "name": "data_license",
+          "type": 5
+        },
+        {
+          "id": "5:605946053329535286",
+          "name": "image_license",
+          "type": 5
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "8:2032654077862712983",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [
+    2589422170797070929,
+    3662998929127907536
+  ],
+  "retiredRelationUids": [],
+  "version": 1
+}

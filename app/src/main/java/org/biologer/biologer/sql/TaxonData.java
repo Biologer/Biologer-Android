@@ -1,11 +1,7 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Convert;
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Generated;
-import org.greenrobot.greendao.annotation.Id;
-
-import java.util.List;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 /**
  * Created by Miloš Popović on 2.3.2019.
@@ -13,22 +9,21 @@ import java.util.List;
 @Entity
 public class TaxonData {
 
-    @Id (autoincrement = true)
-    private Long Id;
-    private Long parentId;
-    private String latinName;
-    private String rank;
-    private Long rankLevel;
-    private String speciesAuthor;
-    private boolean restricted;
-    private boolean useAtlasCode;
-    private String ancestorNames;
+    @Id(assignable = true)
+    long id;
+    private long parentId;
+    private final String latinName;
+    private final String rank;
+    private final long rankLevel;
+    private final String speciesAuthor;
+    private final boolean restricted;
+    private final boolean useAtlasCode;
+    private final String ancestorNames;
     private String groups;
 
-    @Generated(hash = 605078756)
-    public TaxonData(Long Id, Long parentId, String latinName, String rank, Long rankLevel, String speciesAuthor,
+    public TaxonData(long id, long parentId, String latinName, String rank, long rankLevel, String speciesAuthor,
             boolean restricted, boolean useAtlasCode, String ancestorNames, String groups) {
-        this.Id = Id;
+        this.id = id;
         this.parentId = parentId;
         this.latinName = latinName;
         this.rank = rank;
@@ -39,14 +34,12 @@ public class TaxonData {
         this.ancestorNames = ancestorNames;
         this.groups = groups;
     }
-    @Generated(hash = 345389106)
-    public TaxonData() {
-    }
-    public Long getParentId() {
+
+    public long getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParentId(long parentId) {
         this.parentId = parentId;
     }
 
@@ -54,68 +47,36 @@ public class TaxonData {
         return latinName;
     }
 
-    public void setLatinName(String latinName) {
-        this.latinName = latinName;
-    }
-
     public String getRank() {
         return rank;
     }
 
-    public void setRank(String rank) {
-        this.rank = rank;
-    }
-
-    public Long getRankLevel() {
+    public long getRankLevel() {
         return rankLevel;
-    }
-
-    public void setRankLevel(Long rankLevel) {
-        this.rankLevel = rankLevel;
     }
 
     public String getSpeciesAuthor() {
         return speciesAuthor;
     }
 
-    public void setSpeciesAuthor(String speciesAuthor) {
-        this.speciesAuthor = speciesAuthor;
-    }
-
     public boolean isRestricted() {
         return restricted;
-    }
-
-    public void setRestricted(boolean restricted) {
-        this.restricted = restricted;
     }
 
     public boolean isUseAtlasCode() {
         return useAtlasCode;
     }
 
-    public void setUseAtlasCode(boolean useAtlasCode) {
-        this.useAtlasCode = useAtlasCode;
-    }
-
     public String getAncestorNames() {
         return ancestorNames;
     }
 
-    public void setAncestorNames(String ancestorNames) {
-        this.ancestorNames = ancestorNames;
+    public long getId() {
+        return id;
     }
 
-    public Long getId() {
-        return Id;
-    }
-
-    public void setId(Long id) {
-        Id = id;
-    }
-
-    public boolean getRestricted() {
-        return this.restricted;
+    public void setId(long id) {
+        id = id;
     }
 
     public boolean getUseAtlasCode() {
@@ -131,4 +92,3 @@ public class TaxonData {
     }
 
 }
-

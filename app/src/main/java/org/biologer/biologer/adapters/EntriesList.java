@@ -1,5 +1,7 @@
 package org.biologer.biologer.adapters;
 
+import static org.biologer.biologer.R.id.slika;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,17 +12,18 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
-import org.biologer.biologer.App;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.Entry;
 import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.sql.StageDao;
+import org.biologer.biologer.sql.Stage_;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.biologer.biologer.R.id.slika;
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 
 /**
  * Created by brjovanovic on 2/24/2018.
@@ -99,8 +102,16 @@ public class EntriesList extends BaseAdapter {
 
         if (taxon_entry.getStage() != null) {
             long i = taxon_entry.getStage();
-            Stage s = App.get().getDaoSession().getStageDao().queryBuilder().where(StageDao.Properties.StageId.eq(i)).limit(1).unique();
-            viewHolder.stage.setText(StageAndSexLocalization.getStageLocale(mContext, s.getName()));
+            Box<Stage> stageBox = ObjectBox.get().boxFor(Stage.class);
+
+            Query<Stage> query = stageBox
+                    .query(Stage_.stageId.equal(i))
+                    .build();
+            List<Stage> results = query.find();
+            String s = results.get(0).getName();
+            query.close();
+            viewHolder.stage.setText(StageAndSexLocalization.getStageLocale(mContext, s));
+
         } else {
             viewHolder.stage.setText("");
         }

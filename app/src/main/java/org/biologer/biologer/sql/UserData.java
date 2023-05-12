@@ -1,8 +1,7 @@
 package org.biologer.biologer.sql;
 
-import org.greenrobot.greendao.annotation.Entity;
-import org.greenrobot.greendao.annotation.Id;
-import org.greenrobot.greendao.annotation.Generated;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
 
 /**
  * Created by brjovanovic on 3/20/2018.
@@ -10,28 +9,26 @@ import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
 public class UserData {
-    @org.greenrobot.greendao.annotation.Id
-    private Long Id;
+    @Id
+    long id;
     private String username;
     private String email;
     private int data_license;
     private int image_license;
-    @Generated(hash = 784653985)
-    public UserData(Long Id, String username, String email, int data_license, int image_license) {
-        this.Id = Id;
+
+    public UserData(long id, String username, String email, int data_license, int image_license) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.data_license = data_license;
         this.image_license = image_license;
     }
-    @Generated(hash = 1838565001)
-    public UserData() {
+
+    public long getId() {
+        return this.id;
     }
-    public Long getId() {
-        return this.Id;
-    }
-    public void setId(Long Id) {
-        this.Id = Id;
+    public void setId(long id) {
+        this.id = id;
     }
     public String getUsername() {
         return this.username;

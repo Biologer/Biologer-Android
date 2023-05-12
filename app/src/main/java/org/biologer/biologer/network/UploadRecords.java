@@ -20,20 +20,18 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.biologer.biologer.App;
+import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
-import org.biologer.biologer.bus.DeleteEntryFromList;
 import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.APIEntryBirdloger;
 import org.biologer.biologer.network.JSON.APIEntryPhotos;
-import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
-import org.biologer.biologer.sql.Entry;
-import org.biologer.biologer.network.JSON.UploadFileResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
-import org.greenrobot.eventbus.EventBus;
+import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
+import org.biologer.biologer.network.JSON.UploadFileResponse;
+import org.biologer.biologer.sql.Entry;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -96,7 +94,7 @@ public class UploadRecords extends Service {
                     case ACTION_START:
                         // Do something...
                         Log.d(TAG, "Starting upload process…");
-                        entryList = (ArrayList<Entry>) App.get().getDaoSession().getEntryDao().loadAll();
+                        entryList = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
                         totalEntries = entryList.size();
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
                         notificationInitiate();
@@ -173,7 +171,8 @@ public class UploadRecords extends Service {
         // When all entries are uploaded
         if (entryList.size() == 0) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
-            App.get().getDaoSession().getEntryDao().deleteAll();
+            ObjectBox.get().boxFor(Entry.class).removeAll();
+            //App.get().getDaoSession().getEntryDao().deleteAll();
             // Stop the foreground service and update the notification
             stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
                     getString(R.string.notify_desc_entries_uploaded));
@@ -290,7 +289,7 @@ public class UploadRecords extends Service {
         }
 
         Call<APIEntryResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<APIEntryResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
 
@@ -310,11 +309,13 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        App.get().getDaoSession().getEntryDao().delete(entry);
+                        ObjectBox.get().boxFor(Entry.class).remove(entry);
+                        //App.get().getDaoSession().getEntryDao().delete(entry);
                         entryList.remove(0);
-                        EventBus.getDefault().post(new DeleteEntryFromList());
+                        // TODO get those eventbus stuff back!
+                        //EventBus.getDefault().post(new DeleteEntryFromList());
                         // Delete image files from internal storage
-                        for (String filename: filenames) {
+                        for (String filename : filenames) {
                             if (filename != null) {
                                 final File file = new File(getFilesDir(), filename);
                                 boolean b = file.delete();
@@ -424,7 +425,7 @@ public class UploadRecords extends Service {
         }
 
         Call<APIEntryResponseBirdloger> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<APIEntryResponseBirdloger>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Response<APIEntryResponseBirdloger> response) {
 
@@ -444,11 +445,13 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        App.get().getDaoSession().getEntryDao().delete(entry);
+                        ObjectBox.get().boxFor(Entry.class).remove(entry);
+                        //App.get().getDaoSession().getEntryDao().delete(entry);
                         entryList.remove(0);
-                        EventBus.getDefault().post(new DeleteEntryFromList());
+                        // TODO get the eventbus
+                        //EventBus.getDefault().post(new DeleteEntryFromList());
                         // Delete image files from internal storage
-                        for (String filename: filenames) {
+                        for (String filename : filenames) {
                             if (filename != null) {
                                 final File file = new File(getFilesDir(), filename);
                                 boolean b = file.delete();
@@ -483,7 +486,7 @@ public class UploadRecords extends Service {
 
         Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
 
-        call.enqueue(new Callback<UploadFileResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
