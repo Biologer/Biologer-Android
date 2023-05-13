@@ -8,7 +8,7 @@ import io.objectbox.annotation.Id;
  */
 
 @Entity
-public class Entry {
+public class EntryDb {
 
     @Id
     long id;
@@ -40,11 +40,11 @@ public class Entry {
     private String habitat;
     private String observation_type_ids;
 
-    public Entry(long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
-            String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
-            String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
-            String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
-            String data_licence, int image_licence, String time, String habitat, String observation_type_ids) {
+    public EntryDb(long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
+                   String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
+                   String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
+                   String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
+                   String data_licence, int image_licence, String time, String habitat, String observation_type_ids) {
         this.id = id;
         this.taxonId = taxonId;
         this.taxonSuggestion = taxonSuggestion;

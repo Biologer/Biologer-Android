@@ -10,12 +10,14 @@ import org.biologer.biologer.network.JSON.RegisterResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
+import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
 
 import okhttp3.MultipartBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -98,6 +100,10 @@ public interface RetrofitService {
     @Headers({"Accept: application/json"})
     @GET("/api/my/profile")
     Call<UserDataResponse> getUserData();
+
+    @Headers({"Accept: application/json"})
+    @GET("/api/my/unread-notifications")
+    Call<UnreadNotificationsResponse> getUnreadNotifications();
 
     @Headers({"Accept: application/json"})
     @GET("/api/view-groups")

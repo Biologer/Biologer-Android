@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
-import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.Stage_;
 
@@ -31,14 +31,14 @@ import io.objectbox.query.Query;
 
 public class EntriesList extends BaseAdapter {
     private final Context mContext;
-    private final ArrayList<Entry> mList;
+    private final ArrayList<EntryDb> mList;
 
-    public EntriesList(Context mContext, ArrayList<Entry> mList) {
+    public EntriesList(Context mContext, ArrayList<EntryDb> mList) {
         this.mContext = mContext;
         this.mList = mList;
     }
 
-    public void addAll(List<Entry> list, boolean clean) {
+    public void addAll(List<EntryDb> list, boolean clean) {
         if (clean)
             mList.clear();
         // Reorder list to display new entries at the top
@@ -64,7 +64,7 @@ public class EntriesList extends BaseAdapter {
     }
 
     @Override
-    public Entry getItem(int position) {
+    public EntryDb getItem(int position) {
         return mList.get(position);
     }
 
@@ -93,7 +93,7 @@ public class EntriesList extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        Entry taxon_entry = getItem(position);
+        EntryDb taxon_entry = getItem(position);
         if (taxon_entry.getTaxonSuggestion() != null) {
             viewHolder.taxon.setText(taxon_entry.getTaxonSuggestion());
         } else {

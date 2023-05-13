@@ -71,8 +71,8 @@ import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
-import org.biologer.biologer.sql.Entry;
-import org.biologer.biologer.sql.Entry_;
+import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.ObservationTypesData_;
 import org.biologer.biologer.sql.Stage;
@@ -121,7 +121,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private String image1, image2, image3;
     private Uri current_image;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private List<Entry> currentItem;
+    private List<EntryDb> currentItem;
     private String locale_script = "en";
     Calendar calendar;
     SimpleDateFormat simpleDateFormat;
@@ -660,9 +660,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void fillExistingEntry() {
 
         long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
-        Box<Entry> entry = ObjectBox.get().boxFor(Entry.class);
-        Query<Entry> query = entry
-                .query(Entry_.id.equal(existing_entry_id))
+        Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+        Query<EntryDb> query = entry
+                .query(EntryDb_.id.equal(existing_entry_id))
                 .build();
         currentItem = query.find();
         query.close();
@@ -1173,7 +1173,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
-            Entry entry1 = new Entry(0, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
+            EntryDb entryDb1 = new EntryDb(0, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
                     String.valueOf(!checkBox_dead.isChecked()), deathComment,
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.latitude)),
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.longitude)),
@@ -1181,8 +1181,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
                     location, image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
-            Box<Entry> entry = ObjectBox.get().boxFor(Entry.class);
-            entry.put(entry1);
+            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+            entry.put(entryDb1);
         }
 
         // If the entry exist already
@@ -1210,7 +1210,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             // Now just update the database with new data...
             // TODO we need to update, not to create new entry!!!
-            Box<Entry> entry = ObjectBox.get().boxFor(Entry.class);
+            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
             entry.put(currentItem);
         }
         Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();

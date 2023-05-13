@@ -53,12 +53,15 @@ import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
+import org.biologer.biologer.network.JSON.UnreadNotification;
+import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UserData;
 
 import java.io.FileNotFoundException;
@@ -247,6 +250,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     uploadRecords();
                 }
                 updateTaxa();
+                updateNotifications(database_url);
             } else {
                 checkNotificationPermission();
             }
@@ -254,6 +258,48 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
+    }
+
+    private void updateNotifications(String database_url) {
+        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(database_url).getUnreadNotifications();
+        unreadNotificationsResponseCall.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        int size = response.body().getMeta().getTotal();
+                        // Check if the number of notifications in local SQL equals the number of notifications online.
+                        // If not synchronise, other-ways assume that nothing changed since the last time.
+                        if (size >= 1 && size != ObjectBox.get().boxFor(UnreadNotificationsDb.class).count()) {
+                            Log.d(TAG, "Updating notifications.");
+                            // Clean the SQL database
+                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
+                            UnreadNotificationsDb[] notificationForSQL = new UnreadNotificationsDb[size];
+                            for (int i = 0; i < size; i++) {
+                                UnreadNotification unreadNotification = response.body().getData().get(i);
+                                notificationForSQL[i] = new UnreadNotificationsDb(
+                                        0, unreadNotification.getId(),
+                                        unreadNotification.getType(),
+                                        unreadNotification.getNotifiable_type(),
+                                        unreadNotification.getData().getField_observation_id(),
+                                        unreadNotification.getData().getCauser_name(),
+                                        unreadNotification.getData().getCurator_name(),
+                                        unreadNotification.getData().getTaxon_name(),
+                                        unreadNotification.getUpdated_at());
+                            }
+                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
+                        } else {
+                            Log.d(TAG, "No need to update notifications.");
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
+            }
+        });
     }
 
     private void checkMailConfirmed(String database_url) {
@@ -427,7 +473,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         for (int i = 0; i < fragmentList.size(); i++) {
             if (fragmentList.get(i) instanceof LandingFragment) {
                 Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
-                ArrayList<Entry> entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
+                ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
                 ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
             }
         }
@@ -818,38 +864,38 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
         writer.writeNext(title);
 
-        ArrayList<Entry> entries = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
+        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
         String u = getUserName();
 
         for (int i = 0; i < entries.size(); i++) {
-            Entry entry = entries.get(i);
+            EntryDb entryDb = entries.get(i);
             String[] row = {
-                    entry.getTaxonSuggestion(),
-                    entry.getYear(),
-                    entry.getMonth(),
-                    entry.getDay(),
-                    String.format(Locale.ENGLISH, "%.6f", entry.getLattitude()),
-                    String.format(Locale.ENGLISH, "%.6f", entry.getLongitude()),
-                    String.format(Locale.ENGLISH, "%.0f", entry.getElevation()),
-                    String.format(Locale.ENGLISH, "%.0f", entry.getAccuracy()),
-                    entry.getLocation(),
-                    entry.getTime(),
-                    entry.getComment(),
-                    translateFoundDead(entry.getDeadOrAlive()),
-                    entry.getCauseOfDeath(),
+                    entryDb.getTaxonSuggestion(),
+                    entryDb.getYear(),
+                    entryDb.getMonth(),
+                    entryDb.getDay(),
+                    String.format(Locale.ENGLISH, "%.6f", entryDb.getLattitude()),
+                    String.format(Locale.ENGLISH, "%.6f", entryDb.getLongitude()),
+                    String.format(Locale.ENGLISH, "%.0f", entryDb.getElevation()),
+                    String.format(Locale.ENGLISH, "%.0f", entryDb.getAccuracy()),
+                    entryDb.getLocation(),
+                    entryDb.getTime(),
+                    entryDb.getComment(),
+                    translateFoundDead(entryDb.getDeadOrAlive()),
+                    entryDb.getCauseOfDeath(),
                     u,
                     u,
-                    StageAndSexLocalization.getSexLocale(this, entry.getSex()),
-                    removeNullInteger(entry.getNoSpecimens()),
-                    entry.getProjectId(),
-                    entry.getHabitat(),
-                    entry.getFoundOn(),
-                    StageAndSexLocalization.getStageLocaleFromID(this, entry.getStage()),
-                    entry.getTaxonSuggestion(),
+                    StageAndSexLocalization.getSexLocale(this, entryDb.getSex()),
+                    removeNullInteger(entryDb.getNoSpecimens()),
+                    entryDb.getProjectId(),
+                    entryDb.getHabitat(),
+                    entryDb.getFoundOn(),
+                    StageAndSexLocalization.getStageLocaleFromID(this, entryDb.getStage()),
+                    entryDb.getTaxonSuggestion(),
                     getString(R.string.dataset),
-                    translateLicence(entry.getData_licence()),
-                    translateLicence(String.valueOf(entry.getImage_licence())),
-                    removeNullLong(entry.getAtlas_code())
+                    translateLicence(entryDb.getData_licence()),
+                    translateLicence(String.valueOf(entryDb.getImage_licence())),
+                    removeNullLong(entryDb.getAtlas_code())
             };
             writer.writeNext(row);
         }
@@ -908,7 +954,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void uploadRecords() {
-        if (ObjectBox.get().boxFor(Entry.class).getAll().size() != 0) {
+        if (ObjectBox.get().boxFor(EntryDb.class).getAll().size() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -1039,7 +1085,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     public static void setMenuIconVisibility() {
-        long numberOfItems = ObjectBox.get().boxFor(Entry.class).getAll().size();
+        long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).getAll().size();
         Log.d(TAG, "There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {

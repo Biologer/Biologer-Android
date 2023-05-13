@@ -332,7 +332,7 @@
           "id": "1:2380575649736147577",
           "name": "id",
           "type": 6,
-          "flags": 1
+          "flags": 129
         },
         {
           "id": "3:7208724713108848558",
@@ -419,19 +419,84 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "10:8101485209871029404",
+      "lastPropertyId": "9:7704559419516114504",
+      "name": "UnreadNotificationsDb",
+      "properties": [
+        {
+          "id": "1:7797909397233551802",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1842976666877203180",
+          "name": "realId",
+          "type": 9
+        },
+        {
+          "id": "3:100925584827559470",
+          "name": "type",
+          "type": 9
+        },
+        {
+          "id": "4:4898769785760562094",
+          "name": "notifiableType",
+          "type": 9
+        },
+        {
+          "id": "5:1515877770689320603",
+          "name": "fieldObservationId",
+          "type": 5
+        },
+        {
+          "id": "6:215902047563553118",
+          "name": "causerName",
+          "type": 9
+        },
+        {
+          "id": "7:8360650908915817830",
+          "name": "taxonName",
+          "type": 9
+        },
+        {
+          "id": "8:8887678132527053007",
+          "name": "updatedAt",
+          "type": 9
+        },
+        {
+          "id": "9:7704559419516114504",
+          "name": "curatorName",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "8:2032654077862712983",
+  "lastEntityId": "10:8101485209871029404",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
-  "retiredEntityUids": [],
+  "retiredEntityUids": [
+    7750924795105074485
+  ],
   "retiredIndexUids": [],
   "retiredPropertyUids": [
     2589422170797070929,
-    3662998929127907536
+    3662998929127907536,
+    3438472454553837271,
+    944587168818820477,
+    7904075530599955280,
+    8781476920098757568,
+    3633600769832045523,
+    7488858332740149496,
+    6952120672350887898,
+    2156438225145870976,
+    4618420410411119755
   ],
   "retiredRelationUids": [],
   "version": 1

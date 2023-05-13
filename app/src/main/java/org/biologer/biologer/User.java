@@ -6,7 +6,7 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
-import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.ObservationTypesData;
 import org.biologer.biologer.sql.Stage;
 import org.biologer.biologer.sql.TaxaTranslationData;
@@ -47,7 +47,7 @@ public class User {
 
     private static void deleteAllTables() {
         Log.d(TAG, "Deleting all SQL tables.");
-        ObjectBox.get().boxFor(Entry.class).removeAll();
+        ObjectBox.get().boxFor(EntryDb.class).removeAll();
         ObjectBox.get().boxFor(TaxonGroupsData.class).removeAll();
         ObjectBox.get().boxFor(TaxonGroupsTranslationData.class).removeAll();
         deleteUserTables();

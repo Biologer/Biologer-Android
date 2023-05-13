@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.objectbox.Box;
 
-public class LandingFragment extends Fragment {
+public class NotificationFragment extends Fragment {
 
     private EntriesList entriesList;
     private ArrayList<EntryDb> entries;
@@ -174,7 +174,7 @@ public class LandingFragment extends Fragment {
             builder.setMessage(getString(R.string.confirm_delete_all))
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
-                        Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(NotificationFragment.this.getContext(), NotificationFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
                         ObjectBox.get().boxFor(EntryDb.class).removeAll();
                         entriesList.removeAll();
                         LandingActivity.setMenuIconVisibility();

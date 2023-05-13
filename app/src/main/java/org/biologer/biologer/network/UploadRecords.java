@@ -31,7 +31,7 @@ import org.biologer.biologer.network.JSON.APIEntryPhotos;
 import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
-import org.biologer.biologer.sql.Entry;
+import org.biologer.biologer.sql.EntryDb;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class UploadRecords extends Service {
 
     boolean keep_going = true;
 
-    ArrayList<Entry> entryList;
+    ArrayList<EntryDb> entryList;
     int totalEntries = 0;
     int remainingEntries = 0;
     ArrayList<String> images_array = new ArrayList<>();
@@ -94,7 +94,7 @@ public class UploadRecords extends Service {
                     case ACTION_START:
                         // Do something...
                         Log.d(TAG, "Starting upload process…");
-                        entryList = (ArrayList<Entry>) ObjectBox.get().boxFor(Entry.class).getAll();
+                        entryList = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
                         totalEntries = entryList.size();
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
                         notificationInitiate();
@@ -171,7 +171,7 @@ public class UploadRecords extends Service {
         // When all entries are uploaded
         if (entryList.size() == 0) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
-            ObjectBox.get().boxFor(Entry.class).removeAll();
+            ObjectBox.get().boxFor(EntryDb.class).removeAll();
             //App.get().getDaoSession().getEntryDao().deleteAll();
             // Stop the foreground service and update the notification
             stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
@@ -188,18 +188,18 @@ public class UploadRecords extends Service {
                         getString(R.string.notify_desc_uploading2);
         notificationUpdateProgress(totalEntries, remainingEntries, statusText);
 
-        Entry entry = entryList.get(0);
-        if (entry.getSlika1() != null) {
+        EntryDb entryDb = entryList.get(0);
+        if (entryDb.getSlika1() != null) {
             n++;
-            listOfImages.add(entry.getSlika1());
+            listOfImages.add(entryDb.getSlika1());
         }
-        if (entry.getSlika2() != null) {
+        if (entryDb.getSlika2() != null) {
             n++;
-            listOfImages.add(entry.getSlika2());
+            listOfImages.add(entryDb.getSlika2());
         }
-        if (entry.getSlika3() != null) {
+        if (entryDb.getSlika3() != null) {
             n++;
-            listOfImages.add(entry.getSlika3());
+            listOfImages.add(entryDb.getSlika3());
         }
 
        // If no photos upload the data
@@ -234,34 +234,34 @@ public class UploadRecords extends Service {
         APIEntry apiEntry = new APIEntry();
         photos = new ArrayList<>();
         // Create apiEntry object
-        Entry entry = entryList.get(0);
-        apiEntry.setTaxonId(entry.getTaxonId() != null ? entry.getTaxonId().intValue() : null);
-        apiEntry.setTaxonSuggestion(entry.getTaxonSuggestion());
-        apiEntry.setYear(entry.getYear());
-        apiEntry.setMonth(entry.getMonth());
-        apiEntry.setDay(entry.getDay());
-        apiEntry.setLatitude(entry.getLattitude());
-        apiEntry.setLongitude(entry.getLongitude());
-        if (entry.getAccuracy() == 0.0) {
+        EntryDb entryDb = entryList.get(0);
+        apiEntry.setTaxonId(entryDb.getTaxonId() != null ? entryDb.getTaxonId().intValue() : null);
+        apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
+        apiEntry.setYear(entryDb.getYear());
+        apiEntry.setMonth(entryDb.getMonth());
+        apiEntry.setDay(entryDb.getDay());
+        apiEntry.setLatitude(entryDb.getLattitude());
+        apiEntry.setLongitude(entryDb.getLongitude());
+        if (entryDb.getAccuracy() == 0.0) {
             apiEntry.setAccuracy(null);
         } else {
-            apiEntry.setAccuracy((int) entry.getAccuracy());
+            apiEntry.setAccuracy((int) entryDb.getAccuracy());
         }
-        apiEntry.setLocation(entry.getLocation());
-        apiEntry.setElevation((int) entry.getElevation());
-        apiEntry.setNote(entry.getComment());
-        apiEntry.setSex(entry.getSex());
-        apiEntry.setNumber(entry.getNoSpecimens());
-        apiEntry.setProject(entry.getProjectId());
-        apiEntry.setLocation(entry.getLocation());
-        apiEntry.setFoundOn(entry.getFoundOn());
-        apiEntry.setStageId(entry.getStage());
-        apiEntry.setAtlasCode(entry.getAtlasCode());
-        apiEntry.setFoundDead(entry.getDeadOrAlive().equals("true") ? 0 : 1);
-        apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
-        apiEntry.setDataLicense(entry.getData_licence());
-        apiEntry.setTime(entry.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entry.getObservation_type_ids());
+        apiEntry.setLocation(entryDb.getLocation());
+        apiEntry.setElevation((int) entryDb.getElevation());
+        apiEntry.setNote(entryDb.getComment());
+        apiEntry.setSex(entryDb.getSex());
+        apiEntry.setNumber(entryDb.getNoSpecimens());
+        apiEntry.setProject(entryDb.getProjectId());
+        apiEntry.setLocation(entryDb.getLocation());
+        apiEntry.setFoundOn(entryDb.getFoundOn());
+        apiEntry.setStageId(entryDb.getStage());
+        apiEntry.setAtlasCode(entryDb.getAtlasCode());
+        apiEntry.setFoundDead(entryDb.getDeadOrAlive().equals("true") ? 0 : 1);
+        apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
+        apiEntry.setDataLicense(entryDb.getData_licence());
+        apiEntry.setTime(entryDb.getTime());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -274,11 +274,11 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entry.getImage_licence());
+            p.setLicense(entryDb.getImage_licence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
-        apiEntry.setHabitat(entry.getHabitat());
+        apiEntry.setHabitat(entryDb.getHabitat());
 
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -309,7 +309,7 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        ObjectBox.get().boxFor(Entry.class).remove(entry);
+                        ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
                         //App.get().getDaoSession().getEntryDao().delete(entry);
                         entryList.remove(0);
                         // TODO get those eventbus stuff back!
@@ -346,40 +346,40 @@ public class UploadRecords extends Service {
         APIEntryBirdloger apiEntry = new APIEntryBirdloger();
         photos = new ArrayList<>();
         // Create apiEntry object
-        Entry entry = entryList.get(0);
-        apiEntry.setTaxonId(entry.getTaxonId() != null ? entry.getTaxonId().intValue() : null);
-        apiEntry.setTaxonSuggestion(entry.getTaxonSuggestion());
-        apiEntry.setYear(entry.getYear());
-        apiEntry.setMonth(entry.getMonth());
-        apiEntry.setDay(entry.getDay());
-        apiEntry.setLatitude(entry.getLattitude());
-        apiEntry.setLongitude(entry.getLongitude());
-        if (entry.getAccuracy() == 0.0) {
+        EntryDb entryDb = entryList.get(0);
+        apiEntry.setTaxonId(entryDb.getTaxonId() != null ? entryDb.getTaxonId().intValue() : null);
+        apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
+        apiEntry.setYear(entryDb.getYear());
+        apiEntry.setMonth(entryDb.getMonth());
+        apiEntry.setDay(entryDb.getDay());
+        apiEntry.setLatitude(entryDb.getLattitude());
+        apiEntry.setLongitude(entryDb.getLongitude());
+        if (entryDb.getAccuracy() == 0.0) {
             apiEntry.setAccuracy(null);
         } else {
-            apiEntry.setAccuracy((int) entry.getAccuracy());
+            apiEntry.setAccuracy((int) entryDb.getAccuracy());
         }
-        apiEntry.setLocation(entry.getLocation());
-        apiEntry.setElevation((int) entry.getElevation());
-        apiEntry.setNote(entry.getComment());
-        String sex = entry.getSex();
+        apiEntry.setLocation(entryDb.getLocation());
+        apiEntry.setElevation((int) entryDb.getElevation());
+        apiEntry.setNote(entryDb.getComment());
+        String sex = entryDb.getSex();
         if (sex.equals("")) {
             apiEntry.setSex(null);
         } else {
             apiEntry.setSex(sex);
         }
-        apiEntry.setNumber(entry.getNoSpecimens());
-        apiEntry.setProject(entry.getProjectId());
-        apiEntry.setLocation(entry.getLocation());
-        apiEntry.setFoundOn(entry.getFoundOn());
-        apiEntry.setStageId(entry.getStage());
-        apiEntry.setAtlasCode(entry.getAtlasCode());
-        apiEntry.setFoundDead(!entry.getDeadOrAlive().equals("true"));
-        apiEntry.setFoundDeadNote(entry.getCauseOfDeath());
+        apiEntry.setNumber(entryDb.getNoSpecimens());
+        apiEntry.setProject(entryDb.getProjectId());
+        apiEntry.setLocation(entryDb.getLocation());
+        apiEntry.setFoundOn(entryDb.getFoundOn());
+        apiEntry.setStageId(entryDb.getStage());
+        apiEntry.setAtlasCode(entryDb.getAtlasCode());
+        apiEntry.setFoundDead(!entryDb.getDeadOrAlive().equals("true"));
+        apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
         //apiEntry.setDataLicense(entry.getData_licence());
         apiEntry.setDataLicense(null);
-        apiEntry.setTime(entry.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entry.getObservation_type_ids());
+        apiEntry.setTime(entryDb.getTime());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -392,11 +392,11 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entry.getImage_licence());
+            p.setLicense(entryDb.getImage_licence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
-        apiEntry.setHabitat(entry.getHabitat());
+        apiEntry.setHabitat(entryDb.getHabitat());
         apiEntry.setObserver("");
         apiEntry.setIdentifier("");
         apiEntry.setNote("");
@@ -445,7 +445,7 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        ObjectBox.get().boxFor(Entry.class).remove(entry);
+                        ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
                         //App.get().getDaoSession().getEntryDao().delete(entry);
                         entryList.remove(0);
                         // TODO get the eventbus
