@@ -1,6 +1,9 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,6 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -75,6 +79,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import io.objectbox.Box;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -223,11 +228,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.d(TAG, "Token expired. Refreshing login token.");
                 if (InternetConnection.isConnected(LandingActivity.this)) {
                     RefreshToken(database_url, true);
-                }
-                else {
+                } else {
                     alertWarnAndExit(getString(R.string.refresh_token_no_internet));
                 }
-           }
+            }
         } else {
             Log.d(TAG, "Email is not confirmed.");
             checkMailConfirmed(database_url);
@@ -261,6 +265,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void updateNotifications(String database_url) {
+
+        // Get new notifications from the API
         Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(database_url).getUnreadNotifications();
         unreadNotificationsResponseCall.enqueue(new Callback<>() {
             @Override
@@ -300,6 +306,61 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
             }
         });
+
+        // Display pending notifications
+        displayUnreadNotifications();
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private void displayUnreadNotifications() {
+        Log.d(TAG, "Displaying UnreadNotifications for the observations.");
+        Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+
+        if (!box.isEmpty()) {
+
+            // Intent that should handle if notification is tapped
+            Intent intent = new Intent(this, LandingActivity.class);
+            //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+            int MAX = (int) box.count();
+            if (MAX > 15) {
+                MAX = 15;
+            }
+
+            for (int i = 0; i < MAX; i++) {
+
+                String author;
+                if (box.getAll().get(i).getCuratorName() != null) {
+                    author = box.getAll().get(i).getCuratorName();
+                } else {
+                    author = box.getAll().get(i).getCauserName();
+                }
+
+                Log.d(TAG, box.getAll().get(i).getType());
+                String action;
+                if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationApproved")) {
+                    action = getString(R.string.approved_observation);
+                } else if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationEdited")) {
+                    action = getString(R.string.changed_observation);
+                } else {
+                    action = getString(R.string.did_something_with_observation);
+                }
+
+                int notification_id = (int) box.getAll().get(i).getId();
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
+                        .setSmallIcon(R.mipmap.ic_notification)
+                        .setContentTitle(getString(R.string.observation_changed))
+                        .setContentText(author + " " + action + " " + box.getAll().get(i).getTaxonName() + ".")
+                        .setPriority(NotificationCompat.PRIORITY_LOW)
+                        .setContentIntent(pendingIntent)
+                        .setOnlyAlertOnce(true)
+                        .setAutoCancel(true);
+                NotificationManagerCompat.from(this).notify(notification_id, builder.build());
+            }
+        }
     }
 
     private void checkMailConfirmed(String database_url) {

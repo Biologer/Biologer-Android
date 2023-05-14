@@ -424,5 +424,11 @@
     <string name="no_permission_camera">No permission to take picture from camera. Observations will have no images.</string>
     <string name="no_permission_gallery">No permission to take picture from gallery. Observations will have no images.</string>
     <string name="refresh_token_text">It looks like the login token is invalid or expired. Please enter your password in order to log back into Biologer.</string>
+    <string name="channel_observation_name">Unread notifications</string>
+    <string name="channel_observation_description">Get unread notifications on your field observations.</string>
+    <string name="approved_observation">"approved your observation of "</string>
+    <string name="changed_observation">changed your observation of</string>
+    <string name="did_something_with_observation">did something with your observation of</string>
+    <string name="observation_changed">Observation changed</string>
 
 </resources>

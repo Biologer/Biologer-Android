@@ -22,6 +22,7 @@ public class App extends MultiDexApplication {
         // Create Notification channel in order to send notification to android API 26+
         createNotificationChannelTaxa();
         createNotificationChannelEntries();
+        createNotificationChannelUnreadNotifications();
 
         // For initialisation of OpenBox database
         ObjectBox.init(this);
@@ -57,6 +58,20 @@ public class App extends MultiDexApplication {
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void createNotificationChannelUnreadNotifications() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channel_id = "biologer_observations";
+            CharSequence name = getString(R.string.channel_observation_name);
+            String description = getString(R.string.channel_observation_description);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
+            channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             assert notificationManager != null;
             notificationManager.createNotificationChannel(channel);

@@ -31,6 +31,10 @@ public class UnreadNotificationsDb {
         this.updatedAt = updatedAt;
     }
 
+    public long getId() {
+        return id;
+    }
+
     public String getRealId() {
         return realId;
     }
