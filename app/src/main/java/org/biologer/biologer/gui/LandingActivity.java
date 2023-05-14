@@ -117,7 +117,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
             Log.d(TAG, "No login token, falling back to login screen.");
-            showUserLoginScreen();
+            Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
+            startActivity(intent);
         } else {
 
             // On the first run (after the user came from the login screen) show some help
@@ -292,9 +293,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void showUserLoginScreen() {
+    private void showUserLoginScreen(boolean tokenExpired) {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
-        intent.putExtra("refreshToken", "yes");
+        if (tokenExpired) {
+            intent.putExtra("refreshToken", "yes");
+        }
         startActivity(intent);
     }
 
@@ -379,7 +382,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
                         Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
-                        showUserLoginScreen();
+                        showUserLoginScreen(true);
                     }
                     if (response.isSuccessful()) {
                         if (response.body() != null) {
@@ -470,7 +473,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 new IntentFilter(UploadRecords.TASK_COMPLETED)
         );
         if (!SettingsManager.isMailConfirmed()) {
-            checkMailConfirmed(SettingsManager.getDatabaseName());
+            String database = SettingsManager.getDatabaseName();
+            if (database !=null) {
+                checkMailConfirmed(database);
+            }
+
+            else  {
+                showUserLoginScreen(false);
+            }
+
         }
     }
 
