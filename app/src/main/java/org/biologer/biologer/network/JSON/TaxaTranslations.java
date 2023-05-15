@@ -1,5 +1,6 @@
 package org.biologer.biologer.network.JSON;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -17,7 +18,8 @@ public class TaxaTranslations {
     @JsonProperty("id")
     private Long id;
     @JsonProperty("taxon_id")
-    private Long taxonId;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT)
+    private int taxonId;
     @JsonProperty("locale")
     private String locale;
     @JsonProperty("native_name")
@@ -36,12 +38,14 @@ public class TaxaTranslations {
     }
 
     @JsonProperty("taxon_id")
-    public Long getTaxonId() {
-        return taxonId;
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT)
+    public int getTaxonId() {
+            return taxonId;
     }
 
     @JsonProperty("taxon_id")
-    public void setTaxonId(Long taxonId) {
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT)
+    public void setTaxonId(int taxonId) {
         this.taxonId = taxonId;
     }
 
