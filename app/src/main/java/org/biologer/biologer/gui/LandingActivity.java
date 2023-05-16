@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -319,17 +318,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         if (!box.isEmpty()) {
 
-            // Intent that should handle if notification is tapped
-            Intent intent = new Intent(this, LandingActivity.class);
-            //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
+            // Display no more than 15 notifications!
             int MAX = (int) box.count();
             if (MAX > 15) {
                 MAX = 15;
             }
 
             for (int i = 0; i < MAX; i++) {
+
+                long notification_id = box.getAll().get(i).getId();
 
                 String author;
                 if (box.getAll().get(i).getCuratorName() != null) {
@@ -348,19 +345,25 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     action = getString(R.string.did_something_with_observation);
                 }
 
-                int notification_id = (int) box.getAll().get(i).getId();
-
+                Bundle bundle = new Bundle();
+                bundle.putInt("id", (int) notification_id);
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
                         .setSmallIcon(R.mipmap.ic_notification)
                         .setContentTitle(getString(R.string.observation_changed))
                         .setContentText(author + " " + action + " " + box.getAll().get(i).getTaxonName() + ".")
                         .setPriority(NotificationCompat.PRIORITY_LOW)
-                        .setContentIntent(pendingIntent)
+                        .setContentIntent(getPendingIntent(bundle, (int)notification_id))
                         .setOnlyAlertOnce(true)
                         .setAutoCancel(true);
-                NotificationManagerCompat.from(this).notify(notification_id, builder.build());
+                NotificationManagerCompat.from(this).notify((int) notification_id, builder.build());
             }
         }
+    }
+
+    private PendingIntent getPendingIntent(Bundle bundle, int id) {
+        Intent notificationIntent = new Intent(this, NotificationView.class);
+        notificationIntent.putExtras(bundle);
+        return PendingIntent.getActivity(this, id, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
     }
 
     private void checkMailConfirmed(String database_url) {

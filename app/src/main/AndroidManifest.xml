@@ -104,6 +104,9 @@
             android:name=".gui.IntroActivity" />
 
         <activity
+            android:name=".gui.NotificationView" />
+
+        <activity
             android:name=".gui.ViewImage" />
 
         <service android:name="org.biologer.biologer.network.FetchTaxa"/>
