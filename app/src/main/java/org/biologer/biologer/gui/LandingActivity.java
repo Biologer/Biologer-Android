@@ -10,13 +10,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +57,8 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
+import org.biologer.biologer.network.JSON.FieldObservationData;
+import org.biologer.biologer.network.JSON.FieldObservationResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
@@ -69,6 +75,7 @@ import org.biologer.biologer.sql.UserData;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -122,20 +129,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         tv_email.setText(getUserEmail());
 
         addLandingFragment();
-
-        Call<ResponseBody> fo = RetrofitClient.getService(database_url).getFieldObservation();
-        fo.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                Log.e(TAG, response.body().toString());
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-
-            }
-        });
-
 
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {

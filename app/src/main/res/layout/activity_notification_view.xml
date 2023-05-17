@@ -6,14 +6,70 @@
     <LinearLayout
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/observation_main_text"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="Zdravo da ste!">
         </TextView>
+
+        <!-- 3 images on the bottom -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+
+            <FrameLayout
+                android:id="@+id/notification_view_imageFrame1"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginEnd="5dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/notification_view_image1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/image_frame"
+                    android:scaleType="centerCrop"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/ic_photo_camera" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/notification_view_imageFrame2"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginEnd="5dp"
+                android:visibility="gone">
+                <ImageView
+                    android:id="@+id/notification_view_image2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/image_frame"
+                    android:scaleType="centerCrop"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/ic_photo_camera" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/notification_view_imageFrame3"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginEnd="5dp"
+                android:visibility="gone">
+                <ImageView
+                    android:id="@+id/notification_view_image3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/image_frame"
+                    android:scaleType="centerCrop"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/ic_photo_camera" />
+            </FrameLayout>
+        </LinearLayout>
 
     </LinearLayout>
 

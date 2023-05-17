@@ -4,6 +4,7 @@ import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.APIEntryBirdloger;
 import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
 import org.biologer.biologer.network.JSON.ElevationResponse;
+import org.biologer.biologer.network.JSON.FieldObservationResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.RegisterResponse;
@@ -28,6 +29,8 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
+import retrofit2.http.Streaming;
+import retrofit2.http.Url;
 
 /**
  * Created by brjovanovic on 12/24/2017.
@@ -102,8 +105,13 @@ public interface RetrofitService {
     Call<ResponseBody> getFieldObservations();
 
     @Headers({"Accept: application/json"})
-    @GET("api/field-observations")
-    Call<ResponseBody> getFieldObservation();
+    @GET("api/field-observations/")
+    Call<FieldObservationResponse> getFieldObservation(
+            @Query(value="id", encoded = true) String id);
+
+    @GET
+    Call<ResponseBody> getPhoto(
+            @Url String image);
 
     @Headers({"Accept: application/json"})
     @GET("/api/my/profile")
@@ -119,7 +127,8 @@ public interface RetrofitService {
 
     @Headers({"Accept: application/json"})
     @GET("/api/observation-types")
-    Call<ObservationTypesResponse> getObservationTypes(@Query("updated_after") int updated_after);
+    Call<ObservationTypesResponse> getObservationTypes(
+            @Query("updated_after") int updated_after);
 
     @Headers({"Accept: application/json"})
     @POST("/api/elevation")
