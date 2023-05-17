@@ -11,8 +11,6 @@ import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.User;
-import org.biologer.biologer.gui.LoginActivity;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;
 import org.biologer.biologer.sql.UserData;
@@ -72,21 +70,18 @@ public class UpdateLicenses extends Service {
                                     if (data_license.equals("0") && image_license.equals("0")) {
                                         UserData uData = new UserData(getUserID(), name, email, server_data_license, server_image_license);
                                         ObjectBox.get().boxFor(UserData.class).put(uData);
-                                        //App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                                         Log.d(TAG, "Image and data licenses updated from the server.");
                                     }
                                     // If only Data License should be retrieved from server
                                     if (data_license.equals("0") && !image_license.equals("0")) {
                                         UserData uData = new UserData(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
                                         ObjectBox.get().boxFor(UserData.class).put(uData);
-                                        //App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                                         Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
                                     }
                                     // If only Image License should be retrieved from server
                                     if (!data_license.equals("0")) {
                                         UserData uData = new UserData(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
                                         ObjectBox.get().boxFor(UserData.class).put(uData);
-                                        //App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                                         Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
                                     }
                                 } else {
@@ -109,19 +104,14 @@ public class UpdateLicenses extends Service {
                     Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
                     UserData uData = new UserData(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
                     ObjectBox.get().boxFor(UserData.class).put(uData);
-                    //App.get().getDaoSession().getUserDataDao().insertOrReplace(uData);
                 }
             }
         }
         stopSelf();
     }
 
-    // Get the data from GreenDao database
+    // Get the data from ObjectBox database
     private UserData getLoggedUser() {
-        if (userdata_list.isEmpty()) {
-            User.clearUserData(this);
-            userLoggedOut();
-        }
         return userdata_list.get(0);
     }
 
@@ -135,11 +125,6 @@ public class UpdateLicenses extends Service {
 
     private String getUserEmail() {
         return getLoggedUser().getEmail();
-    }
-
-    private void userLoggedOut() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
     }
 
 }

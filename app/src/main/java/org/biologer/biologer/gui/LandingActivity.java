@@ -150,6 +150,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     if (database_url != null) {
                         runServices(database_url);
                     } else {
+                        Toast.makeText(this, "The database URL is empty!", Toast.LENGTH_LONG).show();
                         fallbackToLoginScreen();
                     }
 
@@ -168,6 +169,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                         if (database_url != null) {
                             checkMailConfirmed(database_url);
                         } else {
+                            Toast.makeText(this, "The database URL is empty again!", Toast.LENGTH_LONG).show();
                             fallbackToLoginScreen();
                         }
                     }
@@ -743,9 +745,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void updateLicenses() {
-        // Check if the licence has changed on the server and update if needed
-        final Intent update_licenses = new Intent(this, UpdateLicenses.class);
-        startService(update_licenses);
+        if (getLoggedUser() == null) {
+            Toast.makeText(this, "Missing user data!", Toast.LENGTH_LONG).show();
+            fallbackToLoginScreen();
+        } else {
+            // Check if the licence has changed on the server and update if needed
+            final Intent update_licenses = new Intent(this, UpdateLicenses.class);
+            startService(update_licenses);
+        }
     }
 
     @Override
