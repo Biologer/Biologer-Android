@@ -98,6 +98,14 @@ public interface RetrofitService {
     Call<APIEntryResponseBirdloger> uploadEntry(@Body APIEntryBirdloger apiEntryBirdloger);
 
     @Headers({"Accept: application/json"})
+    @GET("api/field-observations")
+    Call<ResponseBody> getFieldObservations();
+
+    @Headers({"Accept: application/json"})
+    @GET("api/field-observations")
+    Call<ResponseBody> getFieldObservation();
+
+    @Headers({"Accept: application/json"})
     @GET("/api/my/profile")
     Call<UserDataResponse> getUserData();
 

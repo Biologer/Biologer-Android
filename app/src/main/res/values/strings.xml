@@ -430,5 +430,7 @@
     <string name="changed_observation">changed your observation of</string>
     <string name="did_something_with_observation">did something with your observation of</string>
     <string name="observation_changed">Observation changed</string>
+    <string name="no_login_token_falling_back_to_login_screen">No login token, falling back to login screen.</string>
+    <string name="both_login_and_refresh_tokens_expired">Both login and refresh tokens expired.</string>
 
 </resources>

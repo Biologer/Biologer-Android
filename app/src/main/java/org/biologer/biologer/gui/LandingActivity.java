@@ -79,6 +79,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import io.objectbox.Box;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -122,9 +123,24 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         addLandingFragment();
 
+        Call<ResponseBody> fo = RetrofitClient.getService(database_url).getFieldObservation();
+        fo.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.e(TAG, response.body().toString());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+
+
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
-            Log.d(TAG, "No login token, falling back to login screen.");
+            Log.d(TAG, getString(R.string.no_login_token_falling_back_to_login_screen));
+            Toast.makeText(this, getString(R.string.no_login_token_falling_back_to_login_screen), Toast.LENGTH_LONG).show();
             showUserLoginScreen(false);
         } else {
             // On the first run (after the user came from the login screen) show some help
@@ -192,6 +208,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
         User.clearUserData(LandingActivity.this);
+        Toast.makeText(this, "Something is wrong, falling back to login screen!", Toast.LENGTH_LONG).show();
         showUserLoginScreen(false);
     }
 
@@ -500,6 +517,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
                         Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
+                        Toast.makeText(LandingActivity.this, getString(R.string.both_login_and_refresh_tokens_expired), Toast.LENGTH_LONG).show();
                         showUserLoginScreen(true);
                     }
                     if (response.isSuccessful()) {
@@ -604,6 +622,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             }
             // It seems that the user is logged out, thus we need to go to the login screen
             else {
+                Toast.makeText(this, "There is no user data in SQL database!", Toast.LENGTH_LONG).show();
                 showUserLoginScreen(false);
             }
         }
