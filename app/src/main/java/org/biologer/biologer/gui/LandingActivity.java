@@ -56,8 +56,6 @@ import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
-import org.biologer.biologer.network.JSON.UnreadNotification;
-import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateLicenses;
@@ -66,7 +64,7 @@ import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UserDb;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -276,8 +274,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
 
         if (!box.isEmpty()) {
+
             // Display no more than 15 notifications!
-            for (int i = 0; i < 15; i++) {
+            for (int i = 0; i < (int) box.count(); i++) {
 
                 long notification_id = box.getAll().get(i).getId();
 
@@ -390,9 +389,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                             String name = response.body().getData().getFullName();
                             int data_license = response.body().getData().getSettings().getDataLicense();
                             int image_license = response.body().getData().getSettings().getImageLicense();
-                            UserData user = new UserData(0, name, email, data_license, image_license);
-                            ObjectBox.get().boxFor(UserData.class).removeAll();
-                            ObjectBox.get().boxFor(UserData.class).put(user);
+                            UserDb user = new UserDb(0, name, email, data_license, image_license);
+                            ObjectBox.get().boxFor(UserDb.class).removeAll();
+                            ObjectBox.get().boxFor(UserDb.class).put(user);
                             SettingsManager.setSqlUpdated(false);
                         } else {
                             alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
@@ -551,7 +550,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (database != null) {
                 // Check mail should not be called if the user is not logged in.
                 // The user is not logged in if the SQL UserData is empty.
-                List<UserData> userData = ObjectBox.get().boxFor(UserData.class).getAll();
+                List<UserDb> userData = ObjectBox.get().boxFor(UserDb.class).getAll();
                 if (!userData.isEmpty()) {
                     checkMailConfirmed(database);
                 }
@@ -1075,9 +1074,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     // Get the data from GreenDao database
-    private UserData getLoggedUser() {
+    private UserDb getLoggedUser() {
         // Get the user data from a GreenDao database
-        List<UserData> userdata_list = ObjectBox.get().boxFor(UserData.class).getAll();
+        List<UserDb> userdata_list = ObjectBox.get().boxFor(UserDb.class).getAll();
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             return null;
@@ -1087,7 +1086,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private String getUserName() {
-        UserData userdata = getLoggedUser();
+        UserDb userdata = getLoggedUser();
         if (userdata != null) {
             return userdata.getUsername();
         } else {
@@ -1096,7 +1095,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private String getUserEmail() {
-        UserData userdata = getLoggedUser();
+        UserDb userdata = getLoggedUser();
         if (userdata != null) {
             return userdata.getEmail();
         } else {

@@ -19,7 +19,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.User;
 import org.biologer.biologer.network.FetchTaxa;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
 
@@ -45,9 +45,9 @@ public class LogoutFragment extends Fragment {
                 TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
                 TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
 
-                List<UserData> userDataList = ObjectBox.get().boxFor(UserData.class).getAll();
+                List<UserDb> userDataList = ObjectBox.get().boxFor(UserDb.class).getAll();
                 //List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
-                UserData userData = userDataList.get(0);
+                UserDb userData = userDataList.get(0);
                 String username = userData.getUsername();
                 Log.i(TAG, "Current user: " + username);
                 tv_database.setText(SettingsManager.getDatabaseName());

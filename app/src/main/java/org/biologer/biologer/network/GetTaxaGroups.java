@@ -14,7 +14,7 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.TaxaGroups;
 import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaGroupsTranslations;
-import org.biologer.biologer.sql.TaxonGroupsData;
+import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
 
@@ -84,7 +84,7 @@ public class GetTaxaGroups extends Service {
         Log.d(TAG, "Saving taxa groups to SQL tables");
         List<TaxaGroups> taxaGroups = taxaGroupsResponse.getData();
 
-        List<TaxonGroupsData> taxon_groups = new ArrayList<>();
+        List<TaxonGroupsDb> taxon_groups = new ArrayList<>();
         for (int i = 0; i < taxaGroups.size(); i++) {
             TaxaGroups taxon = taxaGroups.get(i);
             Long taxon_id = taxon.getId();
@@ -93,7 +93,7 @@ public class GetTaxaGroups extends Service {
             String taxon_description = taxon.getDescription();
             List<TaxaGroupsTranslations> taxon_translations = taxon.getTranslations();
 
-            TaxonGroupsData taxonGroupsData = new TaxonGroupsData(
+            TaxonGroupsDb taxonGroupsData = new TaxonGroupsDb(
                     taxon_id,
                     zeroNullValue(taxon_parent_id),
                     taxon_name,
@@ -122,7 +122,7 @@ public class GetTaxaGroups extends Service {
             Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
             taxonGroupsTranslationDataBox.put(translationData);
         }
-        Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
+        Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
         taxonGroupsDataBox.put(taxon_groups);
 
         // Get the IDs from server and compare them to SQL. Delete SQL if deleted on server
@@ -131,7 +131,7 @@ public class GetTaxaGroups extends Service {
             server_ids.add(taxaGroups.get(i).getId());
         }
         ArrayList<Long> sql_ids = new ArrayList<>();
-        List<TaxonGroupsData> sql_ids_list = ObjectBox.get().boxFor(TaxonGroupsData.class).getAll();
+        List<TaxonGroupsDb> sql_ids_list = ObjectBox.get().boxFor(TaxonGroupsDb.class).getAll();
         for (int i = 0; i < sql_ids_list.size(); i++) {
             sql_ids.add(sql_ids_list.get(i).getId());
         }
@@ -157,7 +157,7 @@ public class GetTaxaGroups extends Service {
                 Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
                 taxonGroupsTranslationDataBox1.removeByIds(ids);
             }
-            Box<TaxonGroupsData> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsData.class);
+            Box<TaxonGroupsDb> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsDb.class);
             taxonGroupsDataBox1.removeByIds(sql_ids);
 
         } else {

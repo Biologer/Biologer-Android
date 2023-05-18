@@ -50,7 +50,7 @@ import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UserDb;
 
 import java.util.Arrays;
 import java.util.List;
@@ -105,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Database URL written in the settings is: " + database_name);
 
         // Just display the username in order to make app nice
-        List<UserData> user = ObjectBox.get().boxFor(UserData.class).getAll();
+        List<UserDb> user = ObjectBox.get().boxFor(UserDb.class).getAll();
         if (!user.isEmpty()) {
             Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
             // Just set the user email so that is does not need to be written once again
@@ -497,8 +497,8 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         // Write data in SQL
-                        UserData user = new UserData(0, name, email, data_license, image_license);
-                        Box<UserData> userDataBox = ObjectBox.get().boxFor(UserData.class);
+                        UserDb user = new UserDb(0, name, email, data_license, image_license);
+                        Box<UserDb> userDataBox = ObjectBox.get().boxFor(UserDb.class);
                         userDataBox.removeAll();
                         userDataBox.put(user);
                     }

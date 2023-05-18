@@ -25,11 +25,11 @@ import org.biologer.biologer.network.JSON.TaxaData;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaStages;
 import org.biologer.biologer.network.JSON.TaxaTranslations;
-import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.sql.TaxaTranslationData;
-import org.biologer.biologer.sql.TaxonData;
-import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsData_;
+import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxonDb;
+import org.biologer.biologer.sql.TaxonGroupsDb;
+import org.biologer.biologer.sql.TaxonGroupsDb_;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,11 +87,11 @@ public class FetchTaxa extends Service {
             ArrayList<String> groups_list = intent.getStringArrayListExtra("groups");
             if (groups_list == null) {
                 // Query to get taxa groups that should be used in a query
-                Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
-                Query<TaxonGroupsData> query = taxonGroupsDataBox
-                        .query(TaxonGroupsData_.id.notNull())
+                Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+                Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                        .query(TaxonGroupsDb_.id.notNull())
                         .build();
-                List<TaxonGroupsData> allTaxaGroups = query.find();
+                List<TaxonGroupsDb> allTaxaGroups = query.find();
                 query.close();
                 for (int i = 0; i < allTaxaGroups.size(); i++) {
                     int id = (int)allTaxaGroups.get(i).getId();
@@ -116,7 +116,7 @@ public class FetchTaxa extends Service {
                         stop_fetching = "keep_going";
                         // Check if this is the first time user downloads the data. It true
                         // one should fetch also those taxa without groups.
-                        if (ObjectBox.get().boxFor(TaxonData.class).getAll().isEmpty()) {
+                        if (ObjectBox.get().boxFor(TaxonDb.class).getAll().isEmpty()) {
                             fetch_ungrouped = true;
                         }
                         // Start the service
@@ -226,7 +226,7 @@ public class FetchTaxa extends Service {
 
         Log.i(TAG, "Page " + current_page + " downloaded, total " + totalPages + " pages");
 
-        TaxonData[] final_taxa = new TaxonData[taxaData.size()];
+        TaxonDb[] final_taxa = new TaxonDb[taxaData.size()];
         for (int i = 0; i < taxaData.size(); i++) {
             TaxaData taxon = taxaData.get(i);
             long taxon_id = taxon.getId();
@@ -234,12 +234,12 @@ public class FetchTaxa extends Service {
             // Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
 
             List<TaxaStages> stages = taxon.getStages();
-            Stage[] final_stages = new Stage[stages.size()];
+            StageDb[] final_stages = new StageDb[stages.size()];
             for (int j = 0; j < stages.size(); j++) {
                 TaxaStages stage = stages.get(j);
-                final_stages[j] = new Stage(0, stage.getName(), stage.getId(), taxon_id);
+                final_stages[j] = new StageDb(0, stage.getName(), stage.getId(), taxon_id);
             }
-            ObjectBox.get().boxFor(Stage.class).put(final_stages);
+            ObjectBox.get().boxFor(StageDb.class).put(final_stages);
             //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
@@ -250,7 +250,7 @@ public class FetchTaxa extends Service {
             }
 
             // Write taxon data in SQL database
-            final_taxa[i] = new TaxonData(
+            final_taxa[i] = new TaxonDb(
                     taxon_id,
                     taxon.getParentId(),
                     taxon_latin_name,
@@ -265,10 +265,10 @@ public class FetchTaxa extends Service {
 
             // If there are translations save them in different table
             if (!taxaTranslations.isEmpty()) {
-                TaxaTranslationData[] final_translations = new TaxaTranslationData[taxaTranslations.size()];
+                TaxaTranslationDb[] final_translations = new TaxaTranslationDb[taxaTranslations.size()];
                 for (int k = 0; k < taxaTranslations.size(); k++) {
                     TaxaTranslations taxaTranslation = taxaTranslations.get(k);
-                    final_translations[k] = new TaxaTranslationData(
+                    final_translations[k] = new TaxaTranslationDb(
                             taxaTranslation.getId(),
                             taxon_id,
                             taxaTranslation.getLocale(),
@@ -279,11 +279,11 @@ public class FetchTaxa extends Service {
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
-                ObjectBox.get().boxFor(TaxaTranslationData.class).put(final_translations);
+                ObjectBox.get().boxFor(TaxaTranslationDb.class).put(final_translations);
                 //App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
-        ObjectBox.get().boxFor(TaxonData.class).put(final_taxa);
+        ObjectBox.get().boxFor(TaxonDb.class).put(final_taxa);
         //App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
@@ -515,8 +515,8 @@ public class FetchTaxa extends Service {
         updated_at = 0;
         current_page = 1;
         SettingsManager.setTaxaLastPageFetched("1");
-        ObjectBox.get().boxFor(TaxonData.class).removeAll();
-        ObjectBox.get().boxFor(Stage.class).removeAll();
+        ObjectBox.get().boxFor(TaxonDb.class).removeAll();
+        ObjectBox.get().boxFor(StageDb.class).removeAll();
     }
 
     public void sendResult(String message) {

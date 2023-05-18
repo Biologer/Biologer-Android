@@ -7,7 +7,7 @@ import io.objectbox.annotation.Id;
  * Created by brjovanovic on 2/23/2018.
  */
 @Entity
-public class Stage {
+public class StageDb {
 
     @Id
     long id;
@@ -15,7 +15,7 @@ public class Stage {
     private final long stageId;
     private long taxonId;
 
-    public Stage(long id, String name, long stageId, long taxonId) {
+    public StageDb(long id, String name, long stageId, long taxonId) {
         this.id = id;
         this.name = name;
         this.stageId = stageId;

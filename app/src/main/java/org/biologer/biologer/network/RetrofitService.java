@@ -122,6 +122,18 @@ public interface RetrofitService {
     Call<UnreadNotificationsResponse> getUnreadNotifications();
 
     @Headers({"Accept: application/json"})
+    @POST ("/api/my/read-notifications/batch")
+    Call<ResponseBody> setNotificationAsRead(
+            @Query("notifications_ids[]") String[] notifications);
+    //Call<ResponseBody> setNotificationAsRead(
+    //        @Body String[] id);
+
+    @Headers({"Accept: application/json"})
+    @POST ("/api/my/read-notifications/batch")
+    Call<ResponseBody> setAllNotificationAsRead(
+            @Query("notifications_ids[]") String[] notifications);
+
+    @Headers({"Accept: application/json"})
     @GET("/api/view-groups")
     Call<TaxaGroupsResponse> getTaxaGroupsResponse();
 

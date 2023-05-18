@@ -22,12 +22,12 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.sql.TaxaTranslationData;
-import org.biologer.biologer.sql.TaxaTranslationData_;
-import org.biologer.biologer.sql.TaxonData;
-import org.biologer.biologer.sql.TaxonData_;
-import org.biologer.biologer.sql.TaxonGroupsData;
-import org.biologer.biologer.sql.TaxonGroupsData_;
+import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxaTranslationDb_;
+import org.biologer.biologer.sql.TaxonDb;
+import org.biologer.biologer.sql.TaxonDb_;
+import org.biologer.biologer.sql.TaxonGroupsDb;
+import org.biologer.biologer.sql.TaxonGroupsDb_;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
 
@@ -71,11 +71,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         how_to_use_network = preferences.getString("auto_download", "wifi");
 
         // Query Parent groups from SQL
-        Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
-        Query<TaxonGroupsData> query = taxonGroupsDataBox
-                .query(TaxonGroupsData_.parentId.equal(0))
+        Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+        Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                .query(TaxonGroupsDb_.parentId.equal(0))
                 .build();
-        List<TaxonGroupsData> listParents = query.find();
+        List<TaxonGroupsDb> listParents = query.find();
         query.close();
 
         for (int i = 0; i < listParents.size(); i++) {
@@ -105,11 +105,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             }
 
             // List all children within parent
-            Box<TaxonGroupsData> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsData.class);
-            Query<TaxonGroupsData> children = taxonGroupsDataBox1
-                    .query(TaxonGroupsData_.parentId.equal(id))
+            Box<TaxonGroupsDb> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+            Query<TaxonGroupsDb> children = taxonGroupsDataBox1
+                    .query(TaxonGroupsDb_.parentId.equal(id))
                     .build();
-            List<TaxonGroupsData> listChildren = children.find();
+            List<TaxonGroupsDb> listChildren = children.find();
             children.close();
 
             for (int j = 0; j < listChildren.size(); j++) {
@@ -158,7 +158,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         preferenceScreen.addPreference(checkBoxes.get(last));
 
         // Query for taxa groups selection before the user selects anything
-        List<TaxonGroupsData> allTaxaGroups = ObjectBox.get().boxFor(TaxonGroupsData.class).getAll();
+        List<TaxonGroupsDb> allTaxaGroups = ObjectBox.get().boxFor(TaxonGroupsDb.class).getAll();
         for (int i = 0; i < allTaxaGroups.size(); i++) {
             int id = (int)allTaxaGroups.get(i).getId();
             Activity activity = getActivity();
@@ -179,11 +179,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             Log.d(TAG, "Item " + preference.getTitle() + " (" + id + ") clicked.");
 
             // Query to determine if this is a child or parent checkbox
-            Box<TaxonGroupsData> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsData.class);
-            Query<TaxonGroupsData> query = taxonGroupsDataBox
-                    .query(TaxonGroupsData_.id.equal(id))
+            Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+            Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                    .query(TaxonGroupsDb_.id.equal(id))
                     .build();
-            List<TaxonGroupsData> listSelected = query.find();
+            List<TaxonGroupsDb> listSelected = query.find();
             query.close();
 
             if (!listSelected.isEmpty()) {
@@ -195,11 +195,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     saveCheckedState(key_parent);
 
                     // Query to get all the children
-                    Box<TaxonGroupsData> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsData.class);
-                    Query<TaxonGroupsData> query1 = taxonGroupsDataBox1
-                            .query(TaxonGroupsData_.parentId.equal(id))
+                    Box<TaxonGroupsDb> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+                    Query<TaxonGroupsDb> query1 = taxonGroupsDataBox1
+                            .query(TaxonGroupsDb_.parentId.equal(id))
                             .build();
-                    List<TaxonGroupsData> listChildren = query1.find();
+                    List<TaxonGroupsDb> listChildren = query1.find();
                     query1.close();
 
                     for (int i = 0; i < listChildren.size(); i++) {
@@ -281,11 +281,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
 
                     // Delete taxa
-                    Box<TaxonData> taxonData = ObjectBox.get().boxFor(TaxonData.class);
-                    Query<TaxonData> query = taxonData
-                            .query(TaxonData_.groups.contains(key))
+                    Box<TaxonDb> taxonData = ObjectBox.get().boxFor(TaxonDb.class);
+                    Query<TaxonDb> query = taxonData
+                            .query(TaxonDb_.groups.contains(key))
                             .build();
-                    List<TaxonData> deleteTaxaList = query.find();
+                    List<TaxonDb> deleteTaxaList = query.find();
                     taxonData.remove(deleteTaxaList);
                     query.close();
 
@@ -353,11 +353,11 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         Log.d(TAG, "List of taxa to be deleted: " + deleteThisIds.toString());
         long[] delete_this_ids = ArrayHelper.listToArray(deleteThisIds);
 
-        Box<TaxaTranslationData> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationData.class);
-        Query<TaxaTranslationData> query = taxaTranslationDataBox
-                .query(TaxaTranslationData_.taxonId.oneOf(delete_this_ids))
+        Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+        Query<TaxaTranslationDb> query = taxaTranslationDataBox
+                .query(TaxaTranslationDb_.taxonId.oneOf(delete_this_ids))
                 .build();
-        List<TaxaTranslationData> deleteTaxaList = query.find();
+        List<TaxaTranslationDb> deleteTaxaList = query.find();
         taxaTranslationDataBox.remove(deleteTaxaList);
         query.close();
     }

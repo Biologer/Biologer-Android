@@ -2,21 +2,16 @@ package org.biologer.biologer.network;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.JSON.UserDataSer;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
-import org.biologer.biologer.sql.UserData;
 
 import retrofit2.Call;
 import retrofit2.Callback;

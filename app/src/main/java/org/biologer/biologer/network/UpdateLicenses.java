@@ -13,7 +13,7 @@ import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.JSON.UserDataSer;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class UpdateLicenses extends Service {
     private int retryCount = 0;
 
     // Get the user data from a GreenDao database
-    List<UserData> userdata_list = ObjectBox.get().boxFor(UserData.class).getAll();
+    List<UserDb> userdata_list = ObjectBox.get().boxFor(UserDb.class).getAll();
 
     public void onCreate() {
         super.onCreate();
@@ -68,20 +68,20 @@ public class UpdateLicenses extends Service {
 
                                     // If both data and image licence should be retrieved from server
                                     if (data_license.equals("0") && image_license.equals("0")) {
-                                        UserData uData = new UserData(getUserID(), name, email, server_data_license, server_image_license);
-                                        ObjectBox.get().boxFor(UserData.class).put(uData);
+                                        UserDb uData = new UserDb(getUserID(), name, email, server_data_license, server_image_license);
+                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
                                         Log.d(TAG, "Image and data licenses updated from the server.");
                                     }
                                     // If only Data License should be retrieved from server
                                     if (data_license.equals("0") && !image_license.equals("0")) {
-                                        UserData uData = new UserData(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
-                                        ObjectBox.get().boxFor(UserData.class).put(uData);
+                                        UserDb uData = new UserDb(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
+                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
                                         Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
                                     }
                                     // If only Image License should be retrieved from server
                                     if (!data_license.equals("0")) {
-                                        UserData uData = new UserData(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
-                                        ObjectBox.get().boxFor(UserData.class).put(uData);
+                                        UserDb uData = new UserDb(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
+                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
                                         Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
                                     }
                                 } else {
@@ -102,8 +102,8 @@ public class UpdateLicenses extends Service {
                 } else {
                     // If both data ind image license should be taken from preferences
                     Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
-                    UserData uData = new UserData(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
-                    ObjectBox.get().boxFor(UserData.class).put(uData);
+                    UserDb uData = new UserDb(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
+                    ObjectBox.get().boxFor(UserDb.class).put(uData);
                 }
             }
         }
@@ -111,7 +111,7 @@ public class UpdateLicenses extends Service {
     }
 
     // Get the data from ObjectBox database
-    private UserData getLoggedUser() {
+    private UserDb getLoggedUser() {
         return userdata_list.get(0);
     }
 

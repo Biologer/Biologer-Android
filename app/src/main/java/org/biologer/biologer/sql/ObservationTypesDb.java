@@ -4,7 +4,7 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 
 @Entity
-public class ObservationTypesData {
+public class ObservationTypesDb {
     @Id
     long id;
     private final long localeId;
@@ -13,7 +13,7 @@ public class ObservationTypesData {
     private String locale;
     private String name;
 
-    public ObservationTypesData(long id, long localeId, long observationId, String slug, String locale, String name) {
+    public ObservationTypesDb(long id, long localeId, long observationId, String slug, String locale, String name) {
         this.id = id;
         this.localeId = localeId;
         this.observationId = observationId;

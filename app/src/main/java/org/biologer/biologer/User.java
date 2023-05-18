@@ -7,13 +7,14 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.ObservationTypesData;
-import org.biologer.biologer.sql.Stage;
-import org.biologer.biologer.sql.TaxaTranslationData;
-import org.biologer.biologer.sql.TaxonData;
-import org.biologer.biologer.sql.TaxonGroupsData;
+import org.biologer.biologer.sql.ObservationTypesDb;
+import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxonDb;
+import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UnreadNotificationsDb;
+import org.biologer.biologer.sql.UserDb;
 
 /**
  * Created by brjovanovic on 12/24/2017.
@@ -48,23 +49,24 @@ public class User {
     private static void deleteAllTables() {
         Log.d(TAG, "Deleting all SQL tables.");
         ObjectBox.get().boxFor(EntryDb.class).removeAll();
-        ObjectBox.get().boxFor(TaxonGroupsData.class).removeAll();
+        ObjectBox.get().boxFor(TaxonGroupsDb.class).removeAll();
         ObjectBox.get().boxFor(TaxonGroupsTranslationData.class).removeAll();
+        ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
         deleteUserTables();
         deleteTaxaTables();
     }
 
     public static void deleteTaxaTables() {
         Log.d(TAG, "Deleting taxa SQL tables.");
-        ObjectBox.get().boxFor(TaxonData.class).removeAll();
-        ObjectBox.get().boxFor(TaxaTranslationData.class).removeAll();
-        ObjectBox.get().boxFor(ObservationTypesData.class).removeAll();
-        ObjectBox.get().boxFor(Stage.class).removeAll();
+        ObjectBox.get().boxFor(TaxonDb.class).removeAll();
+        ObjectBox.get().boxFor(TaxaTranslationDb.class).removeAll();
+        ObjectBox.get().boxFor(ObservationTypesDb.class).removeAll();
+        ObjectBox.get().boxFor(StageDb.class).removeAll();
     }
 
     public static void deleteUserTables() {
         Log.d(TAG, "Deleting user SQL table.");
-        ObjectBox.get().boxFor(UserData.class).removeAll();
+        ObjectBox.get().boxFor(UserDb.class).removeAll();
     }
 
     private static void resetPreferences(Context context) {

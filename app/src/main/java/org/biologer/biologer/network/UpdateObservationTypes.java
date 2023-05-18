@@ -8,7 +8,7 @@ import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
-import org.biologer.biologer.sql.ObservationTypesData;
+import org.biologer.biologer.sql.ObservationTypesDb;
 
 import java.util.List;
 
@@ -41,9 +41,9 @@ public class UpdateObservationTypes {
 
                             // Save translations in a separate table...
                             List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
-                            ObservationTypesData[] localizations = new ObservationTypesData[observation_translations.size()];
+                            ObservationTypesDb[] localizations = new ObservationTypesDb[observation_translations.size()];
                             for (int j = 0; j < observation_translations.size(); j++) {
-                                ObservationTypesData localization = new ObservationTypesData(
+                                ObservationTypesDb localization = new ObservationTypesDb(
                                         0,
                                         observation_translations.get(j).getId(),
                                         ob.getId().longValue(),
@@ -52,11 +52,11 @@ public class UpdateObservationTypes {
                                         observation_translations.get(j).getName());
                                 localizations[j] = localization;
                             }
-                            ObjectBox.get().boxFor(ObservationTypesData.class).put(localizations);
+                            ObjectBox.get().boxFor(ObservationTypesDb.class).put(localizations);
                             //App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
 
                         }
-                        Log.d(TAG, "Observation types locales written to the database, there are " + ObjectBox.get().boxFor(ObservationTypesData.class).count() + " records");
+                        Log.d(TAG, "Observation types locales written to the database, there are " + ObjectBox.get().boxFor(ObservationTypesDb.class).count() + " records");
                         SettingsManager.setObservationTypesUpdated(system_time);
                         Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                     }

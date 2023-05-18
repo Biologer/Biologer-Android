@@ -41,6 +41,7 @@ import okio.Timeout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.http.Body;
 
 public class NotificationView extends AppCompatActivity {
 
@@ -64,6 +65,7 @@ public class NotificationView extends AppCompatActivity {
         List<UnreadNotificationsDb> unreadNotification = query.find();
         query.close();
 
+        // TODO next line sometimes return IndexOutOfBoundsException: Index: 0, Size: 0
         String taxon = unreadNotification.get(0).getTaxonName();
         String author;
         if (unreadNotification.get(0).getCuratorName() != null) {
@@ -85,6 +87,7 @@ public class NotificationView extends AppCompatActivity {
         textView.setText(author + " " + action + " " + taxon + ".");
 
         int fieldObservationID = unreadNotification.get(0).getFieldObservationId();
+        String realNotificationID = unreadNotification.get(0).getRealId();
 
         Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
         fieldObservation.enqueue(new Callback<>() {
@@ -92,6 +95,8 @@ public class NotificationView extends AppCompatActivity {
             public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
+                        setNotificationAsRead(realNotificationID);
+
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             int photos = response.body().getData()[0].getPhotos().size();
                             for (int i = 0; i < photos; i++) {
@@ -138,6 +143,30 @@ public class NotificationView extends AppCompatActivity {
 
     }
 
+    private void setNotificationAsRead(String notification_id) {
+        String[] notification = new String[1];
+        notification[0] = notification_id;
+
+        Call<ResponseBody> notificationRead = RetrofitClient
+                .getService(SettingsManager.getDatabaseName())
+                .setNotificationAsRead(notification);
+        notificationRead.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Notification " + notification_id + " should be set to read now.");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.d(TAG, "Setting notification as read failed!");
+                t.printStackTrace();
+            }
+        });
+
+    }
+
 
     private void updatePhoto(String url, ImageView imageView) {
 
@@ -158,7 +187,7 @@ public class NotificationView extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
                 Log.d(TAG, "Something is wrong with image response!");
                 t.printStackTrace();
             }

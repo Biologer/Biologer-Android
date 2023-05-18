@@ -32,7 +32,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.RegisterResponse;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.sql.UserData;
+import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
 import java.util.Objects;
@@ -278,8 +278,8 @@ public class RegisterFragment3 extends Fragment {
     private void saveUserData() {
         String full_name =  ((LoginActivity) requireActivity()).register_name + " " +  ((LoginActivity) requireActivity()).register_surname;
         String email = ((LoginActivity) requireActivity()).et_username.getText().toString();
-        UserData userData = new UserData(0, full_name, email, getDataLicense(), getImageLicense());
-        ObjectBox.get().boxFor(UserData.class).put(userData);
+        UserDb userData = new UserDb(0, full_name, email, getDataLicense(), getImageLicense());
+        ObjectBox.get().boxFor(UserDb.class).put(userData);
         displaySuccess();
     }
 

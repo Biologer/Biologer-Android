@@ -8,7 +8,7 @@ import io.objectbox.annotation.Id;
  */
 
 @Entity
-public class UserData {
+public class UserDb {
     @Id
     long id;
     private String username;
@@ -16,7 +16,7 @@ public class UserData {
     private int data_license;
     private int image_license;
 
-    public UserData(long id, String username, String email, int data_license, int image_license) {
+    public UserDb(long id, String username, String email, int data_license, int image_license) {
         this.id = id;
         this.username = username;
         this.email = email;

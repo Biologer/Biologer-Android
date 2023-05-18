@@ -7,7 +7,7 @@ import io.objectbox.annotation.Id;
  * Created by Miloš Popović on 2.3.2019.
  */
 @Entity
-public class TaxonData {
+public class TaxonDb {
 
     @Id(assignable = true)
     long id;
@@ -21,8 +21,8 @@ public class TaxonData {
     private final String ancestorNames;
     private String groups;
 
-    public TaxonData(long id, long parentId, String latinName, String rank, long rankLevel, String speciesAuthor,
-            boolean restricted, boolean useAtlasCode, String ancestorNames, String groups) {
+    public TaxonDb(long id, long parentId, String latinName, String rank, long rankLevel, String speciesAuthor,
+                   boolean restricted, boolean useAtlasCode, String ancestorNames, String groups) {
         this.id = id;
         this.parentId = parentId;
         this.latinName = latinName;

@@ -4,14 +4,14 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 
 @Entity
-public class TaxonGroupsData {
+public class TaxonGroupsDb {
     @Id(assignable = true)
     long id;
     private long parentId;
     private String name;
     private String description;
 
-    public TaxonGroupsData(long id, long parentId, String name, String description) {
+    public TaxonGroupsDb(long id, long parentId, String name, String description) {
         this.id = id;
         this.parentId = parentId;
         this.name = name;
