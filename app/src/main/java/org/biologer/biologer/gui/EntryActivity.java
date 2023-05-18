@@ -669,7 +669,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
 
         // Check if the taxa is selected from the list = it has an ID.
-        if (currentItem.get(0).getTaxonId() != null) {
+        if (currentItem.get(0).getTaxonId() != 0) {
             taxonSelectedFromTheList = true;
         }
 
@@ -686,12 +686,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         setAccuracyColor();
 
         // Get the atlas code
-        if (currentItem.get(0).getTaxonId() != null) {
+        if (currentItem.get(0).getTaxonId() != 0) {
             Box<TaxonData> taxonDataBox = ObjectBox.get().boxFor(TaxonData.class);
             Query<TaxonData> query1 = taxonDataBox
                     .query(TaxonData_.id.equal(currentItem.get(0).getTaxonId()))
                     .build();
-            boolean use_atlas_code = query1.find().get(0).getUseAtlasCode();
+            boolean use_atlas_code = query1.find().get(0).isUseAtlasCode();
             query1.close();
             if (use_atlas_code) {
                 Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlas_code());
@@ -1164,7 +1164,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             String month = fullDate.substring(3, 5);
             String year = fullDate.substring(6, 10);
             String time = fullDate.substring(11, 16);
-            Long taxon_id = taxon.getId();
+            long taxon_id = taxon.getId();
             String taxon_name = taxon.getLatinName();
             String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
             String location = PreferenceManager.getDefaultSharedPreferences(this).getString("location_name", "");

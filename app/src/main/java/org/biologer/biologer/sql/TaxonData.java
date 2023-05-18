@@ -17,7 +17,7 @@ public class TaxonData {
     private final long rankLevel;
     private final String speciesAuthor;
     private final boolean restricted;
-    private final boolean useAtlasCode;
+    private boolean useAtlasCode;
     private final String ancestorNames;
     private String groups;
 
@@ -63,10 +63,6 @@ public class TaxonData {
         return restricted;
     }
 
-    public boolean isUseAtlasCode() {
-        return useAtlasCode;
-    }
-
     public String getAncestorNames() {
         return ancestorNames;
     }
@@ -79,10 +75,6 @@ public class TaxonData {
         id = id;
     }
 
-    public boolean getUseAtlasCode() {
-        return this.useAtlasCode;
-    }
-
     public String getGroups() {
         return groups;
     }
@@ -91,4 +83,11 @@ public class TaxonData {
         this.groups = groups;
     }
 
+    public boolean isUseAtlasCode() {
+        return useAtlasCode;
+    }
+
+    public void setUseAtlasCode(boolean useAtlasCode) {
+        this.useAtlasCode = useAtlasCode;
+    }
 }

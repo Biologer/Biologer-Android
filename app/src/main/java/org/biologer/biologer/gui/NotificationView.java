@@ -95,7 +95,12 @@ public class NotificationView extends AppCompatActivity {
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             int photos = response.body().getData()[0].getPhotos().size();
                             for (int i = 0; i < photos; i++) {
-                                String url = SettingsManager.getDatabaseName() + "/storage/" + response.body().getData()[0].getPhotos().get(i).getPath();
+                                String url;
+                                if (SettingsManager.getDatabaseName().equals("https://biologer.rs")) {
+                                    url = "https://biologer-rs-photos.eu-central-1.linodeobjects.com/" + response.body().getData()[0].getPhotos().get(i).getPath();
+                                } else {
+                                    url = SettingsManager.getDatabaseName() + "/storage/" + response.body().getData()[0].getPhotos().get(i).getPath();
+                                }
                                 Log.d(TAG, "Loading image from: " + url);
                                 if (i == 0) {
                                     ImageView imageView1 = findViewById(R.id.notification_view_image1);
@@ -140,12 +145,16 @@ public class NotificationView extends AppCompatActivity {
         photoResponse.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                ResponseBody responseBody = response.body();
-                Log.d(TAG, "Image response obtained.");
-                InputStream inputStream = responseBody.byteStream();
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                Log.d(TAG, bitmap.toString() + "; " + bitmap.getHeight() + "x" + bitmap.getWidth());
-                imageView.setImageBitmap(bitmap);
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        ResponseBody responseBody = response.body();
+                        Log.d(TAG, "Image response obtained.");
+                        InputStream inputStream = responseBody.byteStream();
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        Log.d(TAG, bitmap.toString() + "; " + bitmap.getHeight() + "x" + bitmap.getWidth());
+                        imageView.setImageBitmap(bitmap);
+                    }
+                }
             }
 
             @Override
@@ -155,5 +164,4 @@ public class NotificationView extends AppCompatActivity {
             }
         });
     }
-
 }

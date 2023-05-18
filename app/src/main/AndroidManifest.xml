@@ -114,6 +114,7 @@
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
         <service android:name="org.biologer.biologer.network.UploadRecords"/>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
+        <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>
 
     </application>

@@ -10,17 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,8 +53,6 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.FieldObservationData;
-import org.biologer.biologer.network.JSON.FieldObservationResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
@@ -68,6 +62,7 @@ import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
+import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -75,7 +70,6 @@ import org.biologer.biologer.sql.UserData;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -86,7 +80,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 import io.objectbox.Box;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -265,7 +258,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     uploadRecords();
                 }
                 updateTaxa();
-                updateNotifications(database_url);
+                final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
+                startService(update_notifications);
+                displayUnreadNotifications();
             } else {
                 checkNotificationPermission();
             }
@@ -275,68 +270,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    private void updateNotifications(String database_url) {
-
-        // Get new notifications from the API
-        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(database_url).getUnreadNotifications();
-        unreadNotificationsResponseCall.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        int size = response.body().getMeta().getTotal();
-                        // Check if the number of notifications in local SQL equals the number of notifications online.
-                        // If not synchronise, other-ways assume that nothing changed since the last time.
-                        if (size >= 1 && size != ObjectBox.get().boxFor(UnreadNotificationsDb.class).count()) {
-                            Log.d(TAG, "Updating notifications.");
-                            // Clean the SQL database
-                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
-                            UnreadNotificationsDb[] notificationForSQL = new UnreadNotificationsDb[size];
-                            for (int i = 0; i < size; i++) {
-                                UnreadNotification unreadNotification = response.body().getData().get(i);
-                                notificationForSQL[i] = new UnreadNotificationsDb(
-                                        0, unreadNotification.getId(),
-                                        unreadNotification.getType(),
-                                        unreadNotification.getNotifiable_type(),
-                                        unreadNotification.getData().getField_observation_id(),
-                                        unreadNotification.getData().getCauser_name(),
-                                        unreadNotification.getData().getCurator_name(),
-                                        unreadNotification.getData().getTaxon_name(),
-                                        unreadNotification.getUpdated_at());
-                            }
-                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
-                        } else {
-                            Log.d(TAG, "No need to update notifications.");
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-            }
-        });
-
-        // Display pending notifications
-        displayUnreadNotifications();
-
-    }
-
     @SuppressLint("MissingPermission")
     private void displayUnreadNotifications() {
         Log.d(TAG, "Displaying UnreadNotifications for the observations.");
         Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
 
         if (!box.isEmpty()) {
-
             // Display no more than 15 notifications!
-            int MAX = (int) box.count();
-            if (MAX > 15) {
-                MAX = 15;
-            }
-
-            for (int i = 0; i < MAX; i++) {
+            for (int i = 0; i < 15; i++) {
 
                 long notification_id = box.getAll().get(i).getId();
 

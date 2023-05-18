@@ -235,7 +235,11 @@ public class UploadRecords extends Service {
         photos = new ArrayList<>();
         // Create apiEntry object
         EntryDb entryDb = entryList.get(0);
-        apiEntry.setTaxonId(entryDb.getTaxonId() != null ? entryDb.getTaxonId().intValue() : null);
+        if (entryDb.getTaxonId() != 0) {
+            apiEntry.setTaxonId((int) entryDb.getTaxonId());
+        } else {
+            apiEntry.setTaxonId(null);
+        }
         apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
         apiEntry.setYear(entryDb.getYear());
         apiEntry.setMonth(entryDb.getMonth());
@@ -347,7 +351,11 @@ public class UploadRecords extends Service {
         photos = new ArrayList<>();
         // Create apiEntry object
         EntryDb entryDb = entryList.get(0);
-        apiEntry.setTaxonId(entryDb.getTaxonId() != null ? entryDb.getTaxonId().intValue() : null);
+        if (entryDb.getTaxonId() != 0) {
+            apiEntry.setTaxonId((int) entryDb.getTaxonId());
+        } else {
+            apiEntry.setTaxonId(null);
+        }
         apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
         apiEntry.setYear(entryDb.getYear());
         apiEntry.setMonth(entryDb.getMonth());

@@ -12,7 +12,7 @@ public class EntryDb {
 
     @Id
     long id;
-    private Long taxonId;
+    private long taxonId;
     private String taxonSuggestion;
     private String year;
     private String month;
@@ -40,7 +40,7 @@ public class EntryDb {
     private String habitat;
     private String observation_type_ids;
 
-    public EntryDb(long id, Long taxonId, String taxonSuggestion, String year, String month, String day,
+    public EntryDb(long id, long taxonId, String taxonSuggestion, String year, String month, String day,
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
                    String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
@@ -207,10 +207,10 @@ public class EntryDb {
     public void setTime(String time) {
         this.time = time;
     }
-    public Long getTaxonId() {
+    public long getTaxonId() {
         return this.taxonId;
     }
-    public void setTaxonId(Long taxonId) {
+    public void setTaxonId(long taxonId) {
         this.taxonId = taxonId;
     }
     public String getTaxonSuggestion() {
