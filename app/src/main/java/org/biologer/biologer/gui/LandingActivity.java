@@ -191,6 +191,102 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
+                new IntentFilter(UploadRecords.TASK_COMPLETED)
+        );
+        // If the email is not confirmed we would like to check this every time the
+        // user restarts the LandingActivity
+        if (!SettingsManager.isMailConfirmed()) {
+            String database = SettingsManager.getDatabaseName();
+            if (database != null) {
+                // Check mail should not be called if the user is not logged in.
+                // The user is not logged in if the SQL UserData is empty.
+                List<UserDb> userData = ObjectBox.get().boxFor(UserDb.class).getAll();
+                if (!userData.isEmpty()) {
+                    checkMailConfirmed(database);
+                }
+            }
+            // It seems that the user is logged out, thus we need to go to the login screen
+            else {
+                Toast.makeText(this, "There is no user data in SQL database!", Toast.LENGTH_LONG).show();
+                showUserLoginScreen(false);
+            }
+        }
+
+    }
+
+    @Override
+    protected void onStop() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+            return;
+        }
+
+        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+            Log.d(TAG, "Back button pressed, while LandingFragment is active.");
+            getSupportFragmentManager().popBackStack();
+            super.onBackPressed();
+            finishAffinity();
+            return;
+        }
+
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onResume() {
+        //navDrawerFill();
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        View header = navigationView.getHeaderView(0);
+        TextView tv_username = header.findViewById(R.id.tv_username);
+        TextView tv_email = header.findViewById(R.id.tv_email);
+        tv_username.setText(getUserName());
+        tv_email.setText(getUserEmail());
+
+        super.onResume();
+    }
+
+    // Right menu for uploading entries
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.upload_menu, menu);
+        uploadMenu = menu;
+        setMenuIconVisibility();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_upload) {
+            Log.d(TAG, "Upload records button clicked.");
+            // Disable the upload button to avoid double taps
+            item.setEnabled(false);
+            Objects.requireNonNull(item.getIcon()).setAlpha(100);
+            // Upload data to the server
+            uploadRecords();
+            return true;
+        }
+        if (item.getItemId() == R.id.export_csv) {
+            Log.d(TAG, "CSV export button clicked.");
+            exportCSV();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
         User.clearUserData(LandingActivity.this);
@@ -257,8 +353,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
                 updateTaxa();
                 final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
+                update_notifications.putExtra("download", true);
                 startService(update_notifications);
-                displayUnreadNotifications();
             } else {
                 checkNotificationPermission();
             }
@@ -266,56 +362,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void displayUnreadNotifications() {
-        Log.d(TAG, "Displaying UnreadNotifications for the observations.");
-        Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
-
-        if (!box.isEmpty()) {
-
-            // Display no more than 15 notifications!
-            for (int i = 0; i < (int) box.count(); i++) {
-
-                long notification_id = box.getAll().get(i).getId();
-
-                String author;
-                if (box.getAll().get(i).getCuratorName() != null) {
-                    author = box.getAll().get(i).getCuratorName();
-                } else {
-                    author = box.getAll().get(i).getCauserName();
-                }
-
-                Log.d(TAG, box.getAll().get(i).getType());
-                String action;
-                if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationApproved")) {
-                    action = getString(R.string.approved_observation);
-                } else if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationEdited")) {
-                    action = getString(R.string.changed_observation);
-                } else {
-                    action = getString(R.string.did_something_with_observation);
-                }
-
-                Bundle bundle = new Bundle();
-                bundle.putInt("id", (int) notification_id);
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
-                        .setSmallIcon(R.mipmap.ic_notification)
-                        .setContentTitle(getString(R.string.observation_changed))
-                        .setContentText(author + " " + action + " " + box.getAll().get(i).getTaxonName() + ".")
-                        .setPriority(NotificationCompat.PRIORITY_LOW)
-                        .setContentIntent(getPendingIntent(bundle, (int)notification_id))
-                        .setOnlyAlertOnce(true)
-                        .setAutoCancel(true);
-                NotificationManagerCompat.from(this).notify((int) notification_id, builder.build());
-            }
-        }
-    }
-
-    private PendingIntent getPendingIntent(Bundle bundle, int id) {
-        Intent notificationIntent = new Intent(this, NotificationView.class);
-        notificationIntent.putExtras(bundle);
-        return PendingIntent.getActivity(this, id, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
     }
 
     private void checkMailConfirmed(String database_url) {
@@ -537,38 +583,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
             );
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(UploadRecords.TASK_COMPLETED)
-        );
-        // If the email is not confirmed we would like to check this every time the
-        // user restarts the LandingActivity
-        if (!SettingsManager.isMailConfirmed()) {
-            String database = SettingsManager.getDatabaseName();
-            if (database != null) {
-                // Check mail should not be called if the user is not logged in.
-                // The user is not logged in if the SQL UserData is empty.
-                List<UserDb> userData = ObjectBox.get().boxFor(UserDb.class).getAll();
-                if (!userData.isEmpty()) {
-                    checkMailConfirmed(database);
-                }
-            }
-            // It seems that the user is logged out, thus we need to go to the login screen
-            else {
-                Toast.makeText(this, "There is no user data in SQL database!", Toast.LENGTH_LONG).show();
-                showUserLoginScreen(false);
-            }
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
-        super.onStop();
-    }
-
     private boolean shouldDownload() {
         String network_type = InternetConnection.networkType(this);
         if (network_type != null) {
@@ -766,69 +780,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         fragmentTransaction.add(R.id.content_frame, preferencesFragment);
         fragmentTransaction.addToBackStack("Preferences fragment");
         fragmentTransaction.commit();
-    }
-
-    @Override
-    public void onBackPressed() {
-
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-            return;
-        }
-
-        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-            Log.d(TAG, "Back button pressed, while LandingFragment is active.");
-            getSupportFragmentManager().popBackStack();
-            super.onBackPressed();
-            finishAffinity();
-            return;
-        }
-
-        super.onBackPressed();
-    }
-
-    @Override
-    public void onResume() {
-        //navDrawerFill();
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        View header = navigationView.getHeaderView(0);
-        TextView tv_username = header.findViewById(R.id.tv_username);
-        TextView tv_email = header.findViewById(R.id.tv_email);
-        tv_username.setText(getUserName());
-        tv_email.setText(getUserEmail());
-
-        super.onResume();
-    }
-
-    // Right menu for uploading entries
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.upload_menu, menu);
-        uploadMenu = menu;
-        setMenuIconVisibility();
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_upload) {
-            Log.d(TAG, "Upload records button clicked.");
-            // Disable the upload button to avoid double taps
-            item.setEnabled(false);
-            Objects.requireNonNull(item.getIcon()).setAlpha(100);
-            // Upload data to the server
-            uploadRecords();
-            return true;
-        }
-        if (item.getItemId() == R.id.export_csv) {
-            Log.d(TAG, "CSV export button clicked.");
-            exportCSV();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     private void exportCSV() {
