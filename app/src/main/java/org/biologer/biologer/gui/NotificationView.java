@@ -21,6 +21,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
+import com.google.android.material.button.MaterialButton;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
@@ -91,6 +92,15 @@ public class NotificationView extends AppCompatActivity {
         TextView textView = findViewById(R.id.observation_main_text);
         textView.setText(author + " " + action + " " + taxon + ".");
 
+        MaterialButton buttonReadAll = findViewById(R.id.notification_view_read_all_button);
+        buttonReadAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                buttonReadAll.setEnabled(false);
+                setAllNotificationsAsRead();
+            }
+        });
+
         int fieldObservationID = unreadNotification.get(0).getFieldObservationId();
         String realNotificationID = unreadNotification.get(0).getRealId();
 
@@ -148,6 +158,30 @@ public class NotificationView extends AppCompatActivity {
 
     }
 
+    private void setAllNotificationsAsRead() {
+        Call<ResponseBody> notificationRead = RetrofitClient
+                .getService(SettingsManager.getDatabaseName())
+                .setAllNotificationAsRead(true);
+
+        notificationRead.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "All notifications should be set to read now.");
+                    ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
+
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.d(TAG, "Setting notification as read failed!");
+                t.printStackTrace();
+            }
+        });
+
+    }
+
     private void setNotificationAsRead(String notification_id, int system_notification_id) {
         String[] notification = new String[1];
         notification[0] = notification_id;
@@ -161,6 +195,12 @@ public class NotificationView extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "Notification " + notification_id + " should be set to read now.");
                     updateNotificationDatabase(system_notification_id);
+                    // TODO This didn’t work :(
+                    //NotificationManagerCompat.from(NotificationView.this).cancelAll();
+                    // TODO Try with this...
+                    final Intent update_notifications = new Intent(NotificationView.this, UpdateUnreadNotifications.class);
+                    update_notifications.putExtra("download", false);
+                    startService(update_notifications);
                 }
             }
 

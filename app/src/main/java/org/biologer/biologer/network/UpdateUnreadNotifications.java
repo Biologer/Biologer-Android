@@ -36,8 +36,8 @@ public class UpdateUnreadNotifications extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         boolean should_download = intent.getBooleanExtra("download", true);
-//                getExtras().get("download");
         if (should_download) {
             Log.d(TAG, "Notifications will be downloaded and displayed.");
             updateNotifications();
@@ -45,7 +45,9 @@ public class UpdateUnreadNotifications extends Service {
             Log.d(TAG, "Notification view will be updated only.");
             displayUnreadNotifications();
         }
+
         return flags;
+
     }
 
     @Override
@@ -162,6 +164,8 @@ public class UpdateUnreadNotifications extends Service {
                 //NotificationManagerCompat.from(this).cancel((int) notification_id);
                 NotificationManagerCompat.from(this).notify((int) notification_id, builder.build());
             }
+        } else {
+            NotificationManagerCompat.from(this).cancelAll();
         }
     }
 

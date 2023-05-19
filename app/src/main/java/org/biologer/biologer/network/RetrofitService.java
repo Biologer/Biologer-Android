@@ -131,7 +131,7 @@ public interface RetrofitService {
     @Headers({"Accept: application/json"})
     @POST ("/api/my/read-notifications/batch")
     Call<ResponseBody> setAllNotificationAsRead(
-            @Query("notifications_ids[]") String[] notifications);
+            @Query("all[]") boolean read_all);
 
     @Headers({"Accept: application/json"})
     @GET("/api/view-groups")
