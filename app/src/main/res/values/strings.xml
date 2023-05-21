@@ -432,6 +432,12 @@
     <string name="observation_changed">Observation changed</string>
     <string name="no_login_token_falling_back_to_login_screen">No login token, falling back to login screen.</string>
     <string name="both_login_and_refresh_tokens_expired">Both login and refresh tokens expired.</string>
-    <string name="all_read">Mark all as read</string>
+    <string name="all_read">Mark all notifications as read</string>
+    <string name="there_are_at_least">"There are "</string>
+    <string name="changes_to_your_field_observations">" changes to your field observations."</string>
+    <string name="biologer">Biologer\n</string>
+    <string name="your_field_observations_were_changed">Your field observations were changed.</string>
+    <string name="unknown_date">unknown</string>
+    <string name="on">on</string>
 
 </resources>

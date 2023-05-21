@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -38,7 +39,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -89,16 +98,37 @@ public class NotificationView extends AppCompatActivity {
             action = getString(R.string.did_something_with_observation);
         }
 
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault());
+        String originalDate = unreadNotification.get(0).getUpdatedAt();
+        Date date = null;
+        try {
+            date = dateFormat.parse(originalDate);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        DateFormat dateFormatLocalized = android.text.format.DateFormat.getLongDateFormat(this);
+        DateFormat timeFormatLocalized = android.text.format.DateFormat.getTimeFormat(this);
+        String date_string = null;
+        if (date != null) {
+            date_string = dateFormatLocalized.format(date);
+        } else {
+            date_string = getString(R.string.unknown_date);
+        }
+        String time_string = null;
+        if (date != null) {
+            time_string = timeFormatLocalized.format(date);
+        } else {
+            time_string = getString(R.string.unknown_date);
+        }
+
         TextView textView = findViewById(R.id.observation_main_text);
-        textView.setText(author + " " + action + " " + taxon + ".");
+        textView.setText(Html.fromHtml("<b>" + author + "</b> " + action + "<i>" + taxon + "</i> " + getString(R.string.on) + " " + date_string + " (" + time_string + ")."));
 
         MaterialButton buttonReadAll = findViewById(R.id.notification_view_read_all_button);
-        buttonReadAll.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                buttonReadAll.setEnabled(false);
-                setAllNotificationsAsRead();
-            }
+        buttonReadAll.setOnClickListener(v -> {
+            buttonReadAll.setEnabled(false);
+            setAllNotificationsAsRead();
         });
 
         int fieldObservationID = unreadNotification.get(0).getFieldObservationId();

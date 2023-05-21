@@ -28,6 +28,9 @@ import retrofit2.Response;
 public class UpdateUnreadNotifications extends Service {
 
     private static final String TAG = "Biologer.UpdateNotif";
+    private final String GROUP_NOTIFICATIONS = "biologer.UnreadNotifications";
+    private final int SUMMARY_ID = 0;
+
 
     public void onCreate() {
         super.onCreate();
@@ -157,13 +160,25 @@ public class UpdateUnreadNotifications extends Service {
                         .setSmallIcon(R.mipmap.ic_notification)
                         .setContentTitle(getString(R.string.observation_changed))
                         .setContentText(author + " " + action + " " + box.getAll().get(i).getTaxonName() + ".")
-                        .setPriority(NotificationCompat.PRIORITY_LOW)
                         .setContentIntent(getPendingIntent(bundle, (int) notification_id))
+                        .setGroup(GROUP_NOTIFICATIONS)
                         .setOnlyAlertOnce(true)
                         .setAutoCancel(true);
-                //NotificationManagerCompat.from(this).cancel((int) notification_id);
                 NotificationManagerCompat.from(this).notify((int) notification_id, builder.build());
             }
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
+                    .setSmallIcon(R.mipmap.ic_notification)
+                    .setContentTitle(getString(R.string.observation_changed))
+                    .setContentText(getString(R.string.there_are_at_least) + box.count() + getString(R.string.changes_to_your_field_observations))
+                    .setStyle(new NotificationCompat.InboxStyle()
+                            .setSummaryText(getString(R.string.your_field_observations_were_changed))
+                            .setBigContentTitle(getString(R.string.biologer)))
+                    .setGroup(GROUP_NOTIFICATIONS)
+                    .setAutoCancel(true)
+                    .setGroupSummary(true);
+            NotificationManagerCompat.from(this).notify(SUMMARY_ID, builder.build());
+
         } else {
             NotificationManagerCompat.from(this).cancelAll();
         }
