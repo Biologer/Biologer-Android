@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -127,8 +128,20 @@ public class NotificationView extends AppCompatActivity {
 
         MaterialButton buttonReadAll = findViewById(R.id.notification_view_read_all_button);
         buttonReadAll.setOnClickListener(v -> {
-            buttonReadAll.setEnabled(false);
-            setAllNotificationsAsRead();
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("This action will mark all the notifications as read including the ones on the web. Do you want to continue anyway?")
+                    .setCancelable(true)
+                    .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
+                        buttonReadAll.setEnabled(false);
+                        setAllNotificationsAsRead();
+                        dialog.dismiss();
+                    })
+                    .setNegativeButton(getString(R.string.no), (dialog, id) -> {
+                        dialog.dismiss();
+                    }
+        );
+            final AlertDialog alert = builder.create();
+            alert.show();
         });
 
         int fieldObservationID = unreadNotification.get(0).getFieldObservationId();
