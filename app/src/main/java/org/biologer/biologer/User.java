@@ -41,32 +41,16 @@ public class User {
 
     public static void clearUserData(Context context) {
         Log.d(TAG, "Deleting all user settings.");
-        resetSettings();
-        resetPreferences(context);
         deleteAllTables();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
     }
 
     private static void deleteAllTables() {
         Log.d(TAG, "Deleting all SQL tables.");
-        ObjectBox.get().boxFor(EntryDb.class).removeAll();
-        ObjectBox.get().boxFor(TaxonGroupsDb.class).removeAll();
-        ObjectBox.get().boxFor(TaxonGroupsTranslationData.class).removeAll();
-        ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
-        deleteUserTables();
-        deleteTaxaTables();
-    }
-
-    public static void deleteTaxaTables() {
-        Log.d(TAG, "Deleting taxa SQL tables.");
-        ObjectBox.get().boxFor(TaxonDb.class).removeAll();
-        ObjectBox.get().boxFor(TaxaTranslationDb.class).removeAll();
-        ObjectBox.get().boxFor(ObservationTypesDb.class).removeAll();
-        ObjectBox.get().boxFor(StageDb.class).removeAll();
-    }
-
-    public static void deleteUserTables() {
-        Log.d(TAG, "Deleting user SQL table.");
-        ObjectBox.get().boxFor(UserDb.class).removeAll();
+        ObjectBox.get().deleteAllFiles();
     }
 
     private static void resetPreferences(Context context) {

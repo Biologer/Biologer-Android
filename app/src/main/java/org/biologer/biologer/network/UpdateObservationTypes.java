@@ -53,7 +53,6 @@ public class UpdateObservationTypes {
                                 localizations[j] = localization;
                             }
                             ObjectBox.get().boxFor(ObservationTypesDb.class).put(localizations);
-                            //App.get().getDaoSession().getObservationTypesDataDao().insertOrReplaceInTx(localizations);
 
                         }
                         Log.d(TAG, "Observation types locales written to the database, there are " + ObjectBox.get().boxFor(ObservationTypesDb.class).count() + " records");

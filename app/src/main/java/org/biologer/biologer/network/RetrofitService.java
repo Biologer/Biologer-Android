@@ -3,6 +3,7 @@ package org.biologer.biologer.network;
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.APIEntryBirdloger;
 import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
+import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.JSON.FieldObservationResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
@@ -125,13 +126,15 @@ public interface RetrofitService {
     @POST ("/api/my/read-notifications/batch")
     Call<ResponseBody> setNotificationAsRead(
             @Query("notifications_ids[]") String[] notifications);
-    //Call<ResponseBody> setNotificationAsRead(
-    //        @Body String[] id);
 
     @Headers({"Accept: application/json"})
     @POST ("/api/my/read-notifications/batch")
     Call<ResponseBody> setAllNotificationAsRead(
             @Query("all[]") boolean read_all);
+
+    @Headers({"Accept: application/json"})
+    @GET("/api/announcements")
+    Call<AnnouncementsResponse> getAnnouncements();
 
     @Headers({"Accept: application/json"})
     @GET("/api/view-groups")
@@ -142,7 +145,7 @@ public interface RetrofitService {
     Call<ObservationTypesResponse> getObservationTypes(
             @Query("updated_after") int updated_after);
 
-    @Headers({"Accept: application/json"})
+    @Headers({"Accept: application/json" })
     @POST("/api/elevation")
     Call<ElevationResponse> getElevation(@Query("latitude") double latitude,
                                          @Query("longitude") double longitude);

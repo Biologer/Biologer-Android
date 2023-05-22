@@ -50,6 +50,8 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
+import org.biologer.biologer.network.JSON.AnnouncementsData;
+import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
@@ -59,6 +61,8 @@ import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
+import org.biologer.biologer.sql.AnnouncementTranslationsDb;
+import org.biologer.biologer.sql.AnnouncementsDb;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -293,6 +297,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Running online services");
 
         // If SQL is updated we will try to login in the user
+        // TODO check if we still need this SQL stuff!
         if (SettingsManager.isSqlUpdated()) {
             onSqlUpdated(database_url);
         } else {
@@ -345,11 +350,23 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.d(TAG, "Notifications are enabled.");
                 if (shouldDownload()) {
                     uploadRecords();
+
+                    // Update announcements
+                    long current_time = System.currentTimeMillis() / 1000; // in seconds
+                    long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
+                    if (last_check == 0 || current_time > (last_check + 18000) ) { // don’t get data from veb in the next 5 hours
+                        Log.d(TAG, "Announcements should be updated since 5 hours elapsed.");
+                        updateAnnouncements(database_url);
+                        SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
+                    }
+
+                    // Update notifications
+                    final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
+                    update_notifications.putExtra("download", true);
+                    startService(update_notifications);
                 }
                 updateTaxa();
-                final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
-                update_notifications.putExtra("download", true);
-                startService(update_notifications);
+
             } else {
                 checkNotificationPermission();
             }
@@ -357,6 +374,58 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
+    }
+
+    private void updateAnnouncements(String database_uri) {
+        Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_uri).getAnnouncements();
+        announcements.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
+                if (response.isSuccessful()) {
+                    AnnouncementsData[] announcementsData;
+                    if (response.body() != null) {
+                        announcementsData = response.body().getData();
+                        int number_of_announcements = announcementsData.length;
+                        AnnouncementsDb[] announcementsDbs = new AnnouncementsDb[number_of_announcements];
+                        for (int i = 0; i < number_of_announcements; i++) {
+                            announcementsDbs[i] = new AnnouncementsDb(
+                                    announcementsData[i].getId(),
+                                    announcementsData[i].getCreatorName(),
+                                    announcementsData[i].isPrivate(),
+                                    announcementsData[i].getCreatedAt(),
+                                    announcementsData[i].getUpdatedAt(),
+                                    announcementsData[i].isRead(),
+                                    announcementsData[i].getTitle(),
+                                    announcementsData[i].getMessage());
+
+                            int number_of_translations = announcementsData[i].getTranslations().length;
+                            AnnouncementTranslationsDb[] announcementTranslationsDbs = new AnnouncementTranslationsDb[number_of_translations];
+                            for (int j = 0; j < number_of_translations; j++) {
+                                Log.d(TAG, "Announcement translations " + j);
+                                announcementTranslationsDbs[j] = new AnnouncementTranslationsDb(
+                                        announcementsData[i].getTranslations()[j].getId(),
+                                        announcementsData[i].getId(),
+                                        announcementsData[i].getTranslations()[j].getLocale(),
+                                        announcementsData[i].getTranslations()[j].getTitle(),
+                                        announcementsData[i].getTranslations()[j].getMessage()
+                                );
+                            }
+                            ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
+
+                        }
+                        ObjectBox.get().boxFor(AnnouncementsDb.class).put(announcementsDbs);
+                        Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
+                                ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).count() +
+                                " announcement translations.");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<AnnouncementsResponse> call, @NonNull Throwable t) {
+                Log.d(TAG, "Could not get announcements: " + t.getLocalizedMessage());
+            }
+        });
     }
 
     private void checkMailConfirmed(String database_url) {
