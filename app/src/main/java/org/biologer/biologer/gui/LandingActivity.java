@@ -1,8 +1,6 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -28,7 +26,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -63,7 +60,6 @@ import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UserDb;
 
 import java.io.FileNotFoundException;
@@ -77,7 +73,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import io.objectbox.Box;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

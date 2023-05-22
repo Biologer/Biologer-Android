@@ -19,17 +19,22 @@ import org.biologer.biologer.gui.NotificationView;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
+import org.biologer.biologer.sql.UnreadNotificationsDb_;
+
+import java.util.List;
 
 import io.objectbox.Box;
+import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class UpdateUnreadNotifications extends Service {
 
-    private static final String TAG = "Biologer.UpdateNotif";
-    private final String GROUP_NOTIFICATIONS = "biologer.UnreadNotifications";
-    private final int SUMMARY_ID = 0;
+    private static final String TAG = "Biologer.NotificationU";
+    public static String GROUP_NOTIFICATIONS = "biologer.UnreadNotifications";
+    int SUMMARY_ID = 0;
+
 
 
     public void onCreate() {
@@ -41,14 +46,18 @@ public class UpdateUnreadNotifications extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         boolean should_download = intent.getBooleanExtra("download", true);
+        long notification_id = intent.getLongExtra("notification_id", 0);
         if (should_download) {
             Log.d(TAG, "Notifications will be downloaded and displayed.");
             updateNotifications();
         } else {
-            Log.d(TAG, "Notification view will be updated only.");
-            displayUnreadNotifications();
+            Log.d(TAG, "Notification view will be displayed only.");
+            if (notification_id != 0) {
+                displayUnreadNotification(notification_id);
+            } else {
+                displayUnreadNotifications();
+            }
         }
-
         return flags;
 
     }
@@ -58,6 +67,8 @@ public class UpdateUnreadNotifications extends Service {
         return null;
     }
 
+    // This will download 15 notifications from the veb and call displayUnreadNotifications()
+    // to displays all of them in notification area
     private void updateNotifications() {
 
         // Get new notifications from the API
@@ -123,6 +134,7 @@ public class UpdateUnreadNotifications extends Service {
 
     }
 
+    // This will display all the notifications found in local ObjectBox database
     @SuppressLint("MissingPermission")
     public void displayUnreadNotifications() {
         Log.d(TAG, "Displaying UnreadNotifications for the observations.");
@@ -135,22 +147,8 @@ public class UpdateUnreadNotifications extends Service {
 
                 long notification_id = box.getAll().get(i).getId();
 
-                String author;
-                if (box.getAll().get(i).getCuratorName() != null) {
-                    author = box.getAll().get(i).getCuratorName();
-                } else {
-                    author = box.getAll().get(i).getCauserName();
-                }
-
-                Log.d(TAG, box.getAll().get(i).getType());
-                String action;
-                if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationApproved")) {
-                    action = getString(R.string.approved_observation);
-                } else if (box.getAll().get(i).getType().equals("App\\Notifications\\FieldObservationEdited")) {
-                    action = getString(R.string.changed_observation);
-                } else {
-                    action = getString(R.string.did_something_with_observation);
-                }
+                String author = getAuthor(box.getAll().get(i));
+                String action = getAction(box.getAll().get(i).getType());
 
                 Log.d(TAG, "Notification ID for Android system is " + notification_id);
 
@@ -182,6 +180,78 @@ public class UpdateUnreadNotifications extends Service {
         } else {
             NotificationManagerCompat.from(this).cancelAll();
         }
+    }
+
+    private String getAction(String type) {
+        String action = null;
+        switch (type) {
+            case "App\\Notifications\\FieldObservationApproved":
+                action = getString(R.string.approved_observation);
+                break;
+            case "App\\Notifications\\FieldObservationEdited":
+                action = getString(R.string.changed_observation);
+                break;
+            case "App\\Notifications\\FieldObservationMarkedUnidentifiable":
+                action = getString(R.string.marked_as_unidentifiable);
+                break;
+            default:
+                action = getString(R.string.did_something_with_observation);
+                break;
+        }
+        return action;
+    }
+
+    // This will only display the notification from Object Box with the given ID
+    @SuppressLint("MissingPermission")
+    public void displayUnreadNotification(long notification_id) {
+        Log.d(TAG, "Displaying one UnreadNotification for the observations.");
+        Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        Query<UnreadNotificationsDb> query = box
+                .query(UnreadNotificationsDb_.id.equal(notification_id))
+                .build();
+        UnreadNotificationsDb unreadNotification = query.find().get(0);
+        query.close();
+
+        if (unreadNotification != null) {
+            long id = unreadNotification.getId();
+            String author = getAuthor(unreadNotification);
+            String action = getAction(unreadNotification.getType());
+            Log.d(TAG, "Notification ID for Android system is " + id);
+
+            Bundle bundle = new Bundle();
+            bundle.putInt("id", (int) id);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
+                    .setSmallIcon(R.mipmap.ic_notification)
+                    .setContentTitle(getString(R.string.observation_changed))
+                    .setContentText(author + " " + action + " " + unreadNotification.getTaxonName() + ".")
+                    .setContentIntent(getPendingIntent(bundle, (int) id))
+                    .setGroup(GROUP_NOTIFICATIONS)
+                    .setOnlyAlertOnce(true)
+                    .setAutoCancel(true);
+            NotificationManagerCompat.from(this).notify((int) id, builder.build());
+
+            NotificationCompat.Builder builder1 = new NotificationCompat.Builder(this, "biologer_observations")
+                    .setSmallIcon(R.mipmap.ic_notification)
+                    .setContentTitle(getString(R.string.observation_changed))
+                    .setContentText(getString(R.string.there_are_at_least) + box.count() + getString(R.string.changes_to_your_field_observations))
+                    .setStyle(new NotificationCompat.InboxStyle()
+                            .setSummaryText(getString(R.string.your_field_observations_were_changed))
+                            .setBigContentTitle(getString(R.string.biologer)))
+                    .setGroup(GROUP_NOTIFICATIONS)
+                    .setAutoCancel(true)
+                    .setGroupSummary(true);
+            NotificationManagerCompat.from(this).notify(SUMMARY_ID, builder1.build());
+        }
+    }
+
+    private String getAuthor(UnreadNotificationsDb unreadNotificationsDb) {
+        String author = null;
+        if (unreadNotificationsDb.getCuratorName() != null) {
+            author = unreadNotificationsDb.getCuratorName();
+        } else {
+            author = unreadNotificationsDb.getCauserName();
+        }
+        return author;
     }
 
     private PendingIntent getPendingIntent(Bundle bundle, int id) {

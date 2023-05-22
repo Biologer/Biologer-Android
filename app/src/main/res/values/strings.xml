@@ -426,7 +426,7 @@
     <string name="refresh_token_text">It looks like the login token is invalid or expired. Please enter your password in order to log back into Biologer.</string>
     <string name="channel_observation_name">Unread notifications</string>
     <string name="channel_observation_description">Get unread notifications on your field observations.</string>
-    <string name="approved_observation">"approved your observation of "</string>
+    <string name="approved_observation">"approved your observation of"</string>
     <string name="changed_observation">changed your observation of</string>
     <string name="did_something_with_observation">did something with your observation of</string>
     <string name="observation_changed">Observation changed</string>
@@ -439,5 +439,13 @@
     <string name="your_field_observations_were_changed">Your field observations were changed.</string>
     <string name="unknown_date">unknown</string>
     <string name="on">on</string>
+    <string name="next_unread">Next unread notification</string>
+    <string name="marked_unidentifiable">marked observation of</string>
+    <string name="marked_unidentifiable2">as unidentifiable</string>
+    <string name="marked_as_unidentifiable">marked unidentifiable</string>
+    <string name="first_unread_notification">First unread notification</string>
+    <string name="no_unread_notifications">No unread notifications</string>
+    <string name="go_back">Go back to Biologer</string>
+    <string name="hurray_you_just_read_all_the_notifications">Hurray! You just read all the notifications.</string>
 
 </resources>
