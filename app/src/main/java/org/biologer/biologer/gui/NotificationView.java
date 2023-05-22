@@ -328,7 +328,6 @@ public class NotificationView extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "All notifications should be set to read now.");
                     ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
-                    // TODo test if this works!
                     NotificationManagerCompat.from(NotificationView.this).cancelAll();
                 }
             }
