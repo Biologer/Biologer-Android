@@ -422,52 +422,58 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getToken() {
 
-        displayProgressBar(true);
+        if (database_name == null) {
+            Toast.makeText(this, R.string.the_database_is_not_selected, Toast.LENGTH_LONG).show();
+        } else {
 
-        login = RetrofitClient.getService(database_name).login("password", getClientIdForDatabase(database_name), getClientKeyForDatabase(database_name), "*", et_username.getText().toString(), et_password.getText().toString());
+            displayProgressBar(true);
 
-        Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
+            login = RetrofitClient.getService(database_name).login("password", getClientIdForDatabase(database_name), getClientKeyForDatabase(database_name), "*", et_username.getText().toString(), et_password.getText().toString());
 
-        // Get the response from the call
-        Log.d(TAG, "Getting Token from server.");
-        login.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
-                if (response.code() == 404) {
-                    Log.e(TAG, "Error 404: This response is not implemented on a server.");
+            Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
+
+            // Get the response from the call
+            Log.d(TAG, "Getting Token from server.");
+            login.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
+                    if (response.code() == 404) {
+                        Log.e(TAG, "Error 404: This response is not implemented on a server.");
+                    }
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            String token = response.body().getAccessToken();
+                            String refresh_token = response.body().getRefreshToken();
+                            //Log.d(TAG, "Token value is: " + token);
+                            SettingsManager.setAccessToken(token);
+                            SettingsManager.setRefreshToken(refresh_token);
+                            long expire = response.body().getExpiresIn();
+                            long expire_date = (System.currentTimeMillis() / 1000) + expire;
+                            SettingsManager.setTokenExpire(String.valueOf(expire_date));
+                            Log.d(TAG, "Token will expire on timestamp: " + expire_date);
+                            getUserData();
+                        }
+                    } else {
+                        retry_login++;
+                        if (retry_login >= 4) {
+                            forgotPassTextView.setVisibility(View.VISIBLE);
+                        }
+                        til_password.setError(getString(R.string.wrong_creds));
+                        til_username.setError(getString(R.string.wrong_creds));
+                        displayProgressBar(false);
+                        Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
+                    }
                 }
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        String token = response.body().getAccessToken();
-                        String refresh_token = response.body().getRefreshToken();
-                        //Log.d(TAG, "Token value is: " + token);
-                        SettingsManager.setAccessToken(token);
-                        SettingsManager.setRefreshToken(refresh_token);
-                        long expire = response.body().getExpiresIn();
-                        long expire_date = (System.currentTimeMillis() / 1000) + expire;
-                        SettingsManager.setTokenExpire(String.valueOf(expire_date));
-                        Log.d(TAG, "Token will expire on timestamp: " + expire_date);
-                        getUserData();
-                    }
-                } else {
-                    retry_login++;
-                    if (retry_login >= 4) {
-                        forgotPassTextView.setVisibility(View.VISIBLE);
-                    }
-                    til_password.setError(getString(R.string.wrong_creds));
-                    til_username.setError(getString(R.string.wrong_creds));
+
+                @Override
+                public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
+                    Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
                     displayProgressBar(false);
-                    Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
+                    Log.e(TAG, "Cannot get response from the server (token)");
                 }
-            }
+            });
+        }
 
-            @Override
-            public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
-                Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
-                displayProgressBar(false);
-                Log.e(TAG, "Cannot get response from the server (token)");
-            }
-        });
     }
 
     private void getUserData() {
@@ -564,6 +570,7 @@ public class LoginActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
+    // TODO app crashes if there is no browser with ActivityNotFoundException
     public void onForgotPass(View view) {
         String url = SettingsManager.getDatabaseName() + "/password/reset";
         Intent defaultBrowser = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER);

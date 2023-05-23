@@ -220,7 +220,7 @@ public class UploadRecords extends Service {
         }
     }
 
-    // Upload the entries, one by one Record
+    // Checks weather to upload data on Birdloger or standard Biologer
     private void uploadStep2() {
         Log.d(TAG, "Upload data step 2 started...");
         if (SettingsManager.getDatabaseName().equals("https://birdloger.biologer.org")) {
@@ -230,6 +230,7 @@ public class UploadRecords extends Service {
         }
     }
 
+    // Upload records one by one
     private void uploadStep2Biologer() {
         APIEntry apiEntry = new APIEntry();
         photos = new ArrayList<>();
@@ -309,27 +310,28 @@ public class UploadRecords extends Service {
                 }
 
                 if (response.isSuccessful()) {
-                    if (keep_going) {
-                        // Wait... Don’t send too many requests to the server!
-                        SystemClock.sleep(300);
-                        // Delete uploaded entry
-                        ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
-                        //App.get().getDaoSession().getEntryDao().delete(entry);
+                    // Wait... Don’t send too many requests to the server!
+                    SystemClock.sleep(300);
+                    // Delete uploaded entry
+                    ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
+                    // TODO the entryList is null sometimes
+                    if (!entryList.isEmpty()) {
                         entryList.remove(0);
-                        // TODO get those eventbus stuff back!
-                        //EventBus.getDefault().post(new DeleteEntryFromList());
-                        // Delete image files from internal storage
-                        for (String filename : filenames) {
-                            if (filename != null) {
-                                final File file = new File(getFilesDir(), filename);
-                                boolean b = file.delete();
-                                Log.d(TAG, "Deleting image " + filename + " returned: " + b);
-                            }
+                    }
+                    // Delete image files from internal storage
+                    for (String filename : filenames) {
+                        if (filename != null) {
+                            final File file = new File(getFilesDir(), filename);
+                            boolean b = file.delete();
+                            Log.d(TAG, "Deleting image " + filename + " returned: " + b);
                         }
-                        filenames = new String[3];
-                        // Reset the counter
-                        m = 0;
-                        // All done! Upload next entry :)
+                    }
+                    filenames = new String[3];
+                    // Reset the counter
+                    m = 0;
+
+                    // All done! Upload next entry :)
+                    if (keep_going) {
                         uploadStep1();
                     } else {
                         Log.i(TAG, "Uploading has bean canceled by the user.");

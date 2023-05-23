@@ -447,5 +447,7 @@
     <string name="hurray_you_just_read_all_the_notifications">Hurray! You just read all the notifications.</string>
     <string name="failed_to_upload_photo">Failed to upload photo. Check your internet connection or try to reopen the last entry, delete corrupted photo and upload data again.</string>
     <string name="failed_to_upload_entry">Failed to upload observation. If you have a good internet connection but the problem continues, contact the app developers.</string>
+    <string name="the_database_is_not_selected">The database is not selected.</string>
+    <string name="observation_types_not_downloaded">Observation types not downloaded, photographed tag will not be saved.</string>
 
 </resources>

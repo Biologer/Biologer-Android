@@ -141,8 +141,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
-                        ((LoginActivity)activity).runnable = () -> {
+                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
+                        ((LoginActivity) activity).runnable = () -> {
                             if (isValidEmail(editTextEmail.getText().toString())) {
                                 emailLayout.setError(null);
                             } else {
@@ -150,7 +150,7 @@ public class RegisterFragment2 extends Fragment {
                             }
                             enableButton();
                         };
-                        ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);
+                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
                     }
                 });
 

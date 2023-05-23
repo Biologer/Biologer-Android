@@ -1220,14 +1220,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
+            int photo_tag_id;
             Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> observationTypesDataQuery = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
-            int photo_tag_id = (int)observationTypesDataQuery.find().get(0).getObservationId();
+            List<ObservationTypesDb> observationTypesDbs = observationTypesDataQuery.find();
+            if (!observationTypesDbs.isEmpty()) {
+                photo_tag_id = (int) observationTypesDbs.get(0).getObservationId();
+                Log.d(TAG, "Photographed tag has ID: " + photo_tag_id);
+                observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, photo_tag_id);
+            } else {
+                Toast.makeText(this, getString(R.string.observation_types_not_downloaded), Toast.LENGTH_LONG).show();
+            }
             observationTypesDataQuery.close();
-            Log.d(TAG, "Photographed tag has ID: " + photo_tag_id);
-            observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, photo_tag_id);
         }
     }
 

@@ -49,63 +49,59 @@ public class UpdateLicenses extends Service {
         final String data_license = preferences.getString("data_license", "0");
         final String image_license = preferences.getString("image_license", "0");
 
-        if (data_license != null) {
-            if (image_license != null) {
-                if (data_license.equals("0") || image_license.equals("0")) {
-                    // Get User data from a server
-                    Call<UserDataResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
-                    call.enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
-                            if (response.isSuccessful()) {
-                                assert response.body() != null;
-                                if (response.body().getData() != null) {
-                                    UserDataSer user = response.body().getData();
-                                    final String email = user.getEmail();
-                                    String name = user.getFullName();
-                                    int server_data_license = user.getSettings().getDataLicense();
-                                    int server_image_license = user.getSettings().getImageLicense();
+        if (data_license.equals("0") || image_license.equals("0")) {
+            // Get User data from a server
+            Call<UserDataResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
+            call.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
+                    if (response.isSuccessful()) {
+                        assert response.body() != null;
+                        if (response.body().getData() != null) {
+                            UserDataSer user = response.body().getData();
+                            final String email = user.getEmail();
+                            String name = user.getFullName();
+                            int server_data_license = user.getSettings().getDataLicense();
+                            int server_image_license = user.getSettings().getImageLicense();
 
-                                    // If both data and image licence should be retrieved from server
-                                    if (data_license.equals("0") && image_license.equals("0")) {
-                                        UserDb uData = new UserDb(getUserID(), name, email, server_data_license, server_image_license);
-                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
-                                        Log.d(TAG, "Image and data licenses updated from the server.");
-                                    }
-                                    // If only Data License should be retrieved from server
-                                    if (data_license.equals("0") && !image_license.equals("0")) {
-                                        UserDb uData = new UserDb(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
-                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
-                                        Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
-                                    }
-                                    // If only Image License should be retrieved from server
-                                    if (!data_license.equals("0")) {
-                                        UserDb uData = new UserDb(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
-                                        ObjectBox.get().boxFor(UserDb.class).put(uData);
-                                        Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
-                                    }
-                                } else {
-                                    Log.e(TAG, "Application could not get user’s licences from the server.");
-                                }
+                            // If both data and image licence should be retrieved from server
+                            if (data_license.equals("0") && image_license.equals("0")) {
+                                UserDb uData = new UserDb(getUserID(), name, email, server_data_license, server_image_license);
+                                ObjectBox.get().boxFor(UserDb.class).put(uData);
+                                Log.d(TAG, "Image and data licenses updated from the server.");
                             }
-                        }
-
-                        @Override
-                        public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
+                            // If only Data License should be retrieved from server
+                            if (data_license.equals("0") && !image_license.equals("0")) {
+                                UserDb uData = new UserDb(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
+                                ObjectBox.get().boxFor(UserDb.class).put(uData);
+                                Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
+                            }
+                            // If only Image License should be retrieved from server
+                            if (!data_license.equals("0")) {
+                                UserDb uData = new UserDb(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
+                                ObjectBox.get().boxFor(UserDb.class).put(uData);
+                                Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
+                            }
+                        } else {
                             Log.e(TAG, "Application could not get user’s licences from the server.");
-                            if (retryCount++ < TOTAL_RETRIES) {
-                                Log.d(TAG, "Retrying request to get licences from server (" + retryCount + " out of " + TOTAL_RETRIES + ")");
-                                updateLicense();
-                            }
                         }
-                    });
-                } else {
-                    // If both data ind image license should be taken from preferences
-                    Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
-                    UserDb uData = new UserDb(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
-                    ObjectBox.get().boxFor(UserDb.class).put(uData);
+                    }
                 }
-            }
+
+                @Override
+                public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Application could not get user’s licences from the server.");
+                    if (retryCount++ < TOTAL_RETRIES) {
+                        Log.d(TAG, "Retrying request to get licences from server (" + retryCount + " out of " + TOTAL_RETRIES + ")");
+                        updateLicense();
+                    }
+                }
+            });
+        } else {
+            // If both data ind image license should be taken from preferences
+            Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
+            UserDb uData = new UserDb(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
+            ObjectBox.get().boxFor(UserDb.class).put(uData);
         }
         stopSelf();
     }

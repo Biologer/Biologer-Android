@@ -338,7 +338,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             }
         } else {
             Log.d(TAG, "Email is not confirmed.");
-            checkMailConfirmed(database_url);
+            if (database_url != null) {
+                checkMailConfirmed(database_url);
+            }
         }
 
         // Get the user settings from preferences
@@ -775,6 +777,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             // Check if the licence has changed on the server and update if needed
             final Intent update_licenses = new Intent(this, UpdateLicenses.class);
+            update_licenses.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startService(update_licenses);
         }
     }

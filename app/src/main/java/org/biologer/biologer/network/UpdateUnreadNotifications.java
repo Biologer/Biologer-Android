@@ -33,8 +33,6 @@ public class UpdateUnreadNotifications extends Service {
     public static String GROUP_NOTIFICATIONS = "biologer.UnreadNotifications";
     int SUMMARY_ID = 0;
 
-
-
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "Update notifications service started...");
