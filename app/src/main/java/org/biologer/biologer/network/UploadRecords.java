@@ -81,7 +81,7 @@ public class UploadRecords extends Service {
 
     public void onDestroy() {
         super.onDestroy();
-        sendResult("Uploading task is completed, shutting down service.");
+        sendResult("success");
         Log.d(TAG, "Running onDestroy().");
     }
 
@@ -341,6 +341,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
+                sendResult("failed_entry");
                 stopSelf();
             }
         });
@@ -384,7 +385,6 @@ public class UploadRecords extends Service {
         apiEntry.setAtlasCode(entryDb.getAtlasCode());
         apiEntry.setFoundDead(!entryDb.getDeadOrAlive().equals("true"));
         apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
-        //apiEntry.setDataLicense(entry.getData_licence());
         apiEntry.setDataLicense(null);
         apiEntry.setTime(entryDb.getTime());
         int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
@@ -413,10 +413,6 @@ public class UploadRecords extends Service {
         apiEntry.setTypesField(empty);
         apiEntry.setObservers(empty);
         List<APIEntryBirdloger.FieldObservers> observers = new ArrayList<>();
-        //APIEntryBirdloger.FieldObservers fielObserver1 = new APIEntryBirdloger.FieldObservers();
-        //fielObserver1.setFirstName("Milan");
-        //fielObserver1.setLastName("Ivković");
-        //observers.add(fielObserver1);
         apiEntry.setFieldObservers(observers);
         apiEntry.setDescription("");
         apiEntry.setComment("");
@@ -481,6 +477,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
+                sendResult("failed_entry");
                 stopSelf();
             }
         });
@@ -531,6 +528,7 @@ public class UploadRecords extends Service {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
                     cancelUpload("Failed!", "Uploading of photo was not successful!");
+                    sendResult("failed_photo");
                     stopSelf();
                 }
             }
@@ -612,7 +610,7 @@ public class UploadRecords extends Service {
 
     public void sendResult(String message) {
         Intent intent = new Intent(TASK_COMPLETED);
-        if(message != null)
+        if (message != null)
             intent.putExtra(TASK_COMPLETED, message);
         broadcaster.sendBroadcast(intent);
     }

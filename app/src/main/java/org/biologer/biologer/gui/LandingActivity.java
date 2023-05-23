@@ -177,14 +177,20 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 if (s != null) {
                     Log.d(TAG, "Uploading records returned the code: " + s);
                     TextView textView = findViewById(R.id.list_entries_info_text);
-                    textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
+                    if (s.equals("success")) {
+                        textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
+                    }
+                    if (s.equals("failed_photo")) {
+                        textView.setText(R.string.failed_to_upload_photo);
+                    }
+                    if (s.equals("failed_entry")) {
+                        textView.setText(R.string.failed_to_upload_entry);
+                    }
+
                     textView.setVisibility(View.VISIBLE);
                     setMenuIconVisibility();
                     updateEntryListView();
 
-                    if (s.equals("no image")) {
-                        alertOKButton(getString(R.string.no_image_on_storage));
-                    }
                 }
             }
         };
