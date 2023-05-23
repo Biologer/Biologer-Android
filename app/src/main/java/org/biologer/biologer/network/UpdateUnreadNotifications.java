@@ -19,12 +19,10 @@ import org.biologer.biologer.gui.NotificationView;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
-import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
+import java.util.Collections;
 import java.util.List;
 
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,17 +44,17 @@ public class UpdateUnreadNotifications extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         boolean should_download = intent.getBooleanExtra("download", true);
-        long notification_id = intent.getLongExtra("notification_id", 0);
+        //long notification_id = intent.getLongExtra("notification_id", 0);
         if (should_download) {
             Log.d(TAG, "Notifications will be downloaded and displayed.");
             updateNotifications();
         } else {
             Log.d(TAG, "Notification view will be displayed only.");
-            if (notification_id != 0) {
-                displayUnreadNotification(notification_id);
-            } else {
+            //if (notification_id != 0) {
+            //    displayUnreadNotification(notification_id);
+            //} else {
                 displayUnreadNotifications();
-            }
+            //}
         }
         return flags;
 
@@ -138,17 +136,18 @@ public class UpdateUnreadNotifications extends Service {
     @SuppressLint("MissingPermission")
     public void displayUnreadNotifications() {
         Log.d(TAG, "Displaying UnreadNotifications for the observations.");
-        Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        List<UnreadNotificationsDb> unreadNotificationsDbs = ObjectBox.get().boxFor(UnreadNotificationsDb.class).getAll();
+        Collections.reverse(unreadNotificationsDbs); // Reverse elements in a list to display notification in correct order
 
-        if (!box.isEmpty()) {
+        if (!unreadNotificationsDbs.isEmpty()) {
 
             // Display no more than 15 notifications!
-            for (int i = 0; i < (int) box.count(); i++) {
+            for (int i = 0; i < unreadNotificationsDbs.size(); i++) {
 
-                long notification_id = box.getAll().get(i).getId();
+                long notification_id = unreadNotificationsDbs.get(i).getId();
 
-                String author = getAuthor(box.getAll().get(i));
-                String action = getAction(box.getAll().get(i).getType());
+                String author = getAuthor(unreadNotificationsDbs.get(i));
+                String action = getAction(unreadNotificationsDbs.get(i).getType());
 
                 Log.d(TAG, "Notification ID for Android system is " + notification_id);
 
@@ -157,7 +156,7 @@ public class UpdateUnreadNotifications extends Service {
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
                         .setSmallIcon(R.mipmap.ic_notification)
                         .setContentTitle(getString(R.string.observation_changed))
-                        .setContentText(author + " " + action + " " + box.getAll().get(i).getTaxonName() + ".")
+                        .setContentText(author + " " + action + " " + unreadNotificationsDbs.get(i).getTaxonName() + ".")
                         .setContentIntent(getPendingIntent(bundle, (int) notification_id))
                         .setGroup(GROUP_NOTIFICATIONS)
                         .setOnlyAlertOnce(true)
@@ -168,7 +167,7 @@ public class UpdateUnreadNotifications extends Service {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
                     .setSmallIcon(R.mipmap.ic_notification)
                     .setContentTitle(getString(R.string.observation_changed))
-                    .setContentText(getString(R.string.there_are_at_least) + " " + box.count() + " " + getString(R.string.changes_to_your_field_observations))
+                    .setContentText(getString(R.string.there_are_at_least) + " " + unreadNotificationsDbs.size() + " " + getString(R.string.changes_to_your_field_observations))
                     .setStyle(new NotificationCompat.InboxStyle()
                             .setSummaryText(getString(R.string.your_field_observations_were_changed))
                             .setBigContentTitle(getString(R.string.biologer)))
@@ -183,7 +182,7 @@ public class UpdateUnreadNotifications extends Service {
     }
 
     private String getAction(String type) {
-        String action = null;
+        String action;
         switch (type) {
             case "App\\Notifications\\FieldObservationApproved":
                 action = getString(R.string.approved_observation);
@@ -201,51 +200,8 @@ public class UpdateUnreadNotifications extends Service {
         return action;
     }
 
-    // This will only display the notification from Object Box with the given ID
-    @SuppressLint("MissingPermission")
-    public void displayUnreadNotification(long notification_id) {
-        Log.d(TAG, "Displaying one UnreadNotification for the observations.");
-        Box<UnreadNotificationsDb> box = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = box
-                .query(UnreadNotificationsDb_.id.equal(notification_id))
-                .build();
-        UnreadNotificationsDb unreadNotification = query.find().get(0);
-        query.close();
-
-        if (unreadNotification != null) {
-            long id = unreadNotification.getId();
-            String author = getAuthor(unreadNotification);
-            String action = getAction(unreadNotification.getType());
-            Log.d(TAG, "Notification ID for Android system is " + id);
-
-            Bundle bundle = new Bundle();
-            bundle.putInt("id", (int) id);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")
-                    .setSmallIcon(R.mipmap.ic_notification)
-                    .setContentTitle(getString(R.string.observation_changed))
-                    .setContentText(author + " " + action + " " + unreadNotification.getTaxonName() + ".")
-                    .setContentIntent(getPendingIntent(bundle, (int) id))
-                    .setGroup(GROUP_NOTIFICATIONS)
-                    .setOnlyAlertOnce(true)
-                    .setAutoCancel(true);
-            NotificationManagerCompat.from(this).notify((int) id, builder.build());
-
-            NotificationCompat.Builder builder1 = new NotificationCompat.Builder(this, "biologer_observations")
-                    .setSmallIcon(R.mipmap.ic_notification)
-                    .setContentTitle(getString(R.string.observation_changed))
-                    .setContentText(getString(R.string.there_are_at_least) + " " + box.count() + " " + getString(R.string.changes_to_your_field_observations))
-                    .setStyle(new NotificationCompat.InboxStyle()
-                            .setSummaryText(getString(R.string.your_field_observations_were_changed))
-                            .setBigContentTitle(getString(R.string.biologer)))
-                    .setGroup(GROUP_NOTIFICATIONS)
-                    .setAutoCancel(true)
-                    .setGroupSummary(true);
-            NotificationManagerCompat.from(this).notify(SUMMARY_ID, builder1.build());
-        }
-    }
-
     private String getAuthor(UnreadNotificationsDb unreadNotificationsDb) {
-        String author = null;
+        String author;
         if (unreadNotificationsDb.getCuratorName() != null) {
             author = unreadNotificationsDb.getCuratorName();
         } else {

@@ -88,9 +88,7 @@ public class NotificationView extends AppCompatActivity {
                         setAllNotificationsAsRead();
                         dialog.dismiss();
                     })
-                    .setNegativeButton(getString(R.string.no), (dialog, id) -> {
-                        dialog.dismiss();
-                    }
+                    .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss()
         );
             final AlertDialog alert = builder.create();
             alert.show();
@@ -143,7 +141,7 @@ public class NotificationView extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
                         // TODO uncomment this at the end!
-                        setNotificationAsRead(notificationID, realNotificationID, (int) fieldObservationID);
+                        setNotificationAsRead(notificationID, realNotificationID);
 
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             int photos = response.body().getData()[0].getPhotos().size();
@@ -190,7 +188,7 @@ public class NotificationView extends AppCompatActivity {
     }
 
     private Spanned getFormattedMessage(List<UnreadNotificationsDb> unreadNotifications) {
-        Spanned text = null;
+        Spanned text;
         String taxon = unreadNotifications.get(0).getTaxonName();
         String author = getAuthor(unreadNotifications.get(0));
 
@@ -232,7 +230,7 @@ public class NotificationView extends AppCompatActivity {
     }
 
     private String getAuthor(UnreadNotificationsDb unreadNotificationsDb) {
-        String author = null;
+        String author;
         if (unreadNotificationsDb.getCuratorName() != null) {
             author = unreadNotificationsDb.getCuratorName();
         } else {
@@ -243,7 +241,7 @@ public class NotificationView extends AppCompatActivity {
 
     private String getLocalizedTime(Date date) {
         DateFormat timeFormatLocalized = android.text.format.DateFormat.getTimeFormat(this);
-        String time_string = null;
+        String time_string;
         if (date != null) {
             time_string = timeFormatLocalized.format(date);
         } else {
@@ -254,7 +252,7 @@ public class NotificationView extends AppCompatActivity {
 
     private String getLocalizedDate(Date date) {
         DateFormat dateFormatLocalized = android.text.format.DateFormat.getLongDateFormat(this);
-        String date_string = null;
+        String date_string;
         if (date != null) {
             date_string = dateFormatLocalized.format(date);
         } else {
@@ -265,7 +263,7 @@ public class NotificationView extends AppCompatActivity {
 
     private Date getDate(String date_string) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault());
-        Date date = null;
+        Date date;
         try {
             date = dateFormat.parse(date_string);
         } catch (ParseException e) {
@@ -341,7 +339,7 @@ public class NotificationView extends AppCompatActivity {
 
     }
 
-    private void setNotificationAsRead(int notification_id, String real_notification_id, int field_observation_id) {
+    private void setNotificationAsRead(int notification_id, String real_notification_id) {
         String[] notification = new String[1];
         notification[0] = real_notification_id;
 
@@ -409,14 +407,15 @@ public class NotificationView extends AppCompatActivity {
                             ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
 
                             // Display new notification in Android notification area
-                            List<UnreadNotificationsDb> unreadNotifications = ObjectBox
-                                    .get().boxFor(UnreadNotificationsDb.class).getAll();
-                            long new_notification_id = unreadNotifications.get(unreadNotifications.size() - 1).getId();
-                            Log.d(TAG, "New notification saved in ObjectBOx as ID " + new_notification_id);
+                            //List<UnreadNotificationsDb> unreadNotifications = ObjectBox
+                            //        .get().boxFor(UnreadNotificationsDb.class).getAll();
+                            //long new_notification_id = unreadNotifications.get(unreadNotifications.size() - 1).getId();
+                            //Log.d(TAG, "New notification saved in ObjectBOx as ID " + new_notification_id);
+
                             // Update the notifications
                             final Intent update_notifications = new Intent(NotificationView.this, UpdateUnreadNotifications.class);
                             update_notifications.putExtra("download", false);
-                            update_notifications.putExtra("notification_id", new_notification_id);
+                            //update_notifications.putExtra("notification_id", new_notification_id);
                             startService(update_notifications);
                         } else {
                             Log.d(TAG, "There are no more notifications, hurray!.");
