@@ -17,6 +17,19 @@
         </ListView>
     </LinearLayout>
 
+    <!--
+    Adds a transparent view to prevent accidental clicks on entry list
+    -->
+    <View
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="0dp"
+        android:layout_marginEnd="0dp"
+        android:clickable="true"
+        app:backgroundTint="@color/transparent"
+        android:focusable="true"/>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fbtn_add"
         android:layout_width="56dp"
