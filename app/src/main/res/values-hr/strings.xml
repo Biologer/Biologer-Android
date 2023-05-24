@@ -119,6 +119,7 @@
     <string name="title_setup_activity">Biologer Setup</string>
     <string name="license10">Besplatna (CC by-SA)</string>
     <string name="license_default">Preuzmi sa servera</string>
+    <string name="license_timed">Zatvorena, objavljuje se kao otvorena za 3 godine</string>
     <string name="license20">Besplatna, nekomercijalna (CC BY-SA-NC)</string>
     <string name="license30">Djelomično otvorena (ograničena na 10km)</string>
     <string name="license40">Zatvorena (dostupna vama i urednicima)</string>
@@ -127,7 +128,6 @@
     <string name="choose_ilicense">Odaberi različitu licencu za svoje fotografije</string>
     <string name="choose_project">Postavlja ime projekta ako su vaši podaci prikupljeni tijekom projekta.</string>
     <string name="project_name">Ime projekta</string>
-    <string name="license_timed">Zatvorena, objavljuje se kao otvorena za 3 godine</string>
     <string name="channel_description">Ovo služi za primanje obavijesti o taksonomskim ažuriranjma.</string>
     <string name="channel_name">Ažuriraj taksone</string>
     <string name="notify_title_taxa">Ažuriranje taksona</string>
@@ -179,7 +179,7 @@
     <string name="cannot_connect_token">Ne može se dohvatiti signal (odgovor) sa servera. Provjerite internetsku vezu.</string>
     <string name="database">Baza podataka</string>
     <string name="User">Korisnik</string>
-    <string name="stage_juvenile">Mladunac</string>
+    <string name="stage_juvenile">Juvenilna jedinka</string>
     <string name="no_photo_selected">Nije izabrana fotografija iz Galerije.</string>
     <string name="limit_photo1">Izabrali ste</string>
     <string name="limit_photo2">fotografija, od kojih će</string>
@@ -271,7 +271,6 @@
     <string name="register_intro4">i odaberite licencu kojom definirate način na koji dijelite podatke s drugima. Detaljan opis licenci može se naći na webu</string>
     <string name="i_accept_privacy_policy">Prihvaćam pravila privatnosti</string>
     <string name="email_already_exist">Ova adresa e-pošte je već registrirana</string>
-    <string name="email_domain_wrong">Adresa e-pošte nije dostupna!</string>
     <string name="registering">Registracija novog korisnika</string>
     <string name="register_succesfull">Registracija je skoro gotova! Kako bismo provjerili jeste li to vi, poslat ćemo vam e-poruku s vezom za potvrdu. Otvorite tu vezu da biste potvrdili svoju e-poštu i mogli biste se prijaviti na Biologer.</string>
     <string name="confirm_email">Vaša adresa e-pošte još nije potvrđena! Poslali smo vam e-poštu s vezom za potvrdu, samo je kliknite i spremni ste za početak. Ovisno o preopterećenju poslužitelja, moglo bi doći do određenog kašnjenja prije nego što primite vezu za potvrdu.</string>
@@ -325,9 +324,10 @@
     <string name="confirm_delete_all">Izbrisati ćeš sve nalaze koje si prikupio na terenu. Jesi li siguran?</string>
     <string name="yes_delete">Izbriši sve</string>
     <string name="no_delete">Ne</string>
+    <string name="male_text">Mužjak</string>
+    <string name="female_text">Ženka</string>
     <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
     <string name="enable">Enable</string>
     <string name="disable">Disable</string>
     <string name="montenegro">Montenegro</string>
-
 </resources>
