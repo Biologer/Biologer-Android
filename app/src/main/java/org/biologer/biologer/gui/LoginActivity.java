@@ -407,7 +407,9 @@ public class LoginActivity extends AppCompatActivity {
         // If there is no token, we should get one from the server
         if (token == null) {
             Log.d(TAG, "THERE IS NO TOKEN. Trying to log in with username and password.");
-            getToken();
+            if (database_name != null) {
+                getToken();
+            }
         }
         else {
             if (Long.parseLong(SettingsManager.getTokenExpire()) < System.currentTimeMillis() / 1000) {

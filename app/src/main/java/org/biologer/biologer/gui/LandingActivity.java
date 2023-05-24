@@ -222,7 +222,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
            }
         } else {
             Log.d(TAG, "Email is not confirmed.");
-            checkMailConfirmed(database_url);
+            if (database_url != null) {
+                checkMailConfirmed(database_url);
+            }
         }
 
         // Get the user settings from preferences

@@ -311,7 +311,9 @@ public class UploadRecords extends Service {
                         SystemClock.sleep(300);
                         // Delete uploaded entry
                         App.get().getDaoSession().getEntryDao().delete(entry);
-                        entryList.remove(0);
+                        if (!entryList.isEmpty()) {
+                            entryList.remove(0);
+                        }
                         EventBus.getDefault().post(new DeleteEntryFromList());
                         // Delete image files from internal storage
                         for (String filename: filenames) {
