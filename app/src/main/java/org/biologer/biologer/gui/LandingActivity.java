@@ -39,11 +39,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.opencsv.CSVWriter;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.User;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.FetchTaxa;
@@ -295,7 +295,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        User.clearUserData(LandingActivity.this);
+        ObjectBox.get().deleteAllFiles();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
         Toast.makeText(this, "Something is wrong, falling back to login screen!", Toast.LENGTH_LONG).show();
         showUserLoginScreen(false);
     }
@@ -1120,7 +1124,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     public void setMenuIconVisibility() {
         long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).count();
-        Log.d(TAG, "There are " + numberOfItems + " items in the list.");
+        Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {
             // Disable the upload button

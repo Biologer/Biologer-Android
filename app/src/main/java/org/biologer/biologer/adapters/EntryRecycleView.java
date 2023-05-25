@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -33,7 +32,13 @@ public class EntryRecycleView
         extends RecyclerView.Adapter<EntryRecycleView.ViewHolder> {
     private final List<EntryDb> myEntries;
     private int position;
+    private long id;
     private static final String TAG = "Biologer.EntryAdapter";
+
+    public long getId() {
+        id = myEntries.get(position).getId();
+        return id;
+    }
 
     public static class ViewHolder
             extends RecyclerView.ViewHolder
@@ -87,7 +92,11 @@ public class EntryRecycleView
         // Get the taxon name
         TextView taxonName = viewHolder.textTaxonName;
         String taxon_name = entry.getTaxonSuggestion();
-        taxonName.setText(Objects.requireNonNullElse(taxon_name, ""));
+        if (taxon_name != null) {
+            taxonName.setText(taxon_name);
+        } else {
+            taxonName.setText("");
+        }
 
         // Get the taxon stage
         TextView taxonStage = viewHolder.textTaxonStage;
@@ -109,14 +118,14 @@ public class EntryRecycleView
         ImageView entryImage = viewHolder.imageEntry;
         // Get the image
         String useImage = null;
-        if (entry.getSlika1() != null) {
-            useImage = entry.getSlika1();
+        if (entry.getSlika3() != null) {
+            useImage = entry.getSlika3();
         }
         if (entry.getSlika2() != null) {
             useImage = entry.getSlika2();
         }
-        if (entry.getSlika3() != null) {
-            useImage = entry.getSlika3();
+        if (entry.getSlika1() != null) {
+            useImage = entry.getSlika1();
         }
 
         if (useImage != null) {
@@ -130,7 +139,6 @@ public class EntryRecycleView
 
         viewHolder.itemView.setOnLongClickListener(v -> {
             Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
-            setPosition(viewHolder.getLayoutPosition());
             return false;
         });
     }
@@ -154,11 +162,13 @@ public class EntryRecycleView
     public void setPosition(int position) {
         this.position = position;
     }
-
+/*
     @Override
-    public void onViewRecycled(ViewHolder holder) {
-        holder.itemView.setOnLongClickListener(null);
-        super.onViewRecycled(holder);
+    public void onViewRecycled(ViewHolder viewHolder) {
+        viewHolder.itemView.setOnLongClickListener(null);
+        super.onViewRecycled(viewHolder);
     }
+
+ */
 
 }

@@ -1187,6 +1187,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Intent intent = new Intent();
             long index_last = ObjectBox.get().boxFor(EntryDb.class).count() - 1;
             long new_entry_id = ObjectBox.get().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+            Log.d(TAG, "Entry will be saved under ID " + new_entry_id);
             intent.putExtra("IS_NEW_ENTRY", isNewEntry());
             intent.putExtra("ENTRY_LIST_ID", new_entry_id);
             setResult(RESULT_OK, intent);
@@ -1218,12 +1219,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.get(0).setObservation_type_ids(Arrays.toString(observation_type_ids));
 
             // Now just update the database with new data...
-            // TODO we need to update, not to create new entry!!!
             Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
             entry.put(currentItem);
 
             Intent intent = new Intent();
             long current_entry_id = currentItem.get(0).getId();
+            Log.d(TAG, "Entry will be saved under existing ID " + current_entry_id);
             intent.putExtra("IS_NEW_ENTRY", isNewEntry());
             intent.putExtra("ENTRY_LIST_ID", current_entry_id);
             setResult(RESULT_OK, intent);

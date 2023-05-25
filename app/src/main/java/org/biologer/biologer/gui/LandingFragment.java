@@ -81,6 +81,7 @@ public class LandingFragment extends Fragment {
                     @Override
                     public void onLongItemClick(View view, int position) {
                         Log.d(TAG, "Item " + position + " long pressed.");
+                        entriesAdapter.setPosition(position);
                     }
                 }));
         registerForContextMenu(recyclerView);
@@ -120,26 +121,17 @@ public class LandingFragment extends Fragment {
 
         if (item.getItemId() == R.id.delete) {
 
-            // Get the clicked item from the listview
-            int position;
-            try {
-                position = entriesAdapter.getPosition();
-            } catch (Exception e) {
-                Log.d(TAG, e.getLocalizedMessage(), e);
-                return super.onContextItemSelected(item);
-            }
-            Log.d(TAG, "You will now do delete entry ID: " + position);
-
-            // Delete the entry in ObjectBox
-            long number_in_objectbox = entries.get(position).getId();
-            entries.remove(position);
+            int position_in_the_list = entriesAdapter.getPosition();
+            Log.d(TAG, "You will now delete entry ID: " + position_in_the_list);
+            long number_in_objectbox = entries.get(position_in_the_list).getId();
+            Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
             Box<EntryDb> entryBox = ObjectBox.get().boxFor(EntryDb.class);
             entryBox.remove((int) number_in_objectbox);
-            Log.d(TAG, "You will now do delete entry ObjectBox ID: " + position);
-            entriesAdapter.notifyItemRemoved(position);
+            entries.remove(position_in_the_list);
+            entriesAdapter.notifyItemRemoved(position_in_the_list);
 
             // Print user a message
-            int entryNo = position + 1;
+            int entryNo = position_in_the_list + 1;
             Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
             Activity activity = getActivity();
             if (activity != null) {
@@ -228,21 +220,24 @@ public class LandingFragment extends Fragment {
                     Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
                     if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
                         long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        Log.d(TAG, "This was an existing entry with id: " + new_entry_id);
+                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
                         Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
-                        Query<EntryDb> query = box.query(EntryDb_.id.equal((int) new_entry_id)).build();
+                        Query<EntryDb> query = box.query(EntryDb_.id.equal(new_entry_id)).build();
                         EntryDb entryDb = query.findFirst();
+                        query.close();
+
                         Collections.reverse(entries);
                         entries.add(entryDb);
                         Collections.reverse(entries);
                         entriesAdapter.notifyItemInserted(0);
-                        entriesAdapter.notifyItemRangeChanged((int) 0, entriesAdapter.getItemCount());
                     } else {
                         long old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
                         Log.d(TAG, "This was an existing entry with id: " + old_data_id);
                         Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
-                        Query<EntryDb> query = box.query(EntryDb_.id.equal((int) old_data_id)).build();
+                        Query<EntryDb> query = box.query(EntryDb_.id.equal(old_data_id)).build();
                         EntryDb entryDb = query.findFirst();
+                        query.close();
+
                         int entry_id = 0;
                         for (int i = 0; i < entries.size(); i++) {
                             if (entries.get(i).getId() == old_data_id) {
@@ -252,7 +247,6 @@ public class LandingFragment extends Fragment {
                         Log.d(TAG, "Entry ID is " + entry_id);
                         entries.set(entry_id, entryDb);
                         entriesAdapter.notifyItemChanged(entry_id);
-                        entriesAdapter.notifyItemRangeChanged((int) entry_id - 1, entriesAdapter.getItemCount());
                     }
 
                     Activity activity = getActivity();
