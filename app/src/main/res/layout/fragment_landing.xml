@@ -10,11 +10,13 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@color/fragment_background">
-        <ListView
-            android:id="@+id/list_entries"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycled_view_entries"
+            app:stackFromEnd="true"
+            app:reverseLayout="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-        </ListView>
+        </androidx.recyclerview.widget.RecyclerView>
     </LinearLayout>
 
     <!--
@@ -31,7 +33,7 @@
         android:focusable="true"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fbtn_add"
+        android:id="@+id/float_button_new_entry"
         android:layout_width="56dp"
         android:layout_height="56dp"
         app:fabCustomSize="56dp"

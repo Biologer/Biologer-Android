@@ -10,7 +10,7 @@ import io.objectbox.annotation.Id;
 @Entity
 public class EntryDb {
 
-    @Id
+    @Id(assignable = true)
     long id;
     private long taxonId;
     private String taxonSuggestion;

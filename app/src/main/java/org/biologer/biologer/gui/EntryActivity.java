@@ -1183,6 +1183,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
             Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
             entry.put(entryDb1);
+
+            Intent intent = new Intent();
+            long index_last = ObjectBox.get().boxFor(EntryDb.class).count() - 1;
+            long new_entry_id = ObjectBox.get().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+            intent.putExtra("IS_NEW_ENTRY", isNewEntry());
+            intent.putExtra("ENTRY_LIST_ID", new_entry_id);
+            setResult(RESULT_OK, intent);
+            finish();
+
         }
 
         // If the entry exist already
@@ -1212,10 +1221,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // TODO we need to update, not to create new entry!!!
             Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
             entry.put(currentItem);
+
+            Intent intent = new Intent();
+            long current_entry_id = currentItem.get(0).getId();
+            intent.putExtra("IS_NEW_ENTRY", isNewEntry());
+            intent.putExtra("ENTRY_LIST_ID", current_entry_id);
+            setResult(RESULT_OK, intent);
+            finish();
+
         }
         Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
-        setResult(RESULT_OK);
-        finish();
+
     }
 
     private void getPhotoTag() {

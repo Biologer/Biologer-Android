@@ -189,6 +189,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
                     textView.setVisibility(View.VISIBLE);
                     setMenuIconVisibility();
+
                     updateEntryListView();
 
                 }
@@ -467,7 +468,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void updateGuiOnMailConfirmed(boolean mail_confirmed) {
         TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
-        FloatingActionButton floatingActionButton = findViewById(R.id.fbtn_add);
+        FloatingActionButton floatingActionButton = findViewById(R.id.float_button_new_entry);
         floatingActionButton.setEnabled(mail_confirmed);
         if (mail_confirmed) {
             textView_confirmEmail.setVisibility(View.GONE);
@@ -1012,20 +1013,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
-    // Run after filling the new entry from EntryActivity
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "On activity result.");
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            updateEntryListView();
-            TextView textView = findViewById(R.id.list_entries_info_text);
-            textView.setVisibility(View.GONE);
-        }
-        // Change the visibility of the Upload Icon
-        setMenuIconVisibility();
-    }
-
     protected void buildAlertUpdateTaxa(String message, String yes_string, String no_string, int should_skip_next) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
@@ -1131,8 +1118,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return uploadMenu;
     }
 
-    public static void setMenuIconVisibility() {
-        long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).getAll().size();
+    public void setMenuIconVisibility() {
+        long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).count();
         Log.d(TAG, "There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {

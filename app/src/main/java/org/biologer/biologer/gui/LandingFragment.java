@@ -5,74 +5,87 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.view.ContextMenu;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.EntriesList;
-import org.biologer.biologer.bus.DeleteEntryFromList;
+import org.biologer.biologer.adapters.EntryRecycleView;
+import org.biologer.biologer.adapters.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.EntryDb_;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import io.objectbox.Box;
+import io.objectbox.query.Query;
 
 public class LandingFragment extends Fragment {
 
-    private EntriesList entriesList;
     private ArrayList<EntryDb> entries;
-    ListView listView;
+    String TAG = "Biologer.LandingFragment";
+    EntryRecycleView entriesAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
+
         // Load the entries from the database
         entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
-        // If there are no entries display the empty list
-        if (entries == null) {entries = new ArrayList<>();}
-        // If there are entries display the list with taxa
-        Activity activity = getActivity();
-        if (activity != null) {
-            entriesList = new EntriesList(activity.getApplicationContext(), entries);
+        Collections.reverse(entries);
+        // If there are no entries create an empty list
+        if (entries == null) {
+            entries = new ArrayList<>();
         }
-        listView = rootView.findViewById(R.id.list_entries);
-        listView.setAdapter(entriesList);
 
-        listView.setOnItemClickListener((adapterView, view, position, id) -> {
-            EntryDb entryDb = entriesList.getItem(position);
-            long l = entryDb.getId();
-            Activity activity13 = getActivity();
-            if (activity13 != null) {
-                Intent intent = new Intent(activity13.getApplicationContext(), EntryActivity.class);
-                intent.putExtra("IS_NEW_ENTRY", "NO");
-                intent.putExtra("ENTRY_ID", l);
-                startActivity(intent);
-            }
-        });
+        // If there are entries display the list with taxa
+        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.recycled_view_entries);
+        entriesAdapter = new EntryRecycleView(entries);
+        recyclerView.setAdapter(entriesAdapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.addOnItemTouchListener(
+                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        EntryDb entryDb = entries.get(position);
+                        long l = entryDb.getId();
+                        Activity activity13 = getActivity();
+                        if (activity13 != null) {
+                            Intent intent = new Intent(activity13.getApplicationContext(), EntryActivity.class);
+                            intent.putExtra("IS_NEW_ENTRY", "NO");
+                            intent.putExtra("ENTRY_ID", l);
+                            openEntry.launch(intent);
+                        }
+                    }
 
-        registerForContextMenu(listView);
+                    @Override
+                    public void onLongItemClick(View view, int position) {
+                        Log.d(TAG, "Item " + position + " long pressed.");
+                    }
+                }));
+        registerForContextMenu(recyclerView);
 
-        FloatingActionButton floatingActionButton = rootView.findViewById(R.id.fbtn_add);
+        FloatingActionButton floatingActionButton = rootView.findViewById(R.id.float_button_new_entry);
         if (SettingsManager.isMailConfirmed()) {
             floatingActionButton.setEnabled(true);
             floatingActionButton.setAlpha(1f);
@@ -99,51 +112,39 @@ public class LandingFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        //EventBus.getDefault().register(this);
-    }
-
-    //@Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(DeleteEntryFromList deleteEntryFromList) {
-        entriesList.addAll(ObjectBox.get().boxFor(EntryDb.class).getAll(), true);
-    }
-
-    void updateEntries(ArrayList<EntryDb> entries_list) {
-        entries = entries_list;
-        if (entries == null) {
-            entries = new ArrayList<>();
-        }
-        entriesList.addAll(entries, true);
-    }
-
-    @Override
-    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View view, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, view, menuInfo);
-        if (view.getId()==R.id.list_entries) {
-            Activity activity = getActivity();
-            if (activity != null ) {
-                MenuInflater inflater = activity.getMenuInflater();
-                inflater.inflate(R.menu.entry_long_press, menu);
-            }
-        }
     }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.delete) {
-            // Get the clicked item from the listview
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-            int index = 0;
-            if (info != null) {
-                index = info.position;
-            }
+        Log.d(TAG, "Context item.");
 
-            // Delete the entry
+        if (item.getItemId() == R.id.delete) {
+
+            // Get the clicked item from the listview
+            int position;
+            try {
+                position = entriesAdapter.getPosition();
+            } catch (Exception e) {
+                Log.d(TAG, e.getLocalizedMessage(), e);
+                return super.onContextItemSelected(item);
+            }
+            Log.d(TAG, "You will now do delete entry ID: " + position);
+
+            // Delete the entry in ObjectBox
+            long number_in_objectbox = entries.get(position).getId();
+            entries.remove(position);
             Box<EntryDb> entryBox = ObjectBox.get().boxFor(EntryDb.class);
-            entryBox.remove(entriesList.getItem(index).getId());
-            entriesList.removeItem(index);
-            int entryNo = index + 1;
+            entryBox.remove((int) number_in_objectbox);
+            Log.d(TAG, "You will now do delete entry ObjectBox ID: " + position);
+            entriesAdapter.notifyItemRemoved(position);
+
+            // Print user a message
+            int entryNo = position + 1;
             Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
-            LandingActivity.setMenuIconVisibility();
+            Activity activity = getActivity();
+            if (activity != null) {
+                ((LandingActivity)activity).setMenuIconVisibility();
+            }
             return true;
         }
         if (item.getItemId() == R.id.delete_all) {
@@ -151,20 +152,15 @@ public class LandingFragment extends Fragment {
             buildAlertOnDeleteAll();
             return true;
         }
-        return false;
+        return super.onContextItemSelected(item);
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        //EventBus.getDefault().unregister(this);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
-        entriesList.addAll(entries, true);
+    void updateEntries(ArrayList<EntryDb> entries_list) {
+        entries = entries_list;
+        if (entries == null) {
+            entries = new ArrayList<>();
+        }
+        entriesAdapter.notifyItemRangeChanged(0, entries.size());
     }
 
     protected void buildAlertOnDeleteAll() {
@@ -174,16 +170,25 @@ public class LandingFragment extends Fragment {
             builder.setMessage(getString(R.string.confirm_delete_all))
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
+
                         Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
+
+                        entries.clear();
                         ObjectBox.get().boxFor(EntryDb.class).removeAll();
-                        entriesList.removeAll();
-                        LandingActivity.setMenuIconVisibility();
+                        ((LandingActivity)getActivity()).setMenuIconVisibility();
+
+                        // TODO The notify does not work, so I simply recreated the fragment and reload empty list
+                        Fragment replace = new LandingFragment();
+                        FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction.add(R.id.content_frame , replace);
+                        fragmentTransaction.commit();
+
                     })
                     .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
             final AlertDialog alert = builder.create();
 
             alert.setOnShowListener(new DialogInterface.OnShowListener() {
-                private static final int AUTO_DISMISS_MILLIS = 10000;
+                private static final int AUTO_DISMISS_MILLIS = 100;
                 @Override
                 public void onShow(DialogInterface dialogInterface) {
                     final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -217,6 +222,53 @@ public class LandingFragment extends Fragment {
     private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 // If we need to do something with the result after EntryActivity...
+                Log.d(TAG, "We got a result from the Entry Activity!");
+
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
+                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
+                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        Log.d(TAG, "This was an existing entry with id: " + new_entry_id);
+                        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+                        Query<EntryDb> query = box.query(EntryDb_.id.equal((int) new_entry_id)).build();
+                        EntryDb entryDb = query.findFirst();
+                        Collections.reverse(entries);
+                        entries.add(entryDb);
+                        Collections.reverse(entries);
+                        entriesAdapter.notifyItemInserted(0);
+                        entriesAdapter.notifyItemRangeChanged((int) 0, entriesAdapter.getItemCount());
+                    } else {
+                        long old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
+                        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+                        Query<EntryDb> query = box.query(EntryDb_.id.equal((int) old_data_id)).build();
+                        EntryDb entryDb = query.findFirst();
+                        int entry_id = 0;
+                        for (int i = 0; i < entries.size(); i++) {
+                            if (entries.get(i).getId() == old_data_id) {
+                                entry_id = i;
+                            }
+                        }
+                        Log.d(TAG, "Entry ID is " + entry_id);
+                        entries.set(entry_id, entryDb);
+                        entriesAdapter.notifyItemChanged(entry_id);
+                        entriesAdapter.notifyItemRangeChanged((int) entry_id - 1, entriesAdapter.getItemCount());
+                    }
+
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        TextView textView = activity.findViewById(R.id.list_entries_info_text);
+                        textView.setVisibility(View.GONE);
+                    }
+
+                }
+
+                // Change the visibility of the Upload Icon
+                Activity activity = getActivity();
+                if (activity != null) {
+                    ((LandingActivity) getActivity()).setMenuIconVisibility();
+                }
+
             });
 
 }
