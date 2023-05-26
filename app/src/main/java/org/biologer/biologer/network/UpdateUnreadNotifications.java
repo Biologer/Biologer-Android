@@ -15,7 +15,7 @@ import androidx.core.app.NotificationManagerCompat;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.NotificationView;
+import org.biologer.biologer.gui.NotificationActivity;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -209,7 +209,7 @@ public class UpdateUnreadNotifications extends Service {
     }
 
     private PendingIntent getPendingIntent(Bundle bundle, int id) {
-        Intent notificationIntent = new Intent(this, NotificationView.class);
+        Intent notificationIntent = new Intent(this, NotificationActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         notificationIntent.putExtras(bundle);
         return PendingIntent.getActivity(this, id, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

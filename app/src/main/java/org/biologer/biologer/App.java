@@ -23,6 +23,7 @@ public class App extends MultiDexApplication {
         createNotificationChannelTaxa();
         createNotificationChannelEntries();
         createNotificationChannelUnreadNotifications();
+        createNotificationChannelAnnouncements();
 
         // For initialisation of OpenBox database
         ObjectBox.init(this);
@@ -70,6 +71,20 @@ public class App extends MultiDexApplication {
             CharSequence name = getString(R.string.channel_observation_name);
             String description = getString(R.string.channel_observation_description);
             int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void createNotificationChannelAnnouncements() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channel_id = "biologer_announcements";
+            CharSequence name = getString(R.string.channel_announcements);
+            String description = getString(R.string.channel_announcements_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);

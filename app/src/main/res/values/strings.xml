@@ -450,5 +450,8 @@
     <string name="the_database_is_not_selected">The database is not selected.</string>
     <string name="observation_types_not_downloaded">Observation types not downloaded, photographed tag will not be saved.</string>
     <string name="empty_view">Empty view</string>
+    <string name="announcements">Announcements</string>
+    <string name="channel_announcements">Biologer announcements</string>
+    <string name="channel_announcements_description">Get important announcements and news from the Biologer Admins.</string>
 
 </resources>

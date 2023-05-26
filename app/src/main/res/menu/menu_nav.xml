@@ -23,6 +23,10 @@
             android:title="@string/about"
             android:icon="@drawable/about"/>
             <item
+                android:id="@+id/nav_announcements"
+                android:title="@string/announcements"
+                android:icon="@drawable/ic_announcements"/>
+            <item
                 android:id="@+id/nav_help"
                 android:title="@string/help"
                 android:icon="@drawable/ic_help"/>

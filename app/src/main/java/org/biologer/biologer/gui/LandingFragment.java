@@ -27,7 +27,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.EntryRecycleView;
+import org.biologer.biologer.adapters.EntryAdapter;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
@@ -44,7 +44,7 @@ public class LandingFragment extends Fragment {
 
     private ArrayList<EntryDb> entries;
     String TAG = "Biologer.LandingFragment";
-    EntryRecycleView entriesAdapter;
+    EntryAdapter entriesAdapter;
     RecyclerView recyclerView;
 
     @Override
@@ -61,7 +61,7 @@ public class LandingFragment extends Fragment {
 
         // If there are entries display the list with taxa
         recyclerView = rootView.findViewById(R.id.recycled_view_entries);
-        entriesAdapter = new EntryRecycleView(entries);
+        entriesAdapter = new EntryAdapter(entries);
         recyclerView.setAdapter(entriesAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.addOnItemTouchListener(

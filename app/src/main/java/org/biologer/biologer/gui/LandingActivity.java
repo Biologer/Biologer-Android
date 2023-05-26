@@ -1,6 +1,10 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -26,6 +30,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -63,6 +68,7 @@ import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementsDb;
+import org.biologer.biologer.sql.AnnouncementsDb_;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -77,6 +83,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -392,6 +400,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void updateAnnouncements(String database_uri) {
         Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_uri).getAnnouncements();
         announcements.enqueue(new Callback<>() {
+            @SuppressLint("UnspecifiedImmutableFlag")
             @Override
             public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
                 if (response.isSuccessful()) {
@@ -430,6 +439,33 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                         Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
                                 ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).count() +
                                 " announcement translations.");
+                        Box<AnnouncementsDb> announcementsDbBox = ObjectBox.get().boxFor(AnnouncementsDb.class);
+                        Query<AnnouncementsDb> announcementsDbQuery = announcementsDbBox
+                                .query(AnnouncementsDb_.isRead.equal(false)).build();
+                        if ( announcementsDbQuery.count() >= 1 ) {
+                            AnnouncementsDb announcement = announcementsDbQuery.findFirst();
+
+                            Intent intent = new Intent(LandingActivity.this, AnnouncementsActivity.class);
+                            PendingIntent pendingIntent;
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                            } else {
+                                pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, 0);
+                            }
+
+                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(LandingActivity.this, "biologer_announcements")
+                                    .setSmallIcon(R.mipmap.ic_notification)
+                                    .setContentTitle(announcement.getTitle())
+                                    .setContentText(announcement.getMessage())
+                                    .setContentIntent(pendingIntent)
+                                    .setOnlyAlertOnce(true)
+                                    .setAutoCancel(true);
+                            Notification notification = mBuilder.build();
+                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            assert mNotificationManager != null;
+                            mNotificationManager.notify(1, notification);
+                        }
+                        announcementsDbQuery.close();
                     }
                 }
             }
@@ -614,31 +650,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         fragmentTransaction.replace(R.id.content_frame , replace);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
-
-        /*
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        for (int i = 0; i < fragmentList.size(); i++) {
-            if (fragmentList.get(i) instanceof LandingFragment) {
-                Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
-                ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
-                Collections.reverse(entries);
-
-                if (entries.isEmpty()) {
-                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.removeAll();
-                }  else {
-                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.removeAll();
-                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.notifyItemRangeInserted(0, entries.size() - 1);
-                }
-                setMenuIconVisibility();
-
-                //Fragment replace = new LandingFragment();
-                //FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                //fragmentTransaction.add(R.id.content_frame , replace);
-                //fragmentTransaction.commit();
-
-            }
-        }
-         */
     }
 
     private void checkNotificationPermission() {
@@ -843,6 +854,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if(id == R.id.nav_about) {
             showAboutFragment();
         }
+        if(id == R.id.nav_announcements) {
+            showAnnouncementsActivity();
+        }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -864,6 +878,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         fragmentTransaction.add(R.id.content_frame, aboutFragment);
         fragmentTransaction.addToBackStack("About fragment");
         fragmentTransaction.commit();
+    }
+
+    private void showAnnouncementsActivity() {
+        Log.d(TAG, "User clicked announcements icon.");
+        Intent intent = new Intent(this, AnnouncementsActivity.class);
+        startActivity(intent);
     }
 
     private void showLogoutFragment() {

@@ -1,8 +1,5 @@
 package org.biologer.biologer.adapters;
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -15,35 +12,32 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
-import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryRecycleView
-        extends RecyclerView.Adapter<EntryRecycleView.ViewHolder> {
+public class EntryAdapter
+        extends RecyclerView.Adapter<EntryAdapter.ViewHolder> {
     private final List<EntryDb> myEntries;
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
+
+    public EntryAdapter(ArrayList<EntryDb> entries) {
+        myEntries = entries;
+    }
 
     public static class ViewHolder
             extends RecyclerView.ViewHolder
@@ -73,10 +67,6 @@ public class EntryRecycleView
             menu.add(Menu.NONE, R.id.delete_all,
                     Menu.NONE, R.string.delete_all_entries);
         }
-    }
-
-    public EntryRecycleView(ArrayList<EntryDb> entries) {
-        myEntries = entries;
     }
 
     @NonNull
@@ -164,14 +154,6 @@ public class EntryRecycleView
 
     public void setPosition(int position) {
         this.position = position;
-    }
-
-    public void removeAll() {
-        int last_index = this.getItemCount();
-        myEntries.clear();
-        for (int i = 0; i < last_index; i++) {
-            this.notifyItemRemoved(i);
-        }
     }
 
     @Override

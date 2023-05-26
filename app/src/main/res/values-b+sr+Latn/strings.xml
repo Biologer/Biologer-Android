@@ -200,7 +200,6 @@
     <string name="database_bih">Bosna i Hercegovina</string>
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">Adresa: </string>
-    <string name="no_image_on_storage">Izgleda da je slika obrisana sa vašeg uređaja! Pogledajte poslednji unos i obrišite ili zamenite sliku pre nego što nastavite sa slanjem podataka.</string>
     <string name="notifications_disabled1">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_taxa“. Biologer neće moći da preuzme spisak vrsta sa mreže, što je neophodno da bi program ispravno upisivao nazive vrsta uz vaše terenske nalaze.</string>
     <string name="notifications_disabled2">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_entries“. Biologer neće moći da šalje vaše terenske nalaze na server, što je jedna od ključnih mogućnosti ove aplikacije.</string>
     <string name="notifications_disabled">Važna napomena! Obaveštenja su onemogućena! To znači da Biologer neće moći da preuzima spisak vrsta, niti da šalje vaše nalaze na server. Za većinu osnovnih mogućnosti ovog programa morate da omogućite obaveštenja u podešavanjima vašeg Android uređaja.</string>
@@ -446,5 +445,13 @@
     <string name="first_unread_notification">Prvo nepročitano</string>
     <string name="go_back">Nazad u Biologer</string>
     <string name="hurray_you_just_read_all_the_notifications">Ura! Upravo ste pročitali sva obaveštenja.</string>
+    <string name="failed_to_upload_photo">Ne mogu da pošaljem fotografiju. Proverite da li ste povezani na internet ili pokušajte da otvorite poslednji nalaz, obrišete sliku koja pravi problem i ponovo pošaljete nalaze.</string>
+    <string name="failed_to_upload_entry">Ne mogu da pošaljem nalaz. Ukoliko ste povezani na stabilan internet a problem i dalje postoji, kontaktirajte programere koji razvijaju aplikaciju.</string>
+    <string name="the_database_is_not_selected">Nije izabrana baza podataka.</string>
+    <string name="observation_types_not_downloaded">Tipovi nalaza nisu preuzeti, nije sačuvana oznaka fotografisano.</string>
+    <string name="empty_view">Prazan prikaz</string>
+    <string name="announcements">Novosti</string>
+    <string name="channel_announcements">Novosti iz Biologera</string>
+    <string name="channel_announcements_description">Prikazuje važne objave i novosti od Biologerovih administratora.</string>
 
 </resources>
