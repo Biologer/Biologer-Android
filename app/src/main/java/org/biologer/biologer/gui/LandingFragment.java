@@ -45,6 +45,7 @@ public class LandingFragment extends Fragment {
     private ArrayList<EntryDb> entries;
     String TAG = "Biologer.LandingFragment";
     EntryRecycleView entriesAdapter;
+    RecyclerView recyclerView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -59,7 +60,7 @@ public class LandingFragment extends Fragment {
         }
 
         // If there are entries display the list with taxa
-        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.recycled_view_entries);
+        recyclerView = rootView.findViewById(R.id.recycled_view_entries);
         entriesAdapter = new EntryRecycleView(entries);
         recyclerView.setAdapter(entriesAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -86,6 +87,7 @@ public class LandingFragment extends Fragment {
                 }));
         registerForContextMenu(recyclerView);
 
+        // Add the + button for making new records
         FloatingActionButton floatingActionButton = rootView.findViewById(R.id.float_button_new_entry);
         if (SettingsManager.isMailConfirmed()) {
             floatingActionButton.setEnabled(true);
@@ -94,7 +96,6 @@ public class LandingFragment extends Fragment {
             floatingActionButton.setEnabled(false);
             floatingActionButton.setAlpha(0.25f);
         }
-
         floatingActionButton.setOnClickListener(v -> {
             // When user opens the EntryActivity for the first time set this to true.
             // This is used to display intro message for new users.
@@ -120,23 +121,7 @@ public class LandingFragment extends Fragment {
         Log.d(TAG, "Context item.");
 
         if (item.getItemId() == R.id.delete) {
-
-            int position_in_the_list = entriesAdapter.getPosition();
-            Log.d(TAG, "You will now delete entry ID: " + position_in_the_list);
-            long number_in_objectbox = entries.get(position_in_the_list).getId();
-            Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
-            Box<EntryDb> entryBox = ObjectBox.get().boxFor(EntryDb.class);
-            entryBox.remove((int) number_in_objectbox);
-            entries.remove(position_in_the_list);
-            entriesAdapter.notifyItemRemoved(position_in_the_list);
-
-            // Print user a message
-            int entryNo = position_in_the_list + 1;
-            Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
-            Activity activity = getActivity();
-            if (activity != null) {
-                ((LandingActivity)activity).setMenuIconVisibility();
-            }
+            deleteEntryAtPosition(entriesAdapter.getPosition());
             return true;
         }
         if (item.getItemId() == R.id.delete_all) {
@@ -147,12 +132,97 @@ public class LandingFragment extends Fragment {
         return super.onContextItemSelected(item);
     }
 
-    void updateEntries(ArrayList<EntryDb> entries_list) {
-        entries = entries_list;
-        if (entries == null) {
-            entries = new ArrayList<>();
+    private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // If we need to do something with the result after EntryActivity...
+                Log.d(TAG, "We got a result from the Entry Activity!");
+
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
+
+                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
+                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
+                        addEntry(new_entry_id);
+                    } else {
+                        long old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
+                        updateEntry(old_data_id);
+                    }
+
+                }
+
+                // Change the visibility of the Upload Icon
+                Activity activity = getActivity();
+                if (activity != null) {
+                    ((LandingActivity) getActivity()).setMenuIconVisibility();
+                }
+
+            });
+
+    private void addEntry(long newEntryId) {
+        // Load the entry from ObjectBox
+        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+        Query<EntryDb> query = box.query(EntryDb_.id.equal(newEntryId)).build();
+        EntryDb entryDb = query.findFirst();
+        query.close();
+
+        // Add the entry to the entry list (RecycleView)
+        entries.add(0, entryDb);
+        entriesAdapter.notifyItemInserted(0);
+        recyclerView.smoothScrollToPosition(0);
+
+        // Remove the info text that should be displayed if there are no entries
+        Activity activity = getActivity();
+        if (activity != null) {
+            TextView textView = activity.findViewById(R.id.list_entries_info_text);
+            textView.setVisibility(View.GONE);
         }
-        entriesAdapter.notifyItemRangeChanged(0, entries.size());
+    }
+
+    private void updateEntry(long oldDataId) {
+        // Load the entry from the ObjectBox
+        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+        Query<EntryDb> query = box.query(EntryDb_.id.equal(oldDataId)).build();
+        EntryDb entryDb = query.findFirst();
+        query.close();
+
+        // Find the entry’s index ID
+        int entry_id = 0;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).getId() == oldDataId) {
+                entry_id = i;
+            }
+        }
+        Log.d(TAG, "Entry index ID is " + entry_id);
+
+        // Add the entry to the entry list (RecycleView)
+        entries.set(entry_id, entryDb);
+        Log.i(TAG, "Images in entry " + entry_id + ": " +
+                entries.get(entry_id).getSlika1() + ", " +
+                entries.get(entry_id).getSlika2() + ", " +
+                entries.get(entry_id).getSlika3() + ".");
+        entriesAdapter.notifyItemChanged(entry_id);
+    }
+
+    private void deleteEntryAtPosition(int position) {
+        Log.d(TAG, "You will now delete entry index ID: " + position);
+        long number_in_objectbox = entries.get(position).getId();
+        Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
+        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_objectbox + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
+        Box<EntryDb> entryBox = ObjectBox.get().boxFor(EntryDb.class);
+        entryBox.remove((int) number_in_objectbox);
+        entries.remove(position);
+        entriesAdapter.notifyItemRemoved(position);
+        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_objectbox + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
+
+        // Print user a message
+        int entryNo = position + 1;
+        Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
+        Activity activity = getActivity();
+        if (activity != null) {
+            ((LandingActivity)activity).setMenuIconVisibility();
+        }
     }
 
     protected void buildAlertOnDeleteAll() {
@@ -165,14 +235,15 @@ public class LandingFragment extends Fragment {
 
                         Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
 
+                        int last_index = entries.size() - 1;
                         entries.clear();
                         ObjectBox.get().boxFor(EntryDb.class).removeAll();
                         ((LandingActivity)getActivity()).setMenuIconVisibility();
+                        Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
 
-                        // TODO The notify does not work, so I simply recreated the fragment and reload empty list
-                        Fragment replace = new LandingFragment();
+                        Fragment replacementFragment = new LandingFragment();
                         FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.add(R.id.content_frame , replace);
+                        fragmentTransaction.add(R.id.content_frame , replacementFragment);
                         fragmentTransaction.commit();
 
                     })
@@ -180,7 +251,7 @@ public class LandingFragment extends Fragment {
             final AlertDialog alert = builder.create();
 
             alert.setOnShowListener(new DialogInterface.OnShowListener() {
-                private static final int AUTO_DISMISS_MILLIS = 100;
+                private static final int AUTO_DISMISS_MILLIS = 10000;
                 @Override
                 public void onShow(DialogInterface dialogInterface) {
                     final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -210,59 +281,5 @@ public class LandingFragment extends Fragment {
             alert.show();
         }
     }
-
-    private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                // If we need to do something with the result after EntryActivity...
-                Log.d(TAG, "We got a result from the Entry Activity!");
-
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
-                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
-                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
-                        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
-                        Query<EntryDb> query = box.query(EntryDb_.id.equal(new_entry_id)).build();
-                        EntryDb entryDb = query.findFirst();
-                        query.close();
-
-                        Collections.reverse(entries);
-                        entries.add(entryDb);
-                        Collections.reverse(entries);
-                        entriesAdapter.notifyItemInserted(0);
-                    } else {
-                        long old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
-                        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
-                        Query<EntryDb> query = box.query(EntryDb_.id.equal(old_data_id)).build();
-                        EntryDb entryDb = query.findFirst();
-                        query.close();
-
-                        int entry_id = 0;
-                        for (int i = 0; i < entries.size(); i++) {
-                            if (entries.get(i).getId() == old_data_id) {
-                                entry_id = i;
-                            }
-                        }
-                        Log.d(TAG, "Entry ID is " + entry_id);
-                        entries.set(entry_id, entryDb);
-                        entriesAdapter.notifyItemChanged(entry_id);
-                    }
-
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        TextView textView = activity.findViewById(R.id.list_entries_info_text);
-                        textView.setVisibility(View.GONE);
-                    }
-
-                }
-
-                // Change the visibility of the Upload Icon
-                Activity activity = getActivity();
-                if (activity != null) {
-                    ((LandingActivity) getActivity()).setMenuIconVisibility();
-                }
-
-            });
 
 }

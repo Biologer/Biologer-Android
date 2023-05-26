@@ -609,14 +609,36 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void updateEntryListView() {
+        Fragment replace = new LandingFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.content_frame , replace);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+
+        /*
         List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
         for (int i = 0; i < fragmentList.size(); i++) {
             if (fragmentList.get(i) instanceof LandingFragment) {
                 Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
                 ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
-                ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
+                Collections.reverse(entries);
+
+                if (entries.isEmpty()) {
+                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.removeAll();
+                }  else {
+                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.removeAll();
+                    ((LandingFragment) fragmentList.get(i)).entriesAdapter.notifyItemRangeInserted(0, entries.size() - 1);
+                }
+                setMenuIconVisibility();
+
+                //Fragment replace = new LandingFragment();
+                //FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+                //fragmentTransaction.add(R.id.content_frame , replace);
+                //fragmentTransaction.commit();
+
             }
         }
+         */
     }
 
     private void checkNotificationPermission() {

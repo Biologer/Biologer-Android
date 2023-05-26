@@ -449,5 +449,6 @@
     <string name="failed_to_upload_entry">Failed to upload observation. If you have a good internet connection but the problem continues, contact the app developers.</string>
     <string name="the_database_is_not_selected">The database is not selected.</string>
     <string name="observation_types_not_downloaded">Observation types not downloaded, photographed tag will not be saved.</string>
+    <string name="empty_view">Empty view</string>
 
 </resources>

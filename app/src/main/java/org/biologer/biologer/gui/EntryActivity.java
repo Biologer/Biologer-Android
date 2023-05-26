@@ -280,7 +280,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 runnable = () -> {
                     /*
                     Get the list of taxa from the GreenDao database
-                     */
+                    */
 
                     // Remove atlas code and stage for taxa not selected from the list
                     if (!taxonSelectedFromTheList) {
@@ -1683,7 +1683,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void deleteUnsavedImages() {
-        for( String image : list_new_images ) {
+        for (String image: list_new_images) {
             if (image != null) {
                 String filename = new File(image).getName();
                 final File file = new File(getFilesDir(), filename);
