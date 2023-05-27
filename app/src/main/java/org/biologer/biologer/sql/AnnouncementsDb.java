@@ -7,7 +7,7 @@ import io.objectbox.annotation.Id;
 public class AnnouncementsDb {
 
     @Id(assignable = true)
-    long id;
+    private long id;
     private String creatorName;
     private boolean isPrivate;
     private String createdAt;
@@ -83,5 +83,13 @@ public class AnnouncementsDb {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

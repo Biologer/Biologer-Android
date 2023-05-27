@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class Localisation {
 
-    private static final String TAG = "Biologer.Entry";
+    private static final String TAG = "Biologer.Locale";
 
     private static Locale getCurrentLocale() {
         Locale locale;
