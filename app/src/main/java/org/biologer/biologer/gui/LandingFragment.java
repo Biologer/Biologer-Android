@@ -1,8 +1,11 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -19,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,6 +33,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.EntryAdapter;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
+import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 
@@ -46,6 +51,7 @@ public class LandingFragment extends Fragment {
     String TAG = "Biologer.LandingFragment";
     EntryAdapter entriesAdapter;
     RecyclerView recyclerView;
+    BroadcastReceiver broadcastReceiver;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -108,12 +114,72 @@ public class LandingFragment extends Fragment {
             openEntry.launch(intent);
         });
 
+        // Broadcast will watch if upload service is active
+        // and run the command when the upload is complete
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
+                long entry_id = intent.getLongExtra("EntryID", 0);
+
+                // This will be executed after upload is completed
+                if (s != null) {
+                    Log.i(TAG, "Uploading records returned the code: " + s);
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        TextView textView = getActivity().findViewById(R.id.list_entries_info_text);
+                        if (s.equals("success")) {
+                            textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
+                            textView.setVisibility(View.VISIBLE);
+                            ((LandingActivity) getActivity()).setMenuIconGone();
+                        }
+                        if (s.equals("failed_photo")) {
+                            textView.setText(R.string.failed_to_upload_photo);
+                            textView.setVisibility(View.VISIBLE);
+                            ((LandingActivity) getActivity()).setMenuIconVisible();
+                        }
+                        if (s.equals("failed_entry")) {
+                            textView.setText(R.string.failed_to_upload_entry);
+                            textView.setVisibility(View.VISIBLE);
+                            ((LandingActivity) getActivity()).setMenuIconVisible();
+                        }
+                        if (s.equals("id_uploaded")) {
+                            Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
+                            int index = getIndexFromID(entry_id);
+                            entries.remove(index);
+                            entriesAdapter.notifyItemRemoved(index);
+                        }
+
+                        //setMenuIconVisibility();
+
+                        //updateEntryListView();
+                    }
+
+                }
+            }
+        };
+
         return rootView;
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onPause() {
+        super.onPause();
+        Context context = getContext();
+        if (context != null) {
+            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Context context = getContext();
+        if (context != null) {
+            LocalBroadcastManager.getInstance(getContext()).registerReceiver((broadcastReceiver),
+                    new IntentFilter(UploadRecords.TASK_COMPLETED)
+            );
+        }
     }
 
     @Override
@@ -155,7 +221,7 @@ public class LandingFragment extends Fragment {
                 // Change the visibility of the Upload Icon
                 Activity activity = getActivity();
                 if (activity != null) {
-                    ((LandingActivity) getActivity()).setMenuIconVisibility();
+                    ((LandingActivity) getActivity()).updateMenuIconVisibility();
                 }
 
             });
@@ -187,14 +253,7 @@ public class LandingFragment extends Fragment {
         EntryDb entryDb = query.findFirst();
         query.close();
 
-        // Find the entry’s index ID
-        int entry_id = 0;
-        for (int i = 0; i < entries.size(); i++) {
-            if (entries.get(i).getId() == oldDataId) {
-                entry_id = i;
-            }
-        }
-        Log.d(TAG, "Entry index ID is " + entry_id);
+        int entry_id = getIndexFromID(oldDataId);
 
         // Add the entry to the entry list (RecycleView)
         entries.set(entry_id, entryDb);
@@ -205,7 +264,20 @@ public class LandingFragment extends Fragment {
         entriesAdapter.notifyItemChanged(entry_id);
     }
 
-    private void deleteEntryAtPosition(int position) {
+    // Find the entry’s index ID
+    private int getIndexFromID(long entry_id) {
+
+        int index_id = 0;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).getId() == entry_id) {
+                index_id = i;
+            }
+        }
+        Log.d(TAG, "Entry index ID is " + index_id);
+        return index_id;
+    }
+
+    public void deleteEntryAtPosition(int position) {
         Log.d(TAG, "You will now delete entry index ID: " + position);
         long number_in_objectbox = entries.get(position).getId();
         Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
@@ -221,7 +293,7 @@ public class LandingFragment extends Fragment {
         Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
         Activity activity = getActivity();
         if (activity != null) {
-            ((LandingActivity)activity).setMenuIconVisibility();
+            ((LandingActivity)activity).updateMenuIconVisibility();
         }
     }
 
@@ -238,7 +310,7 @@ public class LandingFragment extends Fragment {
                         int last_index = entries.size() - 1;
                         entries.clear();
                         ObjectBox.get().boxFor(EntryDb.class).removeAll();
-                        ((LandingActivity)getActivity()).setMenuIconVisibility();
+                        ((LandingActivity)getActivity()).updateMenuIconVisibility();
                         Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
 
                         Fragment replacementFragment = new LandingFragment();

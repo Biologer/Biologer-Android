@@ -5,11 +5,9 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -37,7 +35,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -94,7 +91,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private static final String TAG = "Biologer.Landing";
 
     private DrawerLayout drawer;
-    BroadcastReceiver receiver;
     String how_to_use_network;
 
     // Define upload menu so that we can hide it if required
@@ -174,43 +170,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             }
         }
-
-        // Broadcast will watch if upload service is active
-        // and run the command when the upload is complete
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
-                // This will be executed after upload is completed
-                if (s != null) {
-                    Log.d(TAG, "Uploading records returned the code: " + s);
-                    TextView textView = findViewById(R.id.list_entries_info_text);
-                    if (s.equals("success")) {
-                        textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
-                    }
-                    if (s.equals("failed_photo")) {
-                        textView.setText(R.string.failed_to_upload_photo);
-                    }
-                    if (s.equals("failed_entry")) {
-                        textView.setText(R.string.failed_to_upload_entry);
-                    }
-
-                    textView.setVisibility(View.VISIBLE);
-                    setMenuIconVisibility();
-
-                    updateEntryListView();
-
-                }
-            }
-        };
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(UploadRecords.TASK_COMPLETED)
-        );
+
         // If the email is not confirmed we would like to check this every time the
         // user restarts the LandingActivity
         if (!SettingsManager.isMailConfirmed()) {
@@ -234,7 +199,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         super.onStop();
     }
 
@@ -277,7 +241,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.upload_menu, menu);
         uploadMenu = menu;
-        setMenuIconVisibility();
+        updateMenuIconVisibility();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -444,26 +408,28 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                                 .query(AnnouncementsDb_.isRead.equal(false)).build();
                         if ( announcementsDbQuery.count() >= 1 ) {
                             AnnouncementsDb announcement = announcementsDbQuery.findFirst();
+                            if (announcement != null) {
+                                Intent intent = new Intent(LandingActivity.this, AnnouncementsActivity.class);
+                                PendingIntent pendingIntent;
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                                    pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                                } else {
+                                    pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, 0);
+                                }
 
-                            Intent intent = new Intent(LandingActivity.this, AnnouncementsActivity.class);
-                            PendingIntent pendingIntent;
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-                            } else {
-                                pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, 0);
+                                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(LandingActivity.this, "biologer_announcements")
+                                        .setSmallIcon(R.mipmap.ic_notification)
+                                        .setContentTitle(announcement.getTitle())
+                                        .setContentText(announcement.getMessage())
+                                        .setContentIntent(pendingIntent)
+                                        .setOnlyAlertOnce(true)
+                                        .setAutoCancel(true);
+                                Notification notification = mBuilder.build();
+                                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                assert mNotificationManager != null;
+                                mNotificationManager.notify(1, notification);
                             }
 
-                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(LandingActivity.this, "biologer_announcements")
-                                    .setSmallIcon(R.mipmap.ic_notification)
-                                    .setContentTitle(announcement.getTitle())
-                                    .setContentText(announcement.getMessage())
-                                    .setContentIntent(pendingIntent)
-                                    .setOnlyAlertOnce(true)
-                                    .setAutoCancel(true);
-                            Notification notification = mBuilder.build();
-                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                            assert mNotificationManager != null;
-                            mNotificationManager.notify(1, notification);
                         }
                         announcementsDbQuery.close();
                     }
@@ -642,14 +608,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             });
         }
-    }
-
-    private void updateEntryListView() {
-        Fragment replace = new LandingFragment();
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame , replace);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
     }
 
     private void checkNotificationPermission() {
@@ -866,7 +824,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Showing LandingFragment");
         Fragment landingFragment = new LandingFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, landingFragment);
+        ft.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
         ft.addToBackStack("Landing fragment");
         ft.commit();
     }
@@ -1164,24 +1122,32 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return uploadMenu;
     }
 
-    public void setMenuIconVisibility() {
+    public void updateMenuIconVisibility() {
         long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).count();
         Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {
             // Disable the upload button
-            if (getMenu() != null) {
-                uploadMenu.getItem(0).setEnabled(false);
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
-                uploadMenu.getItem(1).setVisible(false);
-            }
+            setMenuIconGone();
         } else {
-            // Disable the upload button
-            if (uploadMenu != null) {
-                uploadMenu.getItem(0).setEnabled(true);
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
-                uploadMenu.getItem(1).setVisible(true);
-            }
+            // Enable the upload button
+            setMenuIconVisible();
+        }
+    }
+
+    public void setMenuIconGone () {
+        if (getMenu() != null) {
+            uploadMenu.getItem(0).setEnabled(false);
+            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
+            uploadMenu.getItem(1).setVisible(false);
+        }
+    }
+
+    public void setMenuIconVisible () {
+        if (uploadMenu != null) {
+            uploadMenu.getItem(0).setEnabled(true);
+            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
+            uploadMenu.getItem(1).setVisible(true);
         }
     }
 

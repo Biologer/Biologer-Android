@@ -81,7 +81,7 @@ public class UploadRecords extends Service {
 
     public void onDestroy() {
         super.onDestroy();
-        sendResult("success");
+        sendResult("success", 0);
         Log.d(TAG, "Running onDestroy().");
     }
 
@@ -314,10 +314,14 @@ public class UploadRecords extends Service {
                     SystemClock.sleep(300);
                     // Delete uploaded entry
                     ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
-                    // TODO the entryList is null sometimes
+
+                    // Inform the broadcaster on success
                     if (!entryList.isEmpty()) {
+                        sendResult("id_uploaded", entryList.get(0).getId());
+                        Log.d(TAG, "Entry ID " + entryList.get(0).getId() + " uploaded!");
                         entryList.remove(0);
                     }
+
                     // Delete image files from internal storage
                     for (String filename : filenames) {
                         if (filename != null) {
@@ -343,7 +347,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry");
+                sendResult("failed_entry", 0);
                 stopSelf();
             }
         });
@@ -452,10 +456,11 @@ public class UploadRecords extends Service {
                         SystemClock.sleep(300);
                         // Delete uploaded entry
                         ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
-                        //App.get().getDaoSession().getEntryDao().delete(entry);
-                        entryList.remove(0);
-                        // TODO get the eventbus
-                        //EventBus.getDefault().post(new DeleteEntryFromList());
+                        if (!entryList.isEmpty()) {
+                            sendResult("id_uploaded", entryList.get(0).getId());
+                            entryList.remove(0);
+                        }
+
                         // Delete image files from internal storage
                         for (String filename : filenames) {
                             if (filename != null) {
@@ -479,7 +484,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry");
+                sendResult("failed_entry", 0);
                 stopSelf();
             }
         });
@@ -530,7 +535,7 @@ public class UploadRecords extends Service {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
                     cancelUpload("Failed!", "Uploading of photo was not successful!");
-                    sendResult("failed_photo");
+                    sendResult("failed_photo", 0);
                     stopSelf();
                 }
             }
@@ -610,10 +615,10 @@ public class UploadRecords extends Service {
         mNotificationManager.notify(1, notification);
     }
 
-    public void sendResult(String message) {
+    public void sendResult(String message, long id) {
         Intent intent = new Intent(TASK_COMPLETED);
-        if (message != null)
-            intent.putExtra(TASK_COMPLETED, message);
+        intent.putExtra(TASK_COMPLETED, message);
+        intent.putExtra("EntryID", id);
         broadcaster.sendBroadcast(intent);
     }
 }
