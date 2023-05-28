@@ -108,14 +108,10 @@
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
 
-        <activity
-            android:name=".gui.IntroActivity" />
-
-        <activity
-            android:name=".gui.NotificationActivity" />
-
-        <activity
-            android:name=".gui.ViewImage" />
+        <activity android:name=".gui.IntroActivity" />
+        <activity android:name=".gui.NotificationActivity" />
+        <activity android:name=".gui.AnnouncementsFragment" />
+        <activity android:name=".gui.ViewImage" />
 
         <service android:name="org.biologer.biologer.network.FetchTaxa"/>
         <service android:name="org.biologer.biologer.network.FetchTaxaBirdloger"/>
@@ -123,6 +119,7 @@
         <service android:name="org.biologer.biologer.network.UploadRecords"/>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
+        <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>
         <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>
 
     </application>

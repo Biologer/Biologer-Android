@@ -1,11 +1,6 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,7 +23,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -52,20 +46,16 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.AnnouncementsData;
-import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.sql.AnnouncementTranslationsDb;
-import org.biologer.biologer.sql.AnnouncementsDb;
-import org.biologer.biologer.sql.AnnouncementsDb_;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -80,8 +70,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -339,9 +327,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     // Update announcements
                     long current_time = System.currentTimeMillis() / 1000; // in seconds
                     long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
-                    if (last_check == 0 || current_time > (last_check + 18000) ) { // don’t get data from veb in the next 5 hours
-                        Log.d(TAG, "Announcements should be updated since 5 hours elapsed.");
-                        updateAnnouncements(database_url);
+                    if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
+                        Log.d(TAG, "Announcements should be updated since 10 hours elapsed.");
+                        final Intent getAnnouncements = new Intent(LandingActivity.this, UpdateAnnouncements.class);
+                        startService(getAnnouncements);
                         SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
                     }
 
@@ -359,88 +348,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
-    }
-
-    private void updateAnnouncements(String database_uri) {
-        Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_uri).getAnnouncements();
-        announcements.enqueue(new Callback<>() {
-            @SuppressLint("UnspecifiedImmutableFlag")
-            @Override
-            public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
-                if (response.isSuccessful()) {
-                    AnnouncementsData[] announcementsData;
-                    if (response.body() != null) {
-                        announcementsData = response.body().getData();
-                        int number_of_announcements = announcementsData.length;
-                        AnnouncementsDb[] announcementsDbs = new AnnouncementsDb[number_of_announcements];
-                        for (int i = 0; i < number_of_announcements; i++) {
-                            announcementsDbs[i] = new AnnouncementsDb(
-                                    announcementsData[i].getId(),
-                                    announcementsData[i].getCreatorName(),
-                                    announcementsData[i].isPrivate(),
-                                    announcementsData[i].getCreatedAt(),
-                                    announcementsData[i].getUpdatedAt(),
-                                    announcementsData[i].isRead(),
-                                    announcementsData[i].getTitle(),
-                                    announcementsData[i].getMessage());
-
-                            int number_of_translations = announcementsData[i].getTranslations().length;
-                            AnnouncementTranslationsDb[] announcementTranslationsDbs = new AnnouncementTranslationsDb[number_of_translations];
-                            for (int j = 0; j < number_of_translations; j++) {
-                                Log.d(TAG, "Announcement translations " + j);
-                                announcementTranslationsDbs[j] = new AnnouncementTranslationsDb(
-                                        announcementsData[i].getTranslations()[j].getId(),
-                                        announcementsData[i].getId(),
-                                        announcementsData[i].getTranslations()[j].getLocale(),
-                                        announcementsData[i].getTranslations()[j].getTitle(),
-                                        announcementsData[i].getTranslations()[j].getMessage()
-                                );
-                            }
-                            ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
-
-                        }
-                        ObjectBox.get().boxFor(AnnouncementsDb.class).put(announcementsDbs);
-                        Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
-                                ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).count() +
-                                " announcement translations.");
-                        Box<AnnouncementsDb> announcementsDbBox = ObjectBox.get().boxFor(AnnouncementsDb.class);
-                        Query<AnnouncementsDb> announcementsDbQuery = announcementsDbBox
-                                .query(AnnouncementsDb_.isRead.equal(false)).build();
-                        if ( announcementsDbQuery.count() >= 1 ) {
-                            AnnouncementsDb announcement = announcementsDbQuery.findFirst();
-                            if (announcement != null) {
-                                Intent intent = new Intent(LandingActivity.this, AnnouncementsActivity.class);
-                                PendingIntent pendingIntent;
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                    pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-                                } else {
-                                    pendingIntent = PendingIntent.getActivity(LandingActivity.this, 0, intent, 0);
-                                }
-
-                                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(LandingActivity.this, "biologer_announcements")
-                                        .setSmallIcon(R.mipmap.ic_notification)
-                                        .setContentTitle(announcement.getTitle())
-                                        .setContentText(announcement.getMessage())
-                                        .setContentIntent(pendingIntent)
-                                        .setOnlyAlertOnce(true)
-                                        .setAutoCancel(true);
-                                Notification notification = mBuilder.build();
-                                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                assert mNotificationManager != null;
-                                mNotificationManager.notify(1, notification);
-                            }
-
-                        }
-                        announcementsDbQuery.close();
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<AnnouncementsResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Could not get announcements: " + t.getLocalizedMessage());
-            }
-        });
     }
 
     private void checkMailConfirmed(String database_url) {

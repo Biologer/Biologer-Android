@@ -1,5 +1,7 @@
 package org.biologer.biologer.adapters;
 
+import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,8 +18,6 @@ import java.util.List;
 public class AnnouncementsAdapter
         extends RecyclerView.Adapter<AnnouncementsAdapter.ViewHolder> {
     private final List<AnnouncementsDb> myAnnouncements;
-    private int position;
-    private static final String TAG = "Biologer.EntryAdapter";
 
     public AnnouncementsAdapter(List<AnnouncementsDb> myAnnouncements) {
         this.myAnnouncements = myAnnouncements;
@@ -51,7 +51,8 @@ public class AnnouncementsAdapter
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder viewHolder, final int position) {
+    public void onBindViewHolder(ViewHolder viewHolder, int position) {
+        Log.d("AnnouncementsAdapter", "Binding to the announcements adapter now!");
 
         AnnouncementsDb announcement = myAnnouncements.get(position);
 
@@ -59,11 +60,21 @@ public class AnnouncementsAdapter
         textAnnouncementTitle.setText(announcement.getTitle());
         TextView textAnnouncementText = viewHolder.textAnnouncementText;
         textAnnouncementText.setText(announcement.getMessage());
+
+        if (!announcement.isRead()) {
+            textAnnouncementTitle.setTypeface(null, Typeface.BOLD);
+            textAnnouncementText.setTypeface(null, Typeface.BOLD);
+        }
+
     }
 
     @Override
     public int getItemCount() {
-        return myAnnouncements.size();
+        if (myAnnouncements != null) {
+            return myAnnouncements.size();
+        } else {
+            return 0;
+        }
     }
 
 }
