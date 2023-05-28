@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -20,7 +21,6 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.User;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.sql.UserDb;
 
@@ -58,6 +58,19 @@ public class LogoutFragment extends Fragment {
                 tv_email.setText(userData.getEmail());
 
                 btn_logout.setOnClickListener(v -> {
+                    // If there are entries warn the user that the data will be lost!
+                    if (!ObjectBox.get().boxFor(EntryActivity.class).isEmpty()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                        builder.setMessage(getString(R.string.there_are) + " " +
+                                ObjectBox.get().boxFor(EntryActivity.class).count() + " " +
+                                getString(R.string.there_are2));
+                        builder.setPositiveButton(getString(R.string.yes), (dialog, id) -> deleteDataAndLogout(activity));
+                        builder.setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
+                        builder.setCancelable(true);
+                        final AlertDialog alert = builder.create();
+                        alert.show();
+                    }
+
                     // If download process is active, stop it first
                     if (FetchTaxa.isInstanceCreated()) {
                         final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
