@@ -46,7 +46,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
         Collections.reverse(announcements);
 
         String locale_script = Localisation.getLocaleScript();
-        for (int i = 0; 1 < announcements.size(); i++) {
+        for (int i = 0; i < announcements.size(); i++) {
             Box<AnnouncementTranslationsDb> box = ObjectBox.get().boxFor(AnnouncementTranslationsDb.class);
             Query<AnnouncementTranslationsDb> query = box
                     .query(AnnouncementTranslationsDb_.locale.equal(locale_script)
