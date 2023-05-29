@@ -37,7 +37,6 @@ import com.opencsv.CSVWriter;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CreateExternalFile;
@@ -171,7 +170,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (database != null) {
                 // Check mail should not be called if the user is not logged in.
                 // The user is not logged in if the SQL UserData is empty.
-                List<UserDb> userData = ObjectBox.get().boxFor(UserDb.class).getAll();
+                List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 if (!userData.isEmpty()) {
                     checkMailConfirmed(database);
                 }
@@ -255,7 +254,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        ObjectBox.get().deleteAllFiles();
+        App.get().getBoxStore().deleteAllFiles();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
@@ -422,8 +421,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                             int data_license = response.body().getData().getSettings().getDataLicense();
                             int image_license = response.body().getData().getSettings().getImageLicense();
                             UserDb user = new UserDb(0, name, email, data_license, image_license);
-                            ObjectBox.get().boxFor(UserDb.class).removeAll();
-                            ObjectBox.get().boxFor(UserDb.class).put(user);
+                            App.get().getBoxStore().boxFor(UserDb.class).removeAll();
+                            App.get().getBoxStore().boxFor(UserDb.class).put(user);
                             SettingsManager.setSqlUpdated(false);
                         } else {
                             alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
@@ -823,7 +822,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
         writer.writeNext(title);
 
-        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
+        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
         String u = getUserName();
 
         for (int i = 0; i < entries.size(); i++) {
@@ -913,7 +912,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void uploadRecords() {
-        if (ObjectBox.get().boxFor(EntryDb.class).getAll().size() != 0) {
+        if (App.get().getBoxStore().boxFor(EntryDb.class).getAll().size() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -998,7 +997,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Get the data from GreenDao database
     private UserDb getLoggedUser() {
         // Get the user data from a GreenDao database
-        List<UserDb> userdata_list = ObjectBox.get().boxFor(UserDb.class).getAll();
+        List<UserDb> userdata_list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             return null;
@@ -1030,7 +1029,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     public void updateMenuIconVisibility() {
-        long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).count();
+        long numberOfItems = App.get().getBoxStore().boxFor(EntryDb.class).count();
         Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {

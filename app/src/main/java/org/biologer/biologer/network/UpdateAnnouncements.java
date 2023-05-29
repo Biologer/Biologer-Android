@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -93,12 +94,12 @@ public class UpdateAnnouncements extends Service {
                                             announcementsData[i].getTranslations()[j].getMessage()
                                     );
                                 }
-                                ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
+                                App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
 
                             }
-                            ObjectBox.get().boxFor(AnnouncementsDb.class).put(announcementsDbs);
+                            App.get().getBoxStore().boxFor(AnnouncementsDb.class).put(announcementsDbs);
                             Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
-                                    ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).count() +
+                                    App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).count() +
                                     " announcement translations.");
 
                             displayNotification();
@@ -110,7 +111,7 @@ public class UpdateAnnouncements extends Service {
 
                 @SuppressLint("UnspecifiedImmutableFlag")
                 private void displayNotification() {
-                    Box<AnnouncementsDb> announcementsDbBox = ObjectBox.get().boxFor(AnnouncementsDb.class);
+                    Box<AnnouncementsDb> announcementsDbBox = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
                     Query<AnnouncementsDb> announcementsDbQuery = announcementsDbBox
                             .query(AnnouncementsDb_.isRead.equal(false)).build();
                     if (announcementsDbQuery.count() >= 1) {

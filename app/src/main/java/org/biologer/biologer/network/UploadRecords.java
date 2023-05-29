@@ -20,6 +20,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -94,7 +95,7 @@ public class UploadRecords extends Service {
                     case ACTION_START:
                         // Do something...
                         Log.d(TAG, "Starting upload process…");
-                        entryList = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
+                        entryList = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
                         totalEntries = entryList.size();
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
                         notificationInitiate();
@@ -171,7 +172,7 @@ public class UploadRecords extends Service {
         // When all entries are uploaded
         if (entryList.size() == 0) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
-            ObjectBox.get().boxFor(EntryDb.class).removeAll();
+            App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
             //App.get().getDaoSession().getEntryDao().deleteAll();
             // Stop the foreground service and update the notification
             stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
@@ -313,7 +314,7 @@ public class UploadRecords extends Service {
                     // Wait... Don’t send too many requests to the server!
                     SystemClock.sleep(300);
                     // Delete uploaded entry
-                    ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
+                    App.get().getBoxStore().boxFor(EntryDb.class).remove(entryDb);
 
                     // Inform the broadcaster on success
                     if (!entryList.isEmpty()) {
@@ -455,7 +456,7 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
+                        App.get().getBoxStore().boxFor(EntryDb.class).remove(entryDb);
                         if (!entryList.isEmpty()) {
                             sendResult("id_uploaded", entryList.get(0).getId());
                             entryList.remove(0);

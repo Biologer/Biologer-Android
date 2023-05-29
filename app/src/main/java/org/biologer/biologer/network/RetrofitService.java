@@ -137,6 +137,11 @@ public interface RetrofitService {
     Call<AnnouncementsResponse> getAnnouncements();
 
     @Headers({"Accept: application/json"})
+    @POST ("/api/read-announcements")
+    Call<ResponseBody> setAnnouncementAsRead(
+            @Query("announcement_id") String announcement_id);
+
+    @Headers({"Accept: application/json"})
     @GET("/api/view-groups")
     Call<TaxaGroupsResponse> getTaxaGroupsResponse();
 

@@ -17,6 +17,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
@@ -58,7 +59,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
             actionbar.setDisplayShowHomeEnabled(true);
         }
 
-        announcements = ObjectBox.get().boxFor(AnnouncementsDb.class).getAll();
+        announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
         if (announcements == null) {
             announcements = new ArrayList<>();
             current_size = 0;
@@ -103,7 +104,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
                 if (s != null) {
                     Log.i(TAG, "Downloading announcements returned the code: " + s);
 
-                    announcements = ObjectBox.get().boxFor(AnnouncementsDb.class).getAll();
+                    announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
 
                     if (announcements != null) {
                         if (current_size < announcements.size()) {
@@ -142,7 +143,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
     private void translateAnnouncements(List<AnnouncementsDb> announcements) {
         String locale_script = Localisation.getLocaleScript();
         for (int i = 0; i < announcements.size(); i++) {
-            Box<AnnouncementTranslationsDb> box = ObjectBox.get().boxFor(AnnouncementTranslationsDb.class);
+            Box<AnnouncementTranslationsDb> box = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
             Query<AnnouncementTranslationsDb> query = box
                     .query(AnnouncementTranslationsDb_.locale.equal(locale_script)
                             .and(AnnouncementTranslationsDb_.announcementId.equal(announcements.get(i).getId())))

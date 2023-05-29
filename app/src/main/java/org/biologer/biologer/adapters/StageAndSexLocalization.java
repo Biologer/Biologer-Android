@@ -2,6 +2,7 @@ package org.biologer.biologer.adapters;
 
 import android.content.Context;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.StageDb;
@@ -16,7 +17,7 @@ public class StageAndSexLocalization {
 
     public static String getStageLocaleFromID(Context context, Long stageID) {
         if (stageID != null) {
-            Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query = stageBox
                     .query(StageDb_.stageId.equal(stageID))
                     .build();

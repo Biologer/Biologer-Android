@@ -19,6 +19,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.material.button.MaterialButton;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -262,7 +263,7 @@ public class NotificationActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void getNextUnreadNotification(long previous_notification_id) {
         // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.greater(previous_notification_id))
                 .build();
@@ -287,7 +288,7 @@ public class NotificationActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void getFirstUnreadNotification() {
         // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
         if (!unreadNotificationsDbBox.isEmpty()) {
             UnreadNotificationsDb unreadNotification = unreadNotificationsDbBox.getAll().get(0);
             // Display the notification in the new NotificationView activity
@@ -312,7 +313,7 @@ public class NotificationActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "All notifications should be set to read now.");
-                    ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
+                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
                     NotificationManagerCompat.from(NotificationActivity.this).cancelAll();
                 }
             }
@@ -364,7 +365,7 @@ public class NotificationActivity extends AppCompatActivity {
                 .build();
         query.remove();
         query.close();
-        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + ObjectBox.get().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
 
         // Remove notification from the Android notification area
         Log.d(TAG, "Trying to remove notification " + notification_id + " from notification area.");
@@ -391,7 +392,7 @@ public class NotificationActivity extends AppCompatActivity {
                                     unreadNotification.getData().getCurator_name(),
                                     unreadNotification.getData().getTaxon_name(),
                                     unreadNotification.getUpdated_at());
-                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
+                            App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
 
                             // Display new notification in Android notification area
                             //List<UnreadNotificationsDb> unreadNotifications = ObjectBox

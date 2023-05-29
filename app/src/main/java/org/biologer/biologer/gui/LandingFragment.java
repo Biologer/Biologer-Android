@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import org.biologer.biologer.ObjectBox;
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.EntryAdapter;
@@ -58,7 +58,7 @@ public class LandingFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
 
         // Load the entries from the database
-        entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
+        entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
         Collections.reverse(entries);
         // If there are no entries create an empty list
         if (entries == null) {
@@ -228,7 +228,7 @@ public class LandingFragment extends Fragment {
 
     private void addEntry(long newEntryId) {
         // Load the entry from ObjectBox
-        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         Query<EntryDb> query = box.query(EntryDb_.id.equal(newEntryId)).build();
         EntryDb entryDb = query.findFirst();
         query.close();
@@ -248,7 +248,7 @@ public class LandingFragment extends Fragment {
 
     private void updateEntry(long oldDataId) {
         // Load the entry from the ObjectBox
-        Box<EntryDb> box = ObjectBox.get().boxFor(EntryDb.class);
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         Query<EntryDb> query = box.query(EntryDb_.id.equal(oldDataId)).build();
         EntryDb entryDb = query.findFirst();
         query.close();
@@ -282,7 +282,7 @@ public class LandingFragment extends Fragment {
         long number_in_objectbox = entries.get(position).getId();
         Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
         Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_objectbox + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
-        Box<EntryDb> entryBox = ObjectBox.get().boxFor(EntryDb.class);
+        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
         entryBox.remove((int) number_in_objectbox);
         entries.remove(position);
         entriesAdapter.notifyItemRemoved(position);
@@ -309,7 +309,7 @@ public class LandingFragment extends Fragment {
 
                         int last_index = entries.size() - 1;
                         entries.clear();
-                        ObjectBox.get().boxFor(EntryDb.class).removeAll();
+                        App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
                         ((LandingActivity)getActivity()).updateMenuIconVisibility();
                         Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
 

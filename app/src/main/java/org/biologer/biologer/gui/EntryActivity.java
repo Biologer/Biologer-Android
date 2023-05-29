@@ -63,8 +63,8 @@ import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
@@ -126,8 +126,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     Calendar calendar;
     SimpleDateFormat simpleDateFormat;
     // Get the data from the GreenDao database
-    List<UserDb> userDataList = ObjectBox.get().boxFor(UserDb.class).getAll();
-    List<StageDb> stageList = ObjectBox.get().boxFor(StageDb.class).getAll();
+    List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+    List<StageDb> stageList = App.get().getBoxStore().boxFor(StageDb.class).getAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
     ArrayList<String> list_new_images = new ArrayList<>();
@@ -292,7 +292,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     List<TaxaList> allTaxaLists = new ArrayList<>();
 
                     // Query latin names
-                    Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+                    Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
                     Query<TaxonDb> query_latin_name = taxonDataBox
                             .query(TaxonDb_.latinName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
                             .build();
@@ -300,7 +300,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     query_latin_name.close();
 
                     for (int i = 0; i < latinNames.size(); i++) {
-                        Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+                        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
                         Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
                                 .query(TaxaTranslationDb_.taxonId.equal(latinNames.get(i).getId())
                                         .and(TaxaTranslationDb_.locale.equal(locale_script)))
@@ -323,7 +323,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         }
                     }
 
-                    Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+                    Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
                     List<TaxaTranslationDb> nativeList;
                     // For Serbian language we should also search for Latin and Cyrillic names
                     if (locale_script.equals("sr")) {
@@ -476,7 +476,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             if (preferences.getBoolean("adult_by_default", false)) {
                 // If stage is already selected ignore this...
                 if (textViewStage.getText().toString().equals("")) {
-                    Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
                     Query<StageDb> query = stageBox
                             .query(StageDb_.taxonId.equal(selectedTaxon.getTaxonID())
                                     .and(StageDb_.name.equal("adult")))
@@ -630,7 +630,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             getLocation(100, 2);
 
             // Always add Observation Type for observed specimen
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> query = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("observed"))
                     .build();
@@ -660,7 +660,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void fillExistingEntry() {
 
         long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
-        Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+        Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
         Query<EntryDb> query = entry
                 .query(EntryDb_.id.equal(existing_entry_id))
                 .build();
@@ -687,7 +687,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
         // Get the atlas code
         if (currentItem.get(0).getTaxonId() != 0) {
-            Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
             Query<TaxonDb> query1 = taxonDataBox
                     .query(TaxonDb_.id.equal(currentItem.get(0).getTaxonId()))
                     .build();
@@ -707,7 +707,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Get the name of the stage for the entry from the database
         if (currentItem.get(0).getStage() != null) {
             Log.d(TAG, "There is a stage already selected for this entry!");
-            Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query2 = stageBox
                     .query(StageDb_.stageId.equal(currentItem.get(0).getStage()))
                     .build();
@@ -805,7 +805,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
         if (image1 != null || image2 != null || image3 != null) {
             Log.d(TAG, "Removing image tag just in case images got deleted.");
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> query1 = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
@@ -1181,12 +1181,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
                     location, image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
-            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
             entry.put(entryDb1);
 
             Intent intent = new Intent();
-            long index_last = ObjectBox.get().boxFor(EntryDb.class).count() - 1;
-            long new_entry_id = ObjectBox.get().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+            long index_last = App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
+            long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
             Log.d(TAG, "Entry will be saved under ID " + new_entry_id);
             intent.putExtra("IS_NEW_ENTRY", isNewEntry());
             intent.putExtra("ENTRY_LIST_ID", new_entry_id);
@@ -1219,7 +1219,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.get(0).setObservation_type_ids(Arrays.toString(observation_type_ids));
 
             // Now just update the database with new data...
-            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
             entry.put(currentItem);
 
             Intent intent = new Intent();
@@ -1238,7 +1238,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
             int photo_tag_id;
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> observationTypesDataQuery = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
@@ -1279,7 +1279,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
         // When the taxon is selected from the list we should query SQL to see if there is a stage.
         else {
-            Box<StageDb> stage = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stage = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query = stage
                     .query(StageDb_.taxonId.equal(taxonID))
                     .build();
@@ -1290,7 +1290,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void getStageForTaxon() {
-        Box<StageDb> stage = ObjectBox.get().boxFor(StageDb.class);
+        Box<StageDb> stage = App.get().getBoxStore().boxFor(StageDb.class);
         Query<StageDb> query = stage
                 .query(StageDb_.taxonId.equal(selectedTaxon.getTaxonID()))
                 .build();
@@ -1717,7 +1717,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (taxonID == null) {
             return null;
         } else {
-            Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
             Query<TaxonDb> query = taxonDataBox
                     .query(TaxonDb_.id.equal(taxonID))
                     .build();
@@ -1747,7 +1747,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void fillObservationTypes() {
 
-        Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+        Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         Query<ObservationTypesDb> query = observationTypesDataBox
                 .query(ObservationTypesDb_.locale.equal(locale_script))
                 .build();

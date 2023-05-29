@@ -5,12 +5,17 @@ import android.app.NotificationManager;
 import android.os.Build;
 import androidx.multidex.MultiDexApplication;
 
+import org.biologer.biologer.sql.MyObjectBox;
+
+import io.objectbox.BoxStore;
+
 /**
  * Created by brjovanovic on 12/24/2017.
  */
 
 public class App extends MultiDexApplication {
 
+    private BoxStore boxStore;
     private static App app;
 
     @Override
@@ -19,6 +24,8 @@ public class App extends MultiDexApplication {
 
         app = this;
 
+        initializeBoxStore();
+
         // Create Notification channel in order to send notification to android API 26+
         createNotificationChannelTaxa();
         createNotificationChannelEntries();
@@ -26,7 +33,23 @@ public class App extends MultiDexApplication {
         createNotificationChannelAnnouncements();
 
         // For initialisation of OpenBox database
-        ObjectBox.init(this);
+        // ObjectBox.init(this);
+    }
+
+    public BoxStore getBoxStore() {
+        /* From this method we can get always opened BoxStore */
+        if (boxStore != null && boxStore.isClosed())
+            initializeBoxStore();
+        return boxStore;
+    }
+
+    private void initializeBoxStore() {
+        boxStore = MyObjectBox.builder().androidContext(this).build();
+    }
+
+    public void deleteAllBoxes() {
+        boxStore.close();
+        boxStore.deleteAllFiles();
     }
 
     public void createNotificationChannelTaxa() {

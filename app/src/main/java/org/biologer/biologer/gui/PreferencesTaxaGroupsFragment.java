@@ -16,6 +16,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
@@ -71,7 +72,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         how_to_use_network = preferences.getString("auto_download", "wifi");
 
         // Query Parent groups from SQL
-        Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+        Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
         Query<TaxonGroupsDb> query = taxonGroupsDataBox
                 .query(TaxonGroupsDb_.parentId.equal(0))
                 .build();
@@ -84,7 +85,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             String name = listParents.get(i).getName();
 
             // Get the translation for Parent groups
-            Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
+            Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
             Query<TaxonGroupsTranslationData> groups_translation = taxonGroupsTranslationDataBox
                     .query(TaxonGroupsTranslationData_.locale.equal(locale)
                             .and(TaxonGroupsTranslationData_.viewGroupId.equal(id)))
@@ -105,7 +106,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             }
 
             // List all children within parent
-            Box<TaxonGroupsDb> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+            Box<TaxonGroupsDb> taxonGroupsDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
             Query<TaxonGroupsDb> children = taxonGroupsDataBox1
                     .query(TaxonGroupsDb_.parentId.equal(id))
                     .build();
@@ -118,7 +119,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 Log.d(TAG, "Child group: " + child_name + " (" + child_id + "); parent: " + name + " (" + id + ")");
 
                 // Get the translation for Children groups
-                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = ObjectBox.get().boxFor(TaxonGroupsTranslationData.class);
+                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
                 Query<TaxonGroupsTranslationData> children_translation = taxonGroupsTranslationDataBox1
                         .query(TaxonGroupsTranslationData_.locale.equal(locale)
                                 .and(TaxonGroupsTranslationData_.viewGroupId.equal(child_id)))
@@ -158,7 +159,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         preferenceScreen.addPreference(checkBoxes.get(last));
 
         // Query for taxa groups selection before the user selects anything
-        List<TaxonGroupsDb> allTaxaGroups = ObjectBox.get().boxFor(TaxonGroupsDb.class).getAll();
+        List<TaxonGroupsDb> allTaxaGroups = App.get().getBoxStore().boxFor(TaxonGroupsDb.class).getAll();
         for (int i = 0; i < allTaxaGroups.size(); i++) {
             int id = (int)allTaxaGroups.get(i).getId();
             Activity activity = getActivity();
@@ -179,7 +180,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             Log.d(TAG, "Item " + preference.getTitle() + " (" + id + ") clicked.");
 
             // Query to determine if this is a child or parent checkbox
-            Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+            Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
             Query<TaxonGroupsDb> query = taxonGroupsDataBox
                     .query(TaxonGroupsDb_.id.equal(id))
                     .build();
@@ -195,7 +196,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     saveCheckedState(key_parent);
 
                     // Query to get all the children
-                    Box<TaxonGroupsDb> taxonGroupsDataBox1 = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+                    Box<TaxonGroupsDb> taxonGroupsDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
                     Query<TaxonGroupsDb> query1 = taxonGroupsDataBox1
                             .query(TaxonGroupsDb_.parentId.equal(id))
                             .build();
@@ -281,7 +282,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                     Log.d(TAG, "Attempting to delete key " + key + " from SQL database");
 
                     // Delete taxa
-                    Box<TaxonDb> taxonData = ObjectBox.get().boxFor(TaxonDb.class);
+                    Box<TaxonDb> taxonData = App.get().getBoxStore().boxFor(TaxonDb.class);
                     Query<TaxonDb> query = taxonData
                             .query(TaxonDb_.groups.contains(key))
                             .build();
@@ -353,7 +354,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
         Log.d(TAG, "List of taxa to be deleted: " + deleteThisIds.toString());
         long[] delete_this_ids = ArrayHelper.listToArray(deleteThisIds);
 
-        Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
         Query<TaxaTranslationDb> query = taxaTranslationDataBox
                 .query(TaxaTranslationDb_.taxonId.oneOf(delete_this_ids))
                 .build();

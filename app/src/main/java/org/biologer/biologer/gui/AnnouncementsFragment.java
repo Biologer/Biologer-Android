@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
@@ -47,13 +47,13 @@ public class AnnouncementsFragment extends Fragment {
             index = ((AnnouncementsActivity)getActivity()).index;
         }
 
-        List<AnnouncementsDb> announcements = ObjectBox.get().boxFor(AnnouncementsDb.class).getAll();
+        List<AnnouncementsDb> announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
         Collections.reverse(announcements);
         long id = announcements.get(index).getId();
         String locale = Localisation.getLocaleScript();
         Log.d(TAG, "Opening announcement with index: " + index + "; ID: " + id + "; locale: " + locale);
 
-        Box<AnnouncementTranslationsDb> box = ObjectBox.get().boxFor(AnnouncementTranslationsDb.class);
+        Box<AnnouncementTranslationsDb> box = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
         Query<AnnouncementTranslationsDb> query = box
                 .query(AnnouncementTranslationsDb_.announcementId.equal(id)
                         .and(AnnouncementTranslationsDb_.locale.equal(locale)))

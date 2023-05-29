@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -86,7 +87,7 @@ public class FetchTaxaBirdloger extends Service {
             ArrayList<String> groups_list = intent.getStringArrayListExtra("groups");
             if (groups_list == null) {
                 // Query to get taxa groups that should be used in a query
-                Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+                Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
                 Query<TaxonGroupsDb> query = taxonGroupsDataBox
                         .query(TaxonGroupsDb_.id.notNull())
                         .build();
@@ -228,7 +229,7 @@ public class FetchTaxaBirdloger extends Service {
                 TaxaStages stage = stages.get(j);
                 final_stages[j] = new StageDb(0, stage.getName(), stage.getId(), taxon_id);
             }
-            ObjectBox.get().boxFor(StageDb.class).put(final_stages);
+            App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
             //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
@@ -263,11 +264,11 @@ public class FetchTaxaBirdloger extends Service {
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
-                ObjectBox.get().boxFor(TaxaTranslationDb.class).put(final_translations);
+                App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
                 //App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
-        ObjectBox.get().boxFor(TaxonDb.class).put(final_taxa);
+        App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
         //App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
@@ -499,8 +500,8 @@ public class FetchTaxaBirdloger extends Service {
         updated_at = 0;
         current_page = 1;
         SettingsManager.setTaxaLastPageFetched("1");
-        ObjectBox.get().boxFor(TaxonDb.class).removeAll();
-        ObjectBox.get().boxFor(StageDb.class).removeAll();
+        App.get().getBoxStore().boxFor(TaxonDb.class).removeAll();
+        App.get().getBoxStore().boxFor(StageDb.class).removeAll();
     }
 
     public void sendResult(String message) {

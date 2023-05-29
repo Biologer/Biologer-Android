@@ -22,9 +22,13 @@ import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.FetchTaxa;
+import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.MyObjectBox;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
+
+import io.objectbox.BoxStore;
 
 public class LogoutFragment extends Fragment {
 
@@ -48,8 +52,7 @@ public class LogoutFragment extends Fragment {
                 TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
                 TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
 
-                List<UserDb> userDataList = ObjectBox.get().boxFor(UserDb.class).getAll();
-                //List<UserData> list = App.get().getDaoSession().getUserDataDao().loadAll();
+                List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 UserDb userData = userDataList.get(0);
                 String username = userData.getUsername();
                 Log.i(TAG, "Current user: " + username);
@@ -59,39 +62,40 @@ public class LogoutFragment extends Fragment {
 
                 btn_logout.setOnClickListener(v -> {
                     // If there are entries warn the user that the data will be lost!
-                    if (!ObjectBox.get().boxFor(EntryActivity.class).isEmpty()) {
+                    Log.d(TAG, "There are " + App.get().getBoxStore().boxFor(EntryDb.class).count() + " entries in the list.");
+                    if (!App.get().getBoxStore().boxFor(EntryDb.class).isEmpty()) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                         builder.setMessage(getString(R.string.there_are) + " " +
-                                ObjectBox.get().boxFor(EntryActivity.class).count() + " " +
+                                App.get().getBoxStore().boxFor(EntryDb.class).count() + " " +
                                 getString(R.string.there_are2));
                         builder.setPositiveButton(getString(R.string.yes), (dialog, id) -> deleteDataAndLogout(activity));
                         builder.setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
                         builder.setCancelable(true);
                         final AlertDialog alert = builder.create();
                         alert.show();
-                    }
-
-                    // If download process is active, stop it first
-                    if (FetchTaxa.isInstanceCreated()) {
-                        final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
-                        fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
-                        requireActivity().startService(fetchTaxa);
-
-                        final Handler handler = new Handler(Looper.getMainLooper());
-                        final Runnable runnable = new Runnable() {
-                            public void run() {
-                                // need to do tasks on the UI thread
-                                Log.d(TAG, "Waiting for downloading to finish...");
-                                if (FetchTaxa.isInstanceCreated()) {
-                                    handler.postDelayed(this, 2000);
-                                } else {
-                                    deleteDataAndLogout(activity);
-                                }
-                            }
-                        };
-                        handler.post(runnable);
                     } else {
-                        deleteDataAndLogout(activity);
+                        // If download process is active, stop it first
+                        if (FetchTaxa.isInstanceCreated()) {
+                            final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
+                            fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
+                            requireActivity().startService(fetchTaxa);
+
+                            final Handler handler = new Handler(Looper.getMainLooper());
+                            final Runnable runnable = new Runnable() {
+                                public void run() {
+                                    // need to do tasks on the UI thread
+                                    Log.d(TAG, "Waiting for downloading to finish...");
+                                    if (FetchTaxa.isInstanceCreated()) {
+                                        handler.postDelayed(this, 2000);
+                                    } else {
+                                        deleteDataAndLogout(activity);
+                                    }
+                                }
+                            };
+                            handler.post(runnable);
+                        } else {
+                            deleteDataAndLogout(activity);
+                        }
                     }
                 });
             }
@@ -100,7 +104,8 @@ public class LogoutFragment extends Fragment {
 
     private void deleteDataAndLogout(Activity activity) {
         Log.d(TAG, "Deleting all user data upon logout.");
-        ObjectBox.get().deleteAllFiles();
+
+        App.get().deleteAllBoxes();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();

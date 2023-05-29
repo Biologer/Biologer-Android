@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.EntryDb;
@@ -99,7 +100,7 @@ public class EntryAdapter
         TextView taxonStage = viewHolder.textTaxonStage;
         Long stage_id = entry.getStage();
         if (stage_id != null) {
-            Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
 
             Query<StageDb> query = stageBox
                     .query(StageDb_.stageId.equal(stage_id))

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
@@ -52,10 +53,10 @@ public class UpdateObservationTypes {
                                         observation_translations.get(j).getName());
                                 localizations[j] = localization;
                             }
-                            ObjectBox.get().boxFor(ObservationTypesDb.class).put(localizations);
+                            App.get().getBoxStore().boxFor(ObservationTypesDb.class).put(localizations);
 
                         }
-                        Log.d(TAG, "Observation types locales written to the database, there are " + ObjectBox.get().boxFor(ObservationTypesDb.class).count() + " records");
+                        Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getBoxStore().boxFor(ObservationTypesDb.class).count() + " records");
                         SettingsManager.setObservationTypesUpdated(system_time);
                         Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                     }
