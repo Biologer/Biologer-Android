@@ -456,5 +456,7 @@
     <string name="there_are">There are</string>
     <string name="there_are2">field observations in your list. Logging out will delete these observations! Do you still wants to logout?</string>
     <string name="announcement">Announcement</string>
+    <string name="created_on">"Created on"</string>
+    <string name="by">By:</string>
 
 </resources>

@@ -453,5 +453,10 @@
     <string name="announcements">Новости</string>
     <string name="channel_announcements">Новости из Биологера</string>
     <string name="channel_announcements_description">Приказује важне објаве и новости од Биологерових администратора.</string>
+    <string name="there_are">Имате</string>
+    <string name="there_are2">налаза са терена у вашем списку. Одјавом ћете трајно обрисати ове налазе. Да ли и даље желите да се одјавите?</string>
+    <string name="announcement">Новост</string>
+    <string name="created_on">Датум: </string>
+    <string name="by">Написао: </string>
 
 </resources>

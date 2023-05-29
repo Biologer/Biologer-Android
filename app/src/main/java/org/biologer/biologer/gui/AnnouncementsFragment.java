@@ -2,6 +2,7 @@ package org.biologer.biologer.gui;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.DateHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
@@ -23,6 +25,7 @@ import org.biologer.biologer.sql.AnnouncementsDb;
 import org.biologer.biologer.sql.AnnouncementsDb_;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import io.objectbox.Box;
@@ -76,11 +79,21 @@ public class AnnouncementsFragment extends Fragment {
         textTitle.setText(title);
 
         TextView textText = rootView.findViewById(R.id.announcement_reading_text);
+        textText.setMovementMethod(new ScrollingMovementMethod());
         String text = announcements.get(index).getMessage();
         if (translation != null) {
             text = translation.getMessage();
         }
         textText.setText(text);
+
+        TextView textAuthor = rootView.findViewById(R.id.announcement_reading_author);
+        String author = announcements.get(index).getCreatorName();
+        textAuthor.setText(author);
+
+        TextView textDate = rootView.findViewById(R.id.announcement_reading_date);
+        Date date = DateHelper.getDateFromJSON(announcements.get(index).getCreatedAt());
+        String date_string = getString(R.string.created_on) + " " + DateHelper.getLocalizedDate(date, getContext());
+        textDate.setText(date_string);
 
         markAnnouncementAsRead(id);
 

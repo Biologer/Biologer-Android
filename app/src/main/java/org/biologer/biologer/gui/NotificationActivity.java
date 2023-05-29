@@ -210,8 +210,8 @@ public class NotificationActivity extends AppCompatActivity {
         }
 
         Date date = DateHelper.getDateFromJSON(unreadNotifications.get(0).getUpdatedAt());
-        String localized_date = getLocalizedDate(date);
-        String localized_time = getLocalizedTime(date);
+        String localized_date = DateHelper.getLocalizedDate(date, this);
+        String localized_time = DateHelper.getLocalizedTime(date, this);
 
         if (action1 == null) {
             text = Html.fromHtml("<b>" + author + "</b> " +
@@ -236,28 +236,6 @@ public class NotificationActivity extends AppCompatActivity {
             author = unreadNotificationsDb.getCauserName();
         }
         return author;
-    }
-
-    private String getLocalizedTime(Date date) {
-        DateFormat timeFormatLocalized = android.text.format.DateFormat.getTimeFormat(this);
-        String time_string;
-        if (date != null) {
-            time_string = timeFormatLocalized.format(date);
-        } else {
-            time_string = getString(R.string.unknown_date);
-        }
-        return time_string;
-    }
-
-    private String getLocalizedDate(Date date) {
-        DateFormat dateFormatLocalized = android.text.format.DateFormat.getLongDateFormat(this);
-        String date_string;
-        if (date != null) {
-            date_string = dateFormatLocalized.format(date);
-        } else {
-            date_string = getString(R.string.unknown_date);
-        }
-        return date_string;
     }
 
     @SuppressLint("MissingPermission")
