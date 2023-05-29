@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.AnnouncementsAdapter;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
@@ -39,7 +38,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Announcements";
     BroadcastReceiver broadcastReceiver;
-    List<AnnouncementsDb> announcements;
+
     RecyclerView recyclerView;
     AnnouncementsAdapter announcementsAdapter;
     int current_size;
@@ -59,15 +58,7 @@ public class AnnouncementsActivity extends AppCompatActivity {
             actionbar.setDisplayShowHomeEnabled(true);
         }
 
-        announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
-        if (announcements == null) {
-            announcements = new ArrayList<>();
-            current_size = 0;
-        } else {
-            Collections.reverse(announcements);
-            current_size = announcements.size();
-        }
-        translateAnnouncements(announcements);
+        List<AnnouncementsDb> announcements = getAnnouncments();
 
         recyclerView = findViewById(R.id.recycled_view_announcements);
         announcementsAdapter = new AnnouncementsAdapter(announcements);
@@ -93,7 +84,17 @@ public class AnnouncementsActivity extends AppCompatActivity {
                 }));
 
         final Intent getAnnouncements = new Intent(AnnouncementsActivity.this, UpdateAnnouncements.class);
+        getAnnouncements.putExtra("show_notification", false);
         startService(getAnnouncements);
+
+        // Update view when LandingFragment is destroyed to display
+        // read messages in regular font (not bold)
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            List<AnnouncementsDb> announcements1 = getAnnouncments();
+            // Workaround, updating adapter using notifyItemChanged don’t work
+            announcementsAdapter = new AnnouncementsAdapter(announcements1);
+            recyclerView.setAdapter(announcementsAdapter);
+        });
 
         broadcastReceiver = new BroadcastReceiver() {
             @Override
@@ -104,13 +105,10 @@ public class AnnouncementsActivity extends AppCompatActivity {
                 if (s != null) {
                     Log.i(TAG, "Downloading announcements returned the code: " + s);
 
-                    announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
-
-                    if (announcements != null) {
-                        if (current_size < announcements.size()) {
+                        if (current_size < App.get().getBoxStore().boxFor(AnnouncementsDb.class).count()) {
                             Log.d(TAG, "Displaying new announcements.");
-                            Collections.reverse(announcements);
-                            translateAnnouncements(announcements);
+
+                            List<AnnouncementsDb> announcements = getAnnouncments();
 
                             /*
                             / This didn't work for some reason
@@ -132,12 +130,24 @@ public class AnnouncementsActivity extends AppCompatActivity {
                         } else {
                             Log.d(TAG, "There are no new announcements to display!");
                         }
-                    }
 
                 }
             }
         };
 
+    }
+
+    private List<AnnouncementsDb> getAnnouncments() {
+        List<AnnouncementsDb> announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
+        if (announcements == null) {
+            announcements = new ArrayList<>();
+            current_size = 0;
+        } else {
+            Collections.reverse(announcements);
+            current_size = announcements.size();
+        }
+        translateAnnouncements(announcements);
+        return announcements;
     }
 
     private void translateAnnouncements(List<AnnouncementsDb> announcements) {

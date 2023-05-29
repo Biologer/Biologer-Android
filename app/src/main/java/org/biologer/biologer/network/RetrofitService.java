@@ -2,10 +2,12 @@ package org.biologer.biologer.network;
 
 import org.biologer.biologer.network.JSON.APIEntry;
 import org.biologer.biologer.network.JSON.APIEntryBirdloger;
+import org.biologer.biologer.network.JSON.APIEntryResponse;
 import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
 import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.JSON.FieldObservationResponse;
+import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.ObservationTypesResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.RegisterResponse;
@@ -13,10 +15,8 @@ import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.JSON.LoginResponse;
 import org.biologer.biologer.network.JSON.UploadFileResponse;
-import org.biologer.biologer.network.JSON.APIEntryResponse;
+import org.biologer.biologer.network.JSON.UserDataResponse;
 
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
@@ -30,7 +30,6 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Query;
-import retrofit2.http.Streaming;
 import retrofit2.http.Url;
 
 /**
@@ -102,10 +101,6 @@ public interface RetrofitService {
     Call<APIEntryResponseBirdloger> uploadEntry(@Body APIEntryBirdloger apiEntryBirdloger);
 
     @Headers({"Accept: application/json"})
-    @GET("api/field-observations")
-    Call<ResponseBody> getFieldObservations();
-
-    @Headers({"Accept: application/json"})
     @GET("api/field-observations/")
     Call<FieldObservationResponse> getFieldObservation(
             @Query(value="id", encoded = true) String id);
@@ -139,7 +134,7 @@ public interface RetrofitService {
     @Headers({"Accept: application/json"})
     @POST ("/api/read-announcements")
     Call<ResponseBody> setAnnouncementAsRead(
-            @Query("announcement_id") String announcement_id);
+            @Query("announcement_id") long announcement_id);
 
     @Headers({"Accept: application/json"})
     @GET("/api/view-groups")

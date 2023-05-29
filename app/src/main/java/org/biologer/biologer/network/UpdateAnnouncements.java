@@ -16,14 +16,17 @@ import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.gui.AnnouncementsActivity;
 import org.biologer.biologer.network.JSON.AnnouncementsData;
 import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementsDb;
 import org.biologer.biologer.sql.AnnouncementsDb_;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -36,6 +39,7 @@ public class UpdateAnnouncements extends Service {
     private static final String TAG = "Biologer.UpdateAnnounce";
     static final public String TASK_COMPLETED = "org.biologer.biologer.UpdateAnnounceService.TASK_COMPLETED";
     LocalBroadcastManager broadcastManager;
+    boolean notify;
 
     @Override
     public void onCreate() {
@@ -52,6 +56,8 @@ public class UpdateAnnouncements extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        notify = intent.getBooleanExtra("show_notification", true);
+        Log.d(TAG, "Should display announcement upon download? " + notify);
         getAnnouncements();
         return super.onStartCommand(intent, flags, startId);
     }
@@ -83,18 +89,19 @@ public class UpdateAnnouncements extends Service {
                                         announcementsData[i].getMessage());
 
                                 int number_of_translations = announcementsData[i].getTranslations().length;
-                                AnnouncementTranslationsDb[] announcementTranslationsDbs = new AnnouncementTranslationsDb[number_of_translations];
+                                List<AnnouncementTranslationsDb> announcementTranslations = new ArrayList<>();
                                 for (int j = 0; j < number_of_translations; j++) {
-                                    //Log.d(TAG, "Announcement translations " + j);
-                                    announcementTranslationsDbs[j] = new AnnouncementTranslationsDb(
-                                            announcementsData[i].getTranslations()[j].getId(),
-                                            announcementsData[i].getId(),
-                                            announcementsData[i].getTranslations()[j].getLocale(),
-                                            announcementsData[i].getTranslations()[j].getTitle(),
-                                            announcementsData[i].getTranslations()[j].getMessage()
-                                    );
+                                    if (announcementsData[i].getTranslations()[j].getAnnouncementId() != null) {
+                                        announcementTranslations.add(new AnnouncementTranslationsDb(
+                                                announcementsData[i].getTranslations()[j].getId(),
+                                                announcementsData[i].getId(),
+                                                announcementsData[i].getTranslations()[j].getLocale(),
+                                                announcementsData[i].getTranslations()[j].getTitle(),
+                                                announcementsData[i].getTranslations()[j].getMessage()
+                                        ));
+                                    }
                                 }
-                                App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
+                                App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslations);
 
                             }
                             App.get().getBoxStore().boxFor(AnnouncementsDb.class).put(announcementsDbs);
@@ -102,7 +109,10 @@ public class UpdateAnnouncements extends Service {
                                     App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).count() +
                                     " announcement translations.");
 
-                            displayNotification();
+                            if (notify) {
+                                displayNotification();
+                            }
+
                             sendResult("success");
 
                         }
@@ -117,7 +127,7 @@ public class UpdateAnnouncements extends Service {
                     if (announcementsDbQuery.count() >= 1) {
                         AnnouncementsDb announcement = announcementsDbQuery.findFirst();
                         if (announcement != null) {
-                            Intent intent = new Intent(getApplicationContext(), UpdateAnnouncements.class);
+                            Intent intent = new Intent(getApplicationContext(), AnnouncementsActivity.class);
                             PendingIntent pendingIntent;
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                                 pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);

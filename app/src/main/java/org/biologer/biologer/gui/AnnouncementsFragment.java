@@ -8,22 +8,29 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
 import org.biologer.biologer.sql.AnnouncementsDb;
+import org.biologer.biologer.sql.AnnouncementsDb_;
 
 import java.util.Collections;
 import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
-
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AnnouncementsFragment extends Fragment {
     private static final String TAG = "Biologer.AnnouncementsR";
@@ -75,7 +82,42 @@ public class AnnouncementsFragment extends Fragment {
         }
         textText.setText(text);
 
+        markAnnouncementAsRead(id);
+
         return rootView;
+
+    }
+
+    private void markAnnouncementAsRead(long id) {
+
+        // Mark Announcement as read locally
+        Box<AnnouncementsDb> announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
+        Query<AnnouncementsDb> query = announcements
+                .query(AnnouncementsDb_.id.equal(id))
+                .build();
+        AnnouncementsDb announcement = query.findFirst();
+        query.close();
+        if (announcement != null) {
+            announcement.setRead(true);
+            App.get().getBoxStore().boxFor(AnnouncementsDb.class).put(announcement);
+        }
+
+        // Mark announcement as read online
+        Call<ResponseBody> call = RetrofitClient.getService(
+                SettingsManager.getDatabaseName()).setAnnouncementAsRead(id);
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Announcement should be marked as read now.");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                Log.d(TAG, "Announcement could not be marked as read " + t.getLocalizedMessage());
+            }
+        });
 
     }
 
