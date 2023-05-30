@@ -1,8 +1,11 @@
 package org.biologer.biologer.gui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -10,11 +13,15 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,14 +33,21 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Tile;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.material.textview.MaterialTextView;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.JSON.ElevationResponse;
 import org.biologer.biologer.network.RetrofitClient;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -56,6 +70,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     Marker marker;
     Marker temporaryMarker;
     MaterialTextView textView;
+    TileOverlay customTile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +115,33 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         floatButtonMapType.setOnClickListener(view -> showMapTypeSelectorDialog());
 
         textView = findViewById(R.id.coordinate_accuracy_text);
+
+        AppCompatButton buttonCustomOverlay = findViewById(R.id.map_button_custom_overlay);
+        buttonCustomOverlay.setOnClickListener(v -> getDirectoryUri.launch(Uri.parse(Environment.DIRECTORY_DOCUMENTS)));
+
+        CreateExternalFile.createDocumentsFolder(this, getString(R.string.custom_maps_folder_name));
+
     }
+
+    private final ActivityResultLauncher<Uri> getDirectoryUri = registerForActivityResult(
+            new ActivityResultContracts.OpenDocumentTree() {
+                @Override
+                @NonNull
+                public Intent createIntent(@NonNull Context context, Uri input) {
+                    Intent intent = super.createIntent(context, input);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                    return intent;
+                }
+            },
+            uri -> {
+                if (uri != null) {
+                    getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    Log.d(TAG, "Directory URI is " + uri);
+                }
+            }
+    );
 
     // Add Save button in the right part of the toolbar
     @Override
@@ -187,7 +228,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 marker.setPosition(latLong);
                 temporaryMarker.remove();
             }
-
         });
 
         mMap.setOnMapClickListener(latLng -> {
@@ -205,9 +245,69 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         addCircle();
 
+        TileProvider tileProvider = (x, y, zoom) -> {
+            Uri uri = null;
+
+            try {
+
+                String original_path = SettingsManager.getCustomMapsDir();
+                DocumentFile documentFile = DocumentFile.fromTreeUri(MapActivity.this, Uri.parse(original_path));
+                if (documentFile != null) {
+                    DocumentFile[] documents_zoom = documentFile.listFiles();
+                    for (DocumentFile file : documents_zoom) {
+                        if (Objects.requireNonNull(file.getName()).equals(String.valueOf(zoom))) {
+                            DocumentFile[] documents_x = file.listFiles();
+                            Log.d(TAG, "There are " + documents_x.length + " directories for X coordinates.");
+
+                            for (DocumentFile documentsX : documents_x) {
+                                if (Objects.requireNonNull(documentsX.getName()).equals(String.valueOf(x))) {
+                                    DocumentFile[] documents_y = documentsX.listFiles();
+                                    Log.d(TAG, "There are " + documents_y.length + " directories for Y coordinates.");
+
+                                    for (DocumentFile value : documents_y) {
+                                        if (Objects.requireNonNull(value.getName()).equals(y + ".png") || value.getName().equals(y + ".webp") || value.getName().equals(y + ".jpg")) {
+                                                uri = value.getUri();
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "There are no filed in this directory?");
+                }
+
+                ByteArrayOutputStream output;
+                if (uri != null) {
+                    try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        output = new ByteArrayOutputStream();
+
+                        while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
+                            output.write(buffer, 0, bytesRead);
+                        }
+                        byte[] file = output.toByteArray();
+
+                        return new Tile(256, 256, file);
+                    }
+                } else {
+                    Log.e(TAG, "The uri for the image tile is null.");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
+
+        customTile = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
+
     }
 
-    private void addMarker(LatLng latLng, int zoom) {
+        private void addMarker(LatLng latLng, int zoom) {
         marker = mMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
@@ -354,6 +454,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     public void setLatLong(double lat, double lon) {
         this.latLong = new LatLng(lat, lon);
+    }
+
+    /*
+     * Check that the tile server supports the requested x, y and zoom.
+     * Complete this stub according to the tile range you support.
+     * If you support a limited range of tiles at different zoom levels, then you
+     * need to define the supported x, y range at each zoom level.
+     */
+    private boolean checkTileExists(int x, int y, int zoom) {
+        int minZoom = 0;
+        int maxZoom = 16;
+
+        return (zoom >= minZoom && zoom <= maxZoom);
     }
 
 }

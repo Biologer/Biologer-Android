@@ -13,7 +13,8 @@ public class SettingsManager {
     private static final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
 
     public enum KEY {
-        ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME, GOOGLE_MAP_TYPE,
+        ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
+        GOOGLE_MAP_TYPE, CUSTOM_MAP_TILES_FOLDER,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
@@ -98,6 +99,16 @@ public class SettingsManager {
 
     public static String getGoogleMapType() {
         return sharedPreferences.getString(KEY.GOOGLE_MAP_TYPE.toString(),"NORMAL");
+    }
+
+    public static void setCustomMapsDir(String uri) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.CUSTOM_MAP_TILES_FOLDER.toString(), uri);
+        editor.apply();
+    }
+
+    public static String getCustomMapsDir() {
+        return sharedPreferences.getString(KEY.CUSTOM_MAP_TILES_FOLDER.toString(),null);
     }
 
     public static void setTaxaUpdatedAt(String taxaUpdatedAt) {

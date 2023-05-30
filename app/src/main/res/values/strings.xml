@@ -458,5 +458,7 @@
     <string name="announcement">Announcement</string>
     <string name="created_on">"Created on"</string>
     <string name="by">By:</string>
+    <string name="custom_maps_folder_name">Custom Maps</string>
+    <string name="load_offline_map">Load offline map</string>
 
 </resources>

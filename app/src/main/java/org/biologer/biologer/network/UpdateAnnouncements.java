@@ -56,7 +56,9 @@ public class UpdateAnnouncements extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        notify = intent.getBooleanExtra("show_notification", true);
+        if (intent != null) {
+            notify = intent.getBooleanExtra("show_notification", true);
+        }
         Log.d(TAG, "Should display announcement upon download? " + notify);
         getAnnouncements();
         return super.onStartCommand(intent, flags, startId);
