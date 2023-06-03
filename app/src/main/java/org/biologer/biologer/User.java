@@ -50,7 +50,7 @@ public class User {
 
     private static void deleteAllTables() {
         Log.d(TAG, "Deleting all SQL tables.");
-        App.get().getBoxStore().deleteAllFiles();
+        App.get().deleteAllBoxes();
     }
 
     private static void resetPreferences(Context context) {

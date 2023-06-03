@@ -254,7 +254,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        App.get().getBoxStore().deleteAllFiles();
+        App.get().deleteAllBoxes();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();

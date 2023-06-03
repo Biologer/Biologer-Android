@@ -55,24 +55,29 @@ public class GetTaxaGroups extends Service {
 
         if (InternetConnection.isConnected(this)) {
             Log.d(TAG, "Network is available.");
-            Call<TaxaGroupsResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getTaxaGroupsResponse();
-            call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<TaxaGroupsResponse> call, @NonNull Response<TaxaGroupsResponse> response) {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            Log.d(TAG, "Successful TaxaGroups response.");
-                            TaxaGroupsResponse taxaGroupsResponse = response.body();
-                            saveTaxaGroups(taxaGroupsResponse);
+
+            String database_url = SettingsManager.getDatabaseName();
+
+            if (database_url != null) {
+                Call<TaxaGroupsResponse> call = RetrofitClient.getService(database_url).getTaxaGroupsResponse();
+                call.enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<TaxaGroupsResponse> call, @NonNull Response<TaxaGroupsResponse> response) {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Log.d(TAG, "Successful TaxaGroups response.");
+                                TaxaGroupsResponse taxaGroupsResponse = response.body();
+                                saveTaxaGroups(taxaGroupsResponse);
+                            }
                         }
                     }
-                }
 
-                @Override
-                public void onFailure(@NonNull Call<TaxaGroupsResponse> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Failed to get Taxa Groups from server " + t);
-                }
-            });
+                    @Override
+                    public void onFailure(@NonNull Call<TaxaGroupsResponse> call, @NonNull Throwable t) {
+                        Log.e(TAG, "Failed to get Taxa Groups from server " + t);
+                    }
+                });
+            }
         } else {
             Log.d(TAG, "Network is not available.");
             sendResult("no_network");

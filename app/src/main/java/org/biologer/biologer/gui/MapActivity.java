@@ -316,13 +316,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void addCircle() {
-        circle = mMap.addCircle(new CircleOptions()
-                .center(latLong)
-                .radius(Double.parseDouble(accuracy))
-                .fillColor(0x66c5e1a5)
-                .clickable(true)
-                .strokeColor(0xff689f38)
-                .strokeWidth(4.0f));
+        circle = mMap
+                .addCircle(new CircleOptions()
+                        .center(latLong)
+                        .radius(Double.parseDouble(accuracy))
+                        .fillColor(0x66c5e1a5)
+                        .clickable(true)
+                        .zIndex(5)
+                        .strokeColor(0xff689f38)
+                        .strokeWidth(4.0f));
     }
 
     private void showMapTypeSelectorDialog() {
