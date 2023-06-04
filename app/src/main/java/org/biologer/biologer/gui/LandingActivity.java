@@ -852,9 +852,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     StageAndSexLocalization.getStageLocaleFromID(this, entryDb.getStage()),
                     entryDb.getTaxonSuggestion(),
                     getString(R.string.dataset),
-                    translateLicence(entryDb.getData_licence()),
-                    translateLicence(String.valueOf(entryDb.getImage_licence())),
-                    removeNullLong(entryDb.getAtlas_code())
+                    translateLicence(entryDb.getDataLicence()),
+                    translateLicence(String.valueOf(entryDb.getImageLicence())),
+                    removeNullLong(entryDb.getAtlasCode())
             };
             writer.writeNext(row);
         }

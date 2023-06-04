@@ -57,13 +57,8 @@ public class LandingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
 
-        // Load the entries from the database
-        entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
-        Collections.reverse(entries);
-        // If there are no entries create an empty list
-        if (entries == null) {
-            entries = new ArrayList<>();
-        }
+        // Load the entries from the databasež
+        loadAllEntries();
 
         // If there are entries display the list with taxa
         recyclerView = rootView.findViewById(R.id.recycled_view_entries);
@@ -149,10 +144,6 @@ public class LandingFragment extends Fragment {
                             entries.remove(index);
                             entriesAdapter.notifyItemRemoved(index);
                         }
-
-                        //setMenuIconVisibility();
-
-                        //updateEntryListView();
                     }
 
                 }
@@ -160,6 +151,15 @@ public class LandingFragment extends Fragment {
         };
 
         return rootView;
+    }
+
+    private void loadAllEntries() {
+        entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
+        Collections.reverse(entries);
+        // If there are no entries create an empty list
+        if (entries == null) {
+            entries = new ArrayList<>();
+        }
     }
 
     @Override
@@ -179,6 +179,12 @@ public class LandingFragment extends Fragment {
             LocalBroadcastManager.getInstance(getContext()).registerReceiver((broadcastReceiver),
                     new IntentFilter(UploadRecords.TASK_COMPLETED)
             );
+        }
+
+        if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
+            loadAllEntries();
+            entriesAdapter = new EntryAdapter(entries);
+            recyclerView.setAdapter(entriesAdapter);
         }
     }
 

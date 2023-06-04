@@ -694,7 +694,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             boolean use_atlas_code = query1.find().get(0).isUseAtlasCode();
             query1.close();
             if (use_atlas_code) {
-                Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlas_code());
+                Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlasCode());
                 textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
             }
             selectedTaxon = new TaxaList(currentItem.get(0).getTaxonSuggestion(), currentItem.get(0).getTaxonId(), use_atlas_code);
@@ -739,8 +739,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Get the atlas code.
-        if (currentItem.get(0).getAtlas_code() != null) {
-            Long code = currentItem.get(0).getAtlas_code();
+        if (currentItem.get(0).getAtlasCode() != null) {
+            Long code = currentItem.get(0).getAtlasCode();
             Log.d(TAG, "Setting the spinner to atlas code: " + code);
             textViewAtlasCode.setText(setAtlasCode(code.intValue()));
         }
@@ -800,7 +800,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Load observation types and delete tag for photographed.
-        observation_type_ids_string = currentItem.get(0).getObservation_type_ids();
+        observation_type_ids_string = currentItem.get(0).getObservationTypeIds();
         Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
         observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
         if (image1 != null || image2 != null || image3 != null) {
@@ -1216,7 +1216,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.get(0).setHabitat(habitat);
             currentItem.get(0).setFoundOn(foundOn);
             getPhotoTag();
-            currentItem.get(0).setObservation_type_ids(Arrays.toString(observation_type_ids));
+            currentItem.get(0).setObservationTypeIds(Arrays.toString(observation_type_ids));
 
             // Now just update the database with new data...
             Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
@@ -1696,7 +1696,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int getGreenDaoDataLicense() {
         if (userDataList != null) {
             if (!userDataList.isEmpty()) {
-                return userDataList.get(0).getData_license();
+                return userDataList.get(0).getDataLicense();
             }
             return 0;
         }
@@ -1706,7 +1706,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int getGreenDaoImageLicense() {
         if (userDataList != null) {
             if (!userDataList.isEmpty()) {
-                return userDataList.get(0).getImage_license();
+                return userDataList.get(0).getImageLicense();
             }
             return 0;
         }

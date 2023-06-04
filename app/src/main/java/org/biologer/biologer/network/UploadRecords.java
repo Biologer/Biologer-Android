@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
@@ -265,9 +264,9 @@ public class UploadRecords extends Service {
         apiEntry.setAtlasCode(entryDb.getAtlasCode());
         apiEntry.setFoundDead(entryDb.getDeadOrAlive().equals("true") ? 0 : 1);
         apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
-        apiEntry.setDataLicense(entryDb.getData_licence());
+        apiEntry.setDataLicense(entryDb.getDataLicence());
         apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -280,7 +279,7 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImage_licence());
+            p.setLicense(entryDb.getImageLicence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
@@ -394,7 +393,7 @@ public class UploadRecords extends Service {
         apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
         apiEntry.setDataLicense(null);
         apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -407,7 +406,7 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImage_licence());
+            p.setLicense(entryDb.getImageLicence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
