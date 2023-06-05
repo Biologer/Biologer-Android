@@ -20,7 +20,6 @@ import androidx.core.app.NotificationManagerCompat;
 import com.google.android.material.button.MaterialButton;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.DateHelper;
@@ -33,7 +32,6 @@ import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -57,8 +55,8 @@ public class NotificationActivity extends AppCompatActivity {
         long notification_id = intent.getIntExtra("id", 0);
         Log.d(TAG, "Taped notification ID: " + notification_id);
 
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox
-                .get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notification_id))
                 .build();
@@ -336,8 +334,8 @@ public class NotificationActivity extends AppCompatActivity {
 
     private void updateNotificationDatabase(long notification_id) {
         // Remove old notification from the ObjectBox database
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox
-                .get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notification_id))
                 .build();
