@@ -103,7 +103,7 @@ public class EntryAdapter
             Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
 
             Query<StageDb> query = stageBox
-                    .query(StageDb_.stageId.equal(stage_id))
+                    .query(StageDb_.id.equal(stage_id))
                     .build();
             List<StageDb> results = query.find();
             String s = results.get(0).getName();

@@ -57,7 +57,7 @@ public class LandingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
 
-        // Load the entries from the databasež
+        // Load the entries from the database
         loadAllEntries();
 
         // If there are entries display the list with taxa
@@ -65,6 +65,9 @@ public class LandingFragment extends Fragment {
         entriesAdapter = new EntryAdapter(entries);
         recyclerView.setAdapter(entriesAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setItemViewCacheSize(20);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         recyclerView.addOnItemTouchListener(
                 new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
@@ -155,10 +158,11 @@ public class LandingFragment extends Fragment {
 
     private void loadAllEntries() {
         entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
-        Collections.reverse(entries);
         // If there are no entries create an empty list
         if (entries == null) {
             entries = new ArrayList<>();
+        } else {
+            Collections.reverse(entries);
         }
     }
 

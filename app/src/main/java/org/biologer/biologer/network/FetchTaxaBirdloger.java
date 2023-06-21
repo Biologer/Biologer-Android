@@ -227,7 +227,7 @@ public class FetchTaxaBirdloger extends Service {
             StageDb[] final_stages = new StageDb[stages.size()];
             for (int j = 0; j < stages.size(); j++) {
                 TaxaStages stage = stages.get(j);
-                final_stages[j] = new StageDb(0, stage.getName(), stage.getId(), taxon_id);
+                final_stages[j] = new StageDb(stage.getId(), stage.getName(), taxon_id);
             }
             App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
             //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);

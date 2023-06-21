@@ -484,7 +484,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     List<StageDb> stageList = query.find();
                     query.close();
                     if (stageList.get(0) != null) {
-                        StageDb stage = new StageDb(stageList.get(0).getId(), "adult", stageList.get(0).getStageId(), selectedTaxon.getTaxonID());
+                        StageDb stage = new StageDb(stageList.get(0).getId(), "adult", selectedTaxon.getTaxonID());
                         textViewStage.setText(getString(R.string.stage_adult));
                         textViewStage.setTag(stage);
                     }
@@ -669,8 +669,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
 
         // Check if the taxa is selected from the list = it has an ID.
-        if (currentItem.get(0).getTaxonId() != 0) {
-            taxonSelectedFromTheList = true;
+        if (currentItem.get(0) != null) {
+            if (currentItem.get(0).getTaxonId() != 0) {
+                taxonSelectedFromTheList = true;
+            }
         }
 
         // Get the latitude, longitude, coordinate precision and elevation...
@@ -709,13 +711,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "There is a stage already selected for this entry!");
             Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query2 = stageBox
-                    .query(StageDb_.stageId.equal(currentItem.get(0).getStage()))
+                    .query(StageDb_.id.equal(currentItem.get(0).getStage()))
                     .build();
-            long stage_id = query2.find().get(0).getStageId();
+            long stage_id = query2.find().get(0).getId();
             query2.close();
 
             String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
-            StageDb stage = new StageDb(0, stageName, stage_id, currentItem.get(0).getTaxonId());
+            StageDb stage = new StageDb(stage_id, stageName, currentItem.get(0).getTaxonId());
             textViewStage.setTag(stage);
             textViewStage.setText(stageName);
             textInputStages.setVisibility(View.VISIBLE);
@@ -1151,7 +1153,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         else stage = null;
         String comment = editTextComment.getText().toString();
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
-        Long selectedStage = (stage != null) ? stage.getStageId() : null;
+        Long selectedStage = (stage != null) ? stage.getId() : null;
         String deathComment = (editTextDeathComment.getText() != null) ? editTextDeathComment.getText().toString() : "";
         String habitat = editTextHabitat.getText() != null ? editTextHabitat.getText().toString() : "";
         String foundOn = editTextFoundOn.getText() != null ? editTextFoundOn.getText().toString() : "";

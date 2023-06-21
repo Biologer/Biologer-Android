@@ -19,7 +19,7 @@ public class StageAndSexLocalization {
         if (stageID != null) {
             Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query = stageBox
-                    .query(StageDb_.stageId.equal(stageID))
+                    .query(StageDb_.id.equal(stageID))
                     .build();
             List<StageDb> results = query.find();
             String stage_name = results.get(0).getName();

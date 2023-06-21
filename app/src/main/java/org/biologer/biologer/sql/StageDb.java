@@ -9,16 +9,14 @@ import io.objectbox.annotation.Id;
 @Entity
 public class StageDb {
 
-    @Id
+    @Id(assignable = true)
     long id;
     private String name;
-    private final long stageId;
     private long taxonId;
 
-    public StageDb(long id, String name, long stageId, long taxonId) {
+    public StageDb(long id, String name, long taxonId) {
         this.id = id;
         this.name = name;
-        this.stageId = stageId;
         this.taxonId = taxonId;
     }
 
@@ -34,10 +32,6 @@ public class StageDb {
     public void setName(String name) {
         this.name = name;
     }
-    public long getStageId() {
-        return this.stageId;
-    }
-
     public long getTaxonId() {
         return this.taxonId;
     }
