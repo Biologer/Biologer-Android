@@ -18,7 +18,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
@@ -225,12 +224,13 @@ public class FetchTaxaBirdloger extends Service {
 
             List<TaxaStages> stages = taxon.getStages();
             StageDb[] final_stages = new StageDb[stages.size()];
+            StringBuilder stagesString = new StringBuilder();
             for (int j = 0; j < stages.size(); j++) {
                 TaxaStages stage = stages.get(j);
-                final_stages[j] = new StageDb(stage.getId(), stage.getName(), taxon_id);
+                final_stages[j] = new StageDb(stage.getId(), stage.getName());
+                stagesString.append(stage.getId()).append(";");
             }
             App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
-            //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
@@ -245,7 +245,8 @@ public class FetchTaxaBirdloger extends Service {
                     !taxon.getRestricted().equals("0"),
                     taxon.isUses_atlas_codes(),
                     taxon.getAncestors_names(),
-                    "Birds");
+                    "Birds",
+                    stagesString.toString());
             Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table
@@ -259,7 +260,6 @@ public class FetchTaxaBirdloger extends Service {
                             taxaTranslation.getLocale(),
                             taxaTranslation.getNativeName(),
                             taxon_latin_name,
-                            taxon.isUses_atlas_codes(),
                             taxaTranslation.getDescription());
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");

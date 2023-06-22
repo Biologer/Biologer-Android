@@ -3,7 +3,6 @@ package org.biologer.biologer.adapters;
 import android.content.Context;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;

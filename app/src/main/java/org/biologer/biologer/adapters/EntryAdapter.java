@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.StageDb;
@@ -25,6 +24,7 @@ import org.biologer.biologer.sql.StageDb_;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -90,25 +90,23 @@ public class EntryAdapter
         // Get the taxon name
         TextView taxonName = viewHolder.textTaxonName;
         String taxon_name = entry.getTaxonSuggestion();
-        if (taxon_name != null) {
-            taxonName.setText(taxon_name);
-        } else {
-            taxonName.setText("");
-        }
+        taxonName.setText(Objects.requireNonNullElse(taxon_name, ""));
 
         // Get the taxon stage
         TextView taxonStage = viewHolder.textTaxonStage;
         Long stage_id = entry.getStage();
         if (stage_id != null) {
             Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-
             Query<StageDb> query = stageBox
                     .query(StageDb_.id.equal(stage_id))
                     .build();
-            List<StageDb> results = query.find();
-            String s = results.get(0).getName();
+            StageDb stage = query.findFirst();
             query.close();
-            taxonStage.setText(StageAndSexLocalization.getStageLocale(taxonStage.getContext(), s));
+            if (stage != null) {
+                taxonStage.setText(StageAndSexLocalization.getStageLocale(taxonStage.getContext(), stage.getName()));
+            } else {
+                taxonStage.setText("");
+            }
         } else {
             taxonStage.setText("");
         }
