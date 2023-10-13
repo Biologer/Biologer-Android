@@ -32,6 +32,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,13 +44,12 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.GetTaxaGroups;
-import org.biologer.biologer.network.JSON.LoginResponse;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.JSON.UserDataSer;
+import org.biologer.biologer.network.json.LoginResponse;
+import org.biologer.biologer.network.json.UserDataResponse;
+import org.biologer.biologer.network.json.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserDb;
 
@@ -301,6 +301,14 @@ public class LoginActivity extends AppCompatActivity {
                 getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
             }
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Log.i(TAG, "Back button is pressed!");
+                backPressed();
+            }
+        });
     }
 
     private void setEmailError() {
@@ -400,7 +408,6 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     // Run when user click the login button
-    // TODO check for token should be removed and users could always log in with password from here?
     public void onLogin(View view) {
         loginButton.setEnabled(false);
         String token = SettingsManager.getAccessToken();
@@ -409,15 +416,9 @@ public class LoginActivity extends AppCompatActivity {
         if (token == null) {
             Log.d(TAG, "THERE IS NO TOKEN. Trying to log in with username and password.");
             getToken();
-        }
-        else {
-            if (Long.parseLong(SettingsManager.getTokenExpire()) < System.currentTimeMillis() / 1000) {
-                Log.d(TAG, "There is a token, but it seems to be expired. Trying to log in without username/password.");
-                getToken();
-            } else {
-                Log.d(TAG, "There is a valid token. Trying to log in without username/password.");
-                getUserData();
-            }
+        } else {
+            Log.d(TAG, "There is a valid token. Trying to log in without username/password.");
+            getUserData();
         }
     }
 
@@ -435,7 +436,7 @@ public class LoginActivity extends AppCompatActivity {
 
             // Get the response from the call
             Log.d(TAG, "Getting Token from server.");
-            login.enqueue(new Callback<>() {
+            login.enqueue(new Callback<LoginResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
                     if (response.code() == 404) {
@@ -479,7 +480,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getUserData() {
         Call<UserDataResponse> userData = RetrofitClient.getService(database_name).getUserData();
-        userData.enqueue(new Callback<>() {
+        userData.enqueue(new Callback<UserDataResponse>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -630,8 +631,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onBackPressed() {
+    private void backPressed() {
         Log.d(TAG, "Back button is pressed in login activity, closing the app!");
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
         if (fragments.size() == 0) {

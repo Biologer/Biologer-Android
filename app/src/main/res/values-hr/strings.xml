@@ -200,7 +200,6 @@
     <string name="database_bih">Bosna i Hercegovina</string>
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">URL:</string>
-    <string name="no_image_on_storage">Izgleda da je fotografija izbrisana s vašeg uređaja! Molimo provjerite posljednji unos i izbrišite ili zamijenite fotografiju prije nego nastavite s unosom.</string>
     <string name="notifications_disabled1">Važna obavijest! Obavijesti nisu omogućene za \"biologer_takson\". Biologer neće moći prihvatiti popis vrsta s interneta, što je potrebno kako bi se unio ispravno ime vrste zajedno s terenskim opažanjima.</string>
     <string name="notifications_disabled2">Važna obavijest! Obavijesti nisu omogućene za \"biologer_unose\". Biologer neće moći učitati vaša opažanja na mrežu, što je jedna od njegovih glavnih uloga.</string>
     <string name="notifications_disabled">Važna obavijest: obavijesti nisu omogućene! Ovo znači da Biologer neće moći prihvatiti popis vrsta ili učitati vaša opažanja na mrežu. Potrebno je omogućiti obavijesti u Android OS-u za većinu osnovnih funkcija aplikacije koje neće raditi ispravno bez aktiviranja ovih postavki.</string>

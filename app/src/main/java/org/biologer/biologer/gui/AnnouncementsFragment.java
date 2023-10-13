@@ -118,16 +118,16 @@ public class AnnouncementsFragment extends Fragment {
         // Mark announcement as read online
         Call<ResponseBody> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).setAnnouncementAsRead(id);
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "Announcement should be marked as read now.");
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call call, @NonNull Throwable t) {
                 Log.d(TAG, "Announcement could not be marked as read " + t.getLocalizedMessage());
             }
         });

@@ -43,7 +43,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CreateExternalFile;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.ElevationResponse;
+import org.biologer.biologer.network.json.ElevationResponse;
 import org.biologer.biologer.network.RetrofitClient;
 
 import java.io.ByteArrayOutputStream;
@@ -398,7 +398,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         if (InternetConnection.isConnected(this)) {
             Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
             Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
-            call.enqueue(new Callback<>() {
+            call.enqueue(new Callback<ElevationResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
                     if (response.body() != null) {

@@ -10,11 +10,10 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.JSON.TaxaGroups;
-import org.biologer.biologer.network.JSON.TaxaGroupsResponse;
-import org.biologer.biologer.network.JSON.TaxaGroupsTranslations;
+import org.biologer.biologer.network.json.TaxaGroups;
+import org.biologer.biologer.network.json.TaxaGroupsResponse;
+import org.biologer.biologer.network.json.TaxaGroupsTranslations;
 import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData;
 import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
@@ -60,7 +59,7 @@ public class GetTaxaGroups extends Service {
 
             if (database_url != null) {
                 Call<TaxaGroupsResponse> call = RetrofitClient.getService(database_url).getTaxaGroupsResponse();
-                call.enqueue(new Callback<>() {
+                call.enqueue(new Callback<TaxaGroupsResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<TaxaGroupsResponse> call, @NonNull Response<TaxaGroupsResponse> response) {
                         if (response.isSuccessful()) {

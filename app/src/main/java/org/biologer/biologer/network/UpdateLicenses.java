@@ -11,8 +11,8 @@ import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.JSON.UserDataResponse;
-import org.biologer.biologer.network.JSON.UserDataSer;
+import org.biologer.biologer.network.json.UserDataResponse;
+import org.biologer.biologer.network.json.UserDataSer;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
@@ -52,7 +52,7 @@ public class UpdateLicenses extends Service {
         if (data_license.equals("0") || image_license.equals("0")) {
             // Get User data from a server
             Call<UserDataResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
-            call.enqueue(new Callback<>() {
+            call.enqueue(new Callback<UserDataResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                     if (response.isSuccessful()) {

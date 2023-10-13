@@ -8,12 +8,14 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
@@ -21,10 +23,10 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
-import org.biologer.biologer.network.JSON.TaxaDataBirdloger;
-import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
-import org.biologer.biologer.network.JSON.TaxaStages;
-import org.biologer.biologer.network.JSON.TaxaTranslations;
+import org.biologer.biologer.network.json.TaxaDataBirdloger;
+import org.biologer.biologer.network.json.TaxaResponseBirdloger;
+import org.biologer.biologer.network.json.TaxaStages;
+import org.biologer.biologer.network.json.TaxaTranslations;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.TaxaTranslationDb;
 import org.biologer.biologer.sql.TaxonDb;
@@ -169,7 +171,7 @@ public class FetchTaxaBirdloger extends Service {
                 Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
                         SettingsManager.getDatabaseName()).getBirdlogerTaxa(current_page, 100, updated_at);
 
-                call.enqueue(new Callback<>() {
+                call.enqueue(new Callback<TaxaResponseBirdloger>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
@@ -340,7 +342,11 @@ public class FetchTaxaBirdloger extends Service {
                 .setAutoCancel(false);
 
         Notification notification = mBuilder.build();
-        startForeground(1, notification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceCompat.startForeground(this, 1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(1, notification);
+        }
 
         fetchTaxa();
 

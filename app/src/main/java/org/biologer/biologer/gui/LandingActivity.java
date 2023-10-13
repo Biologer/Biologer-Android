@@ -45,10 +45,10 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.RefreshTokenResponse;
-import org.biologer.biologer.network.JSON.TaxaResponse;
-import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
-import org.biologer.biologer.network.JSON.UserDataResponse;
+import org.biologer.biologer.network.json.RefreshTokenResponse;
+import org.biologer.biologer.network.json.TaxaResponse;
+import org.biologer.biologer.network.json.TaxaResponseBirdloger;
+import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
@@ -353,7 +353,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void checkMailConfirmed(String database_url) {
 
         Call<UserDataResponse> userData = RetrofitClient.getService(database_url).getUserData();
-        userData.enqueue(new Callback<>() {
+        userData.enqueue(new Callback<UserDataResponse>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -397,8 +397,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void showUserLoginScreen(boolean tokenExpired) {
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
         if (tokenExpired) {
-            intent.putExtra("refreshToken", "yes");
             SettingsManager.deleteAccessToken();
+            intent.putExtra("refreshToken", "yes");
         }
         startActivity(intent);
     }
@@ -413,7 +413,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             startService(getTaxaGroups);
 
             Call<UserDataResponse> service = RetrofitClient.getService(database_url).getUserData();
-            service.enqueue(new Callback<>() {
+            service.enqueue(new Callback<UserDataResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
                     if (response.isSuccessful()) {
@@ -480,7 +480,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
 
         if (refresh_call != null) {
-            refresh_call.enqueue(new Callback<>() {
+            refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
@@ -591,7 +591,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (database.equals("https://birdloger.biologer.org")) {
                 Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
                         database).getBirdlogerTaxa(1, 1, finalTimestamp);
-                call.enqueue(new Callback<>() {
+                call.enqueue(new Callback<TaxaResponseBirdloger>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
@@ -622,7 +622,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             else {
                 Call<TaxaResponse> call = RetrofitClient.getService(
                         database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
-                call.enqueue(new Callback<>() {
+                call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {

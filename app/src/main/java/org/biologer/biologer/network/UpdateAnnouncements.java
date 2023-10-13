@@ -19,8 +19,8 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.AnnouncementsActivity;
-import org.biologer.biologer.network.JSON.AnnouncementsData;
-import org.biologer.biologer.network.JSON.AnnouncementsResponse;
+import org.biologer.biologer.network.json.AnnouncementsData;
+import org.biologer.biologer.network.json.AnnouncementsResponse;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementsDb;
 import org.biologer.biologer.sql.AnnouncementsDb_;
@@ -69,7 +69,7 @@ public class UpdateAnnouncements extends Service {
 
         if (database_url != null) {
             Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_url).getAnnouncements();
-            announcements.enqueue(new Callback<>() {
+            announcements.enqueue(new Callback<AnnouncementsResponse>() {
                 @SuppressLint("UnspecifiedImmutableFlag")
                 @Override
                 public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {

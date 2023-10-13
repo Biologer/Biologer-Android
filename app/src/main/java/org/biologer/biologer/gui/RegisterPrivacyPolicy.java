@@ -2,9 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.AbsoluteSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +14,6 @@ import androidx.fragment.app.Fragment;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class RegisterPrivacyPolicy extends Fragment {
     @Nullable

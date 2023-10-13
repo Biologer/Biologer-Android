@@ -8,12 +8,14 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
@@ -21,10 +23,10 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
-import org.biologer.biologer.network.JSON.TaxaData;
-import org.biologer.biologer.network.JSON.TaxaResponse;
-import org.biologer.biologer.network.JSON.TaxaStages;
-import org.biologer.biologer.network.JSON.TaxaTranslations;
+import org.biologer.biologer.network.json.TaxaData;
+import org.biologer.biologer.network.json.TaxaResponse;
+import org.biologer.biologer.network.json.TaxaStages;
+import org.biologer.biologer.network.json.TaxaTranslations;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.TaxaTranslationDb;
 import org.biologer.biologer.sql.TaxonDb;
@@ -181,7 +183,7 @@ public class FetchTaxa extends Service {
                 Call<TaxaResponse> call = RetrofitClient.getService(
                         SettingsManager.getDatabaseName()).getTaxa(current_page, 300, updated_at, true, taxa_groups_int, fetch_ungrouped);
 
-                call.enqueue(new Callback<>() {
+                call.enqueue(new Callback<TaxaResponse>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
@@ -339,7 +341,7 @@ public class FetchTaxa extends Service {
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         } else {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -356,7 +358,11 @@ public class FetchTaxa extends Service {
                 .setAutoCancel(false);
 
         Notification notification = mBuilder.build();
-        startForeground(1, notification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceCompat.startForeground(this, 1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(1, notification);
+        }
 
         fetchTaxa();
 

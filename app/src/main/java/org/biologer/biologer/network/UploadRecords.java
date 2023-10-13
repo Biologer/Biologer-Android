@@ -25,12 +25,12 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.gui.LandingActivity;
-import org.biologer.biologer.network.JSON.APIEntry;
-import org.biologer.biologer.network.JSON.APIEntryBirdloger;
-import org.biologer.biologer.network.JSON.APIEntryPhotos;
-import org.biologer.biologer.network.JSON.APIEntryResponse;
-import org.biologer.biologer.network.JSON.APIEntryResponseBirdloger;
-import org.biologer.biologer.network.JSON.UploadFileResponse;
+import org.biologer.biologer.network.json.APIEntry;
+import org.biologer.biologer.network.json.APIEntryBirdloger;
+import org.biologer.biologer.network.json.APIEntryPhotos;
+import org.biologer.biologer.network.json.APIEntryResponse;
+import org.biologer.biologer.network.json.APIEntryResponseBirdloger;
+import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.io.File;
@@ -294,7 +294,7 @@ public class UploadRecords extends Service {
         }
 
         Call<APIEntryResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<APIEntryResponse>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
 
@@ -435,7 +435,7 @@ public class UploadRecords extends Service {
         }
 
         Call<APIEntryResponseBirdloger> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<APIEntryResponseBirdloger>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Response<APIEntryResponseBirdloger> response) {
 
@@ -498,7 +498,7 @@ public class UploadRecords extends Service {
 
         Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
 
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<UploadFileResponse>() {
             @Override
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 

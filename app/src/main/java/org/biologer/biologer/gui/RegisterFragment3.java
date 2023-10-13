@@ -28,10 +28,9 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.JSON.RegisterResponse;
+import org.biologer.biologer.network.json.RegisterResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UserDb;
 
@@ -212,7 +211,7 @@ public class RegisterFragment3 extends Fragment {
                 ((LoginActivity) requireActivity()).register_institution,
                 ((LoginActivity) requireActivity()).et_username.getText().toString(),
                 ((LoginActivity) requireActivity()).et_password.getText().toString());
-        registerResponseCall.enqueue(new Callback<>() {
+        registerResponseCall.enqueue(new Callback<RegisterResponse>() {
 
             @Override
             public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {

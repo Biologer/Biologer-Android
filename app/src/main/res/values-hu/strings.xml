@@ -198,8 +198,6 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="database_bih">Bosznia-Hercegovina</string>
     <string name="database_dev_version">Fejlesztőknek fenntartott</string>
     <string name="URL_address">URL:</string>
-    <string name="no_image_on_storage">A kép kitörlődhetett a készülékéből!
-Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és törölje vagy másikkal helyettesítse a képet.</string>
     <string name="notifications_disabled1">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_taxa\" csatornán. A Biologer nem fogja tudni megkapni az internetről a fajok listáját, amely a helyes fajnevek és a terepi megfigyelések elküldéséhez szükséges.</string>
     <string name="notifications_disabled2">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_entries\" csatornán. A Biologer nem fogja tudni feltölteni megfigyeléseit online, ez az egyik alapvető funkciója.</string>
     <string name="notifications_disabled">Fontos figyelmeztetés: az értesítések nem engedélyezettek! Ez azt jelenti, hogy a Biologer nem fogja tudni megkapni a fajok listáját vagy feltölteni az adatait online. Az értesítések Android operációs rendszerben történő engedélyezéséhez az alkalmazás alapvető funkcióinak nagy része szükséges, és nem működik megfelelően, ha ez a beállítás nem engedélyezett.</string>
@@ -269,7 +267,6 @@ Kérjük a feltöltés megkezdése előtt ellenőrizze a legutolsó bevitelt és
     <string name="i_accept_privacy_policy">I accept privacy policy</string>
     <string name="register_intro4">and choose how you share data with others</string>
     <string name="email_already_exist">This email address is already registered</string>
-    <string name="email_domain_wrong">Email address not reacheable</string>
     <string name="registering">Registering new user</string>
     <string name="register_succesfull">Registration is almost complete. To make sure this was you, we will send an email with confirmation link. After verifying your email you could login to biologer.</string>
     <string name="confirm_email">Your email addres is not confirmed yet! We have sent you an email with confirmation link to the given address, just click on it and you are good to go.</string>

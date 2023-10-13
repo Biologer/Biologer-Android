@@ -18,17 +18,13 @@ import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.MyObjectBox;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
-
-import io.objectbox.BoxStore;
 
 public class LogoutFragment extends Fragment {
 

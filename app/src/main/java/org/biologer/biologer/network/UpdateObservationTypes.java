@@ -5,10 +5,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.JSON.ObservationTypesResponse;
-import org.biologer.biologer.network.JSON.ObservationTypesTranslations;
+import org.biologer.biologer.network.json.ObservationTypesResponse;
+import org.biologer.biologer.network.json.ObservationTypesTranslations;
 import org.biologer.biologer.sql.ObservationTypesDb;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class UpdateObservationTypes {
 
         Call<ObservationTypesResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
-        call.enqueue(new Callback<>() {
+        call.enqueue(new Callback<ObservationTypesResponse>() {
 
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
@@ -36,8 +35,8 @@ public class UpdateObservationTypes {
                     if (observationsResponse.getData().length == 0) {
                         Log.d(TAG, "Recent observation types are already downloaded from server.");
                     } else {
-                        org.biologer.biologer.network.JSON.ObservationTypes[] obs = observationsResponse.getData();
-                        for (org.biologer.biologer.network.JSON.ObservationTypes ob : obs) {
+                        org.biologer.biologer.network.json.ObservationTypes[] obs = observationsResponse.getData();
+                        for (org.biologer.biologer.network.json.ObservationTypes ob : obs) {
                             Log.d(TAG, "Observation type ID: " + ob.getId() + "; Slug: " + ob.getSlug());
 
                             // Save translations in a separate table...

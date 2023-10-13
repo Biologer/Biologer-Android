@@ -22,8 +22,6 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.R;
 
-import java.util.Objects;
-
 public class RegisterFragment2 extends Fragment {
 
     private static final String TAG = "Biologer.Register";

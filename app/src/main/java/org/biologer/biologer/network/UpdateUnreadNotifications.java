@@ -13,12 +13,11 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.NotificationActivity;
-import org.biologer.biologer.network.JSON.UnreadNotification;
-import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
+import org.biologer.biologer.network.json.UnreadNotification;
+import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.Collections;
@@ -70,7 +69,7 @@ public class UpdateUnreadNotifications extends Service {
 
         // Get new notifications from the API
         Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications();
-        unreadNotificationsResponseCall.enqueue(new Callback<>() {
+        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
             @Override
             public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
                 if (response.isSuccessful()) {

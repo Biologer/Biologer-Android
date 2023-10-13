@@ -9,13 +9,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/navdrawer_header"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/biologer_banner" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingLeft="20dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:paddingBottom="15dp"
         android:layout_gravity="bottom|start">
 
@@ -23,7 +25,7 @@
             android:id="@+id/tv_username"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Username"
+            android:text="@string/banner_username"
             android:textSize="20sp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"/>
         <TextView
@@ -31,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="email_address@biologer.org"
+            android:text="@string/banner_mail_example"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"/>
     </LinearLayout>
 

@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -469,6 +470,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Finally to start the gathering of data...
         startEntryActivity();
         fillObservationTypes();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Log.i(TAG, "Back button is pressed!");
+                backPressed();
+            }
+        });
+
     }
 
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
@@ -851,12 +861,17 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            onBackPressed();
+            backPressed();
         }
         if (id == R.id.action_save) {
             saveEntry1();
         }
         return true;
+    }
+
+    private void backPressed() {
+        deleteUnsavedImages();
+        finish();
     }
 
     @Override
@@ -1487,7 +1502,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Taking pictures from camera
     private final ActivityResultLauncher<Uri> takePictureFromCamera = registerForActivityResult(
             new ActivityResultContracts.TakePicture(),
-            new ActivityResultCallback<>() {
+            new ActivityResultCallback<Boolean>() {
                 @Override
                 public void onActivityResult(Boolean result) {
                     if (result) {
@@ -1524,7 +1539,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             });
 
     private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<>() {
+            new ActivityResultCallback<ActivityResult>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     locationManager.removeUpdates(locationListener);
@@ -1679,17 +1694,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             final AlertDialog alert = builder.create();
             alert.show();
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-
-        // If EntryActivity was canceled, delete unsaved images from internal memory.
-        deleteUnsavedImages();
-
-        Intent intent = new Intent(EntryActivity.this, LandingActivity.class);
-        startActivity(intent);
-        super.onBackPressed();
     }
 
     private void deleteUnsavedImages() {

@@ -21,6 +21,7 @@
     <uses-permission android:name="android.permission.CAMERA"
         android:required="true"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <uses-feature android:name="android.hardware.location.gps" />
     <uses-feature
@@ -113,10 +114,19 @@
         <activity android:name=".gui.AnnouncementsFragment" />
         <activity android:name=".gui.ViewImage" />
 
-        <service android:name="org.biologer.biologer.network.FetchTaxa"/>
-        <service android:name="org.biologer.biologer.network.FetchTaxaBirdloger"/>
+        <service
+            android:name="org.biologer.biologer.network.FetchTaxa"
+            android:foregroundServiceType="dataSync">
+        </service>
+        <service
+            android:name="org.biologer.biologer.network.FetchTaxaBirdloger"
+            android:foregroundServiceType="dataSync">
+        </service>
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
-        <service android:name="org.biologer.biologer.network.UploadRecords"/>
+        <service
+            android:name="org.biologer.biologer.network.UploadRecords"
+            android:foregroundServiceType="dataSync">
+        </service>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>

@@ -24,7 +24,6 @@ import org.biologer.biologer.sql.StageDb_;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -90,7 +89,11 @@ public class EntryAdapter
         // Get the taxon name
         TextView taxonName = viewHolder.textTaxonName;
         String taxon_name = entry.getTaxonSuggestion();
-        taxonName.setText(Objects.requireNonNullElse(taxon_name, ""));
+        if (taxon_name != null) {
+            taxonName.setText(taxon_name);
+        } else {
+            taxonName.setText("");
+        }
 
         // Get the taxon stage
         TextView taxonStage = viewHolder.textTaxonStage;

@@ -23,9 +23,9 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.DateHelper;
-import org.biologer.biologer.network.JSON.FieldObservationResponse;
-import org.biologer.biologer.network.JSON.UnreadNotification;
-import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
+import org.biologer.biologer.network.json.FieldObservationResponse;
+import org.biologer.biologer.network.json.UnreadNotification;
+import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -132,7 +132,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void getPhotosApi(int notificationID, String realNotificationID, int fieldObservationID) {
         // Get the data from Field observation (i.e. images) and display them
         Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
-        fieldObservation.enqueue(new Callback<>() {
+        fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
             @Override
             public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
                 if (response.isSuccessful()) {
@@ -284,7 +284,7 @@ public class NotificationActivity extends AppCompatActivity {
                 .getService(SettingsManager.getDatabaseName())
                 .setAllNotificationAsRead(true);
 
-        notificationRead.enqueue(new Callback<>() {
+        notificationRead.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -310,7 +310,7 @@ public class NotificationActivity extends AppCompatActivity {
         Call<ResponseBody> notificationRead = RetrofitClient
                 .getService(SettingsManager.getDatabaseName())
                 .setNotificationAsRead(notification);
-        notificationRead.enqueue(new Callback<>() {
+        notificationRead.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -349,7 +349,7 @@ public class NotificationActivity extends AppCompatActivity {
 
         // Get new observation from the veb
         Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications();
-        unreadNotificationsResponseCall.enqueue(new Callback<>() {
+        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
             @Override
             public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
                 if (response.isSuccessful()) {
@@ -399,7 +399,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void updatePhoto(String url, ImageView imageView) {
 
         Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
-        photoResponse.enqueue(new Callback<>() {
+        photoResponse.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {

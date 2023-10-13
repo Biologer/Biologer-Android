@@ -200,7 +200,6 @@
     <string name="database_bih">Bosna i Hercegovina</string>
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">Adresa: </string>
-    <string name="no_image_on_storage">Izgleda da je slika obrisana sa vašeg uređaja! Pogledajte posljednji unos i obrišite ili zamijenite sliku prije nego što nastavite sa slanjem podataka.</string>
     <string name="notifications_disabled1">Važna napomena! Obavještenja su onemogućena na kanalu \"biologer_taxa\". Biologer neće moći da preuzme spisak vrsta sa mreže, što je neophodno da bi program ispravno upisivao nazive vrsta uz vaše terenske nalaze. </string>
     <string name="notifications_disabled2">Važna napomena! Obavještenja su onemogućena na kanalu \"biologer_entries\". Biologer neće moći da šalje vaše terenske nalaze na server, što je jedna od ključnih mogućnosti ove aplikacije.</string>
     <string name="notifications_disabled">Važna napomena! Obavještenja su onemogućena!  To znači da Biologer neće moći da preuzima spisak vrsta, niti da šalje vaše nalaze na server. Za većinu osnovnih mogućnosti ovog programa morate da omogućite obavještenja u podešavanjima vašeg Android uređaja.</string>
@@ -271,7 +270,6 @@
     <string name="register_intro4">i izaberite licence koje određuju način na koji dijelite podatke s drugima. Pojedinosti o licenci dostupne su na webu</string>
     <string name="i_accept_privacy_policy">Prihvatam politiku privatnosti</string>
     <string name="email_already_exist">Ova adresa e-pošte je već registrovana</string>
-    <string name="email_domain_wrong">Adresa e-pošte nije dostupna!</string>
     <string name="registering">Registrujem novog korisnika</string>
     <string name="register_succesfull">Registracija je skoro završena! Da bismo potvrdili da ste to vi, poslali smo vam poruku na adresu e-pošte sa vezom za potvrdu. Otvorite je da biste potvrdili svoju adresu, a zatim se možete prijaviti na Biologer.</string>
     <string name="confirm_email">Adresa vaše e-pošte još uvijek nije potvrđena! Poslali smo vam poruku na e-poštu sa vezom za potvrdu. Samo kliknite na nju i bit ćete spremni. U zavisnosti od opterećenja servera, poruka može kasniti.</string>

@@ -6,16 +6,6 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
-import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.ObservationTypesDb;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.TaxaTranslationDb;
-import org.biologer.biologer.sql.TaxonDb;
-import org.biologer.biologer.sql.TaxonGroupsDb;
-import org.biologer.biologer.sql.TaxonGroupsTranslationData;
-import org.biologer.biologer.sql.UnreadNotificationsDb;
-import org.biologer.biologer.sql.UserDb;
-
 /**
  * Created by brjovanovic on 12/24/2017.
  */

@@ -18,7 +18,6 @@ import androidx.preference.PreferenceScreen;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.network.FetchTaxa;
