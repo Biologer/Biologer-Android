@@ -489,6 +489,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
         if (tokenExpired) {
             intent.putExtra("refreshToken", "yes");
+            SettingsManager.deleteAccessToken();
         }
         startActivity(intent);
     }
