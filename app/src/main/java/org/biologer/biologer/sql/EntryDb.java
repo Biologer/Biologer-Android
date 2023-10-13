@@ -21,7 +21,7 @@ public class EntryDb {
     private Integer noSpecimens;
     private String sex;
     private Long stage;
-    private Long atlas_code;
+    private Long atlasCode;
     private String deadOrAlive;
     private String causeOfDeath;
     private double lattitude;
@@ -34,17 +34,17 @@ public class EntryDb {
     private String slika3;
     private final String projectId;
     private String foundOn;
-    private String data_licence;
-    private final int image_licence;
+    private String dataLicence;
+    private int imageLicence;
     private String time;
     private String habitat;
-    private String observation_type_ids;
+    private String observationTypeIds;
 
     public EntryDb(long id, long taxonId, String taxonSuggestion, String year, String month, String day,
-                   String comment, Integer noSpecimens, String sex, Long stage, Long atlas_code, String deadOrAlive,
+                   String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
                    String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
-                   String data_licence, int image_licence, String time, String habitat, String observation_type_ids) {
+                   String dataLicence, int imageLicence, String time, String habitat, String observationTypeIds) {
         this.id = id;
         this.taxonId = taxonId;
         this.taxonSuggestion = taxonSuggestion;
@@ -55,7 +55,7 @@ public class EntryDb {
         this.noSpecimens = noSpecimens;
         this.sex = sex;
         this.stage = stage;
-        this.atlas_code = atlas_code;
+        this.atlasCode = atlasCode;
         this.deadOrAlive = deadOrAlive;
         this.causeOfDeath = causeOfDeath;
         this.lattitude = lattitude;
@@ -68,11 +68,11 @@ public class EntryDb {
         this.slika3 = slika3;
         this.projectId = projectId;
         this.foundOn = foundOn;
-        this.data_licence = data_licence;
-        this.image_licence = image_licence;
+        this.dataLicence = dataLicence;
+        this.imageLicence = imageLicence;
         this.time = time;
         this.habitat = habitat;
-        this.observation_type_ids = observation_type_ids;
+        this.observationTypeIds = observationTypeIds;
     }
 
     public long getId() {
@@ -193,14 +193,6 @@ public class EntryDb {
     public void setFoundOn(String foundOn) {
         this.foundOn = foundOn;
     }
-    public String getData_licence() {
-        return this.data_licence;
-    }
-
-    public int getImage_licence() {
-        return this.image_licence;
-    }
-
     public String getTime() {
         return this.time;
     }
@@ -226,25 +218,35 @@ public class EntryDb {
         this.habitat = habitat;
     }
 
-    public String getObservation_type_ids() {
-        return observation_type_ids;
+    public String getObservationTypeIds() {
+        return observationTypeIds;
     }
 
-    public void setObservation_type_ids(String observation_type_ids) {
-        this.observation_type_ids = observation_type_ids;
+    public void setObservationTypeIds(String observation_type_ids) {
+        this.observationTypeIds = observation_type_ids;
     }
 
     public Long getAtlasCode() {
-        return atlas_code;
+        return atlasCode;
     }
 
-    public void setAtlasCode(Long atlas_code) {
-        this.atlas_code = atlas_code;
+    public void setAtlasCode(Long atlasCode) {
+        this.atlasCode = atlasCode;
     }
-    public Long getAtlas_code() {
-        return this.atlas_code;
+
+    public String getDataLicence() {
+        return dataLicence;
     }
-    public void setAtlas_code(Long atlas_code) {
-        this.atlas_code = atlas_code;
+
+    public void setDataLicence(String dataLicence) {
+        this.dataLicence = dataLicence;
+    }
+
+    public int getImageLicence() {
+        return imageLicence;
+    }
+
+    public void setImageLicence(int imageLicence) {
+        this.imageLicence = imageLicence;
     }
 }

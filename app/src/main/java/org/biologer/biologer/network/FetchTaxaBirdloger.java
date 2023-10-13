@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
-import org.biologer.biologer.ObjectBox;
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.LandingActivity;
@@ -86,7 +86,7 @@ public class FetchTaxaBirdloger extends Service {
             ArrayList<String> groups_list = intent.getStringArrayListExtra("groups");
             if (groups_list == null) {
                 // Query to get taxa groups that should be used in a query
-                Box<TaxonGroupsDb> taxonGroupsDataBox = ObjectBox.get().boxFor(TaxonGroupsDb.class);
+                Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
                 Query<TaxonGroupsDb> query = taxonGroupsDataBox
                         .query(TaxonGroupsDb_.id.notNull())
                         .build();
@@ -224,12 +224,13 @@ public class FetchTaxaBirdloger extends Service {
 
             List<TaxaStages> stages = taxon.getStages();
             StageDb[] final_stages = new StageDb[stages.size()];
+            StringBuilder stagesString = new StringBuilder();
             for (int j = 0; j < stages.size(); j++) {
                 TaxaStages stage = stages.get(j);
-                final_stages[j] = new StageDb(0, stage.getName(), stage.getId(), taxon_id);
+                final_stages[j] = new StageDb(stage.getId(), stage.getName());
+                stagesString.append(stage.getId()).append(";");
             }
-            ObjectBox.get().boxFor(StageDb.class).put(final_stages);
-            //App.get().getDaoSession().getStageDao().insertOrReplaceInTx(final_stages);
+            App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
 
             List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
 
@@ -244,7 +245,8 @@ public class FetchTaxaBirdloger extends Service {
                     !taxon.getRestricted().equals("0"),
                     taxon.isUses_atlas_codes(),
                     taxon.getAncestors_names(),
-                    "Birds");
+                    "Birds",
+                    stagesString.toString());
             Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table
@@ -258,16 +260,15 @@ public class FetchTaxaBirdloger extends Service {
                             taxaTranslation.getLocale(),
                             taxaTranslation.getNativeName(),
                             taxon_latin_name,
-                            taxon.isUses_atlas_codes(),
                             taxaTranslation.getDescription());
                     Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
-                ObjectBox.get().boxFor(TaxaTranslationDb.class).put(final_translations);
+                App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
                 //App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
-        ObjectBox.get().boxFor(TaxonDb.class).put(final_taxa);
+        App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
         //App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
@@ -499,8 +500,8 @@ public class FetchTaxaBirdloger extends Service {
         updated_at = 0;
         current_page = 1;
         SettingsManager.setTaxaLastPageFetched("1");
-        ObjectBox.get().boxFor(TaxonDb.class).removeAll();
-        ObjectBox.get().boxFor(StageDb.class).removeAll();
+        App.get().getBoxStore().boxFor(TaxonDb.class).removeAll();
+        App.get().getBoxStore().boxFor(StageDb.class).removeAll();
     }
 
     public void sendResult(String message) {

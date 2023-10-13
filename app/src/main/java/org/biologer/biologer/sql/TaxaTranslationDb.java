@@ -12,16 +12,14 @@ public class TaxaTranslationDb {
     private String locale;
     private final String nativeName;
     private final String latinName;
-    private final boolean useAtlasCode;
     private String description;
 
-    public TaxaTranslationDb(long id, long taxonId, String locale, String nativeName, String latinName, boolean useAtlasCode, String description) {
+    public TaxaTranslationDb(long id, long taxonId, String locale, String nativeName, String latinName, String description) {
         this.id = id;
         this.taxonId = taxonId;
         this.locale = locale;
         this.nativeName = nativeName;
         this.latinName = latinName;
-        this.useAtlasCode = useAtlasCode;
         this.description = description;
     }
 
@@ -65,8 +63,5 @@ public class TaxaTranslationDb {
         return latinName;
     }
 
-    public boolean isUseAtlasCode() {
-        return useAtlasCode;
-    }
 
 }

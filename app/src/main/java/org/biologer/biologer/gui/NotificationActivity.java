@@ -19,9 +19,10 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.material.button.MaterialButton;
 
-import org.biologer.biologer.ObjectBox;
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.DateHelper;
 import org.biologer.biologer.network.JSON.FieldObservationResponse;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
@@ -31,12 +32,8 @@ import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -45,7 +42,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class NotificationView extends AppCompatActivity {
+public class NotificationActivity extends AppCompatActivity {
 
     private static final String TAG = "Biologer.NotificationV";
 
@@ -58,8 +55,8 @@ public class NotificationView extends AppCompatActivity {
         long notification_id = intent.getIntExtra("id", 0);
         Log.d(TAG, "Taped notification ID: " + notification_id);
 
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox
-                .get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notification_id))
                 .build();
@@ -106,7 +103,7 @@ public class NotificationView extends AppCompatActivity {
 
         MaterialButton buttonGoBack = findViewById(R.id.notification_view_back_button);
         buttonGoBack.setOnClickListener(v -> {
-            Intent landing = new Intent(NotificationView.this, LandingActivity.class);
+            Intent landing = new Intent(NotificationActivity.this, LandingActivity.class);
             landing.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(landing);
         });
@@ -210,9 +207,9 @@ public class NotificationView extends AppCompatActivity {
                 break;
         }
 
-        Date date = getDate(unreadNotifications.get(0).getUpdatedAt());
-        String localized_date = getLocalizedDate(date);
-        String localized_time = getLocalizedTime(date);
+        Date date = DateHelper.getDateFromJSON(unreadNotifications.get(0).getUpdatedAt());
+        String localized_date = DateHelper.getLocalizedDate(date, this);
+        String localized_time = DateHelper.getLocalizedTime(date, this);
 
         if (action1 == null) {
             text = Html.fromHtml("<b>" + author + "</b> " +
@@ -239,43 +236,10 @@ public class NotificationView extends AppCompatActivity {
         return author;
     }
 
-    private String getLocalizedTime(Date date) {
-        DateFormat timeFormatLocalized = android.text.format.DateFormat.getTimeFormat(this);
-        String time_string;
-        if (date != null) {
-            time_string = timeFormatLocalized.format(date);
-        } else {
-            time_string = getString(R.string.unknown_date);
-        }
-        return time_string;
-    }
-
-    private String getLocalizedDate(Date date) {
-        DateFormat dateFormatLocalized = android.text.format.DateFormat.getLongDateFormat(this);
-        String date_string;
-        if (date != null) {
-            date_string = dateFormatLocalized.format(date);
-        } else {
-            date_string = getString(R.string.unknown_date);
-        }
-        return date_string;
-    }
-
-    private Date getDate(String date_string) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault());
-        Date date;
-        try {
-            date = dateFormat.parse(date_string);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        return date;
-    }
-
     @SuppressLint("MissingPermission")
     private void getNextUnreadNotification(long previous_notification_id) {
         // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.greater(previous_notification_id))
                 .build();
@@ -288,7 +252,7 @@ public class NotificationView extends AppCompatActivity {
             long next_notification_id = unreadNotification.get(0).getId();
             Bundle bundle = new Bundle();
             bundle.putInt("id", (int) next_notification_id);
-            Intent notificationIntent = new Intent(this, NotificationView.class);
+            Intent notificationIntent = new Intent(this, NotificationActivity.class);
             notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             notificationIntent.putExtras(bundle);
             startActivity(notificationIntent);
@@ -300,7 +264,7 @@ public class NotificationView extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void getFirstUnreadNotification() {
         // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox.get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
         if (!unreadNotificationsDbBox.isEmpty()) {
             UnreadNotificationsDb unreadNotification = unreadNotificationsDbBox.getAll().get(0);
             // Display the notification in the new NotificationView activity
@@ -308,7 +272,7 @@ public class NotificationView extends AppCompatActivity {
             long first_notification_id = unreadNotification.getId();
             Bundle bundle = new Bundle();
             bundle.putInt("id", (int) first_notification_id);
-            Intent notificationIntent = new Intent(this, NotificationView.class);
+            Intent notificationIntent = new Intent(this, NotificationActivity.class);
             notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             notificationIntent.putExtras(bundle);
             startActivity(notificationIntent);
@@ -325,8 +289,8 @@ public class NotificationView extends AppCompatActivity {
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "All notifications should be set to read now.");
-                    ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
-                    NotificationManagerCompat.from(NotificationView.this).cancelAll();
+                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
+                    NotificationManagerCompat.from(NotificationActivity.this).cancelAll();
                 }
             }
 
@@ -370,18 +334,18 @@ public class NotificationView extends AppCompatActivity {
 
     private void updateNotificationDatabase(long notification_id) {
         // Remove old notification from the ObjectBox database
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = ObjectBox
-                .get().boxFor(UnreadNotificationsDb.class);
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notification_id))
                 .build();
         query.remove();
         query.close();
-        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + ObjectBox.get().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
 
         // Remove notification from the Android notification area
         Log.d(TAG, "Trying to remove notification " + notification_id + " from notification area.");
-        NotificationManagerCompat.from(NotificationView.this).cancel((int) notification_id);
+        NotificationManagerCompat.from(NotificationActivity.this).cancel((int) notification_id);
 
         // Get new observation from the veb
         Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications();
@@ -404,7 +368,7 @@ public class NotificationView extends AppCompatActivity {
                                     unreadNotification.getData().getCurator_name(),
                                     unreadNotification.getData().getTaxon_name(),
                                     unreadNotification.getUpdated_at());
-                            ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
+                            App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
 
                             // Display new notification in Android notification area
                             //List<UnreadNotificationsDb> unreadNotifications = ObjectBox
@@ -413,7 +377,7 @@ public class NotificationView extends AppCompatActivity {
                             //Log.d(TAG, "New notification saved in ObjectBOx as ID " + new_notification_id);
 
                             // Update the notifications
-                            final Intent update_notifications = new Intent(NotificationView.this, UpdateUnreadNotifications.class);
+                            final Intent update_notifications = new Intent(NotificationActivity.this, UpdateUnreadNotifications.class);
                             update_notifications.putExtra("download", false);
                             //update_notifications.putExtra("notification_id", new_notification_id);
                             startService(update_notifications);

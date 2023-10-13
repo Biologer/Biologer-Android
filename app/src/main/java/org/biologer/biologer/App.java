@@ -5,12 +5,17 @@ import android.app.NotificationManager;
 import android.os.Build;
 import androidx.multidex.MultiDexApplication;
 
+import org.biologer.biologer.sql.MyObjectBox;
+
+import io.objectbox.BoxStore;
+
 /**
  * Created by brjovanovic on 12/24/2017.
  */
 
 public class App extends MultiDexApplication {
 
+    private BoxStore boxStore;
     private static App app;
 
     @Override
@@ -19,13 +24,32 @@ public class App extends MultiDexApplication {
 
         app = this;
 
+        initializeBoxStore();
+
         // Create Notification channel in order to send notification to android API 26+
         createNotificationChannelTaxa();
         createNotificationChannelEntries();
         createNotificationChannelUnreadNotifications();
+        createNotificationChannelAnnouncements();
 
         // For initialisation of OpenBox database
-        ObjectBox.init(this);
+        // ObjectBox.init(this);
+    }
+
+    public BoxStore getBoxStore() {
+        /* From this method we can get always opened BoxStore */
+        if (boxStore != null && boxStore.isClosed())
+            initializeBoxStore();
+        return boxStore;
+    }
+
+    private void initializeBoxStore() {
+        boxStore = MyObjectBox.builder().androidContext(this).build();
+    }
+
+    public void deleteAllBoxes() {
+        boxStore.close();
+        boxStore.deleteAllFiles();
     }
 
     public void createNotificationChannelTaxa() {
@@ -70,6 +94,20 @@ public class App extends MultiDexApplication {
             CharSequence name = getString(R.string.channel_observation_name);
             String description = getString(R.string.channel_observation_description);
             int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void createNotificationChannelAnnouncements() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channel_id = "biologer_announcements";
+            CharSequence name = getString(R.string.channel_announcements);
+            String description = getString(R.string.channel_announcements_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);

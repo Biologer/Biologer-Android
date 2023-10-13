@@ -63,8 +63,8 @@ import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
@@ -126,12 +126,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     Calendar calendar;
     SimpleDateFormat simpleDateFormat;
     // Get the data from the GreenDao database
-    List<UserDb> userDataList = ObjectBox.get().boxFor(UserDb.class).getAll();
-    List<StageDb> stageList = ObjectBox.get().boxFor(StageDb.class).getAll();
+    List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
     ArrayList<String> list_new_images = new ArrayList<>();
-    TaxaList selectedTaxon = null;
+    TaxonDb selectedTaxon = null;
     boolean locationFromTheMap = false;
     boolean taxonSelectedFromTheList = false;
     boolean callTagAutoChecked = false;
@@ -259,9 +258,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         autoCompleteTextView_speciesName.setThreshold(2);
 
         autoCompleteTextView_speciesName.setOnItemClickListener((parent, view, position, id) -> {
-            TaxaList taxaList = (TaxaList) parent.getItemAtPosition(position);
-            autoCompleteTextView_speciesName.setText(taxaList.getTaxonName());
-            selectedTaxon = new TaxaList(taxaList.getTaxonName(), taxaList.getTaxonID(), taxaList.isAtlasCode());
+            TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
+            autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
+            selectedTaxon = taxonDb;
             taxonSelectedFromTheList = true;
             showStagesAndAtlasCode(preferences);
         });
@@ -280,7 +279,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 runnable = () -> {
                     /*
                     Get the list of taxa from the GreenDao database
-                     */
+                    */
 
                     // Remove atlas code and stage for taxa not selected from the list
                     if (!taxonSelectedFromTheList) {
@@ -289,10 +288,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     taxonSelectedFromTheList = false;
 
                     // This will bee the list of all IDs from all the queries
-                    List<TaxaList> allTaxaLists = new ArrayList<>();
+                    List<TaxonDb> allTaxaLists = new ArrayList<>();
 
                     // Query latin names
-                    Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+                    Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
                     Query<TaxonDb> query_latin_name = taxonDataBox
                             .query(TaxonDb_.latinName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
                             .build();
@@ -300,7 +299,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     query_latin_name.close();
 
                     for (int i = 0; i < latinNames.size(); i++) {
-                        Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+                        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
                         Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
                                 .query(TaxaTranslationDb_.taxonId.equal(latinNames.get(i).getId())
                                         .and(TaxaTranslationDb_.locale.equal(locale_script)))
@@ -311,19 +310,20 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (nativeNames.size() >= 1) {
                             String native_name = nativeNames.get(0).getNativeName();
                             if (native_name != null) {
-                                allTaxaLists.add(new TaxaList(latinNames.get(i).getLatinName() + " (" + native_name + ")",
-                                        latinNames.get(i).getId(), latinNames.get(i).isUseAtlasCode()));
+                                TaxonDb taxon = latinNames.get(i);
+                                taxon.setLatinName(taxon.getLatinName() + " (" + native_name + ")");
+                                allTaxaLists.add(taxon);
                             }
                             else {
-                                allTaxaLists.add(new TaxaList(latinNames.get(i).getLatinName(), latinNames.get(i).getId(), latinNames.get(i).isUseAtlasCode()));
+                                allTaxaLists.add(latinNames.get(i));
 
                             }
                         } else {
-                            allTaxaLists.add(new TaxaList(latinNames.get(i).getLatinName(), latinNames.get(i).getId(), latinNames.get(i).isUseAtlasCode()));
+                            allTaxaLists.add(latinNames.get(i));
                         }
                     }
 
-                    Box<TaxaTranslationDb> taxaTranslationDataBox = ObjectBox.get().boxFor(TaxaTranslationDb.class);
+                    Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
                     List<TaxaTranslationDb> nativeList;
                     // For Serbian language we should also search for Latin and Cyrillic names
                     if (locale_script.equals("sr")) {
@@ -376,15 +376,22 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         // Don’t add taxa if already on the list
                         boolean duplicated = false;
                         for (int j = 0; j < allTaxaLists.size(); j++) {
-                            if (allTaxaLists.get(j).getTaxonID().equals(taxaTranslationData.getTaxonId())) {
+                            if (allTaxaLists.get(j).getId() == taxaTranslationData.getTaxonId()) {
                                 duplicated = true;
                             }
                         }
                         if (!duplicated) {
-                            allTaxaLists.add(new TaxaList(
-                                    taxaTranslationData.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")",
-                                    taxaTranslationData.getTaxonId(),
-                                    taxaTranslationData.isUseAtlasCode()));
+                            Box<TaxonDb> taxonDbBox = App.get().getBoxStore().boxFor(TaxonDb.class);
+                            Query<TaxonDb> taxonDbQuery = taxonDbBox
+                                    .query(TaxonDb_.id.equal(taxaTranslationData.getTaxonId()))
+                                    .build();
+                            TaxonDb taxon = taxonDbQuery.findFirst();
+                            taxonDbQuery.close();
+
+                            if (taxon != null) {
+                                taxon.setLatinName(taxon.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")");
+                                allTaxaLists.add(taxon);
+                            }
                         }
                     }
 
@@ -467,31 +474,37 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
         // Enable stage entry
         // Check if the taxon has stages. If not hide the stages dialog.
-        if (isStageAvailable(selectedTaxon.getTaxonID())) {
+        String stages = selectedTaxon.getStages();
+        Log.i(TAG, "This are the stages for " + selectedTaxon.getLatinName() + ": " + stages);
+
+        if (stages != null) {
             Log.d(TAG, "Enabling Stages for this taxon.");
             textInputStages.setVisibility(View.VISIBLE);
+
+            String[] all_stages = stages.split(";");
 
             // If user preferences are selected, the stage for taxa will be set to adult by default.
             // Step 1: Get the preferences
             if (preferences.getBoolean("adult_by_default", false)) {
                 // If stage is already selected ignore this...
                 if (textViewStage.getText().toString().equals("")) {
-                    Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
                     Query<StageDb> query = stageBox
-                            .query(StageDb_.taxonId.equal(selectedTaxon.getTaxonID())
-                                    .and(StageDb_.name.equal("adult")))
+                            .query(StageDb_.name.equal("adult"))
                             .build();
-                    List<StageDb> stageList = query.find();
+                    StageDb stage = query.findFirst();
                     query.close();
-                    if (stageList.get(0) != null) {
-                        StageDb stage = new StageDb(stageList.get(0).getId(), "adult", stageList.get(0).getStageId(), selectedTaxon.getTaxonID());
-                        textViewStage.setText(getString(R.string.stage_adult));
-                        textViewStage.setTag(stage);
+                    if (stage != null) {
+                        String s = String.valueOf(stage.getId());
+                        if (Arrays.asList(all_stages).contains(s)) {
+                            textViewStage.setText(getString(R.string.stage_adult));
+                            textViewStage.setTag(stage.getId());
+                        }
                     }
                 }
             }
         }
-        if (selectedTaxon.isAtlasCode()) {
+        if (selectedTaxon.isUseAtlasCode()) {
             Log.d(TAG, "Enabling Atlas code for this taxon.");
             textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
         }
@@ -506,33 +519,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
     }
 
-    private static class TaxaList {
-        public String TaxonName;
-        public Long TaxonID;
-        public boolean AtlasCode;
+    public static class TaxaListAdapter extends ArrayAdapter<TaxonDb> {
 
-        public TaxaList(String taxonName, Long taxonID, boolean atlasCode) {
-            this.TaxonName = taxonName;
-            this.TaxonID = taxonID;
-            this.AtlasCode = atlasCode;
-        }
-
-        public String getTaxonName() {
-            return this.TaxonName;
-        }
-
-        public Long getTaxonID() {
-            return this.TaxonID;
-        }
-
-        public boolean isAtlasCode() {
-            return this.AtlasCode;
-        }
-    }
-
-    public static class TaxaListAdapter extends ArrayAdapter<TaxaList> {
-
-        public TaxaListAdapter(@NonNull Context context, int resource, @NonNull List<TaxaList> taxaLists) {
+        public TaxaListAdapter(@NonNull Context context, int resource, @NonNull List<TaxonDb> taxaLists) {
             super(context, resource, taxaLists);
         }
 
@@ -549,7 +538,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 rowViewHolder = (ViewHolder) convertView.getTag();
             }
 
-            String taxon = Objects.requireNonNull(getItem(position)).TaxonName;
+            String taxon = Objects.requireNonNull(getItem(position)).getLatinName();
 
             rowViewHolder.taxonNames.setText(taxon);
 
@@ -630,7 +619,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             getLocation(100, 2);
 
             // Always add Observation Type for observed specimen
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> query = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("observed"))
                     .build();
@@ -660,7 +649,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void fillExistingEntry() {
 
         long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
-        Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+        Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
         Query<EntryDb> query = entry
                 .query(EntryDb_.id.equal(existing_entry_id))
                 .build();
@@ -669,8 +658,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
 
         // Check if the taxa is selected from the list = it has an ID.
-        if (currentItem.get(0).getTaxonId() != 0) {
-            taxonSelectedFromTheList = true;
+        if (currentItem.get(0) != null) {
+            if (currentItem.get(0).getTaxonId() != 0) {
+                taxonSelectedFromTheList = true;
+            }
         }
 
         // Get the latitude, longitude, coordinate precision and elevation...
@@ -685,19 +676,36 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         textViewMeters.setVisibility(View.VISIBLE);
         setAccuracyColor();
 
-        // Get the atlas code
         if (currentItem.get(0).getTaxonId() != 0) {
-            Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
             Query<TaxonDb> query1 = taxonDataBox
                     .query(TaxonDb_.id.equal(currentItem.get(0).getTaxonId()))
                     .build();
-            boolean use_atlas_code = query1.find().get(0).isUseAtlasCode();
+            TaxonDb taxon = query1.findFirst();
             query1.close();
-            if (use_atlas_code) {
-                Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlas_code());
-                textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+
+            // Get the atlas code
+            boolean use_atlas_code;
+            if (taxon != null) {
+                use_atlas_code = taxon.isUseAtlasCode();
+                if (use_atlas_code) {
+                    Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlasCode());
+                    textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                }
+
+                // Get the taxa translation
+                Box<TaxaTranslationDb> taxaTranslationDbBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+                Query<TaxaTranslationDb> query2 = taxaTranslationDbBox
+                        .query(TaxaTranslationDb_.taxonId.equal(currentItem.get(0).getTaxonId())
+                                .and(TaxaTranslationDb_.locale.equal(locale_script)))
+                        .build();
+                TaxaTranslationDb translationDb = query2.findFirst();
+                query2.close();
+                if (translationDb != null) {
+                    taxon.setLatinName(taxon.getLatinName() + "(" + translationDb.getNativeName() + ")");
+                }
+                selectedTaxon = taxon;
             }
-            selectedTaxon = new TaxaList(currentItem.get(0).getTaxonSuggestion(), currentItem.get(0).getTaxonId(), use_atlas_code);
         }
 
         // Get the name of the taxon for this entry
@@ -707,16 +715,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Get the name of the stage for the entry from the database
         if (currentItem.get(0).getStage() != null) {
             Log.d(TAG, "There is a stage already selected for this entry!");
-            Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query2 = stageBox
-                    .query(StageDb_.stageId.equal(currentItem.get(0).getStage()))
+                    .query(StageDb_.id.equal(currentItem.get(0).getStage()))
                     .build();
-            long stage_id = query2.find().get(0).getStageId();
+            long stage_id = query2.find().get(0).getId();
             query2.close();
 
             String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
-            StageDb stage = new StageDb(0, stageName, stage_id, currentItem.get(0).getTaxonId());
-            textViewStage.setTag(stage);
+            StageDb stage = new StageDb(stage_id, stageName);
+            textViewStage.setTag(stage.getId());
             textViewStage.setText(stageName);
             textInputStages.setVisibility(View.VISIBLE);
         } else {
@@ -739,8 +747,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Get the atlas code.
-        if (currentItem.get(0).getAtlas_code() != null) {
-            Long code = currentItem.get(0).getAtlas_code();
+        if (currentItem.get(0).getAtlasCode() != null) {
+            Long code = currentItem.get(0).getAtlasCode();
             Log.d(TAG, "Setting the spinner to atlas code: " + code);
             textViewAtlasCode.setText(setAtlasCode(code.intValue()));
         }
@@ -800,12 +808,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Load observation types and delete tag for photographed.
-        observation_type_ids_string = currentItem.get(0).getObservation_type_ids();
+        observation_type_ids_string = currentItem.get(0).getObservationTypeIds();
         Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
         observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
         if (image1 != null || image2 != null || image3 != null) {
             Log.d(TAG, "Removing image tag just in case images got deleted.");
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> query1 = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
@@ -989,7 +997,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "The taxon does not exist in GreenDao database. Asking user to save it as is.");
             buildAlertMessageInvalidTaxon();
         } else {
-            TaxonDb taxon = getSelectedTaxon(selectedTaxon.getTaxonID());
+            TaxonDb taxon = selectedTaxon;
             Log.d(TAG, "The taxon with ID " + taxon.getId() + " selected. Checking coordinates and saving the entry!");
             saveEntry2(taxon);
         }
@@ -1011,7 +1019,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 if (taxon == null) {
                     Log.d(TAG, "Saving taxon with unknown ID as simple text.");
                     TaxonDb taxon_noId = new TaxonDb(0, 0, autoCompleteTextView_speciesName.getText().toString(),
-                            null, 0, null, false, false, null, null);
+                            null, 0, null, false, false, null, null, null);
                     saveEntry3(taxon_noId);
                 } else {
                     Log.d(TAG, "Saving taxon with known ID: " + taxon.getId());
@@ -1146,12 +1154,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     //  Gather all the data into the Entry and wright it into the GreenDao database.
     private void entrySaver(TaxonDb taxon, String specimens, String sex, int entry_id) {
-        StageDb stage;
-        if (textViewStage.getTag() != null) stage = (StageDb) textViewStage.getTag();
-        else stage = null;
         String comment = editTextComment.getText().toString();
         Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
-        Long selectedStage = (stage != null) ? stage.getStageId() : null;
+        Long selectedStage = (textViewStage.getTag() != null) ? Long.parseLong(textViewStage.getTag().toString()) : null;
         String deathComment = (editTextDeathComment.getText() != null) ? editTextDeathComment.getText().toString() : "";
         String habitat = editTextHabitat.getText() != null ? editTextHabitat.getText().toString() : "";
         String foundOn = editTextFoundOn.getText() != null ? editTextFoundOn.getText().toString() : "";
@@ -1181,12 +1186,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
                     location, image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
-            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
             entry.put(entryDb1);
 
             Intent intent = new Intent();
-            long index_last = ObjectBox.get().boxFor(EntryDb.class).count() - 1;
-            long new_entry_id = ObjectBox.get().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+            long index_last = App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
+            long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
             Log.d(TAG, "Entry will be saved under ID " + new_entry_id);
             intent.putExtra("IS_NEW_ENTRY", isNewEntry());
             intent.putExtra("ENTRY_LIST_ID", new_entry_id);
@@ -1216,10 +1221,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.get(0).setHabitat(habitat);
             currentItem.get(0).setFoundOn(foundOn);
             getPhotoTag();
-            currentItem.get(0).setObservation_type_ids(Arrays.toString(observation_type_ids));
+            currentItem.get(0).setObservationTypeIds(Arrays.toString(observation_type_ids));
 
             // Now just update the database with new data...
-            Box<EntryDb> entry = ObjectBox.get().boxFor(EntryDb.class);
+            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
             entry.put(currentItem);
 
             Intent intent = new Intent();
@@ -1238,7 +1243,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
             int photo_tag_id;
-            Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> observationTypesDataQuery = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
@@ -1279,9 +1284,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
         // When the taxon is selected from the list we should query SQL to see if there is a stage.
         else {
-            Box<StageDb> stage = ObjectBox.get().boxFor(StageDb.class);
+            Box<StageDb> stage = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query = stage
-                    .query(StageDb_.taxonId.equal(taxonID))
+                    .query(StageDb_.id.equal(taxonID))
                     .build();
             int size = query.find().size();
             query.close();
@@ -1290,30 +1295,35 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void getStageForTaxon() {
-        Box<StageDb> stage = ObjectBox.get().boxFor(StageDb.class);
-        Query<StageDb> query = stage
-                .query(StageDb_.taxonId.equal(selectedTaxon.getTaxonID()))
-                .build();
-        stageList = query.find();
-        query.close();
-        if (stageList != null) {
-            final String[] taxon_stages = new String[stageList.size() + 1];
-            taxon_stages[0] = getString(R.string.not_selected);
-            for (int i = 0; i < stageList.size(); i++) {
-                // Translate the stages to the app language
-                taxon_stages[i + 1] = StageAndSexLocalization.getStageLocale(this, stageList.get(i).getName());
+        String stages = selectedTaxon.getStages();
+        String[] all_stages_ids = stages.split(";");
+        if (all_stages_ids.length != 0) {
+            final String[] all_stages_names = new String[all_stages_ids.length + 1];
+            all_stages_names[0] = getString(R.string.not_selected);
+            for (int i = 0; i < all_stages_ids.length; i++) {
+                Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+                Query<StageDb> query = stageBox
+                        .query(StageDb_.id.equal(Long.parseLong(all_stages_ids[i])))
+                        .build();
+                StageDb stage = query.findFirst();
+                query.close();
+                if (stage != null) {
+                    all_stages_names[i + 1] = StageAndSexLocalization.getStageLocale(this, stage.getName());
+                }
             }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(taxon_stages, (DialogInterface dialogInterface, int i) -> {
-                textViewStage.setText(taxon_stages[i]);
+            builder.setItems(all_stages_names, (DialogInterface dialogInterface, int i) -> {
+                textViewStage.setText(all_stages_names[i]);
                 if (i == 0) {
                     textViewStage.setTag(null); // If no stage selected
                 } else {
-                    textViewStage.setTag(stageList.get(i - 1));
+                    textViewStage.setTag(all_stages_ids[i - 1]);
                 }
             });
             builder.show();
-            Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(taxon_stages));
+            Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(all_stages_names));
+
         } else {
             textViewStage.setEnabled(false);
             Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
@@ -1640,7 +1650,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 })
                 .setNegativeButton(getString(R.string.save_anyway), (dialog, id) -> {
                     // Save the taxon
-                    saveEntry3(getSelectedTaxon(selectedTaxon.getTaxonID()));
+                    saveEntry3(getSelectedTaxon(selectedTaxon.getId()));
                 });
         final AlertDialog alert = builder.create();
         alert.show();
@@ -1683,7 +1693,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void deleteUnsavedImages() {
-        for( String image : list_new_images ) {
+        for (String image: list_new_images) {
             if (image != null) {
                 String filename = new File(image).getName();
                 final File file = new File(getFilesDir(), filename);
@@ -1696,7 +1706,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int getGreenDaoDataLicense() {
         if (userDataList != null) {
             if (!userDataList.isEmpty()) {
-                return userDataList.get(0).getData_license();
+                return userDataList.get(0).getDataLicense();
             }
             return 0;
         }
@@ -1706,7 +1716,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private int getGreenDaoImageLicense() {
         if (userDataList != null) {
             if (!userDataList.isEmpty()) {
-                return userDataList.get(0).getImage_license();
+                return userDataList.get(0).getImageLicense();
             }
             return 0;
         }
@@ -1717,7 +1727,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (taxonID == null) {
             return null;
         } else {
-            Box<TaxonDb> taxonDataBox = ObjectBox.get().boxFor(TaxonDb.class);
+            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
             Query<TaxonDb> query = taxonDataBox
                     .query(TaxonDb_.id.equal(taxonID))
                     .build();
@@ -1747,7 +1757,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void fillObservationTypes() {
 
-        Box<ObservationTypesDb> observationTypesDataBox = ObjectBox.get().boxFor(ObservationTypesDb.class);
+        Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         Query<ObservationTypesDb> query = observationTypesDataBox
                 .query(ObservationTypesDb_.locale.equal(locale_script))
                 .build();

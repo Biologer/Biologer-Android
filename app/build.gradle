@@ -16,8 +16,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 140
-        versionName "4.0_alpha7"
+        versionCode 144
+        versionName "4.0_beta3"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -123,8 +123,6 @@ dependencies {
     implementation 'com.github.MikeOrtiz:TouchImageView:3.1.1'
     implementation ('com.github.bumptech.glide:glide:4.15.1')
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
-
-    implementation "org.greenrobot:objectbox-daocompat:3.5.1"
 
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {

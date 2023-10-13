@@ -7,7 +7,7 @@ import io.objectbox.annotation.Id;
 public class AnnouncementTranslationsDb {
 
     @Id(assignable = true)
-    long id;
+    private long id;
     private long announcementId;
     private String locale;
     private String title;
@@ -52,5 +52,13 @@ public class AnnouncementTranslationsDb {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

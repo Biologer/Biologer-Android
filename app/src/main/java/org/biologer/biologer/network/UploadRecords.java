@@ -20,7 +20,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.biologer.biologer.ObjectBox;
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
@@ -81,7 +81,7 @@ public class UploadRecords extends Service {
 
     public void onDestroy() {
         super.onDestroy();
-        sendResult("success");
+        sendResult("success", 0);
         Log.d(TAG, "Running onDestroy().");
     }
 
@@ -94,7 +94,7 @@ public class UploadRecords extends Service {
                     case ACTION_START:
                         // Do something...
                         Log.d(TAG, "Starting upload process…");
-                        entryList = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
+                        entryList = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
                         totalEntries = entryList.size();
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
                         notificationInitiate();
@@ -171,7 +171,7 @@ public class UploadRecords extends Service {
         // When all entries are uploaded
         if (entryList.size() == 0) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
-            ObjectBox.get().boxFor(EntryDb.class).removeAll();
+            App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
             //App.get().getDaoSession().getEntryDao().deleteAll();
             // Stop the foreground service and update the notification
             stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
@@ -264,9 +264,9 @@ public class UploadRecords extends Service {
         apiEntry.setAtlasCode(entryDb.getAtlasCode());
         apiEntry.setFoundDead(entryDb.getDeadOrAlive().equals("true") ? 0 : 1);
         apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
-        apiEntry.setDataLicense(entryDb.getData_licence());
+        apiEntry.setDataLicense(entryDb.getDataLicence());
         apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -279,7 +279,7 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImage_licence());
+            p.setLicense(entryDb.getImageLicence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
@@ -313,11 +313,15 @@ public class UploadRecords extends Service {
                     // Wait... Don’t send too many requests to the server!
                     SystemClock.sleep(300);
                     // Delete uploaded entry
-                    ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
-                    // TODO the entryList is null sometimes
+                    App.get().getBoxStore().boxFor(EntryDb.class).remove(entryDb);
+
+                    // Inform the broadcaster on success
                     if (!entryList.isEmpty()) {
+                        sendResult("id_uploaded", entryList.get(0).getId());
+                        Log.d(TAG, "Entry ID " + entryList.get(0).getId() + " uploaded!");
                         entryList.remove(0);
                     }
+
                     // Delete image files from internal storage
                     for (String filename : filenames) {
                         if (filename != null) {
@@ -343,7 +347,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry");
+                sendResult("failed_entry", 0);
                 stopSelf();
             }
         });
@@ -389,7 +393,7 @@ public class UploadRecords extends Service {
         apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
         apiEntry.setDataLicense(null);
         apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservation_type_ids());
+        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
         // Handle situations when observation types are not downloaded from server
         if (observation_types == null) {
             Log.e(TAG, "Observation types are null!");
@@ -402,7 +406,7 @@ public class UploadRecords extends Service {
         for (int i = 0; i < n; i++) {
             APIEntryPhotos p = new APIEntryPhotos();
             p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImage_licence());
+            p.setLicense(entryDb.getImageLicence());
             photos.add(p);
         }
         apiEntry.setPhotos(photos);
@@ -451,11 +455,12 @@ public class UploadRecords extends Service {
                         // Wait... Don’t send too many requests to the server!
                         SystemClock.sleep(300);
                         // Delete uploaded entry
-                        ObjectBox.get().boxFor(EntryDb.class).remove(entryDb);
-                        //App.get().getDaoSession().getEntryDao().delete(entry);
-                        entryList.remove(0);
-                        // TODO get the eventbus
-                        //EventBus.getDefault().post(new DeleteEntryFromList());
+                        App.get().getBoxStore().boxFor(EntryDb.class).remove(entryDb);
+                        if (!entryList.isEmpty()) {
+                            sendResult("id_uploaded", entryList.get(0).getId());
+                            entryList.remove(0);
+                        }
+
                         // Delete image files from internal storage
                         for (String filename : filenames) {
                             if (filename != null) {
@@ -479,7 +484,7 @@ public class UploadRecords extends Service {
             public void onFailure(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Throwable t) {
                 Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry");
+                sendResult("failed_entry", 0);
                 stopSelf();
             }
         });
@@ -530,7 +535,7 @@ public class UploadRecords extends Service {
                 if (t.getLocalizedMessage() != null) {
                     Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
                     cancelUpload("Failed!", "Uploading of photo was not successful!");
-                    sendResult("failed_photo");
+                    sendResult("failed_photo", 0);
                     stopSelf();
                 }
             }
@@ -610,10 +615,10 @@ public class UploadRecords extends Service {
         mNotificationManager.notify(1, notification);
     }
 
-    public void sendResult(String message) {
+    public void sendResult(String message, long id) {
         Intent intent = new Intent(TASK_COMPLETED);
-        if (message != null)
-            intent.putExtra(TASK_COMPLETED, message);
+        intent.putExtra(TASK_COMPLETED, message);
+        intent.putExtra("EntryID", id);
         broadcaster.sendBroadcast(intent);
     }
 }

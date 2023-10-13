@@ -41,6 +41,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
@@ -105,7 +106,7 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Database URL written in the settings is: " + database_name);
 
         // Just display the username in order to make app nice
-        List<UserDb> user = ObjectBox.get().boxFor(UserDb.class).getAll();
+        List<UserDb> user = App.get().getBoxStore().boxFor(UserDb.class).getAll();
         if (!user.isEmpty()) {
             Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
             // Just set the user email so that is does not need to be written once again
@@ -504,7 +505,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         // Write data in SQL
                         UserDb user = new UserDb(0, name, email, data_license, image_license);
-                        Box<UserDb> userDataBox = ObjectBox.get().boxFor(UserDb.class);
+                        Box<UserDb> userDataBox = App.get().getBoxStore().boxFor(UserDb.class);
                         userDataBox.removeAll();
                         userDataBox.put(user);
                     }

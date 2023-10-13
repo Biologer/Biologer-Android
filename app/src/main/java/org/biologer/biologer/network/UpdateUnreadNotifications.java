@@ -12,10 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.NotificationView;
+import org.biologer.biologer.gui.NotificationActivity;
 import org.biologer.biologer.network.JSON.UnreadNotification;
 import org.biologer.biologer.network.JSON.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -83,13 +84,13 @@ public class UpdateUnreadNotifications extends Service {
                         if (size >= 1) {
                             // Check if the number of notifications in local SQL equals the number of notifications online.
                             // If not synchronise, other-ways assume that nothing changed since the last time.
-                            int size_in_sql = (int) ObjectBox.get().boxFor(UnreadNotificationsDb.class).count();
+                            int size_in_sql = (int) App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count();
                             Log.d(TAG, "There are " + size_in_sql + " notifications stored locally.");
                             if (size_in_sql != 15) {
                                 if (size != size_in_sql) {
                                     Log.d(TAG, "Updating notifications.");
                                     // Clean the SQL database
-                                    ObjectBox.get().boxFor(UnreadNotificationsDb.class).removeAll();
+                                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
                                     UnreadNotificationsDb[] notificationForSQL = new UnreadNotificationsDb[size];
                                     for (int i = 0; i < size; i++) {
                                         UnreadNotification unreadNotification = response.body().getData().get(i);
@@ -103,7 +104,7 @@ public class UpdateUnreadNotifications extends Service {
                                                 unreadNotification.getData().getTaxon_name(),
                                                 unreadNotification.getUpdated_at());
                                     }
-                                    ObjectBox.get().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
+                                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
                                     Log.d(TAG, "Notifications saved");
 
                                 } else {
@@ -134,7 +135,7 @@ public class UpdateUnreadNotifications extends Service {
     @SuppressLint("MissingPermission")
     public void displayUnreadNotifications() {
         Log.d(TAG, "Displaying UnreadNotifications for the observations.");
-        List<UnreadNotificationsDb> unreadNotificationsDbs = ObjectBox.get().boxFor(UnreadNotificationsDb.class).getAll();
+        List<UnreadNotificationsDb> unreadNotificationsDbs = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).getAll();
         Collections.reverse(unreadNotificationsDbs); // Reverse elements in a list to display notification in correct order
 
         if (!unreadNotificationsDbs.isEmpty()) {
@@ -209,7 +210,7 @@ public class UpdateUnreadNotifications extends Service {
     }
 
     private PendingIntent getPendingIntent(Bundle bundle, int id) {
-        Intent notificationIntent = new Intent(this, NotificationView.class);
+        Intent notificationIntent = new Intent(this, NotificationActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         notificationIntent.putExtras(bundle);
         return PendingIntent.getActivity(this, id, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

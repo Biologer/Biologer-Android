@@ -1,11 +1,8 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -32,7 +29,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -41,7 +37,6 @@ import com.opencsv.CSVWriter;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
-import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.CreateExternalFile;
@@ -50,19 +45,16 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.JSON.AnnouncementsData;
-import org.biologer.biologer.network.JSON.AnnouncementsResponse;
 import org.biologer.biologer.network.JSON.RefreshTokenResponse;
 import org.biologer.biologer.network.JSON.TaxaResponse;
 import org.biologer.biologer.network.JSON.TaxaResponseBirdloger;
 import org.biologer.biologer.network.JSON.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.sql.AnnouncementTranslationsDb;
-import org.biologer.biologer.sql.AnnouncementsDb;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -86,7 +78,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private static final String TAG = "Biologer.Landing";
 
     private DrawerLayout drawer;
-    BroadcastReceiver receiver;
     String how_to_use_network;
 
     // Define upload menu so that we can hide it if required
@@ -166,43 +157,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             }
         }
-
-        // Broadcast will watch if upload service is active
-        // and run the command when the upload is complete
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
-                // This will be executed after upload is completed
-                if (s != null) {
-                    Log.d(TAG, "Uploading records returned the code: " + s);
-                    TextView textView = findViewById(R.id.list_entries_info_text);
-                    if (s.equals("success")) {
-                        textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
-                    }
-                    if (s.equals("failed_photo")) {
-                        textView.setText(R.string.failed_to_upload_photo);
-                    }
-                    if (s.equals("failed_entry")) {
-                        textView.setText(R.string.failed_to_upload_entry);
-                    }
-
-                    textView.setVisibility(View.VISIBLE);
-                    setMenuIconVisibility();
-
-                    updateEntryListView();
-
-                }
-            }
-        };
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(UploadRecords.TASK_COMPLETED)
-        );
+
         // If the email is not confirmed we would like to check this every time the
         // user restarts the LandingActivity
         if (!SettingsManager.isMailConfirmed()) {
@@ -210,7 +170,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (database != null) {
                 // Check mail should not be called if the user is not logged in.
                 // The user is not logged in if the SQL UserData is empty.
-                List<UserDb> userData = ObjectBox.get().boxFor(UserDb.class).getAll();
+                List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 if (!userData.isEmpty()) {
                     checkMailConfirmed(database);
                 }
@@ -226,7 +186,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         super.onStop();
     }
 
@@ -269,7 +228,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.upload_menu, menu);
         uploadMenu = menu;
-        setMenuIconVisibility();
+        updateMenuIconVisibility();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -295,7 +254,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        ObjectBox.get().deleteAllFiles();
+        App.get().deleteAllBoxes();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
@@ -365,13 +324,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     uploadRecords();
 
                     // Update announcements
-                    long current_time = System.currentTimeMillis() / 1000; // in seconds
-                    long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
-                    if (last_check == 0 || current_time > (last_check + 18000) ) { // don’t get data from veb in the next 5 hours
-                        Log.d(TAG, "Announcements should be updated since 5 hours elapsed.");
-                        updateAnnouncements(database_url);
-                        SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
-                    }
+                    //long current_time = System.currentTimeMillis() / 1000; // in seconds
+                    //long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
+                    //if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
+                        Log.d(TAG, "Announcements should be updated since 10 hours elapsed.");
+                        final Intent getAnnouncements = new Intent(LandingActivity.this, UpdateAnnouncements.class);
+                        getAnnouncements.putExtra("show_notification", true);
+                        startService(getAnnouncements);
+                    //    SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
+                    //}
 
                     // Update notifications
                     final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
@@ -387,58 +348,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         } else {
             Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
         }
-    }
-
-    private void updateAnnouncements(String database_uri) {
-        Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_uri).getAnnouncements();
-        announcements.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
-                if (response.isSuccessful()) {
-                    AnnouncementsData[] announcementsData;
-                    if (response.body() != null) {
-                        announcementsData = response.body().getData();
-                        int number_of_announcements = announcementsData.length;
-                        AnnouncementsDb[] announcementsDbs = new AnnouncementsDb[number_of_announcements];
-                        for (int i = 0; i < number_of_announcements; i++) {
-                            announcementsDbs[i] = new AnnouncementsDb(
-                                    announcementsData[i].getId(),
-                                    announcementsData[i].getCreatorName(),
-                                    announcementsData[i].isPrivate(),
-                                    announcementsData[i].getCreatedAt(),
-                                    announcementsData[i].getUpdatedAt(),
-                                    announcementsData[i].isRead(),
-                                    announcementsData[i].getTitle(),
-                                    announcementsData[i].getMessage());
-
-                            int number_of_translations = announcementsData[i].getTranslations().length;
-                            AnnouncementTranslationsDb[] announcementTranslationsDbs = new AnnouncementTranslationsDb[number_of_translations];
-                            for (int j = 0; j < number_of_translations; j++) {
-                                Log.d(TAG, "Announcement translations " + j);
-                                announcementTranslationsDbs[j] = new AnnouncementTranslationsDb(
-                                        announcementsData[i].getTranslations()[j].getId(),
-                                        announcementsData[i].getId(),
-                                        announcementsData[i].getTranslations()[j].getLocale(),
-                                        announcementsData[i].getTranslations()[j].getTitle(),
-                                        announcementsData[i].getTranslations()[j].getMessage()
-                                );
-                            }
-                            ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).put(announcementTranslationsDbs);
-
-                        }
-                        ObjectBox.get().boxFor(AnnouncementsDb.class).put(announcementsDbs);
-                        Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
-                                ObjectBox.get().boxFor(AnnouncementTranslationsDb.class).count() +
-                                " announcement translations.");
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<AnnouncementsResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Could not get announcements: " + t.getLocalizedMessage());
-            }
-        });
     }
 
     private void checkMailConfirmed(String database_url) {
@@ -514,8 +423,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                             int data_license = response.body().getData().getSettings().getDataLicense();
                             int image_license = response.body().getData().getSettings().getImageLicense();
                             UserDb user = new UserDb(0, name, email, data_license, image_license);
-                            ObjectBox.get().boxFor(UserDb.class).removeAll();
-                            ObjectBox.get().boxFor(UserDb.class).put(user);
+                            App.get().getBoxStore().boxFor(UserDb.class).removeAll();
+                            App.get().getBoxStore().boxFor(UserDb.class).put(user);
                             SettingsManager.setSqlUpdated(false);
                         } else {
                             alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
@@ -606,17 +515,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
                 }
             });
-        }
-    }
-
-    private void updateEntryListView() {
-        List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
-        for (int i = 0; i < fragmentList.size(); i++) {
-            if (fragmentList.get(i) instanceof LandingFragment) {
-                Log.d(TAG, "Updating entries list within the fragment No. " + i + ".");
-                ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
-                ((LandingFragment) fragmentList.get(i)).updateEntries(entries);
-            }
         }
     }
 
@@ -822,6 +720,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if(id == R.id.nav_about) {
             showAboutFragment();
         }
+        if(id == R.id.nav_announcements) {
+            showAnnouncementsActivity();
+        }
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -831,7 +732,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Showing LandingFragment");
         Fragment landingFragment = new LandingFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, landingFragment);
+        ft.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
         ft.addToBackStack("Landing fragment");
         ft.commit();
     }
@@ -843,6 +744,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         fragmentTransaction.add(R.id.content_frame, aboutFragment);
         fragmentTransaction.addToBackStack("About fragment");
         fragmentTransaction.commit();
+    }
+
+    private void showAnnouncementsActivity() {
+        Log.d(TAG, "User clicked announcements icon.");
+        Intent intent = new Intent(this, AnnouncementsActivity.class);
+        startActivity(intent);
     }
 
     private void showLogoutFragment() {
@@ -917,7 +824,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         };
         writer.writeNext(title);
 
-        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) ObjectBox.get().boxFor(EntryDb.class).getAll();
+        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
         String u = getUserName();
 
         for (int i = 0; i < entries.size(); i++) {
@@ -946,9 +853,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     StageAndSexLocalization.getStageLocaleFromID(this, entryDb.getStage()),
                     entryDb.getTaxonSuggestion(),
                     getString(R.string.dataset),
-                    translateLicence(entryDb.getData_licence()),
-                    translateLicence(String.valueOf(entryDb.getImage_licence())),
-                    removeNullLong(entryDb.getAtlas_code())
+                    translateLicence(entryDb.getDataLicence()),
+                    translateLicence(String.valueOf(entryDb.getImageLicence())),
+                    removeNullLong(entryDb.getAtlasCode())
             };
             writer.writeNext(row);
         }
@@ -1007,7 +914,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void uploadRecords() {
-        if (ObjectBox.get().boxFor(EntryDb.class).getAll().size() != 0) {
+        if (App.get().getBoxStore().boxFor(EntryDb.class).getAll().size() != 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -1092,7 +999,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Get the data from GreenDao database
     private UserDb getLoggedUser() {
         // Get the user data from a GreenDao database
-        List<UserDb> userdata_list = ObjectBox.get().boxFor(UserDb.class).getAll();
+        List<UserDb> userdata_list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
         // If there is no user data we should logout the user
         if (userdata_list == null || userdata_list.isEmpty()) {
             return null;
@@ -1123,24 +1030,32 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return uploadMenu;
     }
 
-    public void setMenuIconVisibility() {
-        long numberOfItems = ObjectBox.get().boxFor(EntryDb.class).count();
+    public void updateMenuIconVisibility() {
+        long numberOfItems = App.get().getBoxStore().boxFor(EntryDb.class).count();
         Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
 
         if (numberOfItems == 0) {
             // Disable the upload button
-            if (getMenu() != null) {
-                uploadMenu.getItem(0).setEnabled(false);
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
-                uploadMenu.getItem(1).setVisible(false);
-            }
+            setMenuIconGone();
         } else {
-            // Disable the upload button
-            if (uploadMenu != null) {
-                uploadMenu.getItem(0).setEnabled(true);
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
-                uploadMenu.getItem(1).setVisible(true);
-            }
+            // Enable the upload button
+            setMenuIconVisible();
+        }
+    }
+
+    public void setMenuIconGone () {
+        if (getMenu() != null) {
+            uploadMenu.getItem(0).setEnabled(false);
+            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
+            uploadMenu.getItem(1).setVisible(false);
+        }
+    }
+
+    public void setMenuIconVisible () {
+        if (uploadMenu != null) {
+            uploadMenu.getItem(0).setEnabled(true);
+            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
+            uploadMenu.getItem(1).setVisible(true);
         }
     }
 

@@ -200,7 +200,6 @@
     <string name="database_bih">Босна и Херцеговина</string>
     <string name="database_dev_version">За програмере</string>
     <string name="URL_address">Адреса: </string>
-    <string name="no_image_on_storage">Изгледа да је слика обрисана са вашег уређаја! Погледајте последњи унос и обришите или замените слику пре него што наставите са слањем података.</string>
     <string name="notifications_disabled1">Важна напомена! Обавештења су онемогућена на каналу „biologer_taxa“. Биологер неће моћи да преузме списак врста са мреже, што је неопходно да би програм исправно уписивао називе врста уз ваше теренске налазе.</string>
     <string name="notifications_disabled2">Важна напомена! Обавештења су онемогућена на каналу „biologer_entries“. Биологер неће моћи да шаље ваше теренске налазе на сервер, што је једна од кључних могућности ове апликације.</string>
     <string name="notifications_disabled">Важна напомена! Обавештења су онемогућена! То значи да Биологер неће моћи да преузима списак врста, нити да шаље ваше налазе на сервер. За већину основних могућности овог програма морате да омогућите обавештења у подешавањима вашег Андроид уређаја.</string>
@@ -446,5 +445,18 @@
     <string name="first_unread_notification">Прво непрочитано</string>
     <string name="go_back">Назад у Биологер</string>
     <string name="hurray_you_just_read_all_the_notifications">Ура! Управо сте прочитали сва обавештења.</string>
+    <string name="failed_to_upload_photo">Не могу да пошаљем фотографију. Проверите да ли сте повезани на интернет или покушајте да отворите последњи налаз, обришете слику која прави проблем и поново пошаљете налазе.</string>
+    <string name="failed_to_upload_entry">Не могу да пошаљем налаз. Уколико сте повезани на стабилан интернет а проблем и даље постоји, контактирајте програмере који развијају апликацију.</string>
+    <string name="the_database_is_not_selected">Није изабрана база података.</string>
+    <string name="observation_types_not_downloaded">Типови налаза нису преузети, није сачувана ознака фотографисано.</string>
+    <string name="empty_view">Празан приказ</string>
+    <string name="announcements">Новости</string>
+    <string name="channel_announcements">Новости из Биологера</string>
+    <string name="channel_announcements_description">Приказује важне објаве и новости од Биологерових администратора.</string>
+    <string name="there_are">Имате</string>
+    <string name="there_are2">налаза са терена у вашем списку. Одјавом ћете трајно обрисати ове налазе. Да ли и даље желите да се одјавите?</string>
+    <string name="announcement">Новост</string>
+    <string name="created_on">Датум: </string>
+    <string name="by">Написао: </string>
 
 </resources>

@@ -1,7 +1,6 @@
 package org.biologer.biologer.adapters;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -12,32 +11,33 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.biologer.biologer.ObjectBox;
+import com.bumptech.glide.Glide;
+
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryRecycleView
-        extends RecyclerView.Adapter<EntryRecycleView.ViewHolder> {
+public class EntryAdapter
+        extends RecyclerView.Adapter<EntryAdapter.ViewHolder> {
     private final List<EntryDb> myEntries;
     private int position;
-    private long id;
     private static final String TAG = "Biologer.EntryAdapter";
+    View view;
 
-    public long getId() {
-        id = myEntries.get(position).getId();
-        return id;
+    public EntryAdapter(ArrayList<EntryDb> entries) {
+        myEntries = entries;
     }
 
     public static class ViewHolder
@@ -52,9 +52,11 @@ public class EntryRecycleView
             super(view);
 
             // Define click listener for the ViewHolder's View
-            imageEntry = (ImageView) view.findViewById(R.id.entry_image);
-            textTaxonName = (TextView) view.findViewById(R.id.entry_taxon_name);
-            textTaxonStage = (TextView) view.findViewById(R.id.entry_stage);
+            imageEntry = view.findViewById(R.id.entry_image);
+            textTaxonName = view.findViewById(R.id.entry_taxon_name);
+            textTaxonStage = view.findViewById(R.id.entry_stage);
+
+            // Add the entry items menu
             view.setOnCreateContextMenuListener(this);
         }
 
@@ -68,16 +70,12 @@ public class EntryRecycleView
         }
     }
 
-    public EntryRecycleView(ArrayList<EntryDb> entries) {
-        myEntries = entries;
-    }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
 
         // Create a new view, which defines the UI of the list item
-        View view = LayoutInflater.from(viewGroup.getContext())
+        view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.entries_list, viewGroup, false);
 
         return new ViewHolder(view);
@@ -92,25 +90,23 @@ public class EntryRecycleView
         // Get the taxon name
         TextView taxonName = viewHolder.textTaxonName;
         String taxon_name = entry.getTaxonSuggestion();
-        if (taxon_name != null) {
-            taxonName.setText(taxon_name);
-        } else {
-            taxonName.setText("");
-        }
+        taxonName.setText(Objects.requireNonNullElse(taxon_name, ""));
 
         // Get the taxon stage
         TextView taxonStage = viewHolder.textTaxonStage;
         Long stage_id = entry.getStage();
         if (stage_id != null) {
-            Box<StageDb> stageBox = ObjectBox.get().boxFor(StageDb.class);
-
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
             Query<StageDb> query = stageBox
-                    .query(StageDb_.stageId.equal(stage_id))
+                    .query(StageDb_.id.equal(stage_id))
                     .build();
-            List<StageDb> results = query.find();
-            String s = results.get(0).getName();
+            StageDb stage = query.findFirst();
             query.close();
-            taxonStage.setText(StageAndSexLocalization.getStageLocale(taxonStage.getContext(), s));
+            if (stage != null) {
+                taxonStage.setText(StageAndSexLocalization.getStageLocale(taxonStage.getContext(), stage.getName()));
+            } else {
+                taxonStage.setText("");
+            }
         } else {
             taxonStage.setText("");
         }
@@ -128,26 +124,22 @@ public class EntryRecycleView
             useImage = entry.getSlika1();
         }
 
-        if (useImage != null) {
-            try {
-                Bitmap bitmap = loadBitmap(useImage);
-                entryImage.setImageBitmap(bitmap);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        if (useImage == null) {
+            Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.mipmap.ic_kornjaca_kocka);
+            Glide.with(view.getContext())
+                    .load(defaultImage)
+                    .into(entryImage);
+        } else {
+            Glide.with(view.getContext())
+                    .load(useImage)
+                    .override(40, 40)
+                    .into(entryImage);
         }
 
         viewHolder.itemView.setOnLongClickListener(v -> {
             Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
             return false;
         });
-    }
-
-    public static Bitmap loadBitmap(String url) throws IOException {
-        Bitmap bitmap;
-        URL newurl = new URL(url);
-        bitmap = BitmapFactory.decodeStream(newurl.openConnection().getInputStream());
-        return bitmap;
     }
 
     @Override
@@ -162,13 +154,11 @@ public class EntryRecycleView
     public void setPosition(int position) {
         this.position = position;
     }
-/*
+
     @Override
     public void onViewRecycled(ViewHolder viewHolder) {
         viewHolder.itemView.setOnLongClickListener(null);
         super.onViewRecycled(viewHolder);
     }
-
- */
 
 }

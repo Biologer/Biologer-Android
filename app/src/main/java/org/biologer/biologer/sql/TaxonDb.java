@@ -12,7 +12,7 @@ public class TaxonDb {
     @Id(assignable = true)
     long id;
     private long parentId;
-    private final String latinName;
+    private String latinName;
     private final String rank;
     private final long rankLevel;
     private final String speciesAuthor;
@@ -20,9 +20,10 @@ public class TaxonDb {
     private boolean useAtlasCode;
     private final String ancestorNames;
     private String groups;
+    private String stages;
 
     public TaxonDb(long id, long parentId, String latinName, String rank, long rankLevel, String speciesAuthor,
-                   boolean restricted, boolean useAtlasCode, String ancestorNames, String groups) {
+                   boolean restricted, boolean useAtlasCode, String ancestorNames, String groups, String stages) {
         this.id = id;
         this.parentId = parentId;
         this.latinName = latinName;
@@ -33,6 +34,7 @@ public class TaxonDb {
         this.useAtlasCode = useAtlasCode;
         this.ancestorNames = ancestorNames;
         this.groups = groups;
+        this.stages = stages;
     }
 
     public long getParentId() {
@@ -45,6 +47,10 @@ public class TaxonDb {
 
     public String getLatinName() {
         return latinName;
+    }
+
+    public void setLatinName(String latinName) {
+        this.latinName = latinName;
     }
 
     public String getRank() {
@@ -89,5 +95,13 @@ public class TaxonDb {
 
     public void setUseAtlasCode(boolean useAtlasCode) {
         this.useAtlasCode = useAtlasCode;
+    }
+
+    public String getStages() {
+        return stages;
+    }
+
+    public void setStages(String stages) {
+        this.stages = stages;
     }
 }

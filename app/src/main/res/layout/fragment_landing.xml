@@ -12,8 +12,6 @@
         android:background="@color/fragment_background">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycled_view_entries"
-            app:stackFromEnd="true"
-            app:reverseLayout="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </androidx.recyclerview.widget.RecyclerView>
@@ -29,6 +27,7 @@
         android:layout_marginBottom="0dp"
         android:layout_marginEnd="0dp"
         android:clickable="true"
+        android:contentDescription="@string/empty_view"
         app:backgroundTint="@color/transparent"
         android:focusable="true"/>
 

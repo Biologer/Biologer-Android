@@ -27,6 +27,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.ObjectBox;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -279,7 +280,7 @@ public class RegisterFragment3 extends Fragment {
         String full_name =  ((LoginActivity) requireActivity()).register_name + " " +  ((LoginActivity) requireActivity()).register_surname;
         String email = ((LoginActivity) requireActivity()).et_username.getText().toString();
         UserDb userData = new UserDb(0, full_name, email, getDataLicense(), getImageLicense());
-        ObjectBox.get().boxFor(UserDb.class).put(userData);
+        App.get().getBoxStore().boxFor(UserDb.class).put(userData);
         displaySuccess();
     }
 

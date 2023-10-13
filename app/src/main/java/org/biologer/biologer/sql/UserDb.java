@@ -13,15 +13,15 @@ public class UserDb {
     long id;
     private String username;
     private String email;
-    private int data_license;
-    private int image_license;
+    private int dataLicense;
+    private int imageLicense;
 
-    public UserDb(long id, String username, String email, int data_license, int image_license) {
+    public UserDb(long id, String username, String email, int dataLicense, int imageLicense) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.data_license = data_license;
-        this.image_license = image_license;
+        this.dataLicense = dataLicense;
+        this.imageLicense = imageLicense;
     }
 
     public long getId() {
@@ -42,17 +42,17 @@ public class UserDb {
     public void setEmail(String email) {
         this.email = email;
     }
-    public int getData_license() {
-        return this.data_license;
+    public int getDataLicense() {
+        return this.dataLicense;
     }
-    public void setData_license(int data_license) {
-        this.data_license = data_license;
+    public void setDataLicense(int data_license) {
+        this.dataLicense = data_license;
     }
-    public int getImage_license() {
-        return this.image_license;
+    public int getImageLicense() {
+        return this.imageLicense;
     }
-    public void setImage_license(int image_license) {
-        this.image_license = image_license;
+    public void setImageLicense(int image_license) {
+        this.imageLicense = image_license;
     }
 
 }
