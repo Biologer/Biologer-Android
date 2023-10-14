@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -157,6 +158,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 }
             }
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Log.i(TAG, "Back button is pressed!");
+                backPressed();
+            }
+        });
     }
 
     @Override
@@ -189,23 +198,17 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         super.onStop();
     }
 
-    @Override
-    public void onBackPressed() {
-
+    private void backPressed() {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-            return;
         }
 
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
             Log.d(TAG, "Back button pressed, while LandingFragment is active.");
             getSupportFragmentManager().popBackStack();
-            super.onBackPressed();
             finishAffinity();
-            return;
         }
 
-        super.onBackPressed();
     }
 
     @Override
@@ -717,10 +720,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (id == R.id.nav_logout) {
             showLogoutFragment();
         }
-        if(id == R.id.nav_about) {
+        if (id == R.id.nav_about) {
             showAboutFragment();
         }
-        if(id == R.id.nav_announcements) {
+        if (id == R.id.nav_notifications) {
+            showNotificationsActivity();
+        }
+        if (id == R.id.nav_announcements) {
             showAnnouncementsActivity();
         }
 
@@ -749,6 +755,12 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void showAnnouncementsActivity() {
         Log.d(TAG, "User clicked announcements icon.");
         Intent intent = new Intent(this, AnnouncementsActivity.class);
+        startActivity(intent);
+    }
+
+    private void showNotificationsActivity() {
+        Log.d(TAG, "User clicked notification icon.");
+        Intent intent = new Intent(this, NotificationsActivity.class);
         startActivity(intent);
     }
 

@@ -27,6 +27,10 @@
                 android:title="@string/announcements"
                 android:icon="@drawable/ic_announcements"/>
             <item
+                android:id="@+id/nav_notifications"
+                android:title="@string/notifications"
+                android:icon="@drawable/ic_notifications"/>
+            <item
                 android:id="@+id/nav_help"
                 android:title="@string/help"
                 android:icon="@drawable/ic_help"/>

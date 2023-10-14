@@ -1,6 +1,7 @@
 package org.biologer.biologer.adapters;
 
 import android.graphics.Typeface;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,7 +60,7 @@ public class AnnouncementsAdapter
         TextView textAnnouncementTitle = viewHolder.textAnnouncementTitle;
         textAnnouncementTitle.setText(announcement.getTitle());
         TextView textAnnouncementText = viewHolder.textAnnouncementText;
-        textAnnouncementText.setText(announcement.getMessage());
+        textAnnouncementText.setText(Html.fromHtml(announcement.getMessage()));
 
         if (!announcement.isRead()) {
             textAnnouncementTitle.setTypeface(null, Typeface.BOLD);

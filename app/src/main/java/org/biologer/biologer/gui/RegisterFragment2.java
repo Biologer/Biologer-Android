@@ -144,7 +144,7 @@ public class RegisterFragment2 extends Fragment {
                             if (isValidEmail(editTextEmail.getText().toString())) {
                                 emailLayout.setError(null);
                             } else {
-                                emailLayout.setError(getString(R.string.invalid_email));
+                                emailLayout.setError(activity.getString(R.string.invalid_email));
                             }
                             enableButton();
                         };

@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/fragment_background">
+    <include
+        layout="@layout/toolbar_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <LinearLayout
         android:layout_height="match_parent"
         android:layout_width="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         android:orientation="vertical">
 
         <TextView
@@ -14,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="12dp"
             android:layout_marginStart="6dp"
             android:layout_marginEnd="6dp"
@@ -108,16 +114,6 @@
             android:visibility="gone"
             android:text="@string/hurray_you_just_read_all_the_notifications">
         </TextView>
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="12dp"
-            android:id="@+id/notification_view_back_button"
-            android:visibility="gone"
-            android:text="@string/go_back">
-        </com.google.android.material.button.MaterialButton>
 
     </LinearLayout>
 
