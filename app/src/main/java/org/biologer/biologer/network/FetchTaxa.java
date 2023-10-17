@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -35,6 +36,7 @@ import org.biologer.biologer.sql.TaxonGroupsDb_;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -45,7 +47,6 @@ import retrofit2.Response;
 public class FetchTaxa extends Service {
 
     private static final String TAG = "Biologer.FetchTaxa";
-
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_START_NEW = "ACTION_START_NEW";
     public static final String ACTION_PAUSE = "ACTION_PAUSE";
@@ -55,18 +56,13 @@ public class FetchTaxa extends Service {
     private String stop_fetching;
     private static FetchTaxa instance = null;
     static final String TASK_COMPLETED = "org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED";
-    int retry_number = 1;
     boolean fetch_ungrouped = false;
     ArrayList<String> taxa_groups = new ArrayList<>();
-
-
     LocalBroadcastManager broadcaster;
-
     private int totalPages = 0;
     private static int updated_at = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
     private static int current_page = Integer.parseInt(SettingsManager.getTaxaLastPageFetched());
     private static int progressStatus = 0;
-
     String system_time;
 
     @Override
@@ -191,23 +187,24 @@ public class FetchTaxa extends Service {
                             TaxaResponse taxaResponse = response.body();
                             assert taxaResponse != null;
                             saveFetchedPage(taxaResponse);
+                        } else if (response.code() == 429) {
+                            String retryAfter = response.headers().get("retry-after");
+                            long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                            Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                            // Add handler to delay fetching
+                            Handler handler = new Handler();
+                            Runnable runnable = () -> fetchTaxa();
+                            handler.postDelayed(runnable, sec * 1000);
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-
-                        if (retry_number == 4) {
-                            sendResult("failed");
-                            updateNotification(getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry), progressStatus);
-                            stopSelf();
-                            Log.d(TAG, "Fetching taxa failed!");
-                        } else {
-                            Log.d(TAG, "Starting retry loop No. " + retry_number + ".");
-                            fetchTaxa();
-                            retry_number++;
-                        }
+                        sendResult("failed");
+                        updateNotification(getString(R.string.notify_title_taxa_failed), getString(R.string.notify_desc_taxa_failed), getString(R.string.retry), progressStatus);
+                        stopSelf();
+                        Log.d(TAG, "Fetching taxa failed!");
                     }
                 });
         }
@@ -283,11 +280,9 @@ public class FetchTaxa extends Service {
                             " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
                 App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
-                //App.get().getDaoSession().getTaxaTranslationDataDao().insertOrReplaceInTx(final_translations);
             }
         }
         App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
-        //App.get().getDaoSession().getTaxonDataDao().insertOrReplaceInTx(final_taxa);
 
         // If we just finished fetching taxa data for the last page, we can stop showing
         // loader. Otherwise we continue fetching taxa from the API on the next page.

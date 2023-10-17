@@ -158,7 +158,8 @@ public class NotificationsAdapter
                     if (response.body() != null) {
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             FieldObservationDataPhotos photo = response.body().getData()[0].getPhotos().get(0);
-                            String url = SettingsManager.getDatabaseName() + "/storage/" + photo.getPath();
+                            //String url = SettingsManager.getDatabaseName() + "/storage/" + photo.getPath();
+                            String url = photo.getUrl();
                             Log.d(TAG, "Image url is: " + url);
 
                             Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
