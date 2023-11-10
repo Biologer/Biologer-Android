@@ -87,14 +87,6 @@
         </activity>
 
         <activity
-            android:name=".gui.AnnouncementsActivity"
-            android:label="@string/announcements">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.gui.AnnouncementsActivity" />
-        </activity>
-
-        <activity
             android:name=".gui.EntryActivity"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <meta-data
@@ -110,8 +102,8 @@
         </activity>
 
         <activity android:name=".gui.IntroActivity" />
+        <activity android:name=".gui.AnnouncementActivity" />
         <activity android:name=".gui.NotificationActivity" />
-        <activity android:name=".gui.AnnouncementsFragment" />
         <activity android:name=".gui.ViewImage" />
 
         <service

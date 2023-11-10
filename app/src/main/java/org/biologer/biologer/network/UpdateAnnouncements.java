@@ -18,7 +18,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.AnnouncementsActivity;
+import org.biologer.biologer.gui.AnnouncementsFragment;
 import org.biologer.biologer.network.json.AnnouncementsData;
 import org.biologer.biologer.network.json.AnnouncementsResponse;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
@@ -129,7 +129,7 @@ public class UpdateAnnouncements extends Service {
                     if (announcementsDbQuery.count() >= 1) {
                         AnnouncementsDb announcement = announcementsDbQuery.findFirst();
                         if (announcement != null) {
-                            Intent intent = new Intent(getApplicationContext(), AnnouncementsActivity.class);
+                            Intent intent = new Intent(getApplicationContext(), AnnouncementsFragment.class);
                             PendingIntent pendingIntent;
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                                 pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);

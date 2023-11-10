@@ -163,8 +163,6 @@ public class NotificationActivity extends AppCompatActivity {
                 }
             }
         });
-
-
     }
 
     private String getFormattedMessage(UnreadNotificationsDb unreadNotification) {

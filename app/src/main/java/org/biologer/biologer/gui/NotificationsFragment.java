@@ -23,7 +23,6 @@ import java.util.List;
 public class NotificationsFragment extends Fragment {
 
     private static final String TAG = "Biologer.NotifyFragment";
-
     RecyclerView recyclerView;
     List<UnreadNotificationsDb> notifications;
     NotificationsAdapter notificationsAdapter;
@@ -35,7 +34,6 @@ public class NotificationsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_notifications, container, false);
 
         notifications = getNotifications();
-
         recyclerView = rootView.findViewById(R.id.recycled_view_notifications);
         updateRecycleView(notifications);
 
