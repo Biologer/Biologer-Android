@@ -207,7 +207,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Log.d(TAG, "Back button pressed, while LandingFragment is active.");
             getSupportFragmentManager().popBackStack();
             finishAffinity();
+        } else {
+            Log.d(TAG, "Back button pressed, while there are many fragment open.");
+            getSupportFragmentManager().popBackStack();
         }
+
 
     }
 
@@ -327,15 +331,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     uploadRecords();
 
                     // Update announcements
-                    //long current_time = System.currentTimeMillis() / 1000; // in seconds
-                    //long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
-                    //if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
+                    long current_time = System.currentTimeMillis() / 1000; // in seconds
+                    long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
+                    if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
                         Log.d(TAG, "Announcements should be updated since 10 hours elapsed.");
                         final Intent getAnnouncements = new Intent(LandingActivity.this, UpdateAnnouncements.class);
                         getAnnouncements.putExtra("show_notification", true);
                         startService(getAnnouncements);
-                    //    SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
-                    //}
+                        SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
+                    }
 
                     // Update notifications
                     final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
@@ -760,8 +764,11 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void showNotificationsActivity() {
         Log.d(TAG, "User clicked notification icon.");
-        Intent intent = new Intent(this, NotificationsActivity.class);
-        startActivity(intent);
+        Fragment notificationsFragment = new NotificationsFragment();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.add(R.id.content_frame, notificationsFragment);
+        fragmentTransaction.addToBackStack("Notifications fragment");
+        fragmentTransaction.commit();
     }
 
     private void showLogoutFragment() {

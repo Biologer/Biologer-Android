@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -32,10 +33,13 @@ public class ViewImage extends AppCompatActivity {
 
         // Get the image location from previous activity
         Intent intent = getIntent();
-        String image = intent.getStringExtra("image");
+        String image_url = intent.getStringExtra("image");
 
         TouchImageView imageView = findViewById(R.id.imageViewZoom);
-        imageView.setImageURI(Uri.parse(image));
+        if (image_url != null) {
+            imageView.setImageURI(Uri.parse(image_url));
+        }
+
     }
 
     // Process running after clicking the toolbar buttons (back and save)

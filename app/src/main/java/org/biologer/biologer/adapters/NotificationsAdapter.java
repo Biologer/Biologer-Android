@@ -3,6 +3,7 @@ package org.biologer.biologer.adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +25,7 @@ import org.biologer.biologer.sql.UnreadNotificationsDb;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -33,7 +35,7 @@ import retrofit2.Response;
 public class NotificationsAdapter
         extends RecyclerView.Adapter<NotificationsAdapter.ViewHolder> {
     private final List<UnreadNotificationsDb> myNotifications;
-    private static final String TAG = "Biologer.NotificationA";
+    private static final String TAG = "Biologer.NotifyAdapter";
     Context context;
 
     public NotificationsAdapter(List<UnreadNotificationsDb> myNotifications) {
@@ -148,7 +150,7 @@ public class NotificationsAdapter
         return author;
     }
 
-    private void setPhoto(int fieldObservationID,ImageView imageView) {
+    private void setPhoto(int fieldObservationID, ImageView imageView) {
         // Get the data from Field observation and display them
         Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
         fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
@@ -158,7 +160,6 @@ public class NotificationsAdapter
                     if (response.body() != null) {
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             FieldObservationDataPhotos photo = response.body().getData()[0].getPhotos().get(0);
-                            //String url = SettingsManager.getDatabaseName() + "/storage/" + photo.getPath();
                             String url = photo.getUrl();
                             Log.d(TAG, "Image url is: " + url);
 
@@ -168,22 +169,25 @@ public class NotificationsAdapter
                                 public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                                     if (response.isSuccessful()) {
                                         Log.d(TAG, "Photo successfully downloaded.");
-                                        if (response.body() != null) {
-                                            ResponseBody responseBody = response.body();
-                                            Log.d(TAG, "Image response obtained.");
-                                            InputStream inputStream = responseBody.byteStream();
-                                            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                                            // Crop the image to look a bit better
-                                            int w = bitmap.getWidth();
-                                            int h = bitmap.getHeight();
-                                            if (w < h) {
-                                                int size = w - 200;
-                                                int rest_to_crop = (h - size) / 2;
-                                                imageView.setImageBitmap(Bitmap.createBitmap(bitmap, 100, rest_to_crop, size, size));
+                                        try (ResponseBody responseBody = response.body()) {
+                                            if (responseBody != null) {
+                                                Log.d(TAG, "Image response obtained.");
+                                                InputStream inputStream = responseBody.byteStream();
+                                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                                // Crop the image to square shape to look a bit better
+                                                int w = bitmap.getWidth();
+                                                int h = bitmap.getHeight();
+                                                if (w < h) {
+                                                    int size = w - 200;
+                                                    int rest_to_crop = (h - size) / 2;
+                                                    imageView.setImageBitmap(Bitmap.createBitmap(bitmap, 100, rest_to_crop, size, size));
+                                                } else {
+                                                    int size = h - 200;
+                                                    int rest_to_crop = (w - size) / 2;
+                                                    imageView.setImageBitmap(Bitmap.createBitmap(bitmap, rest_to_crop, 100, size, size));
+                                                }
                                             } else {
-                                                int size = h - 200;
-                                                int rest_to_crop = (w - size) / 2;
-                                                imageView.setImageBitmap(Bitmap.createBitmap(bitmap, rest_to_crop, 100, size, size));
+                                                Log.e(TAG, "Server returned null as the image response.");
                                             }
                                         }
                                     }
@@ -200,7 +204,16 @@ public class NotificationsAdapter
                     } else {
                         Log.d(TAG, "Response body is null!");
                     }
-                } else {
+                } else if (response.code() == 429) {
+                    String retryAfter = response.headers().get("retry-after");
+                    long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                    Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                    // Add handler to delay fetching
+                    Handler handler = new Handler();
+                    Runnable runnable = () -> setPhoto(fieldObservationID, imageView);
+                    handler.postDelayed(runnable, sec * 1000);
+                }
+                else {
                     Log.d(TAG, "The response is not successful.");
                 }
             }
@@ -211,7 +224,5 @@ public class NotificationsAdapter
                 t.printStackTrace();
             }
         });
-
     }
-
 }

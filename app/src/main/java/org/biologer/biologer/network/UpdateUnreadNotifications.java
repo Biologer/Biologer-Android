@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -14,11 +15,12 @@ import androidx.core.app.NotificationManagerCompat;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.AnnouncementsActivity;
-import org.biologer.biologer.gui.NotificationsActivity;
+import org.biologer.biologer.gui.NotificationsFragment;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
+
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -83,23 +85,7 @@ public class UpdateUnreadNotifications extends Service {
                                     if (p == 0) {
                                         saveNotificationsSQL(response.body());
                                     } else {
-                                        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(p + 1);
-                                        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
-
-                                            @Override
-                                            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
-                                                if (response.isSuccessful()) {
-                                                    if (response.body() != null) {
-                                                        saveNotificationsSQL(response.body());
-                                                    }
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
-                                                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-                                            }
-                                        });
+                                        getAndSaveNotificationsSQL(p + 1);
                                     }
                                 }
                             } else {
@@ -111,6 +97,34 @@ public class UpdateUnreadNotifications extends Service {
                         }
                     }
                 }
+            }
+
+            private void getAndSaveNotificationsSQL(int page) {
+                Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(page);
+                unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+
+                    @Override
+                    public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                saveNotificationsSQL(response.body());
+                            }
+                        } else if (response.code() == 429) {
+                            String retryAfter = response.headers().get("retry-after");
+                            long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                            Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                            // Add handler to delay fetching
+                            Handler handler = new Handler();
+                            Runnable runnable = () -> getAndSaveNotificationsSQL(page);
+                            handler.postDelayed(runnable, sec * 1000);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
+                        Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
+                    }
+                });
             }
 
             private void saveNotificationsSQL(UnreadNotificationsResponse response) {
@@ -150,7 +164,7 @@ public class UpdateUnreadNotifications extends Service {
         } else {
             text = size + " " + getString(R.string.new_notifications_text);
         }
-        Intent notificationIntent = new Intent(this, NotificationsActivity.class);
+        Intent notificationIntent = new Intent(this, NotificationsFragment.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")

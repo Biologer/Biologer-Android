@@ -469,5 +469,6 @@
     <string name="mark_all_notifications_read">This action will mark all the notifications as read including the ones on the web. Do you want to continue anyway?</string>
     <string name="new_notification_text">of your field observations is changed online. See what’s new!</string>
     <string name="new_notifications_text">of your field observations are changed online. See what’s new!</string>
+    <string name="notification">Notification</string>
 
 </resources>
