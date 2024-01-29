@@ -104,6 +104,7 @@
         <activity android:name=".gui.IntroActivity" />
         <activity android:name=".gui.AnnouncementActivity" />
         <activity android:name=".gui.NotificationActivity" />
+        <activity android:name=".gui.NotificationsActivity" />
         <activity android:name=".gui.ViewImage" />
 
         <service

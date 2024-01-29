@@ -470,5 +470,9 @@
     <string name="new_notification_text">of your field observations is changed online. See what’s new!</string>
     <string name="new_notifications_text">of your field observations are changed online. See what’s new!</string>
     <string name="notification">Notification</string>
+    <string name="observation_date">Observed on:</string>
+    <string name="notification_location">Location:</string>
+    <string name="observation_id">Observation ID:</string>
+    <string name="notification_project_name">Project name:</string>
 
 </resources>

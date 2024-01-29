@@ -728,7 +728,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             showAboutFragment();
         }
         if (id == R.id.nav_notifications) {
-            showNotificationsFragment();
+            startActivity(new Intent(LandingActivity.this, NotificationsActivity.class));
         }
         if (id == R.id.nav_announcements) {
             showAnnouncementsFragment();
@@ -762,15 +762,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.content_frame, announcementsFragment);
         fragmentTransaction.addToBackStack("Announcements fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void showNotificationsFragment() {
-        Log.d(TAG, "User clicked notification icon.");
-        Fragment notificationsFragment = new NotificationsFragment();
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, notificationsFragment);
-        fragmentTransaction.addToBackStack("Notifications fragment");
         fragmentTransaction.commit();
     }
 

@@ -79,7 +79,9 @@ public class NotificationsAdapter
         textNotifications.setText(Html.fromHtml(getFormattedMessage(notification)));
 
         ImageView imageView = viewHolder.observationPhoto;
-        setPhoto(notification.getFieldObservationId(), imageView);
+        imageView.setImageDrawable(null); // Clear the previous image
+        imageView.setImageResource(R.mipmap.ic_kornjaca); // Set the icon before the real image is loaded
+        setPhoto(notification.getFieldObservationId(), imageView); // Download and display image
     }
 
     @Override

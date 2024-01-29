@@ -23,6 +23,17 @@ public class DateHelper {
         return date;
     }
 
+    public static Date getDate(String date_string) {
+        DateFormat dateFormat = new SimpleDateFormat("d-M-yyyy", Locale.getDefault());
+        Date date;
+        try {
+            date = dateFormat.parse(date_string);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return date;
+    }
+
     public static String getLocalizedDate(Date date, Context context) {
         DateFormat dateFormatLocalized = android.text.format.DateFormat.getLongDateFormat(context);
         String date_string;

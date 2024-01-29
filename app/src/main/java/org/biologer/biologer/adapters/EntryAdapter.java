@@ -115,6 +115,7 @@ public class EntryAdapter
         }
 
         ImageView entryImage = viewHolder.imageEntry;
+        entryImage.setImageDrawable(null); // Clear the previous image
         // Get the image
         String useImage = null;
         if (entry.getSlika3() != null) {

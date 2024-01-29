@@ -64,6 +64,7 @@ public class LandingFragment extends Fragment {
         recyclerView = rootView.findViewById(R.id.recycled_view_entries);
         entriesAdapter = new EntryAdapter(entries);
         recyclerView.setAdapter(entriesAdapter);
+        recyclerView.setClickable(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setItemViewCacheSize(20);
         recyclerView.setDrawingCacheEnabled(true);
@@ -72,6 +73,7 @@ public class LandingFragment extends Fragment {
                 new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
+                        recyclerView.setClickable(false);
                         EntryDb entryDb = entries.get(position);
                         long l = entryDb.getId();
                         Activity activity13 = getActivity();

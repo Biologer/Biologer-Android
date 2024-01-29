@@ -1,6 +1,5 @@
 package org.biologer.biologer.gui;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -35,8 +34,8 @@ import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 import io.objectbox.Box;
@@ -47,14 +46,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class NotificationActivity extends AppCompatActivity {
-    private static final String TAG = "Biologer.NotifyActivity";
+    private static final String TAG = "Biologer.NotifActivity";
+    String downloaded;
     ImageView imageView1, imageView2, imageView3;
     boolean image1, image2, image3;
     FrameLayout frameLayout1,frameLayout2, frameLayout3;
     LinearLayout linearLayoutZoom;
     TouchImageView touchImageView;
     MaterialButton buttonReadAll, buttonReadNext;
-    TextView textView, textViewAllRead;
+    TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject;
+    int indexId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +76,8 @@ public class NotificationActivity extends AppCompatActivity {
         long notificationId;
         Bundle bundle = getIntent().getExtras();
         notificationId = Objects.requireNonNull(bundle).getLong("notification_id");
-        Log.d(TAG, "Displaying notification with index ID: " + notificationId + ".");
+        indexId = Objects.requireNonNull(bundle).getInt("index_id");
+        Log.d(TAG, "Displaying notification with ID: " + notificationId + ".");
 
         // Get the notification from its ID
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
@@ -88,8 +90,12 @@ public class NotificationActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.notification_text);
         textView.setText(Html.fromHtml(getFormattedMessage(notification)));
-
+        textViewID = findViewById(R.id.notification_text_id);
+        textViewDate = findViewById(R.id.notification_text_date);
+        textViewLocation = findViewById(R.id.notification_text_location);
+        textViewProject = findViewById(R.id.notification_text_project);
         textViewAllRead = findViewById(R.id.notification_all_read_text);
+        downloaded = "no";
 
         frameLayout1 = findViewById(R.id.notification_view_imageFrame1);
         imageView1 = findViewById(R.id.notification_view_image1);
@@ -128,11 +134,7 @@ public class NotificationActivity extends AppCompatActivity {
         buttonReadNext = findViewById(R.id.notification_view_read_next_button);
         buttonReadNext.setOnClickListener(v -> {
             buttonReadNext.setEnabled(false);
-            if (is_last) {
-                getFirstUnreadNotification();
-            } else {
-                getNextUnreadNotification(notification.getId());
-            }
+            openNextNotification();
         });
 
         if (is_last) {
@@ -149,7 +151,7 @@ public class NotificationActivity extends AppCompatActivity {
             textViewAllRead.setVisibility(View.VISIBLE);
         }
 
-        getPhotosApi((int) notification.getId(), notification.getRealId(), notification.getFieldObservationId());
+        getObservationApi((int) notification.getId(), notification.getRealId(), notification.getFieldObservationId());
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -240,44 +242,7 @@ public class NotificationActivity extends AppCompatActivity {
         });
     }
 
-    @SuppressLint("MissingPermission")
-    private void getFirstUnreadNotification() {
-        // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
-        if (!unreadNotificationsDbBox.isEmpty()) {
-            UnreadNotificationsDb unreadNotification = unreadNotificationsDbBox.getAll().get(0);
-            // Display the notification in the new NotificationView activity
-            long first_notification_id = unreadNotification.getId();
-            Log.d(TAG, "Opening the first notification with ID " + first_notification_id + ".");
-            Intent intent = new Intent(this, NotificationActivity.class);
-            intent.putExtra("notification_id", first_notification_id);
-            startActivity(intent);
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private void getNextUnreadNotification(long previous_notification_id) {
-        // Get the next unread notification from the ObjectBox
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.greater(previous_notification_id))
-                .build();
-        List<UnreadNotificationsDb> unreadNotification = query.find();
-        query.close();
-
-        // Display the notification in the new Fragment
-        if (!unreadNotification.isEmpty()) {
-            long next_notification_id = unreadNotification.get(0).getId();
-            Log.d(TAG, "Opening the next notification with ID " + next_notification_id + ".");
-            Intent intent = new Intent(this, NotificationActivity.class);
-            intent.putExtra("notification_id", next_notification_id);
-            startActivity(intent);
-        } else {
-            Log.d(TAG, "This is the last notification, you could only start from the first one!");
-        }
-    }
-
-    private void getPhotosApi(int notificationID, String realNotificationID, int fieldObservationID) {
+    private void getObservationApi(int notificationID, String realNotificationID, int fieldObservationID) {
         // Get the data from Field observation (i.e. images) and display them
         Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
         fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
@@ -289,7 +254,46 @@ public class NotificationActivity extends AppCompatActivity {
                         //  1. if there are images and all of them are downloaded or
                         //  2. if there are no images
                         setNotificationAsRead(notificationID, realNotificationID);
+                        downloaded = "yes";
 
+                        // Show field observation ID
+                        String idText = getString(R.string.observation_id) + " " + fieldObservationID;
+                        textViewID.setText(idText);
+
+                        // Add observation date
+                        String date = response.body().getData()[0].getDay() + "-" +
+                                response.body().getData()[0].getMonth() + "-" +
+                                response.body().getData()[0].getYear();
+                        Date dateReal = DateHelper.getDate(date);
+                        String dateText = getString(R.string.observation_date) + " " +
+                                DateHelper.getLocalizedDate(dateReal, NotificationActivity.this);
+                        textViewDate.setText(dateText);
+
+                         // Add the place of observation
+                         String location = response.body().getData()[0].getLocation();
+                         if (location != null) {
+                             if (!location.equals("")) {
+                                 String locationText = getString(R.string.notification_location) + " " + location;
+                                 textViewLocation.setText(locationText);
+                             }
+                         } else {
+                             DecimalFormat f = new DecimalFormat("##.0000");
+                             String coordinates = f.format(response.body().getData()[0].getLongitude()) + "° E; " +
+                                     f.format(response.body().getData()[0].getLatitude()) + "° N";
+                             String coordinatesText = getString(R.string.notification_location) + " " + coordinates;
+                             textViewLocation.setText(coordinatesText);
+                         }
+
+                         // Get the name of the project if it exist
+                        String project = response.body().getData()[0].getProject();
+                        if (project != null) {
+                            if (!project.equals("")) {
+                                String projectText = getString(R.string.notification_project_name) + " " +  project;
+                                textViewProject.setText(projectText);
+                            }
+                        }
+
+                        // Finally get the photos
                         if (!response.body().getData()[0].getPhotos().isEmpty()) {
                             int number_of_photos = response.body().getData()[0].getPhotos().size();
                             for (int i = 0; i < number_of_photos; i++) {
@@ -431,10 +435,23 @@ public class NotificationActivity extends AppCompatActivity {
         Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
     }
 
+    private void openNextNotification() {
+        Intent intent = new Intent();
+        intent.putExtra("open_next", true);
+        intent.putExtra("downloaded", downloaded);
+        intent.putExtra("index_id", indexId);
+        setResult(2, intent);
+        finish();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
+            Intent intent = new Intent();
+            intent.putExtra("downloaded", downloaded);
+            intent.putExtra("index_id", indexId);
+            setResult(3, intent);
             this.getOnBackPressedDispatcher().onBackPressed();
         }
         return true;

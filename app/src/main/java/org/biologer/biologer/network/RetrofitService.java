@@ -119,12 +119,12 @@ public interface RetrofitService {
             @Query("page") long page);
 
     @Headers({"Accept: application/json"})
-    @POST ("/api/my/read-notifications/batch")
+    @POST("/api/my/read-notifications/batch")
     Call<ResponseBody> setNotificationAsRead(
             @Query("notifications_ids[]") String[] notifications);
 
     @Headers({"Accept: application/json"})
-    @POST ("/api/my/read-notifications/batch")
+    @POST("/api/my/read-notifications/batch")
     Call<ResponseBody> setAllNotificationAsRead(
             @Query("all[]") boolean read_all);
 
@@ -133,7 +133,7 @@ public interface RetrofitService {
     Call<AnnouncementsResponse> getAnnouncements();
 
     @Headers({"Accept: application/json"})
-    @POST ("/api/read-announcements")
+    @POST("/api/read-announcements")
     Call<ResponseBody> setAnnouncementAsRead(
             @Query("announcement_id") long announcement_id);
 
