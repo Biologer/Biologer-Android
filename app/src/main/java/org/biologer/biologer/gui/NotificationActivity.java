@@ -161,6 +161,10 @@ public class NotificationActivity extends AppCompatActivity {
                     Log.i(TAG, "Image is currently showing in the touch image view.");
                     showUiElements();
                 } else {
+                    Intent intent = new Intent();
+                    intent.putExtra("downloaded", downloaded);
+                    intent.putExtra("index_id", indexId);
+                    setResult(1, intent);
                     finish();
                 }
             }
@@ -254,7 +258,6 @@ public class NotificationActivity extends AppCompatActivity {
                         //  1. if there are images and all of them are downloaded or
                         //  2. if there are no images
                         setNotificationAsRead(notificationID, realNotificationID);
-                        downloaded = "yes";
 
                         // Show field observation ID
                         String idText = getString(R.string.observation_id) + " " + fieldObservationID;
@@ -331,6 +334,7 @@ public class NotificationActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, "Notification " + real_notification_id + " should be set to read now.");
+                    downloaded = "yes";
                     // Remove the notification from ObjectBox
                     // Get new notification from veb and display it
                     updateNotificationDatabase(notification_id);
@@ -364,9 +368,9 @@ public class NotificationActivity extends AppCompatActivity {
                             if (position == 0) {
                                 imageView1.setImageBitmap(bitmap);
                                 frameLayout1.setVisibility(View.VISIBLE);
+                                image1 = true;
                                 imageView1.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
-                                    image1 = true;
                                     hideUiElements();
                                 });
                             }
@@ -374,9 +378,9 @@ public class NotificationActivity extends AppCompatActivity {
                             if (position == 1) {
                                 imageView2.setImageBitmap(bitmap);
                                 frameLayout2.setVisibility(View.VISIBLE);
+                                image2 = true;
                                 imageView2.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
-                                    image2 = true;
                                     hideUiElements();
                                 });
                             }
@@ -384,9 +388,9 @@ public class NotificationActivity extends AppCompatActivity {
                             if (position == 2) {
                                 imageView3.setImageBitmap(bitmap);
                                 frameLayout3.setVisibility(View.VISIBLE);
+                                image3 = true;
                                 imageView3.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
-                                    image3 = true;
                                     hideUiElements();
                                 });
                             }
@@ -451,7 +455,7 @@ public class NotificationActivity extends AppCompatActivity {
             Intent intent = new Intent();
             intent.putExtra("downloaded", downloaded);
             intent.putExtra("index_id", indexId);
-            setResult(3, intent);
+            setResult(1, intent);
             this.getOnBackPressedDispatcher().onBackPressed();
         }
         return true;

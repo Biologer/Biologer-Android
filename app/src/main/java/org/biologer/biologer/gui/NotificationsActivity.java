@@ -57,7 +57,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> notificationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
-                public void onActivityResult(ActivityResult result) {
+                    public void onActivityResult(ActivityResult result) {
                     if (result.getData() != null) {
                         long index = result.getData().getIntExtra("index_id", 0);
                         String downloaded = result.getData().getStringExtra("downloaded");
