@@ -121,13 +121,13 @@ public class PreparePhotos extends Service {
             if (Math.max(input_image.getHeight(), input_image.getWidth()) == 1024) {
                 Log.d(TAG, "The image fits perfectly! Returning image without resize");
                 Bitmap rotatedBitmap = rotateImage(input_image, rotation);
-                return saveBitmap(rotatedBitmap);
+                return saveBitmap(this, rotatedBitmap);
             }
             else {
                 Log.d(TAG, "Resizing image...");
                 Bitmap resizedBitmap = resizeBitmap(input_image, 1024);
                 Bitmap rotatedBitmap = rotateImage(resizedBitmap, rotation);
-                return saveBitmap(rotatedBitmap);
+                return saveBitmap(this, rotatedBitmap);
             }
 
         } else {
@@ -136,20 +136,20 @@ public class PreparePhotos extends Service {
         }
     }
 
-    private Uri saveBitmap(Bitmap bitmap) {
+    public static Uri saveBitmap(Context context, Bitmap bitmap) {
         try {
 
             // Save the file in internal Biologer storage
             String filename = getImageFileName() + ".jpg";
-            FileOutputStream fos = openFileOutput(filename, Context.MODE_PRIVATE);
+            FileOutputStream fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 73, fos);
             fos.flush();
             fos.close();
 
             // Get the file Uri
-            final File file = new File(getFilesDir(), filename);
+            final File file = new File(context.getFilesDir(), filename);
             Uri photoUri = Uri.fromFile(file);
-            Log.i(TAG, "Resized image saved to " + photoUri + ".");
+            Log.i(TAG, "Image file saved to " + photoUri + ".");
 
             return photoUri;
 
@@ -166,7 +166,7 @@ public class PreparePhotos extends Service {
     }
 
     // Set the filename for image taken through the Camera
-    private String getImageFileName() {
+    private static String getImageFileName() {
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         String timeStamp = new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date());
 

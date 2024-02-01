@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.NotificationsAdapter;
+import org.biologer.biologer.adapters.NotificationsHelper;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationsActivity extends AppCompatActivity {
-    private static final String TAG = "Biologer.NotifsActivity";
+    private static final String TAG = "Biologer.NotySActivity";
 
     RecyclerView recyclerView;
     List<UnreadNotificationsDb> notifications;
@@ -61,14 +62,21 @@ public class NotificationsActivity extends AppCompatActivity {
                     if (result.getData() != null) {
                         long index = result.getData().getIntExtra("index_id", 0);
                         String downloaded = result.getData().getStringExtra("downloaded");
+                        String realId = result.getData().getStringExtra("real_notification_id");
+                        long notificationId = result.getData().getLongExtra("notification_id", 0);
 
-                        // Remove notification from the Recycler View
+                        // Remove notification from the Recycler View and mark it as read
                         if (downloaded != null) {
                             Log.i(TAG, "Activity returned result: " + downloaded);
                             if (downloaded.equals("yes")) {
-                                    Log.i(TAG, "Removing notification no. " + index + " from RecyclerView.");
-                                    notifications.remove( (int) index);
-                                    notificationsAdapter.notifyItemRemoved((int) index);
+                                Log.i(TAG, "Removing notification no. " + index + " from RecyclerView.");
+                                notifications.remove( (int) index);
+                                notificationsAdapter.notifyItemRemoved((int) index);
+                                NotificationsHelper.setOnlineNotificationAsRead(realId);
+                                if (notificationId != 0) {
+                                    NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notificationId);
+                                    NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
+                                }
                             }
                         }
 

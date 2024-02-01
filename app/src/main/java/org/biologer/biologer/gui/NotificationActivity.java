@@ -3,6 +3,7 @@ package org.biologer.biologer.gui;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
@@ -19,7 +20,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.ortiz.touchview.TouchImageView;
@@ -28,14 +28,17 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.DateHelper;
+import org.biologer.biologer.adapters.FileManipulation;
+import org.biologer.biologer.adapters.NotificationsHelper;
+import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
+import java.io.File;
 import java.io.InputStream;
-import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import io.objectbox.Box;
@@ -46,16 +49,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class NotificationActivity extends AppCompatActivity {
-    private static final String TAG = "Biologer.NotifActivity";
+    private static final String TAG = "Biologer.NotyActivity";
     String downloaded;
     ImageView imageView1, imageView2, imageView3;
-    boolean image1, image2, image3;
+    boolean image1, image2, image3, image1_ok, image2_ok, image3_ok;
     FrameLayout frameLayout1,frameLayout2, frameLayout3;
     LinearLayout linearLayoutZoom;
     TouchImageView touchImageView;
     MaterialButton buttonReadAll, buttonReadNext;
     TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject;
+    UnreadNotificationsDb notification;
     int indexId;
+    long notificationId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +78,6 @@ public class NotificationActivity extends AppCompatActivity {
         }
 
         // If opening from Activity use index of taped list, else use bundle received from other Fragment
-        long notificationId;
         Bundle bundle = getIntent().getExtras();
         notificationId = Objects.requireNonNull(bundle).getLong("notification_id");
         indexId = Objects.requireNonNull(bundle).getInt("index_id");
@@ -85,11 +89,11 @@ public class NotificationActivity extends AppCompatActivity {
         Query<UnreadNotificationsDb> queryNotification = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notificationId))
                 .build();
-        UnreadNotificationsDb notification = queryNotification.find().get(0);
+        notification = queryNotification.find().get(0);
         queryNotification.close();
 
         textView = findViewById(R.id.notification_text);
-        textView.setText(Html.fromHtml(getFormattedMessage(notification)));
+        textView.setText(Html.fromHtml(getFormattedMessage()));
         textViewID = findViewById(R.id.notification_text_id);
         textViewDate = findViewById(R.id.notification_text_date);
         textViewLocation = findViewById(R.id.notification_text_location);
@@ -114,7 +118,7 @@ public class NotificationActivity extends AppCompatActivity {
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
                         buttonReadAll.setEnabled(false);
-                        setAllNotificationsAsRead();
+                        NotificationsHelper.setAllOnlineNotificationsAsRead(NotificationActivity.this);
                         dialog.dismiss();
                     })
                     .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss()
@@ -151,7 +155,8 @@ public class NotificationActivity extends AppCompatActivity {
             textViewAllRead.setVisibility(View.VISIBLE);
         }
 
-        getObservationApi((int) notification.getId(), notification.getRealId(), notification.getFieldObservationId());
+        getFieldObservationData();
+        displayPhotos();
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -161,24 +166,20 @@ public class NotificationActivity extends AppCompatActivity {
                     Log.i(TAG, "Image is currently showing in the touch image view.");
                     showUiElements();
                 } else {
-                    Intent intent = new Intent();
-                    intent.putExtra("downloaded", downloaded);
-                    intent.putExtra("index_id", indexId);
-                    setResult(1, intent);
-                    finish();
+                    sendResult(1);
                 }
             }
         });
     }
 
-    private String getFormattedMessage(UnreadNotificationsDb unreadNotification) {
+    private String getFormattedMessage() {
         String text;
-        String taxon = unreadNotification.getTaxonName();
-        String author = getAuthor(unreadNotification);
+        String taxon = notification.getTaxonName();
+        String author = getAuthor(notification);
 
         String action;
         String action1 = null;
-        switch (unreadNotification.getType()) {
+        switch (notification.getType()) {
             case "App\\Notifications\\FieldObservationApproved":
                 action = getString(R.string.approved_observation);
                 break;
@@ -194,7 +195,7 @@ public class NotificationActivity extends AppCompatActivity {
                 break;
         }
 
-        Date date = DateHelper.getDateFromJSON(unreadNotification.getUpdatedAt());
+        Date date = DateHelper.getDateFromJSON(notification.getUpdatedAt());
         String localized_date = DateHelper.getLocalizedDate(date, this);
         String localized_time = DateHelper.getLocalizedTime(date, this);
 
@@ -223,135 +224,127 @@ public class NotificationActivity extends AppCompatActivity {
         return author;
     }
 
-    private void setAllNotificationsAsRead() {
-        Call<ResponseBody> notificationRead = RetrofitClient
-                .getService(SettingsManager.getDatabaseName())
-                .setAllNotificationAsRead(true);
+    private void getFieldObservationData() {
+        // Show field observation ID
+        String idText = getString(R.string.observation_id) + " " + notification.getFieldObservationId();
+        textViewID.setText(idText);
 
-        notificationRead.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Log.d(TAG, "All notifications should be set to read now.");
-                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
-                    NotificationManagerCompat.from(NotificationActivity.this).cancelAll();
-                }
-            }
+        // Add observation date
+        String date = notification.getDate();
+        Date dateReal = DateHelper.getDate(date);
+        String dateText = getString(R.string.observation_date) + " " +
+                DateHelper.getLocalizedDate(dateReal, NotificationActivity.this);
+        textViewDate.setText(dateText);
 
-            @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.d(TAG, "Setting notification as read failed!");
-                t.printStackTrace();
+        // Add the place of observation
+        String location = notification.getLocation();
+        String locationText = getString(R.string.notification_location) + " " + location;
+        textViewLocation.setText(locationText);
+
+        // Get the name of the project if it exist
+        String project = notification.getProject();
+        if (project != null) {
+            if (!project.equals("")) {
+                String projectText = getString(R.string.notification_project_name) + " " +  project;
+                textViewProject.setText(projectText);
             }
-        });
+        }
     }
 
-    private void getObservationApi(int notificationID, String realNotificationID, int fieldObservationID) {
-        // Get the data from Field observation (i.e. images) and display them
-        Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
-        fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        // TODO: Maybe we need to set notification as read only
-                        //  1. if there are images and all of them are downloaded or
-                        //  2. if there are no images
-                        setNotificationAsRead(notificationID, realNotificationID);
+    private void displayPhotos() {
 
-                        // Show field observation ID
-                        String idText = getString(R.string.observation_id) + " " + fieldObservationID;
-                        textViewID.setText(idText);
-
-                        // Add observation date
-                        String date = response.body().getData()[0].getDay() + "-" +
-                                response.body().getData()[0].getMonth() + "-" +
-                                response.body().getData()[0].getYear();
-                        Date dateReal = DateHelper.getDate(date);
-                        String dateText = getString(R.string.observation_date) + " " +
-                                DateHelper.getLocalizedDate(dateReal, NotificationActivity.this);
-                        textViewDate.setText(dateText);
-
-                         // Add the place of observation
-                         String location = response.body().getData()[0].getLocation();
-                         if (location != null) {
-                             if (!location.equals("")) {
-                                 String locationText = getString(R.string.notification_location) + " " + location;
-                                 textViewLocation.setText(locationText);
-                             }
-                         } else {
-                             DecimalFormat f = new DecimalFormat("##.0000");
-                             String coordinates = f.format(response.body().getData()[0].getLongitude()) + "° E; " +
-                                     f.format(response.body().getData()[0].getLatitude()) + "° N";
-                             String coordinatesText = getString(R.string.notification_location) + " " + coordinates;
-                             textViewLocation.setText(coordinatesText);
-                         }
-
-                         // Get the name of the project if it exist
-                        String project = response.body().getData()[0].getProject();
-                        if (project != null) {
-                            if (!project.equals("")) {
-                                String projectText = getString(R.string.notification_project_name) + " " +  project;
-                                textViewProject.setText(projectText);
-                            }
-                        }
-
-                        // Finally get the photos
-                        if (!response.body().getData()[0].getPhotos().isEmpty()) {
-                            int number_of_photos = response.body().getData()[0].getPhotos().size();
-                            for (int i = 0; i < number_of_photos; i++) {
-                                String url = response.body().getData()[0].getPhotos().get(i).getUrl();
-                                Log.d(TAG, "Loading image " + i + " from: " + url);
-                                updatePhoto(url, i);
-                            }
-                        }
+        // Image 1
+        if (notification.getImage1() != null) {
+            if (notification.getImage1().equals("No photo")) {
+                Log.i(TAG, "No photo 1 for this notification.");
+                image1_ok = true;
+            } else {
+                String type = FileManipulation.uriType(notification.getImage1());
+                Log.i(TAG, "Image 1 exist, loading " + notification.getImage1() + "; Type: " + type);
+                if (type != null) {
+                    if (type.equals("file")) {
+                        // There is a file already downloaded with an uri to the storage
+                        Uri uri = Uri.parse(notification.getImage1());
+                        imageView1.setImageURI(uri);
+                        frameLayout1.setVisibility(View.VISIBLE);
+                        image1 = true;
+                        imageView1.setOnClickListener(view -> {
+                            File file = FileManipulation.getInternalFileFromUri(this, uri);
+                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                            touchImageView.setImageBitmap(bitmap);
+                            hideUiElements();
+                        });
+                        image1_ok = true;
                     } else {
-                        Log.d(TAG, "Response body is null!");
+                        // There is https uri written to the Image 1, download it...
+                        downloadPhoto(notification.getImage1(), 0, notification.getRealId());
                     }
-
-                } else {
-                    Log.d(TAG, "The response is not successful.");
                 }
             }
+        }
 
-            @Override
-            public void onFailure(@NonNull Call<FieldObservationResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Something is wrong!");
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void setNotificationAsRead(int notification_id, String real_notification_id) {
-        String[] notification = new String[1];
-        notification[0] = real_notification_id;
-
-        Call<ResponseBody> notificationRead = RetrofitClient
-                .getService(SettingsManager.getDatabaseName())
-                .setNotificationAsRead(notification);
-        notificationRead.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
-                    Log.d(TAG, "Notification " + real_notification_id + " should be set to read now.");
-                    downloaded = "yes";
-                    // Remove the notification from ObjectBox
-                    // Get new notification from veb and display it
-                    updateNotificationDatabase(notification_id);
+        // Image 2
+        if (notification.getImage2() != null) {
+            if (notification.getImage2().equals("No photo")) {
+                Log.i(TAG, "No photo 2 for this notification.");
+                image2_ok = true;
+            } else {
+                String type = FileManipulation.uriType(notification.getImage2());
+                Log.i(TAG, "Image 2 exist, loading " + notification.getImage2() + "; Type: " + type);
+                if (type != null) {
+                    if (type.equals("file")) {
+                        // There is a file already downloaded with an uri to the storage
+                        Uri uri = Uri.parse(notification.getImage2());
+                        imageView2.setImageURI(uri);
+                        frameLayout2.setVisibility(View.VISIBLE);
+                        image2 = true;
+                        imageView2.setOnClickListener(view -> {
+                            File file = FileManipulation.getInternalFileFromUri(this, uri);
+                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                            touchImageView.setImageBitmap(bitmap);
+                            hideUiElements();
+                        });
+                        image2_ok = true;
+                    } else {
+                        // There is https uri written to the Image 1, download it...
+                        downloadPhoto(notification.getImage2(), 1, notification.getRealId());
+                    }
                 }
             }
+        }
 
-            @Override
-            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.d(TAG, "Setting notification as read failed!");
-                t.printStackTrace();
+        // Image 3
+        if (notification.getImage3() != null) {
+            if (notification.getImage3().equals("No photo")) {
+                Log.i(TAG, "No photo 3 for this notification.");
+                image3_ok = true;
+            } else {
+                String type = FileManipulation.uriType(notification.getImage3());
+                Log.i(TAG, "Image 3 exist, loading " + notification.getImage3() + "; Type: " + type);
+                if (type != null) {
+                    if (type.equals("file")) {
+                        // There is a file already downloaded with an uri to the storage
+                        Uri uri = Uri.parse(notification.getImage3());
+                        imageView3.setImageURI(uri);
+                        frameLayout3.setVisibility(View.VISIBLE);
+                        image3 = true;
+                        imageView3.setOnClickListener(view -> {
+                            File file = FileManipulation.getInternalFileFromUri(this, uri);
+                            Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                            touchImageView.setImageBitmap(bitmap);
+                            hideUiElements();
+                        });
+                        image3_ok = true;
+                    } else {
+                        // There is https uri written to the Image 1, download it...
+                        downloadPhoto(notification.getImage3(), 2, notification.getRealId());
+                    }
+                }
             }
-        });
-
-        updateNotificationDatabase(notification_id);
+        }
     }
 
-    private void updatePhoto(String url, int position) {
+    private void downloadPhoto(String url, int position, String realNotificationID) {
 
         Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
         photoResponse.enqueue(new Callback<ResponseBody>() {
@@ -369,33 +362,67 @@ public class NotificationActivity extends AppCompatActivity {
                                 imageView1.setImageBitmap(bitmap);
                                 frameLayout1.setVisibility(View.VISIBLE);
                                 image1 = true;
+                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView1.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
+                                image1_ok = true;
                             }
 
                             if (position == 1) {
                                 imageView2.setImageBitmap(bitmap);
                                 frameLayout2.setVisibility(View.VISIBLE);
                                 image2 = true;
+                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView2.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
+                                image2_ok = true;
                             }
 
                             if (position == 2) {
                                 imageView3.setImageBitmap(bitmap);
                                 frameLayout3.setVisibility(View.VISIBLE);
                                 image3 = true;
+                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView3.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
+                                image3_ok = true;
                             }
                         }
                     }
+                }
+            }
+
+            private void updateObjectBox(int position, String imageUri, String realNotificationID) {
+                Box<UnreadNotificationsDb> notificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
+                Query<UnreadNotificationsDb> notificationsDbQuery = notificationsDbBox
+                        .query(UnreadNotificationsDb_.realId.equal(realNotificationID))
+                        .build();
+                List<UnreadNotificationsDb> notifications = notificationsDbQuery.find();
+                notificationsDbQuery.close();
+                if (!notifications.isEmpty()) {
+                    for (int i = 0; i < notifications.size() - 1; i++) {
+                        UnreadNotificationsDb notification = notifications.get(i);
+                        if (position == 0) {
+                            notification.setImage1(imageUri);
+                        } if (position == 1) {
+                            notification.setImage2(imageUri);
+                        } if (position == 2) {
+                            notification.setImage3(imageUri);
+                        }
+
+                        App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notification);
+                    }
+                } else {
+                    Log.e(TAG, "Image URI not saved to ObjectBox.");
                 }
             }
 
@@ -427,24 +454,8 @@ public class NotificationActivity extends AppCompatActivity {
         textView.setVisibility(View.VISIBLE);
     }
 
-    private void updateNotificationDatabase(long notification_id) {
-        // Remove old notification from the ObjectBox database
-        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
-                .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.equal(notification_id))
-                .build();
-        query.remove();
-        query.close();
-        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
-    }
-
     private void openNextNotification() {
-        Intent intent = new Intent();
-        intent.putExtra("open_next", true);
-        intent.putExtra("downloaded", downloaded);
-        intent.putExtra("index_id", indexId);
-        setResult(2, intent);
+        sendResult(2);
         finish();
     }
 
@@ -452,13 +463,23 @@ public class NotificationActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            Intent intent = new Intent();
-            intent.putExtra("downloaded", downloaded);
-            intent.putExtra("index_id", indexId);
-            setResult(1, intent);
+            sendResult(1);
             this.getOnBackPressedDispatcher().onBackPressed();
         }
         return true;
+    }
+
+    private void sendResult(int resultCode) {
+        if (image1_ok && image2_ok && image3_ok) {
+            downloaded = "yes";
+        }
+        Intent intent = new Intent();
+        intent.putExtra("downloaded", downloaded);
+        intent.putExtra("notification_id", notificationId);
+        intent.putExtra("real_notification_id", notification.getRealId());
+        intent.putExtra("index_id", indexId);
+        setResult(resultCode, intent);
+        finish();
     }
 
 }

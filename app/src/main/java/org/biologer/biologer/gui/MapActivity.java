@@ -41,7 +41,7 @@ import com.google.android.material.textview.MaterialTextView;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.CreateExternalFile;
+import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.json.ElevationResponse;
 import org.biologer.biologer.network.RetrofitClient;
@@ -119,7 +119,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         AppCompatButton buttonCustomOverlay = findViewById(R.id.map_button_custom_overlay);
         buttonCustomOverlay.setOnClickListener(v -> getDirectoryUri.launch(Uri.parse(Environment.DIRECTORY_DOCUMENTS)));
 
-        CreateExternalFile.createDocumentsFolder(this, getString(R.string.custom_maps_folder_name));
+        FileManipulation.createExternalDocumentsFolder(this, getString(R.string.custom_maps_folder_name));
 
     }
 

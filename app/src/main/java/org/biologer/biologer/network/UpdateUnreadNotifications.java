@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.NotificationsHelper;
 import org.biologer.biologer.gui.NotificationsActivity;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
@@ -28,7 +30,7 @@ import retrofit2.Response;
 
 public class UpdateUnreadNotifications extends Service {
 
-    private static final String TAG = "Biologer.NotificationU";
+    private static final String TAG = "Biologer.NotyUpdate";
     int NOTIFICATION_ID = 0;
 
     public void onCreate() {
@@ -40,7 +42,6 @@ public class UpdateUnreadNotifications extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         boolean should_download = intent.getBooleanExtra("download", true);
-        //long notification_id = intent.getLongExtra("notification_id", 0);
         if (should_download) {
             Log.d(TAG, "Notifications will be downloaded and displayed.");
             updateNotifications();
@@ -70,23 +71,32 @@ public class UpdateUnreadNotifications extends Service {
                     if (response.body() != null) {
                         int size = response.body().getMeta().getTotal();
                         int pages = response.body().getMeta().getLastPage();
-                        Log.d(TAG, "Number of unread notifications: " + size);
-                        // Check if there is any notification
+                        Log.d(TAG, "Number of unread notifications: " + size + " – on " + pages + " pages.");
+                        // If there are notification...
                         if (size >= 1) {
                             // Check if the number of notifications in local SQL equals the number of notifications online.
                             // If not synchronise, other-ways assume that nothing changed since the last time.
                             int size_in_sql = (int) App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count();
                             Log.d(TAG, "There are " + size_in_sql + " notifications stored locally.");
                             if (size != size_in_sql) {
-                                // Clean the SQL database
-                                App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
+
+                                // First delete photos from internal storage
+                                Log.i(TAG, "Trying to remove all images from internal storage.");
+                                NotificationsHelper.deleteAllNotificationsLocally(UpdateUnreadNotifications.this);
+
                                 for (int p = 0; p < pages; p++) {
-                                    Log.d(TAG, "Updating notifications, page " + p + ".");
-                                    if (p == 0) {
-                                        saveNotificationsSQL(response.body());
+                                    int real_page = p + 1;
+                                    Log.d(TAG, "Updating notifications, page " + real_page + ".");
+                                    if (real_page == 1) {
+                                        saveNotificationsToObjectBox(response.body());
                                     } else {
-                                        getAndSaveNotificationsSQL(p + 1);
+                                        // Delay requests a bit...
+                                        Handler handler = new Handler(Looper.getMainLooper());
+                                        Runnable runnable;
+                                        runnable = () -> getAndSaveNotificationsToObjectBox(real_page);
+                                        handler.postDelayed(runnable, 1000);
                                     }
+
                                 }
                             } else {
                                 Log.d(TAG, "Number of notifications online equals the ones stored locally.");
@@ -99,51 +109,38 @@ public class UpdateUnreadNotifications extends Service {
                 }
             }
 
-            private void getAndSaveNotificationsSQL(int page) {
-                Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(page);
-                unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
-
-                    @Override
-                    public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
-                        if (response.isSuccessful()) {
-                            if (response.body() != null) {
-                                saveNotificationsSQL(response.body());
-                            }
-                        } else if (response.code() == 429) {
-                            String retryAfter = response.headers().get("retry-after");
-                            long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
-                            Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
-                            // Add handler to delay fetching
-                            Handler handler = new Handler();
-                            Runnable runnable = () -> getAndSaveNotificationsSQL(page);
-                            handler.postDelayed(runnable, sec * 1000);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
-                        Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-                    }
-                });
+            @Override
+            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
             }
+        });
 
-            private void saveNotificationsSQL(UnreadNotificationsResponse response) {
-                int size = response.getData().size();
-                UnreadNotificationsDb[] notificationForSQL = new UnreadNotificationsDb[size];
-                for (int i = 0; i < size; i++) {
-                    UnreadNotification unreadNotification = response.getData().get(i);
-                    notificationForSQL[i] = new UnreadNotificationsDb(
-                            0, unreadNotification.getId(),
-                            unreadNotification.getType(),
-                            unreadNotification.getNotifiable_type(),
-                            unreadNotification.getData().getField_observation_id(),
-                            unreadNotification.getData().getCauser_name(),
-                            unreadNotification.getData().getCurator_name(),
-                            unreadNotification.getData().getTaxon_name(),
-                            unreadNotification.getUpdated_at());
+    }
+
+    private void getAndSaveNotificationsToObjectBox(int page) {
+        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(page);
+        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+
+            @Override
+            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        saveNotificationsToObjectBox(response.body());
+                    }
+                } else if (response.code() == 429) {
+                    String retryAfter = response.headers().get("retry-after");
+                    long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                    Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                    // Add handler to delay fetching
+                    Handler handler = new Handler();
+                    Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
+                    handler.postDelayed(runnable, sec * 1000);
+                } else if (response.code() == 508) {
+                    Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
+                    Handler handler = new Handler();
+                    Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
+                    handler.postDelayed(runnable, 5000);
                 }
-                App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
-                Log.d(TAG, "Notifications saved");
             }
 
             @Override
@@ -151,7 +148,28 @@ public class UpdateUnreadNotifications extends Service {
                 Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
             }
         });
+    }
 
+    private void saveNotificationsToObjectBox(UnreadNotificationsResponse response) {
+        int size = response.getData().size();
+        UnreadNotificationsDb[] notificationForSQL = new UnreadNotificationsDb[size];
+        for (int i = 0; i < size; i++) {
+            UnreadNotification unreadNotification = response.getData().get(i);
+            notificationForSQL[i] = new UnreadNotificationsDb(
+                    0, unreadNotification.getId(),
+                    unreadNotification.getType(),
+                    unreadNotification.getNotifiable_type(),
+                    unreadNotification.getData().getField_observation_id(),
+                    unreadNotification.getData().getCauser_name(),
+                    unreadNotification.getData().getCurator_name(),
+                    unreadNotification.getData().getTaxon_name(),
+                    unreadNotification.getUpdated_at(),
+                    null,null, null, null,
+                    null, null, null);
+        }
+        App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
+        Log.d(TAG, notificationForSQL.length + " notifications should be saved; total "
+                + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications.");
     }
 
     // This will display all the notifications found in local ObjectBox database

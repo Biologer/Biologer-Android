@@ -69,7 +69,7 @@ import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
-import org.biologer.biologer.adapters.CreateExternalFile;
+import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
@@ -1514,7 +1514,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     );
 
     private void takePhotoFromCamera() {
-        current_image = CreateExternalFile.newDocumentFile(this, null, ".jpg");
+        current_image = FileManipulation.newExternalDocumentFile(this, null, ".jpg");
         takePictureFromCamera.launch(current_image);
     }
 

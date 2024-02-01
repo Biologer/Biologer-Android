@@ -40,7 +40,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.CreateExternalFile;
+import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
@@ -785,7 +785,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         String filename = "Export_" + new SimpleDateFormat("yyMMddss", Locale.getDefault()).format(new Date());
 
-        Uri uri = CreateExternalFile.newDocumentFile(this, filename, ".csv");
+        Uri uri = FileManipulation.newExternalDocumentFile(this, filename, ".csv");
         OutputStream output = null;
         try {
             if (uri != null) {

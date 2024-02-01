@@ -195,6 +195,11 @@ public class FetchTaxa extends Service {
                             Handler handler = new Handler();
                             Runnable runnable = () -> fetchTaxa();
                             handler.postDelayed(runnable, sec * 1000);
+                        } else if (response.code() == 508) {
+                            Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
+                            Handler handler = new Handler();
+                            Runnable runnable = () -> fetchTaxa();
+                            handler.postDelayed(runnable, 5000);
                         }
                     }
 

@@ -18,12 +18,13 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
-public class CreateExternalFile {
+public class FileManipulation {
 
     private static final String TAG = "Biologer.ExternalFile";
 
-    public static Uri newDocumentFile(Context context, String filename, String extension) {
+    public static Uri newExternalDocumentFile(Context context, String filename, String extension) {
 
         if (filename == null) {
             filename = "JPEG_" + getFileNameFromDate();
@@ -56,7 +57,7 @@ public class CreateExternalFile {
             File file = null;
             // Create the File where the photo should go
             try {
-                file = createFile(context, filename, extension);
+                file = createExternalFile(context, filename, extension);
             } catch (IOException ex) {
                 Log.e(TAG, "Could not create file: " + ex);
             }
@@ -78,7 +79,7 @@ public class CreateExternalFile {
     }
 
     // This will create image on Android <= 9.0
-    private static File createFile(Context context, String filename, String extension) throws IOException {
+    private static File createExternalFile(Context context, String filename, String extension) throws IOException {
 
         if (extension.equals(".jpg")) {
             File file = new File(Environment.getExternalStoragePublicDirectory(
@@ -121,7 +122,7 @@ public class CreateExternalFile {
         return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
     }
 
-    public static void createDocumentsFolder(Context context, String dir_name) {
+    public static void createExternalDocumentsFolder(Context context, String dir_name) {
         Log.i(TAG, "Creating new directory in Biologer Document " + dir_name);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues contentValues = new ContentValues();
@@ -142,6 +143,36 @@ public class CreateExternalFile {
             file = new File(Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_PICTURES) + "/" + context.getString(R.string.biologer), dir_name);
             file.mkdirs();
+        }
+    }
+
+    public static String getFilenameFromUri(Uri uri) {
+        return uri.getLastPathSegment();
+    }
+
+    public static File getInternalFileFromName(Context context, String filename) {
+        return new File(context.getFilesDir(),
+                Objects.requireNonNull(filename, "Filename of the thumbnail returned null!"));
+    }
+
+    public static File getInternalFileFromUri(Context context, Uri uri) {
+        return new File(context.getFilesDir(),
+                Objects.requireNonNull(getFilenameFromUri(uri), "Filename of the thumbnail returned null!"));
+    }
+
+    public static void deleteInternalFileFromUri(Context context, Uri uri) {
+        File file = getInternalFileFromUri(context, uri);
+        boolean deleted = file.delete();
+        Log.d(TAG, "Deleting file " + file.getName() + ", size: " + file.getTotalSpace() + ", returned: " + deleted);
+    }
+
+    // Returns the type of uri, i.e. the word starting the uri address
+    public static String uriType(String uri) {
+        int end = uri.indexOf(':');
+        if (end != -1) {
+            return uri.substring(0 , end);
+        } else {
+            return null;
         }
     }
 

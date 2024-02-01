@@ -15,11 +15,15 @@ public class UnreadNotificationsDb {
     private String curatorName;
     private String taxonName;
     private String updatedAt;
+    private String thumbnail, image1, image2, image3;
+    private String date, location, project;
 
     public UnreadNotificationsDb (long id, String realId, String type,
                                   String notifiableType, int fieldObservationId,
                                   String causerName, String curatorName,
-                                  String taxonName, String updatedAt) {
+                                  String taxonName, String updatedAt,
+                                  String thumbnail, String image1, String image2,  String image3,
+                                  String date, String location, String project) {
         this.id = id;
         this.realId = realId;
         this.type = type;
@@ -29,6 +33,13 @@ public class UnreadNotificationsDb {
         this.curatorName = curatorName;
         this.taxonName = taxonName;
         this.updatedAt = updatedAt;
+        this.image1 = image1;
+        this.image2 = image2;
+        this.image3 = image3;
+        this.thumbnail = thumbnail;
+        this.date = date;
+        this.location = location;
+        this.project = project;
     }
 
     public long getId() {
@@ -97,5 +108,61 @@ public class UnreadNotificationsDb {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getImage1() {
+        return image1;
+    }
+
+    public void setImage1(String image1) {
+        this.image1 = image1;
+    }
+
+    public String getImage2() {
+        return image2;
+    }
+
+    public void setImage2(String image2) {
+        this.image2 = image2;
+    }
+
+    public String getImage3() {
+        return image3;
+    }
+
+    public void setImage3(String image3) {
+        this.image3 = image3;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
     }
 }

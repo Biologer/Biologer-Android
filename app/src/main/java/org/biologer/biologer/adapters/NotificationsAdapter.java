@@ -3,6 +3,7 @@ package org.biologer.biologer.adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Handler;
 import android.text.Html;
 import android.util.Log;
@@ -15,18 +16,23 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
+import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -81,7 +87,7 @@ public class NotificationsAdapter
         ImageView imageView = viewHolder.observationPhoto;
         imageView.setImageDrawable(null); // Clear the previous image
         imageView.setImageResource(R.mipmap.ic_kornjaca); // Set the icon before the real image is loaded
-        setPhoto(notification.getFieldObservationId(), imageView); // Download and display image
+        setPhoto(notification, imageView); // Download and display image
     }
 
     @Override
@@ -152,79 +158,193 @@ public class NotificationsAdapter
         return author;
     }
 
-    private void setPhoto(int fieldObservationID, ImageView imageView) {
-        // Get the data from Field observation and display them
-        Call<FieldObservationResponse> fieldObservation = RetrofitClient.getService(SettingsManager.getDatabaseName()).getFieldObservation(String.valueOf(fieldObservationID));
-        fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        if (!response.body().getData()[0].getPhotos().isEmpty()) {
-                            FieldObservationDataPhotos photo = response.body().getData()[0].getPhotos().get(0);
-                            String url = photo.getUrl();
-                            Log.d(TAG, "Image url is: " + url);
+    private void setPhoto(UnreadNotificationsDb unreadNotificationsDb, ImageView imageView) {
 
-                            Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
-                            photoResponse.enqueue(new Callback<ResponseBody>() {
-                                @Override
-                                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                                    if (response.isSuccessful()) {
-                                        Log.d(TAG, "Photo successfully downloaded.");
-                                        try (ResponseBody responseBody = response.body()) {
-                                            if (responseBody != null) {
-                                                Log.d(TAG, "Image response obtained.");
-                                                InputStream inputStream = responseBody.byteStream();
-                                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                                                // Crop the image to square shape to look a bit better
-                                                int w = bitmap.getWidth();
-                                                int h = bitmap.getHeight();
-                                                if (w < h) {
-                                                    int size = w - 200;
-                                                    int rest_to_crop = (h - size) / 2;
-                                                    imageView.setImageBitmap(Bitmap.createBitmap(bitmap, 100, rest_to_crop, size, size));
-                                                } else {
-                                                    int size = h - 200;
-                                                    int rest_to_crop = (w - size) / 2;
-                                                    imageView.setImageBitmap(Bitmap.createBitmap(bitmap, rest_to_crop, 100, size, size));
-                                                }
-                                            } else {
-                                                Log.e(TAG, "Server returned null as the image response.");
+        // First check if there is a photo stored in the internal memory and ObjectBox
+        Box<UnreadNotificationsDb> notificationsDbBox = App
+                .get().getBoxStore().boxFor(UnreadNotificationsDb.class);
+        Query<UnreadNotificationsDb> notificationsDbQuery = notificationsDbBox
+                .query(UnreadNotificationsDb_.fieldObservationId.equal(unreadNotificationsDb.getFieldObservationId()))
+                .build();
+        List<UnreadNotificationsDb> notifications = notificationsDbQuery.find();
+        notificationsDbQuery.close();
+        if (!notifications.isEmpty()) {
+            Log.i(TAG, "There are " + notifications.size() + " notifications for field observation ID " + unreadNotificationsDb.getFieldObservationId());
+            for (int i = 0; i < notifications.size(); i++) {
+                String thumbnail = notifications.get(i).getThumbnail();
+                // If there is no thumbnail, we should download it from the internet
+                // Note that the photo will also be saved in a separate file
+                Log.d(TAG, "Thumbnail is set to " + thumbnail);
+                if (thumbnail == null && i == 0) {
+                    Call<FieldObservationResponse> fieldObservation = RetrofitClient
+                            .getService(SettingsManager.getDatabaseName())
+                            .getFieldObservation(String.valueOf(unreadNotificationsDb.getFieldObservationId()));
+                    fieldObservation.enqueue(new Callback<FieldObservationResponse>() {
+                        @Override
+                        public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
+                            if (response.isSuccessful()) {
+                                if (response.body() != null) {
+
+                                    // Get the data from field observation to store it in the ObjectBox later on
+                                    String date = response.body().getData()[0].getDay() + "-" +
+                                            response.body().getData()[0].getMonth() + "-" +
+                                            response.body().getData()[0].getYear();
+                                    String location = response.body().getData()[0].getLocation();
+                                    if (location == null || location.equals("")) {
+                                        DecimalFormat f = new DecimalFormat("##.0000");
+                                        location = f.format(response.body().getData()[0].getLongitude()) + "° E; " +
+                                                f.format(response.body().getData()[0].getLatitude()) + "° N";
+                                    }
+                                    String project = response.body().getData()[0].getProject();
+
+                                    List<FieldObservationDataPhotos> photos = response.body().getData()[0].getPhotos();
+                                    if (!photos.isEmpty()) {
+                                        String url = photos.get(0).getUrl();
+                                        Log.d(TAG, "Image 1 url is: " + url);
+
+                                        // Save the URL from online images without downloading.
+                                        // It will save some online traffic latter on.
+                                        if (photos.size() > 1) {
+                                            Log.d(TAG, "Image 2 url is: " + photos.get(1).getUrl());
+                                            for (int j = 0; j < notifications.size(); j++) {
+                                                notifications.get(j).setImage2(photos.get(1).getUrl());
+                                            }
+                                        } else {
+                                            Log.d(TAG, "Image 2 does not exist, setting to no photo.");
+                                            for (int j = 0; j < notifications.size(); j++) {
+                                                notifications.get(j).setImage2("No photo");
                                             }
                                         }
+
+                                        if (photos.size() > 2) {
+                                            Log.d(TAG, "Image 3 url is: " + photos.get(2).getUrl());
+                                            for (int j = 0; j < notifications.size(); j++) {
+                                                notifications.get(j).setImage3(photos.get(2).getUrl());
+                                            }
+                                        } else {
+                                            Log.d(TAG, "Image 3 does not exist, setting to no photo.");
+                                            for (int j = 0; j < notifications.size(); j++) {
+                                                notifications.get(j).setImage3("No photo");
+                                            }
+                                        }
+
+                                        Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
+                                        photoResponse.enqueue(new Callback<ResponseBody>() {
+                                            @Override
+                                            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                                                if (response.isSuccessful()) {
+                                                    Log.d(TAG, "Photo successfully downloaded.");
+                                                    try (ResponseBody responseBody = response.body()) {
+                                                        if (responseBody != null) {
+                                                            Log.d(TAG, "Image response obtained.");
+                                                            InputStream inputStream = responseBody.byteStream();
+                                                            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+                                                            // Store the original image 1 first
+                                                            Uri uri = PreparePhotos.saveBitmap(context, bitmap);
+                                                            for (int j = 0; j < notifications.size(); j++) {
+                                                                notifications.get(j).setImage1(uri != null ? uri.toString() : null);
+                                                            }
+
+                                                            // Crop the thumbnail to square shape to look a bit better
+                                                            int w = bitmap.getWidth();
+                                                            int h = bitmap.getHeight();
+                                                            if (w < h) {
+                                                                int size = w - 200;
+                                                                int rest_to_crop = (h - size) / 2;
+                                                                Bitmap thumbnail = Bitmap.createBitmap(bitmap, 100, rest_to_crop, size, size);
+                                                                imageView.setImageBitmap(thumbnail);
+                                                                Uri th_uri = PreparePhotos.saveBitmap(context, thumbnail);
+                                                                for (int j = 0; j < notifications.size(); j++) {
+                                                                    notifications.get(j).setThumbnail(th_uri != null ? th_uri.toString() : null);
+                                                                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
+                                                                }
+                                                            } else {
+                                                                int size = h - 200;
+                                                                int rest_to_crop = (w - size) / 2;
+                                                                Bitmap thumbnail = Bitmap.createBitmap(bitmap, rest_to_crop, 100, size, size);
+                                                                imageView.setImageBitmap(thumbnail);
+                                                                Uri th_uri = PreparePhotos.saveBitmap(context, thumbnail);
+                                                                for (int j = 0; j < notifications.size(); j++) {
+                                                                    notifications.get(j).setThumbnail(th_uri != null ? th_uri.toString() : null);
+                                                                    App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
+                                                                }
+                                                            }
+                                                        } else {
+                                                            Log.e(TAG, "Server returned null as the image response.");
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                                                Log.d(TAG, "Something is wrong with image response!");
+                                                t.printStackTrace();
+                                            }
+                                        });
+
+                                    } else {
+                                        Log.i(TAG, "This observation does not have a photo.");
+                                        for (int k = 0; k < notifications.size(); k++) {
+                                            notifications.get(k).setThumbnail("No photo");
+                                            notifications.get(k).setImage1("No photo");
+                                            notifications.get(k).setImage2("No photo");
+                                            notifications.get(k).setImage3("No photo");
+                                        }
                                     }
-                                }
 
-                                @Override
-                                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                                    Log.d(TAG, "Something is wrong with image response!");
-                                    t.printStackTrace();
+                                    // Save everything to the ObjectBox
+                                    for (int j = 0; j < notifications.size(); j++) {
+                                        notifications.get(j).setDate(date);
+                                        notifications.get(j).setLocation(location);
+                                        notifications.get(j).setProject(project);
+                                        Log.i(TAG, "Writing important field observation date to the ObjectBox.");
+                                        App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
+                                    }
+                                } else {
+                                    Log.d(TAG, "Response body is null!");
                                 }
-                            });
-
+                            } else if (response.code() == 429) {
+                                String retryAfter = response.headers().get("retry-after");
+                                long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                                Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                                // Add handler to delay fetching
+                                Handler handler = new Handler();
+                                Runnable runnable = () -> setPhoto(unreadNotificationsDb, imageView);
+                                handler.postDelayed(runnable, sec * 1000);
+                            } else if (response.code() == 508) {
+                                Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
+                                Handler handler = new Handler();
+                                Runnable runnable = () -> setPhoto(unreadNotificationsDb, imageView);
+                                handler.postDelayed(runnable, 5000);
+                            }
+                            else {
+                                Log.d(TAG, "The response is not successful.");
+                            }
                         }
-                    } else {
-                        Log.d(TAG, "Response body is null!");
-                    }
-                } else if (response.code() == 429) {
-                    String retryAfter = response.headers().get("retry-after");
-                    long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
-                    Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
-                    // Add handler to delay fetching
-                    Handler handler = new Handler();
-                    Runnable runnable = () -> setPhoto(fieldObservationID, imageView);
-                    handler.postDelayed(runnable, sec * 1000);
-                }
-                else {
-                    Log.d(TAG, "The response is not successful.");
-                }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<FieldObservationResponse> call, @NonNull Throwable t) {
-                Log.d(TAG, "Something is wrong!");
-                t.printStackTrace();
+                        @Override
+                        public void onFailure(@NonNull Call<FieldObservationResponse> call, @NonNull Throwable t) {
+                            Log.d(TAG, "Something is wrong!");
+                            t.printStackTrace();
+                        }
+                    });
+
+                } else if (thumbnail != null && thumbnail.equals("No photo")) {
+                    Log.i(TAG, "There is no photo, ignoring...");
+                }
+
+                // If the thumbnail exist, we should just display it in tne notifications.
+                else {
+                    if (i == 0) {
+                        Log.i(TAG, "There is a thumbnail already, displaying that one: " + notifications.get(0).getThumbnail());
+                        imageView.setImageURI(Uri.parse(notifications.get(0).getThumbnail()));
+                    }
+                }
             }
-        });
+        } else {
+            Log.e(TAG, "Image URI not saved to ObjectBox.");
+        }
     }
 }
