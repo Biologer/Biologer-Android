@@ -147,15 +147,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="24dp"
-            android:id="@+id/notification_view_read_all_button"
-            android:text="@string/all_read">
-        </com.google.android.material.button.MaterialButton>
-
-        <com.google.android.material.button.MaterialButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginTop="12dp"
             android:id="@+id/notification_view_read_next_button"
             android:text="@string/next_unread">

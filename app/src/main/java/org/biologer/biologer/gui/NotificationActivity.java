@@ -17,7 +17,6 @@ import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -29,7 +28,6 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.DateHelper;
 import org.biologer.biologer.adapters.FileManipulation;
-import org.biologer.biologer.adapters.NotificationsHelper;
 import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -56,7 +54,7 @@ public class NotificationActivity extends AppCompatActivity {
     FrameLayout frameLayout1,frameLayout2, frameLayout3;
     LinearLayout linearLayoutZoom;
     TouchImageView touchImageView;
-    MaterialButton buttonReadAll, buttonReadNext;
+    MaterialButton buttonReadNext;
     TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject;
     UnreadNotificationsDb notification;
     int indexId;
@@ -110,23 +108,6 @@ public class NotificationActivity extends AppCompatActivity {
         touchImageView = findViewById(R.id.imageViewNotificationZoom);
         linearLayoutZoom = findViewById(R.id.notification_view_zoomed_image);
 
-        buttonReadAll = findViewById(R.id.notification_view_read_all_button);
-        buttonReadAll.setEnabled(true);
-        buttonReadAll.setOnClickListener(v -> {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(getString(R.string.mark_all_notifications_read))
-                    .setCancelable(true)
-                    .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                        buttonReadAll.setEnabled(false);
-                        NotificationsHelper.setAllOnlineNotificationsAsRead(NotificationActivity.this);
-                        dialog.dismiss();
-                    })
-                    .setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.dismiss()
-                    );
-            final AlertDialog alert = builder.create();
-            alert.show();
-        });
-
         // Check if there is notification with larger ID
         Query<UnreadNotificationsDb> queryLargerId = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.greater(notificationId))
@@ -150,8 +131,6 @@ public class NotificationActivity extends AppCompatActivity {
             Log.d(TAG, "There is only 1 notification, disabling buttons.");
             buttonReadNext.setEnabled(false);
             buttonReadNext.setVisibility(View.GONE);
-            buttonReadAll.setEnabled(false);
-            buttonReadAll.setVisibility(View.GONE);
             textViewAllRead.setVisibility(View.VISIBLE);
         }
 
@@ -439,7 +418,6 @@ public class NotificationActivity extends AppCompatActivity {
         frameLayout1.setVisibility(View.GONE);
         frameLayout2.setVisibility(View.GONE);
         frameLayout3.setVisibility(View.GONE);
-        buttonReadAll.setVisibility(View.GONE);
         buttonReadNext.setVisibility(View.GONE);
         textView.setVisibility(View.GONE);
     }
@@ -449,7 +427,6 @@ public class NotificationActivity extends AppCompatActivity {
         if (image1) {frameLayout1.setVisibility(View.VISIBLE);}
         if (image2) {frameLayout2.setVisibility(View.VISIBLE);}
         if (image3) {frameLayout3.setVisibility(View.VISIBLE);}
-        buttonReadAll.setVisibility(View.VISIBLE);
         buttonReadNext.setVisibility(View.VISIBLE);
         textView.setVisibility(View.VISIBLE);
     }

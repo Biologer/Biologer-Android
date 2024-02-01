@@ -41,14 +41,14 @@
     <string name="sacuvaj">Save</string>
     <string name="upload">Upload</string>
     <string name="title_activity_map">Map</string>
-    <string name="entry_title">Data entryDb</string>
+    <string name="entry_title">Field observation</string>
     <string name="taxa_mandatory">You must enter the valid species (taxon) name.</string>
     <string name="please_select">Please select</string>
     <string name="enable_location">Location setting must be enabled on your device.</string>
     <string name="enable_location_yes">Enable</string>
     <string name="enable_location_no">Cancel</string>
-    <string name="saved">The entryDb is saved.</string>
-    <string name="location_is_zero">Location is not retrieved yet. Would you like to wait for location or cancel this entryDb?</string>
+    <string name="saved">The entry is saved.</string>
+    <string name="location_is_zero">Location is not retrieved yet. Would you like to wait for location or cancel this entry?</string>
     <string name="wait">Wait</string>
 
     <!--picture dialog-->
@@ -167,7 +167,7 @@
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
     <string name="map">Map</string>
-    <string name="advanced_entry">Advanced observation entryDb</string>
+    <string name="advanced_entry">Advanced observation entry</string>
     <string name="advanced_entry_desc">Enables advanced options that could be entered with your occurrence (i.e. number of individuals, stage, sex).</string>
     <string name="select_sex">Sex of the individual</string>
     <string name="stage_egg">Egg</string>
@@ -212,7 +212,7 @@
     <string name="is_male">Male</string>
     <string name="is_female">Female</string>
     <string name="unknown_sex">Unknown sex</string>
-    <string name="preferences_data_entry">Data entryDb</string>
+    <string name="preferences_data_entry">Data entry</string>
     <string name="allow_english_names">Always list english names</string>
     <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
     <string name="preferences_user_settings">User account</string>
@@ -282,7 +282,7 @@
     <string name="name_is_obligatory">Name is obligatory</string>
     <string name="password_too_short">Password is too short</string>
     <string name="species_groups">Choose species groups</string>
-    <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or plants) it will be easier to find species for data entryDb. Other species will not pop up in the drop down menu.</string>
+    <string name="species_groups_desc">By selecting only certain groups (i.e. birds, butterflies or plants) it will be easier to find species for data entry. Other species will not pop up in the drop down menu.</string>
     <string name="sql_updated_message">SQL database structure changed. Biologer will log you back in and download user data from server.</string>
     <string name="login_after_sql_update_fail">Could not login after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of species</string>
@@ -337,7 +337,7 @@
     <string name="export_licence_40">Closed</string>
     <string name="export_licence_11">Closed 3 years</string>
     <string name="failed">Failed!</string>
-    <string name="upload_not_succesfull">Uploading of entryDb was not successful!</string>
+    <string name="upload_not_succesfull">Uploading of entry was not successful!</string>
     <string name="refresh_token_no_internet">Your login token expired after one year of use. Biologer will exit not since there is no internet connection to refresh the login token!</string>
     <string name="male_text">Male</string>
     <string name="female_text">Female</string>
@@ -384,7 +384,7 @@
     <string name="license_title_3">Partially open data license</string>
     <string name="partially_open_data_license_text">License for data with a limited geographical view\n\nThis license specifies the terms and conditions of Biologer \"limited view\" data usage from the database. Data is displayed on the map in the form of a 10×10 km square.\n\nThe basis of this license is Creative Commons License, Attribution-Noncommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0). This means that data with limited are allowed to be shared with third parties under the terms of the Creative Commons licenses.\n\nThe difference compared to a completely open data is only reflected in the precision of the geographical location and the date of observation. Limited data view allows displaying of locations in the form of a 10×10 km squares, without the possibility of showing places more accurately to other users of the database and hiding data about the month and day of records. Other information that came with the observations will be fully shown. This applies both to the data view within Biologer and to the data that are available for export from the database or sharing within larges systems for data aggregation.\n\nBy selecting this license authors retain all rights to use the precise location and date of their observations. %1$s administrators and taxonomic experts reserve the right to use all data entered under this license in order to produce the documents of national importance, for nature conservation (Red Book, Red List, revision of legislature, defining the borders of protested areas, etc.), as well as for statistical data processing (e.g. scientific publications, protection and conservation of the species and their habitats) but without publicly releasing the exact location of the original data. In the case that the location of the original data, which is recorded under this license, is needed for publishing, Administrators of %1$s and taxonomic experts must do so with the consent of the authors.</string>
     <string name="license_title_4">Temporarily closed data license</string>
-    <string name="temporary_closed_data_license_text">License for data with temporary limited access (closes for 3 years)\n\nThis license specifies the terms and conditions of the data usage from Biologer database for users who do not want to instantly share their data with others. Data is hidden for 3 first years and does not appear on the map, but will be completely published afterwards. Such way of saving data could be useful if the data has been collected for a scientific study, leaving enough time to the author to independently publish data before their publication in Biologer platform.\n\nSelecting this license temporary restricts the visibility of data for other users of the database. In the first 3 years after the data entryDb, it will be visible only to the author of the observation, to the taxonomic experts who verify the findings and to the website administrators. Data under this license will not be instantly shown on the taxa distribution maps, and other users will not be able to export this kind of data from the database. In 3 years after the observation is entered into database, the data becomes open and will be shared under the conditions of the Creative Commons license Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).\n\nBy selecting this license authors retain all rights to the data they entered. %1$s administrators and taxonomic experts reserve the right to use data entered under this license in order to produce the documents of national importance, for nature conservation (Red Book, Red List, revision of legislature, defining borders of the protected areas etc.), as well as for statistical data processing (e.g. protection and conservation of the taxa and their habitats) but without publicly releasing the exact location of the original data. In scientific publications, this data could only be used in summary form, without details about original record. In the case that the location of the original data, which is recorded under this license, is required for publishing, Administrators of %1$s and taxonomic experts must do so with the consent of the authors.</string>
+    <string name="temporary_closed_data_license_text">License for data with temporary limited access (closes for 3 years)\n\nThis license specifies the terms and conditions of the data usage from Biologer database for users who do not want to instantly share their data with others. Data is hidden for 3 first years and does not appear on the map, but will be completely published afterwards. Such way of saving data could be useful if the data has been collected for a scientific study, leaving enough time to the author to independently publish data before their publication in Biologer platform.\n\nSelecting this license temporary restricts the visibility of data for other users of the database. In the first 3 years after the data entry, it will be visible only to the author of the observation, to the taxonomic experts who verify the findings and to the website administrators. Data under this license will not be instantly shown on the taxa distribution maps, and other users will not be able to export this kind of data from the database. In 3 years after the observation is entered into database, the data becomes open and will be shared under the conditions of the Creative Commons license Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).\n\nBy selecting this license authors retain all rights to the data they entered. %1$s administrators and taxonomic experts reserve the right to use data entered under this license in order to produce the documents of national importance, for nature conservation (Red Book, Red List, revision of legislature, defining borders of the protected areas etc.), as well as for statistical data processing (e.g. protection and conservation of the taxa and their habitats) but without publicly releasing the exact location of the original data. In scientific publications, this data could only be used in summary form, without details about original record. In the case that the location of the original data, which is recorded under this license, is required for publishing, Administrators of %1$s and taxonomic experts must do so with the consent of the authors.</string>
     <string name="license_title_5">Closed data license</string>
     <string name="closed_data_license_text">License for data with limited access rights\n\nThis license specifies the terms and conditions of the data usage from %1$s database for users who do not want to share their data with others. Data is hidden and does not appear on the map.\n\nSelecting this license restricts the visibility of data for other users of the database. Entered data will be visible only to the author of the observation, to the taxonomic experts who verify the findings and to the website administrators. Data under this license will not be shown on the taxon distribution maps, and other users will not be able to export this kind of data from the database.\n\nBy selecting this license authors retain all rights to the data they entered. %1$s administrators and taxonomic experts reserve the right to use data entered under this license in order to produce the documents of national importance, for nature conservation (Red Book, Red List, revision of legislature, defining borders of the protected areas etc.), as well as for statistical data processing (e.g. protection and conservation of the species and their habitats) but without publicly releasing the exact location of the original data. In scientific publications, this data could only be used in summary form, without details about original record. In the case that the location of the original data, which is recorded under this license, is required for publishing, Administrators of %1$s and taxonomic experts must do so with the consent of the authors.\n\nDue to the limitations in verification of the data uploaded under this license and the inability of detailed data display, Biologer team does not recommend choosing this license!</string>
     <string name="license_image_title_1">Open image license</string>
@@ -474,5 +474,9 @@
     <string name="notification_location">Location:</string>
     <string name="observation_id">Observation ID:</string>
     <string name="notification_project_name">Project name:</string>
+    <string name="mark_all_as_read">Mark all as read</string>
+    <string name="confirm_read_all">You are about to set all the notifications as read. Are you sure about this?</string>
+    <string name="yes_read_add">Read all</string>
+    <string name="all_notifications_are_read">All notifications are read now!</string>
 
 </resources>

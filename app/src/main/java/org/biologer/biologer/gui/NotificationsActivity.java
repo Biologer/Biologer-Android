@@ -1,16 +1,23 @@
 package org.biologer.biologer.gui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,6 +32,8 @@ import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
@@ -136,13 +145,72 @@ public class NotificationsActivity extends AppCompatActivity {
         return notifications;
     }
 
+    // Add Save button in the right part of the toolbar
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.notifications_menu, menu);
+        return true;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
             this.getOnBackPressedDispatcher().onBackPressed();
         }
+        if (id == R.id.noty_all_read) {
+            buildAlertOnReadAll();
+        }
         return true;
     }
+
+    protected void buildAlertOnReadAll() {
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(getString(R.string.confirm_read_all))
+                    .setCancelable(true)
+                    .setPositiveButton(getString(R.string.yes_read_add), (dialog, id) -> {
+
+                        Toast.makeText(this, getString(R.string.all_notifications_are_read), Toast.LENGTH_SHORT).show();
+                        NotificationsHelper.setAllOnlineNotificationsAsRead(this); // Remove notifications online
+                        int size = notifications.size();
+                        notifications.clear(); // Remove notifications from the list
+                        notificationsAdapter.notifyItemRangeRemoved(0, size); // Remove notifications from RecycleView
+
+                    })
+                    .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
+            final AlertDialog alert = builder.create();
+
+            alert.setOnShowListener(new DialogInterface.OnShowListener() {
+                private static final int AUTO_DISMISS_MILLIS = 4000;
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+                    defaultButton.setEnabled(false);
+                    final CharSequence negativeButtonText = defaultButton.getText();
+                    new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
+                        @Override
+                        public void onTick(long l) {
+                            defaultButton.setText(String.format(
+                                    Locale.getDefault(), "%s (%d)",
+                                    negativeButtonText,
+                                    TimeUnit.MILLISECONDS.toSeconds(l) + 1
+                            ));
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if (alert.isShowing()) {
+                                defaultButton.setEnabled(true);
+                                defaultButton.setText(negativeButtonText);
+                            }
+                        }
+                    }.start();
+                }
+            });
+
+            alert.show();
+    }
+
 
 }
