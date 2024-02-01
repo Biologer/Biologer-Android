@@ -176,4 +176,9 @@ public class FileManipulation {
         }
     }
 
+    public static boolean uriFileExist(Context context, Uri uri) {
+        File file = getInternalFileFromUri(context, uri);
+        return file.exists();
+    }
+
 }

@@ -339,7 +339,18 @@ public class NotificationsAdapter
                 else {
                     if (i == 0) {
                         Log.i(TAG, "There is a thumbnail already, displaying that one: " + notifications.get(0).getThumbnail());
-                        imageView.setImageURI(Uri.parse(notifications.get(0).getThumbnail()));
+                        Uri uri = Uri.parse(notifications.get(0).getThumbnail());
+                        if (FileManipulation.uriFileExist(context, uri)) {
+                            imageView.setImageURI(uri);
+                        } else {
+                            // If the image file is deleted, download it again.
+                            for (int j = 0; j < notifications.size(); j++) {
+                                notifications.get(j).setThumbnail(null);
+                                notifications.get(j).setImage1(null);
+                                App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
+                            }
+                            setPhoto(notifications.get(0), imageView);
+                        }
                     }
                 }
             }

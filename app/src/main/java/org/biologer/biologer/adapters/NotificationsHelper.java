@@ -115,22 +115,34 @@ public class NotificationsHelper {
         UnreadNotificationsDb notification = query.findFirst();
         query.close();
 
+        // Get the number of observations for the same field observation ID. It there are more
+        // notifications for the same field observation, don’t delete the image.
         if (notification != null) {
-            Log.d(TAG, "Photos to be deleted: " + notification.getThumbnail() + "; "
-                    + notification.getImage1() + "; " + notification.getImage2()
-                    + "; " + notification.getImage3());
-            if (notification.getThumbnail() != null && Objects.equals(FileManipulation.uriType(notification.getThumbnail()), "file")) {
-                Log.i(TAG, "Deleting photo 1 and its thumbnail from internal storage.");
-                FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getThumbnail()));
-                FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage1()));
-                if (notification.getImage2() != null && Objects.equals(FileManipulation.uriType(notification.getImage2()), "file")) {
-                    Log.i(TAG, "Deleting photo 2 from internal storage.");
-                    FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage2()));
-                    if (notification.getImage3() != null && Objects.equals(FileManipulation.uriType(notification.getImage3()), "file")) {
-                        Log.i(TAG, "Deleting photo 3 from internal storage.");
-                        FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage3()));
+            long observations;
+            try (Query<UnreadNotificationsDb> queryFieldObservations = unreadNotificationsDbBox
+                    .query(UnreadNotificationsDb_.fieldObservationId.equal(notification.getFieldObservationId()))
+                    .build()) {
+                observations = queryFieldObservations.count();
+            }
+            if (observations == 1) {
+                Log.d(TAG, "Photos to be deleted: " + notification.getThumbnail() + "; "
+                        + notification.getImage1() + "; " + notification.getImage2()
+                        + "; " + notification.getImage3());
+                if (notification.getThumbnail() != null && Objects.equals(FileManipulation.uriType(notification.getThumbnail()), "file")) {
+                    Log.i(TAG, "Deleting photo 1 and its thumbnail from internal storage.");
+                    FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getThumbnail()));
+                    FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage1()));
+                    if (notification.getImage2() != null && Objects.equals(FileManipulation.uriType(notification.getImage2()), "file")) {
+                        Log.i(TAG, "Deleting photo 2 from internal storage.");
+                        FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage2()));
+                        if (notification.getImage3() != null && Objects.equals(FileManipulation.uriType(notification.getImage3()), "file")) {
+                            Log.i(TAG, "Deleting photo 3 from internal storage.");
+                            FileManipulation.deleteInternalFileFromUri(context, Uri.parse(notification.getImage3()));
+                        }
                     }
                 }
+            } else {
+                Log.i(TAG, "There are " + observations + " field observations with the same image. Not deleting the images...");
             }
         }
     }
