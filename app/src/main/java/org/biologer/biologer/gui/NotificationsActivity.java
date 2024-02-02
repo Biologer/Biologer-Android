@@ -1,5 +1,6 @@
 package org.biologer.biologer.gui;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -274,21 +275,27 @@ public class NotificationsActivity extends AppCompatActivity {
     private void deleteSelectedNotifications() {
         make_selection = false;
         selectedNotificationsMenuItemsEnabled(false);
-        List<Integer> to_remove = new ArrayList<>();
+        List<Integer> remove_indexes = new ArrayList<>();
+        List<UnreadNotificationsDb> remove_list = new ArrayList<>();
         for (int i = 0; i < notifications.size(); i++) {
             if (notifications.get(i).getMarked() == 1) {
-                Log.d(TAG, "Adding item " + i + " for removal.");
-                to_remove.add(i);
+                Log.d(TAG, "Removing notification using item index " + i + ".");
+                NotificationsHelper.setOnlineNotificationAsRead(notifications.get(i).getRealId());
+                NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notifications.get(i).getId());
+                NotificationsHelper.deleteNotificationFromObjectBox(notifications.get(i).getId());
+                remove_indexes.add(i);
+                remove_list.add(notifications.get(i));
             }
         }
-        for (int i = to_remove.size() - 1; i > 0; i--) {
-            notifications.remove(i);
-            Log.d(TAG, "Removing item " + to_remove.get(i) + ".");
-            NotificationsHelper.setOnlineNotificationAsRead(notifications.get(to_remove.get(i)).getRealId());
-            NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notifications.get(to_remove.get(i)).getId());
-            NotificationsHelper.deleteNotificationFromObjectBox(notifications.get(to_remove.get(i)).getId());
+        Log.d(TAG, "There are " + remove_indexes.size() + " entries to remove.");
+
+        // Finally remove notification from RecycleView
+        notifications.removeAll(remove_list);
+        if (remove_indexes.size() == 1) {
+            notificationsAdapter.notifyItemRemoved(remove_indexes.get(0));
+        } else {
+            notificationsAdapter.notifyItemRangeRemoved(Collections.min(remove_indexes), Collections.max(remove_indexes));
         }
-        notificationsAdapter.notifyItemRangeRemoved(Collections.min(to_remove), Collections.max(to_remove));
     }
 
     protected void buildAlertOnReadAll() {
