@@ -41,14 +41,14 @@
     <string name="sacuvaj">Сачувај</string>
     <string name="upload">Пошаљи</string>
     <string name="title_activity_map">Карта</string>
-    <string name="entry_title">Унос податка</string>
+    <string name="entry_title">Теренски налаз</string>
     <string name="taxa_mandatory">Морате унети исправан назив врсте (таксона).</string>
     <string name="please_select">Изаберите</string>
     <string name="enable_location">Праћење локације мора бити омогућено у подешавањима уређаја.</string>
     <string name="enable_location_yes">Омогући</string>
     <string name="enable_location_no">Откажи</string>
     <string name="saved">Унос је сачуван.</string>
-    <string name="location_is_zero">Још увек не знамо где сте. Да ли желите да сачекате на локацију или да откажете овај унос?</string>
+    <string name="location_is_zero">Још увек није пронађена ваша локација. Да ли желите да сачекате на локацију или да откажете овај унос?</string>
     <string name="wait">Сачекај</string>
 
     <!--picture dialog-->
@@ -337,7 +337,7 @@
     <string name="export_licence_40">Затворена</string>
     <string name="export_licence_11">Затворена на 3 године</string>
     <string name="failed">Неуспешно!</string>
-    <string name="upload_not_succesfull">Није успело слање уноса на сервер.</string>
+    <string name="upload_not_succesfull">Није успело слање уноса на сервер!</string>
     <string name="refresh_token_no_internet">Ваш жетон за пријаву је истекао након једне године. Биологер ће бити затворен, пошто нема везе са интернетом за преузимање новог жетона.</string>
     <string name="male_text">Мужјак</string>
     <string name="female_text">Женка</string>
@@ -456,7 +456,29 @@
     <string name="there_are">Имате</string>
     <string name="there_are2">налаза са терена у вашем списку. Одјавом ћете трајно обрисати ове налазе. Да ли и даље желите да се одјавите?</string>
     <string name="announcement">Новост</string>
-    <string name="created_on">Датум: </string>
+    <string name="created_on">Датум настанка</string>
     <string name="by">Написао: </string>
+    <string name="custom_maps_folder_name">Произвољне карте</string>
+    <string name="load_offline_map">Учитај карте за рад ван мреже</string>
+    <string name="biologer_banner">Биологеров банер</string>
+    <string name="banner_username">Корисничко име</string>
+    <string name="banner_mail_example">ваша_адреса@biologer.org</string>
+    <string name="notifications">Обавештења</string>
+    <string name="species_photo">Слика врсте</string>
+    <string name="notification_text">Текст обавештења.</string>
+    <string name="mark_all_notifications_read">Ова радња ће означити сва обавештења као прочитана, укључујући и обавештења на вебу. Да ли желите да наставите?</string>
+    <string name="new_notification_text">ваш теренски налаз је измењен на вебу. Погледајте шта је ново!</string>
+    <string name="new_notifications_text">ваших теренских налаза је измењено на вебу. Погледајте шта је ново!</string>
+    <string name="notification">Обавештење</string>
+    <string name="observation_date">Датум посматрања:</string>
+    <string name="notification_location">Место посматрања:</string>
+    <string name="observation_id">Иб. посматрања:</string>
+    <string name="notification_project_name">Назив пројекта:</string>
+    <string name="mark_all_as_read">Означи све као прочитано</string>
+    <string name="confirm_read_all">Овим ћете означити сва обавештења као прочитана. Да ли сте сигурни да то желите?</string>
+    <string name="yes_read_add">Прочитај све</string>
+    <string name="all_notifications_are_read">Сва обавештења су сада прочитана!</string>
+    <string name="mark_as_read">Означи одабрано као прочитано</string>
+    <string name="mark_deselect">Поништи избор</string>
 
 </resources>

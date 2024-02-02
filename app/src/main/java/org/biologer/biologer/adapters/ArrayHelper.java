@@ -77,4 +77,15 @@ public class ArrayHelper {
         return null;
     }
 
+    public static int[] intListToArray(List<Integer> list) {
+        if (list != null) {
+            int[] result = new int[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                result[i] = list.get(i);
+            }
+            return result;
+        }
+        return null;
+    }
+
 }

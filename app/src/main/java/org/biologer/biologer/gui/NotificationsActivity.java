@@ -2,8 +2,11 @@ package org.biologer.biologer.gui;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -20,6 +24,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,17 +36,19 @@ import org.biologer.biologer.adapters.RecyclerOnClickListener;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
-
     RecyclerView recyclerView;
     List<UnreadNotificationsDb> notifications;
     NotificationsAdapter notificationsAdapter;
-    int current_size;
+    boolean make_selection;
+    static Menu notyMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +69,51 @@ public class NotificationsActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycled_view_notifications);
         initiateRecycleView(notifications);
 
+        make_selection = false;
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (make_selection) {
+                    make_selection = false;
+                    deselectAllNotifications();
+                } else {
+                    finish();
+                }
+            }
+        });
+
+    }
+
+    private void selectedNotificationsMenuItemsEnabled(boolean selected) {
+        updateMenuItemEnabled(0, selected);
+        updateMenuItemEnabled(1, selected);
+    }
+
+    // Update visibility by menu index
+    // 0 = Mark read menu
+    // 1 = Clear selection menu
+    // 2 = Clear all notifications
+    private void updateMenuItemEnabled(int index, boolean active) {
+        if (active) {
+            getMenu().getItem(index).setEnabled(true);
+            Objects.requireNonNull(getMenu().getItem(index).getIcon()).setAlpha(255);
+            changeMenuItemColor(getMenu().getItem(index), true);
+        } else {
+            getMenu().getItem(index).setEnabled(false);
+            Objects.requireNonNull(getMenu().getItem(index).getIcon()).setAlpha(100);
+            changeMenuItemColor(getMenu().getItem(index), false);
+        }
+    }
+
+    private void changeMenuItemColor(MenuItem item, boolean enabled) {
+        SpannableString s = new SpannableString(item.getTitle());
+        if (enabled) {
+            s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, s.length(), 0);
+        } else {
+            s.setSpan(new ForegroundColorSpan(Color.GRAY), 0, s.length(), 0);
+        }
+        item.setTitle(s);
     }
 
     private final ActivityResultLauncher<Intent> notificationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -93,6 +145,7 @@ public class NotificationsActivity extends AppCompatActivity {
                         if (result.getResultCode() == 2) {
                             if (notifications.isEmpty()) {
                                 Log.i(TAG, "No more notifications");
+                                selectedNotificationsMenuItemsEnabled(false);
                             } if (notifications.size() == index) {
                                 openNotification(0);
                             } if (notifications.size() > index) {
@@ -107,20 +160,64 @@ public class NotificationsActivity extends AppCompatActivity {
         notificationsAdapter = new NotificationsAdapter(notifications);
         recyclerView.setAdapter(notificationsAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setClickable(true);
         recyclerView.addOnItemTouchListener(
                 new RecyclerOnClickListener(this, recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        recyclerView.setClickable(false);
-                        openNotification(position);
+                        // Select the notifications
+                        if (make_selection) {
+                            selectDeselect(position);
+                            notificationsAdapter.notifyItemChanged(position);
+                        }
+                        // Or open it in normal way...
+                        else {
+                            recyclerView.setClickable(false);
+                            openNotification(position);
+                        }
                     }
 
                     @Override
                     public void onLongItemClick(View view, int position) {
-                        Log.d(TAG, "Notification item " + position + " long pressed");
+                        make_selection = true;
+                        selectedNotificationsMenuItemsEnabled(true);
+                        selectDeselect(position);
+                        notificationsAdapter.notifyItemChanged(position);
                     }
                 }));
+    }
+
+    private void selectDeselect(int position) {
+        if (notifications.get(position).getMarked() == 0) {
+            Log.d(TAG, "Notification " + position + " not selected. Selecting now.");
+            notifications.get(position).setMarked(1);
+        } else {
+            Log.d(TAG, "Notification " + position + " already selected. Deselecting.");
+            notifications.get(position).setMarked(0);
+            // If some notification is selected continue selection,...
+            int selected = 0;
+            for (int i = 0; i < notifications.size(); i++) {
+                if (notifications.get(i).getMarked() == 1) {
+                    selected++;
+                }
+            }
+            Log.d(TAG, "There are " + selected + " notifications already selected.");
+            if (selected == 0) {
+                make_selection = false;
+                selectedNotificationsMenuItemsEnabled(false);
+            }
+        }
+    }
+
+    private void deselectAllNotifications() {
+        selectedNotificationsMenuItemsEnabled(false);
+        for (int i = 0; i < notifications.size(); i++) {
+            if (notifications.get(i).getMarked() == 1) {
+                notifications.get(i).setMarked(0);
+                notificationsAdapter.notifyItemChanged(i);
+            }
+        }
     }
 
     private void openNotification(int index) {
@@ -138,9 +235,6 @@ public class NotificationsActivity extends AppCompatActivity {
         List<UnreadNotificationsDb> notifications = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).getAll();
         if (notifications == null) {
             notifications = new ArrayList<>();
-            current_size = 0;
-        } else {
-            current_size = notifications.size();
         }
         return notifications;
     }
@@ -150,7 +244,13 @@ public class NotificationsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.notifications_menu, menu);
-        return true;
+        notyMenu = menu;
+        selectedNotificationsMenuItemsEnabled(false);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    private static Menu getMenu() {
+        return notyMenu;
     }
 
     @Override
@@ -162,7 +262,33 @@ public class NotificationsActivity extends AppCompatActivity {
         if (id == R.id.noty_all_read) {
             buildAlertOnReadAll();
         }
+        if (id == R.id.noty_read) {
+            deleteSelectedNotifications();
+        }
+        if (id == R.id.noty_deselect) {
+            deselectAllNotifications();
+        }
         return true;
+    }
+
+    private void deleteSelectedNotifications() {
+        make_selection = false;
+        selectedNotificationsMenuItemsEnabled(false);
+        List<Integer> to_remove = new ArrayList<>();
+        for (int i = 0; i < notifications.size(); i++) {
+            if (notifications.get(i).getMarked() == 1) {
+                Log.d(TAG, "Adding item " + i + " for removal.");
+                to_remove.add(i);
+            }
+        }
+        for (int i = to_remove.size() - 1; i > 0; i--) {
+            notifications.remove(i);
+            Log.d(TAG, "Removing item " + to_remove.get(i) + ".");
+            NotificationsHelper.setOnlineNotificationAsRead(notifications.get(to_remove.get(i)).getRealId());
+            NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notifications.get(to_remove.get(i)).getId());
+            NotificationsHelper.deleteNotificationFromObjectBox(notifications.get(to_remove.get(i)).getId());
+        }
+        notificationsAdapter.notifyItemRangeRemoved(Collections.min(to_remove), Collections.max(to_remove));
     }
 
     protected void buildAlertOnReadAll() {
@@ -176,6 +302,7 @@ public class NotificationsActivity extends AppCompatActivity {
                         int size = notifications.size();
                         notifications.clear(); // Remove notifications from the list
                         notificationsAdapter.notifyItemRangeRemoved(0, size); // Remove notifications from RecycleView
+                        selectedNotificationsMenuItemsEnabled(false);
 
                     })
                     .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
@@ -211,6 +338,5 @@ public class NotificationsActivity extends AppCompatActivity {
 
             alert.show();
     }
-
 
 }

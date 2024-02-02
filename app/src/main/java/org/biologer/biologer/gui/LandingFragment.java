@@ -131,17 +131,17 @@ public class LandingFragment extends Fragment {
                         if (s.equals("success")) {
                             textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconGone();
+                            ((LandingActivity) getActivity()).setMenuIconVisibility(false);
                         }
                         if (s.equals("failed_photo")) {
                             textView.setText(R.string.failed_to_upload_photo);
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconVisible();
+                            ((LandingActivity) getActivity()).setMenuIconVisibility(true);
                         }
                         if (s.equals("failed_entry")) {
                             textView.setText(R.string.failed_to_upload_entry);
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconVisible();
+                            ((LandingActivity) getActivity()).setMenuIconVisibility(true);
                         }
                         if (s.equals("id_uploaded")) {
                             Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");

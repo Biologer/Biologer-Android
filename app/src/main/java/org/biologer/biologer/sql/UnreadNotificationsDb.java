@@ -17,13 +17,14 @@ public class UnreadNotificationsDb {
     private String updatedAt;
     private String thumbnail, image1, image2, image3;
     private String date, location, project;
+    private int marked;
 
     public UnreadNotificationsDb (long id, String realId, String type,
                                   String notifiableType, int fieldObservationId,
                                   String causerName, String curatorName,
                                   String taxonName, String updatedAt,
                                   String thumbnail, String image1, String image2,  String image3,
-                                  String date, String location, String project) {
+                                  String date, String location, String project, int marked) {
         this.id = id;
         this.realId = realId;
         this.type = type;
@@ -40,6 +41,7 @@ public class UnreadNotificationsDb {
         this.date = date;
         this.location = location;
         this.project = project;
+        this.marked = marked;
     }
 
     public long getId() {
@@ -164,5 +166,13 @@ public class UnreadNotificationsDb {
 
     public void setProject(String project) {
         this.project = project;
+    }
+
+    public int getMarked() {
+        return marked;
+    }
+
+    public void setMarked(int marked) {
+        this.marked = marked;
     }
 }

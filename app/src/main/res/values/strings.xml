@@ -478,5 +478,7 @@
     <string name="confirm_read_all">You are about to set all the notifications as read. Are you sure about this?</string>
     <string name="yes_read_add">Read all</string>
     <string name="all_notifications_are_read">All notifications are read now!</string>
+    <string name="mark_as_read">Mark selected as read</string>
+    <string name="mark_deselect">Clear selection</string>
 
 </resources>

@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -40,12 +41,12 @@ import retrofit2.Response;
 
 public class NotificationsAdapter
         extends RecyclerView.Adapter<NotificationsAdapter.ViewHolder> {
-    private final List<UnreadNotificationsDb> myNotifications;
+    private final List<UnreadNotificationsDb> notifications;
     private static final String TAG = "Biologer.NotifyAdapter";
     Context context;
 
-    public NotificationsAdapter(List<UnreadNotificationsDb> myNotifications) {
-        this.myNotifications = myNotifications;
+    public NotificationsAdapter(List<UnreadNotificationsDb> notificationa) {
+        this.notifications = notificationa;
     }
 
     public static class ViewHolder
@@ -53,6 +54,8 @@ public class NotificationsAdapter
 
         public TextView textNotification;
         public ImageView observationPhoto;
+        //public LinearLayout linearLayout;
+        boolean make_selection;
 
         public ViewHolder(View view) {
             super(view);
@@ -60,6 +63,25 @@ public class NotificationsAdapter
             // Define click listener for the ViewHolder's View
             textNotification = view.findViewById(R.id.notification_list_text);
             observationPhoto = view.findViewById(R.id.image_view_notification);
+            /* linearLayout = view.findViewById(R.id.notification_layout);
+            linearLayout.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) {
+
+                    }
+                    return false;
+                }
+            });
+
+            linearLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                }
+            });
+            */
         }
     }
 
@@ -79,7 +101,7 @@ public class NotificationsAdapter
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Log.d(TAG, "Binding to the notifications adapter now!");
 
-        UnreadNotificationsDb notification = myNotifications.get(position);
+        UnreadNotificationsDb notification = notifications.get(position);
 
         TextView textNotifications = viewHolder.textNotification;
         textNotifications.setText(Html.fromHtml(getFormattedMessage(notification)));
@@ -88,6 +110,12 @@ public class NotificationsAdapter
         imageView.setImageDrawable(null); // Clear the previous image
         imageView.setImageResource(R.mipmap.ic_kornjaca); // Set the icon before the real image is loaded
         setPhoto(notification, imageView); // Download and display image
+        if (notification.getMarked() == 1) {
+            viewHolder.itemView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.colorPrimaryLight));
+        } else {
+            viewHolder.itemView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.fragment_background));
+        }
+
     }
 
     @Override
@@ -98,8 +126,8 @@ public class NotificationsAdapter
 
     @Override
     public int getItemCount() {
-        if (myNotifications != null) {
-            return myNotifications.size();
+        if (notifications != null) {
+            return notifications.size();
         } else {
             return 0;
         }

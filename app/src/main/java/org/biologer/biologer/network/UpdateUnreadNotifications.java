@@ -165,7 +165,7 @@ public class UpdateUnreadNotifications extends Service {
                     unreadNotification.getData().getTaxon_name(),
                     unreadNotification.getUpdated_at(),
                     null,null, null, null,
-                    null, null, null);
+                    null, null, null, 0);
         }
         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notificationForSQL);
         Log.d(TAG, notificationForSQL.length + " notifications should be saved; total "

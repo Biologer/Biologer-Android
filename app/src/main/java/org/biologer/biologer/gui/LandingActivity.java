@@ -1047,28 +1047,20 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         long numberOfItems = App.get().getBoxStore().boxFor(EntryDb.class).count();
         Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
 
-        if (numberOfItems == 0) {
-            // Disable the upload button
-            setMenuIconGone();
-        } else {
-            // Enable the upload button
-            setMenuIconVisible();
-        }
+        // Disable the upload button
+        // Enable the upload button
+        setMenuIconVisibility(numberOfItems != 0);
     }
 
-    public void setMenuIconGone () {
+    public void setMenuIconVisibility (boolean visible) {
         if (getMenu() != null) {
-            uploadMenu.getItem(0).setEnabled(false);
-            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
-            uploadMenu.getItem(1).setVisible(false);
-        }
-    }
-
-    public void setMenuIconVisible () {
-        if (uploadMenu != null) {
-            uploadMenu.getItem(0).setEnabled(true);
-            Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
-            uploadMenu.getItem(1).setVisible(true);
+            uploadMenu.getItem(0).setEnabled(visible);
+            if (visible) {
+                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
+            } else {
+                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
+            }
+            uploadMenu.getItem(1).setVisible(visible);
         }
     }
 
