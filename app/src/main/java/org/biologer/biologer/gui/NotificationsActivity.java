@@ -1,6 +1,5 @@
 package org.biologer.biologer.gui;
 
-import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -291,10 +290,12 @@ public class NotificationsActivity extends AppCompatActivity {
 
         // Finally remove notification from RecycleView
         notifications.removeAll(remove_list);
-        if (remove_indexes.size() == 1) {
-            notificationsAdapter.notifyItemRemoved(remove_indexes.get(0));
-        } else {
-            notificationsAdapter.notifyItemRangeRemoved(Collections.min(remove_indexes), Collections.max(remove_indexes));
+        Collections.sort(remove_indexes);
+        Log.d(TAG, "Removing notifications from index " + Collections.min(remove_indexes) + " to " + Collections.max(remove_indexes));
+        Log.d(TAG, "Removing notifications from index " + remove_indexes.get(0) + " to " + remove_indexes.get(remove_indexes.size() - 1));
+        for (int i = remove_indexes.size() - 1; i >=0; i--) {
+            Log.d(TAG, "Removing notification " + remove_indexes.get(i) + " from adapter.");
+            notificationsAdapter.notifyItemRemoved(remove_indexes.get(i));
         }
     }
 
