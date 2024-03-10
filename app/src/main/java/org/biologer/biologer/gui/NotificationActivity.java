@@ -55,7 +55,7 @@ public class NotificationActivity extends AppCompatActivity {
     LinearLayout linearLayoutZoom;
     TouchImageView touchImageView;
     MaterialButton buttonReadNext;
-    TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject;
+    TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject, textViewFinalTaxon;
     UnreadNotificationsDb notification;
     int indexId;
     long notificationId;
@@ -93,6 +93,7 @@ public class NotificationActivity extends AppCompatActivity {
         textView = findViewById(R.id.notification_text);
         textView.setText(Html.fromHtml(getFormattedMessage()));
         textViewID = findViewById(R.id.notification_text_id);
+        textViewFinalTaxon = findViewById(R.id.notification_text_final_taxon);
         textViewDate = findViewById(R.id.notification_text_date);
         textViewLocation = findViewById(R.id.notification_text_location);
         textViewProject = findViewById(R.id.notification_text_project);
@@ -204,6 +205,10 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void getFieldObservationData() {
+        // Show current identification of the taxon online
+        String finalTaxon = getString(R.string.observation_taxon) + " <i>" + notification.getFinalTaxonName() + "</i>";
+        textViewFinalTaxon.setText(Html.fromHtml(finalTaxon));
+
         // Show field observation ID
         String idText = getString(R.string.observation_id) + " " + notification.getFieldObservationId();
         textViewID.setText(idText);

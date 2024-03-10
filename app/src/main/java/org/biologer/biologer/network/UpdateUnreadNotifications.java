@@ -173,6 +173,7 @@ public class UpdateUnreadNotifications extends Service {
                     unreadNotification.getData().getCauser_name(),
                     unreadNotification.getData().getCurator_name(),
                     unreadNotification.getData().getTaxon_name(),
+                    null,
                     unreadNotification.getUpdated_at(),
                     null,null, null, null,
                     null, null, null, 0);

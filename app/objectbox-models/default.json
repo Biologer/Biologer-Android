@@ -39,7 +39,7 @@
     },
     {
       "id": "10:8101485209871029404",
-      "lastPropertyId": "18:6380064111013356104",
+      "lastPropertyId": "19:6613538116525791881",
       "name": "UnreadNotificationsDb",
       "properties": [
         {
@@ -127,6 +127,11 @@
           "id": "18:6380064111013356104",
           "name": "marked",
           "type": 5
+        },
+        {
+          "id": "19:6613538116525791881",
+          "name": "finalTaxonName",
+          "type": 9
         }
       ],
       "relations": []

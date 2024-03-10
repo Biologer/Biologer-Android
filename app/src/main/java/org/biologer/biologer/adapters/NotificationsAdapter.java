@@ -202,6 +202,7 @@ public class NotificationsAdapter
                                                 f.format(response.body().getData()[0].getLatitude()) + "° N";
                                     }
                                     String project = response.body().getData()[0].getProject();
+                                    String finalTaxon = response.body().getData()[0].getTaxonSuggestion();
 
                                     List<FieldObservationDataPhotos> photos = response.body().getData()[0].getPhotos();
                                     if (!photos.isEmpty()) {
@@ -305,6 +306,7 @@ public class NotificationsAdapter
                                         notifications.get(j).setDate(date);
                                         notifications.get(j).setLocation(location);
                                         notifications.get(j).setProject(project);
+                                        notifications.get(j).setFinalTaxonName(finalTaxon);
                                         Log.i(TAG, "Writing important field observation date to the ObjectBox.");
                                         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
                                     }

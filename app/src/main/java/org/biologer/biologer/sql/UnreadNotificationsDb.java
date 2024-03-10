@@ -14,6 +14,7 @@ public class UnreadNotificationsDb {
     private String causerName;
     private String curatorName;
     private String taxonName;
+    private String finalTaxonName;
     private String updatedAt;
     private String thumbnail, image1, image2, image3;
     private String date, location, project;
@@ -22,7 +23,7 @@ public class UnreadNotificationsDb {
     public UnreadNotificationsDb (long id, String realId, String type,
                                   String notifiableType, int fieldObservationId,
                                   String causerName, String curatorName,
-                                  String taxonName, String updatedAt,
+                                  String taxonName, String finalTaxonName, String updatedAt,
                                   String thumbnail, String image1, String image2,  String image3,
                                   String date, String location, String project, int marked) {
         this.id = id;
@@ -33,6 +34,7 @@ public class UnreadNotificationsDb {
         this.causerName = causerName;
         this.curatorName = curatorName;
         this.taxonName = taxonName;
+        this.finalTaxonName = finalTaxonName;
         this.updatedAt = updatedAt;
         this.image1 = image1;
         this.image2 = image2;
@@ -174,5 +176,13 @@ public class UnreadNotificationsDb {
 
     public void setMarked(int marked) {
         this.marked = marked;
+    }
+
+    public String getFinalTaxonName() {
+        return finalTaxonName;
+    }
+
+    public void setFinalTaxonName(String finalTaxonName) {
+        this.finalTaxonName = finalTaxonName;
     }
 }
