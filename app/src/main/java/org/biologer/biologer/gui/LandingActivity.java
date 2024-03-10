@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -79,7 +80,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private static final String TAG = "Biologer.Landing";
 
     private DrawerLayout drawer;
-    String how_to_use_network;
+    static String how_to_use_network;
 
     // Define upload menu so that we can hide it if required
     static Menu uploadMenu;
@@ -327,7 +328,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // Check if notifications are enabled and download/upload data
             if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 Log.d(TAG, "Notifications are enabled.");
-                if (shouldDownload()) {
+                if (shouldDownload(this)) {
                     uploadRecords();
 
                     // Update announcements
@@ -566,8 +567,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     }
             );
 
-    private boolean shouldDownload() {
-        String network_type = InternetConnection.networkType(this);
+    public static boolean shouldDownload(Context context) {
+        String network_type = InternetConnection.networkType(context);
         if (network_type != null) {
             if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
                 return true;
@@ -660,7 +661,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void updateTaxa2 (int timestamp) {
         // If user choose to update data on any network, just do it!
-        if (shouldDownload()) {
+        if (shouldDownload(this)) {
             Log.d(TAG, "The user chooses to update taxa without asking. Fetching automatically.");
             startFetchingTaxa();
         } else {

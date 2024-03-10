@@ -12,6 +12,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
@@ -31,6 +32,7 @@ import retrofit2.Response;
 public class UpdateUnreadNotifications extends Service {
 
     private static final String TAG = "Biologer.NotyUpdate";
+    public final static String NOTIFICATIONS_DOWNLOADED = "org.biologer.biologer.adapters.UpdateNotifications.DOWNLOADED";
     int NOTIFICATION_ID = 0;
 
     public void onCreate() {
@@ -56,6 +58,13 @@ public class UpdateUnreadNotifications extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void sendBroadcast () {
+        Log.i(TAG, "Sending download success through the Broadcast.");
+        Intent intent = new Intent (NOTIFICATIONS_DOWNLOADED);
+        intent.putExtra(NOTIFICATIONS_DOWNLOADED, "downloaded");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     // This will download notifications from the veb and call displayUnreadNotifications()
@@ -102,6 +111,7 @@ public class UpdateUnreadNotifications extends Service {
                                 Log.d(TAG, "Number of notifications online equals the ones stored locally.");
                             }
                             displayUnreadNotifications(size);
+                            sendBroadcast();
                         } else {
                             Log.d(TAG, "No unread notifications online, Hurray!");
                         }

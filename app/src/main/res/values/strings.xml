@@ -480,5 +480,8 @@
     <string name="all_notifications_are_read">All notifications are read now!</string>
     <string name="mark_as_read">Mark selected as read</string>
     <string name="mark_deselect">Clear selection</string>
+    <string name="downloading_notifications_disabled">Downloading is disabled in Biologer preferences. You could temporary download new notifications here or change the preferences.</string>
+    <string name="notifications_downloaded">Notifications downloaded.</string>
+    <string name="notifications_download_text">Notifications are only visible when you are online. Ensure that you allowed Biologer to download data from the web and check your internet connection.</string>
 
 </resources>

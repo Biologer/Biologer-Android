@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -45,8 +44,8 @@ public class NotificationsAdapter
     private static final String TAG = "Biologer.NotifyAdapter";
     Context context;
 
-    public NotificationsAdapter(List<UnreadNotificationsDb> notificationa) {
-        this.notifications = notificationa;
+    public NotificationsAdapter(List<UnreadNotificationsDb> notification) {
+        this.notifications = notification;
     }
 
     public static class ViewHolder
@@ -54,8 +53,6 @@ public class NotificationsAdapter
 
         public TextView textNotification;
         public ImageView observationPhoto;
-        //public LinearLayout linearLayout;
-        boolean make_selection;
 
         public ViewHolder(View view) {
             super(view);
@@ -63,25 +60,6 @@ public class NotificationsAdapter
             // Define click listener for the ViewHolder's View
             textNotification = view.findViewById(R.id.notification_list_text);
             observationPhoto = view.findViewById(R.id.image_view_notification);
-            /* linearLayout = view.findViewById(R.id.notification_layout);
-            linearLayout.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION) {
-
-                    }
-                    return false;
-                }
-            });
-
-            linearLayout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                }
-            });
-            */
         }
     }
 

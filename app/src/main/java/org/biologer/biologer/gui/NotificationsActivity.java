@@ -1,7 +1,10 @@
 package org.biologer.biologer.gui;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -13,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -24,6 +28,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,7 +37,9 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.adapters.NotificationsHelper;
+import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
+import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.ArrayList;
@@ -45,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 public class NotificationsActivity extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
     RecyclerView recyclerView;
+    BroadcastReceiver downloadNotifications;
     List<UnreadNotificationsDb> notifications;
     NotificationsAdapter notificationsAdapter;
     boolean make_selection;
@@ -71,6 +79,28 @@ public class NotificationsActivity extends AppCompatActivity {
 
         make_selection = false;
 
+        registerDownloadNotificationsReceiver();
+
+        // If downloading is disables, we should ask user to download notifications
+        if (!LandingActivity.shouldDownload(this)) {
+            TextView textView = findViewById(R.id.recycled_view_notifications_text);
+            recyclerView.setVisibility(View.GONE);
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.downloading_notifications_disabled)
+                    .setCancelable(true)
+                    .setPositiveButton(getString(R.string.download), (dialog, id) -> {
+                        final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
+                        update_notifications.putExtra("download", true);
+                        startService(update_notifications);
+                    })
+                    .setNegativeButton(getString(R.string.ignore), (dialog, id) -> {
+                        textView.setVisibility(View.VISIBLE);
+                        dialog.cancel();
+                    });
+            final AlertDialog alert = builder.create();
+            alert.show();
+        }
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -85,9 +115,38 @@ public class NotificationsActivity extends AppCompatActivity {
 
     }
 
+    private void registerDownloadNotificationsReceiver() {
+        downloadNotifications = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String received = intent.getStringExtra(UpdateUnreadNotifications.NOTIFICATIONS_DOWNLOADED);
+                if (received != null) {
+                    if (received.equals("downloaded")) {
+                        Toast.makeText(NotificationsActivity.this, getString(R.string.notifications_downloaded), Toast.LENGTH_SHORT).show();
+                        recyclerView.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+        };
+    }
+
     private void selectedNotificationsMenuItemsEnabled(boolean selected) {
         updateMenuItemEnabled(0, selected);
         updateMenuItemEnabled(1, selected);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver((downloadNotifications),
+                new IntentFilter(UpdateUnreadNotifications.NOTIFICATIONS_DOWNLOADED)
+        );
+    }
+
+    @Override
+    protected void onStop() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(downloadNotifications);
+        super.onStop();
     }
 
     // Update visibility by menu index
