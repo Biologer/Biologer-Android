@@ -62,6 +62,8 @@ public class EntryAdapter
         @Override
         public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
             Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
+            menu.add(Menu.NONE, R.id.duplicate,
+                    Menu.NONE, R.string.duplicate_entry);
             menu.add(Menu.NONE, R.id.delete,
                     Menu.NONE, R.string.delete_entry);
             menu.add(Menu.NONE, R.id.delete_all,

@@ -39,6 +39,7 @@ import org.biologer.biologer.sql.EntryDb_;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -76,9 +77,9 @@ public class LandingFragment extends Fragment {
                         recyclerView.setClickable(false);
                         EntryDb entryDb = entries.get(position);
                         long l = entryDb.getId();
-                        Activity activity13 = getActivity();
-                        if (activity13 != null) {
-                            Intent intent = new Intent(activity13.getApplicationContext(), EntryActivity.class);
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            Intent intent = new Intent(activity.getApplicationContext(), EntryActivity.class);
                             intent.putExtra("IS_NEW_ENTRY", "NO");
                             intent.putExtra("ENTRY_ID", l);
                             openEntry.launch(intent);
@@ -198,6 +199,10 @@ public class LandingFragment extends Fragment {
     public boolean onContextItemSelected(MenuItem item) {
         Log.d(TAG, "Context item.");
 
+        if (item.getItemId() == R.id.duplicate) {
+            duplicateEntry(entriesAdapter.getPosition());
+            return true;
+        }
         if (item.getItemId() == R.id.delete) {
             deleteEntryAtPosition(entriesAdapter.getPosition());
             return true;
@@ -227,7 +232,6 @@ public class LandingFragment extends Fragment {
                         Log.d(TAG, "This was an existing entry with id: " + old_data_id);
                         updateEntry(old_data_id);
                     }
-
                 }
 
                 // Change the visibility of the Upload Icon
@@ -267,12 +271,8 @@ public class LandingFragment extends Fragment {
 
         int entry_id = getIndexFromID(oldDataId);
 
-        // Add the entry to the entry list (RecycleView)
+        // Update the entry to in the entry list (RecycleView)
         entries.set(entry_id, entryDb);
-        Log.i(TAG, "Images in entry " + entry_id + ": " +
-                entries.get(entry_id).getSlika1() + ", " +
-                entries.get(entry_id).getSlika2() + ", " +
-                entries.get(entry_id).getSlika3() + ".");
         entriesAdapter.notifyItemChanged(entry_id);
     }
 
@@ -280,25 +280,84 @@ public class LandingFragment extends Fragment {
     private int getIndexFromID(long entry_id) {
 
         int index_id = 0;
-        for (int i = 0; i < entries.size(); i++) {
+        for (int i = entries.size() - 1; i >= 0; i--) {
+            Log.e(TAG, "Entry ID " + entry_id + " should match " + entries.get(i).getId());
             if (entries.get(i).getId() == entry_id) {
                 index_id = i;
             }
         }
-        Log.d(TAG, "Entry index ID is " + index_id);
+        Log.d(TAG, "Entry " + entry_id + " index ID is " + index_id);
         return index_id;
+    }
+
+    public void duplicateEntry(int position) {
+        Log.d(TAG, "You will now duplicate entry ID: " + position);
+        //EntryDb entry = entries.get(position);
+        EntryDb entry = new EntryDb(
+                0,
+                entries.get(position).getTaxonId(),
+                entries.get(position).getTaxonSuggestion(),
+                entries.get(position).getYear(),
+                entries.get(position).getMonth(),
+                entries.get(position).getDay(),
+                entries.get(position).getComment(),
+                null,"", null, null, "", "",
+                entries.get(position).getLattitude(),
+                entries.get(position).getLongitude(),
+                entries.get(position).getAccuracy(),
+                entries.get(position).getElevation(),
+                entries.get(position).getLocation(),
+                null, null, null,
+                entries.get(position).getProjectId(),
+                entries.get(position).getFoundOn(),
+                entries.get(position).getDataLicence(),
+                entries.get(position).getImageLicence(),
+                entries.get(position).getTime(),
+                entries.get(position).getHabitat(),
+                "");
+
+        for (int i = 0; i < entries.size(); i++) {
+            Log.e(TAG, "ID locally before: " + entries.get(i).getId());
+        }
+        entries.add(0, entry);
+
+        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
+        entryBox.put(entry);
+        long index_last = App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
+        long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+        Log.d(TAG, "Entry will be saved in ObjectBox under ID " + new_entry_id);
+
+        List<EntryDb> e = App.get().getBoxStore().boxFor(EntryDb.class).getAll();
+        for (int i = 0; i < e.size(); i++) {
+            Log.e(TAG, "ID ObjectBox: " + e.get(i).getId());
+        }
+
+        for (int i = 0; i < entries.size(); i++) {
+            Log.e(TAG, "ID locally after: " + entries.get(i).getId());
+        }
+
+        entriesAdapter.notifyItemInserted(0);
+        recyclerView.smoothScrollToPosition(0);
+
+        Activity activity = getActivity();
+        if (activity != null) {
+            Intent intent = new Intent(activity.getApplicationContext(), EntryActivity.class);
+            intent.putExtra("IS_NEW_ENTRY", "NO");
+            intent.putExtra("ENTRY_ID", new_entry_id);
+            openEntry.launch(intent);
+        }
     }
 
     public void deleteEntryAtPosition(int position) {
         Log.d(TAG, "You will now delete entry index ID: " + position);
-        long number_in_objectbox = entries.get(position).getId();
-        Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_objectbox);
-        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_objectbox + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
+        long number_in_database = entries.get(position).getId();
+        Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_database);
+        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_database + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
         Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
-        entryBox.remove((int) number_in_objectbox);
+        entryBox.remove((int) number_in_database);
         entries.remove(position);
         entriesAdapter.notifyItemRemoved(position);
-        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_objectbox + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
+        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_database + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
 
         // Print user a message
         int entryNo = position + 1;

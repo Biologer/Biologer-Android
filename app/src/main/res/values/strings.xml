@@ -484,5 +484,6 @@
     <string name="notifications_downloaded">Notifications downloaded.</string>
     <string name="notifications_download_text">Notifications are only visible when you are online. Ensure that you allowed Biologer to download data from the web and check your internet connection.</string>
     <string name="observation_taxon">Taxon:</string>
+    <string name="duplicate_entry">Duplicate this observation</string>
 
 </resources>

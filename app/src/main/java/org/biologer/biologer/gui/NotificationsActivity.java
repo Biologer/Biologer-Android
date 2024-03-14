@@ -37,7 +37,6 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.adapters.NotificationsHelper;
-import org.biologer.biologer.adapters.PreparePhotos;
 import org.biologer.biologer.adapters.RecyclerOnClickListener;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
