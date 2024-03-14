@@ -13,9 +13,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.AppCompatButton;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
+
+import com.google.android.material.button.MaterialButton;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
@@ -43,20 +44,26 @@ public class LogoutFragment extends Fragment {
         if (view != null) {
             Activity activity = getActivity();
             if (activity != null) {
-                AppCompatButton btn_logout = getActivity().findViewById(R.id.btn_logout);
-                TextView tv_database = getActivity().findViewById(R.id.currentDatabase);
-                TextView tv_username = getActivity().findViewById(R.id.tv_currentlyLogged_username);
-                TextView tv_email = getActivity().findViewById(R.id.tv_currentlyLogged_email);
+                MaterialButton buttonLogout = getActivity().findViewById(R.id.btn_logout);
+                TextView textViewUser = getActivity().findViewById(R.id.current_logged_in_text);
+                TextView textViewLogout = getActivity().findViewById(R.id.logout_text);
 
                 List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 UserDb userData = userDataList.get(0);
                 String username = userData.getUsername();
-                Log.i(TAG, "Current user: " + username);
-                tv_database.setText(SettingsManager.getDatabaseName());
-                tv_username.setText(username);
-                tv_email.setText(userData.getEmail());
+                String database_url = SettingsManager.getDatabaseName();
+                String community_name = getBiologerCommunity(database_url);
 
-                btn_logout.setOnClickListener(v -> {
+                Log.i(TAG, "Current user: " + username);
+                String database_text = getString(R.string.currently_logged) +
+                        " " + community_name + " " +
+                        getString(R.string.at) + " " +
+                        database_url + " " + getString(R.string.as_user) + " " +
+                        username + " (" +
+                        userData.getEmail() + ").";
+                textViewUser.setText(database_text);
+
+                buttonLogout.setOnClickListener(v -> {
                     // If there are entries warn the user that the data will be lost!
                     Log.d(TAG, "There are " + App.get().getBoxStore().boxFor(EntryDb.class).count() + " entries in the list.");
                     if (!App.get().getBoxStore().boxFor(EntryDb.class).isEmpty()) {
@@ -94,7 +101,44 @@ public class LogoutFragment extends Fragment {
                         }
                     }
                 });
+
+                logoutEnableDisable(buttonLogout, textViewLogout);
+
             }
+        }
+    }
+
+    private void logoutEnableDisable(MaterialButton button, TextView textView) {
+        long entries = App.get().getBoxStore().boxFor(EntryDb.class).count();
+        if (entries >= 1) {
+            button.setEnabled(false);
+            textView.setText(R.string.logout_disabled_note);
+        } else {
+            button.setEnabled(true);
+            textView.setText(getString(R.string.logout_from_biologer));
+        }
+    }
+
+    public String getBiologerCommunity(String database) {
+        if (database.equals("https://biologer.ba")) {
+            return "Bosnia and Herzegovina Biologer Community";
+        }
+        if (database.equals("https://biologer.rs")) {
+            return "Serbian Biologer Community";
+        }
+        if (database.equals("https://biologer.me")) {
+            return "Montenegrin Biologer Community";
+        }
+        if (database.equals("https://birdloger.biologer.org")) {
+            return "Birdloger Community";
+        }
+        if (database.equals("https://dev.biologer.org")) {
+            return "Global Biologer Community";
+        }
+        if (database.equals("https://biologer.hr")) {
+            return "Croatian Biologer Community";
+        } else {
+            return "";
         }
     }
 

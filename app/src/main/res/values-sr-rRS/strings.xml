@@ -87,7 +87,7 @@
     <!--Logout-->
     <string name="currently_logged_data">"Тренутно сте пријављени на базу података:"</string>
     <string name="currently_logged_user_name">Као корисник:</string>
-    <string name="realy">Да ли желите да се одјавите са ове Биологер базе података?</string>
+    <string name="logout_from_biologer">Да ли желите да се одјавите са ове Биологер базе података?</string>
 
     <!--Setup-->
     <string name="note">Одавде можете ажурирати списак врста и осталих таксона.</string>

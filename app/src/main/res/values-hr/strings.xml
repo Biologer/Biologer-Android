@@ -87,7 +87,7 @@
     <!--Logout-->
     <string name="currently_logged_data">"Trenutno ste prijavljeni u bazu podataka:"</string>
     <string name="currently_logged_user_name">Kao korisnik:</string>
-    <string name="realy">Želite li se odjaviti s Biologer baze podataka?</string>
+    <string name="logout_from_biologer">Želite li se odjaviti s Biologer baze podataka?</string>
 
     <!--Setup-->
     <string name="note">Ovdje možete ažurirati popis taksona</string>

@@ -87,7 +87,7 @@
     <!--Logout-->
     <string name="currently_logged_data">You are currently logged into a database:</string>
     <string name="currently_logged_user_name">As user:</string>
-    <string name="realy">Do you want to logout from this Biologer database?</string>
+    <string name="logout_from_biologer">Do you want to logout from this Biologer database?</string>
 
     <!--Setup-->
     <string name="note">Here you can update the list of species and other taxa.</string>
@@ -485,5 +485,9 @@
     <string name="notifications_download_text">Notifications are only visible when you are online. Ensure that you allowed Biologer to download data from the web and check your internet connection.</string>
     <string name="observation_taxon">Taxon:</string>
     <string name="duplicate_entry">Duplicate this observation</string>
+    <string name="currently_logged">You are currently logged into</string>
+    <string name="at">at</string>
+    <string name="as_user">as</string>
+    <string name="logout_disabled_note">Important note! Your records must be saved before logging out, since this action will delete all species observations stored on your phone. Please upload your observations to Biologer server before logging out. Alternatively, you can manually delete field observations from the list, but ensure that you exported the needed data in CSV file to avoid losing your valuable field effort.</string>
 
 </resources>

@@ -84,7 +84,7 @@
     <!--Logout-->
     <string name="currently_logged_data">Bejelentkezve az adatbázisba:</string>
     <string name="currently_logged_user_name">Mint:</string>
-    <string name="realy">Kilép?</string>
+    <string name="logout_from_biologer">Kilép?</string>
 
     <!--Setup-->
     <string name="note">A fajok rendszertani adatbázisa itt frissíthető.</string>

@@ -3,56 +3,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:gravity="center"
     android:orientation="vertical"
     android:background="@color/fragment_background"
     tools:context="org.biologer.biologer.gui.LogoutFragment">
 
     <TextView
+        android:id="@+id/current_logged_in_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="16sp"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/currently_logged_data"/>
 
     <TextView
-        android:id="@+id/currentDatabase"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:layout_marginBottom="16dp"
-        android:text=""/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:text="@string/currently_logged_user_name"/>
-
-    <TextView
-        android:id="@+id/tv_currentlyLogged_email"
+        android:id="@+id/logout_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="16sp"
-        android:gravity="center"/>
-
-    <TextView
-        android:id="@+id/tv_currentlyLogged_username"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="160dp"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:textStyle="bold"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:text="@string/realy"
-        android:layout_marginBottom="24dp"
+        android:text="@string/logout_from_biologer"
+        android:layout_marginTop="48dp"
         android:gravity="center"/>
 
     <com.google.android.material.button.MaterialButton
