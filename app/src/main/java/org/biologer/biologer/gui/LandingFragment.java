@@ -39,7 +39,6 @@ import org.biologer.biologer.sql.EntryDb_;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -281,7 +280,6 @@ public class LandingFragment extends Fragment {
 
         int index_id = 0;
         for (int i = entries.size() - 1; i >= 0; i--) {
-            Log.e(TAG, "Entry ID " + entry_id + " should match " + entries.get(i).getId());
             if (entries.get(i).getId() == entry_id) {
                 index_id = i;
             }
@@ -292,7 +290,8 @@ public class LandingFragment extends Fragment {
 
     public void duplicateEntry(int position) {
         Log.d(TAG, "You will now duplicate entry ID: " + position);
-        //EntryDb entry = entries.get(position);
+
+        // Create new entry based on current one
         EntryDb entry = new EntryDb(
                 0,
                 entries.get(position).getTaxonId(),
@@ -315,30 +314,20 @@ public class LandingFragment extends Fragment {
                 entries.get(position).getTime(),
                 entries.get(position).getHabitat(),
                 "");
-
-        for (int i = 0; i < entries.size(); i++) {
-            Log.e(TAG, "ID locally before: " + entries.get(i).getId());
-        }
         entries.add(0, entry);
 
+        // Update ObjectBox
         Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
         entryBox.put(entry);
-        long index_last = App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
-        long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get((int) index_last).getId();
+        int index_last = (int) App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
+        long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get(index_last).getId();
         Log.d(TAG, "Entry will be saved in ObjectBox under ID " + new_entry_id);
 
-        List<EntryDb> e = App.get().getBoxStore().boxFor(EntryDb.class).getAll();
-        for (int i = 0; i < e.size(); i++) {
-            Log.e(TAG, "ID ObjectBox: " + e.get(i).getId());
-        }
-
-        for (int i = 0; i < entries.size(); i++) {
-            Log.e(TAG, "ID locally after: " + entries.get(i).getId());
-        }
-
+        // Update the list in RecycleView
         entriesAdapter.notifyItemInserted(0);
         recyclerView.smoothScrollToPosition(0);
 
+        // Open EntryActivity to edit the new record
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = new Intent(activity.getApplicationContext(), EntryActivity.class);
