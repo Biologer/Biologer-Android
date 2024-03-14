@@ -47,16 +47,16 @@ import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.json.RefreshTokenResponse;
-import org.biologer.biologer.network.json.TaxaResponse;
-import org.biologer.biologer.network.json.TaxaResponseBirdloger;
-import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
+import org.biologer.biologer.network.json.RefreshTokenResponse;
+import org.biologer.biologer.network.json.TaxaResponse;
+import org.biologer.biologer.network.json.TaxaResponseBirdloger;
+import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -111,7 +111,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         tv_username.setText(getUserName());
         tv_email.setText(getUserEmail());
 
-        addLandingFragment();
+        showLandingFragment();
 
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
@@ -209,7 +209,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             getSupportFragmentManager().popBackStack();
             finishAffinity();
         } else {
-            Log.d(TAG, "Back button pressed, while there are many fragment open.");
+            Log.d(TAG, "Back button pressed, while there are many fragments opened.");
             getSupportFragmentManager().popBackStack();
         }
 
@@ -714,7 +714,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (!SettingsManager.isMailConfirmed()) {
                 textView1.setVisibility(View.VISIBLE);
             }
-            addLandingFragment();
+            showLandingFragment();
         }
         if (id == R.id.nav_help) {
             startActivity(new Intent(LandingActivity.this, IntroActivity.class));
@@ -739,45 +739,77 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         return true;
     }
 
-    private void addLandingFragment() {
+    private void showLandingFragment() {
         Log.d(TAG, "Showing LandingFragment");
-        Fragment landingFragment = new LandingFragment();
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
-        ft.addToBackStack("Landing fragment");
-        ft.commit();
+        Fragment landingFragment;
+        landingFragment = getSupportFragmentManager().findFragmentByTag("LANDING_FRAGMENT");
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        if (landingFragment != null) {
+            fragmentTransaction.replace(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
+        } else {
+            landingFragment = new LandingFragment();
+            fragmentTransaction.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
+        }
+        fragmentTransaction.addToBackStack("Landing fragment");
+        fragmentTransaction.commit();
     }
 
     private void showAboutFragment() {
         Log.d(TAG, "User clicked about icon.");
-        Fragment aboutFragment = new AboutFragment();
+        Fragment aboutFragment;
+        aboutFragment = getSupportFragmentManager().findFragmentByTag("ABOUT_FRAGMENT");
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, aboutFragment);
+        if (aboutFragment != null) {
+            fragmentTransaction.replace(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
+        } else {
+            aboutFragment = new AboutFragment();
+            fragmentTransaction.add(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
+        }
         fragmentTransaction.addToBackStack("About fragment");
         fragmentTransaction.commit();
     }
 
     private void showAnnouncementsFragment() {
         Log.d(TAG, "User clicked announcements icon.");
-        Fragment announcementsFragment = new AnnouncementsFragment();
+        Fragment announcementsFragment;
+        announcementsFragment = getSupportFragmentManager().findFragmentByTag("ANNOUNCEMENTS_FRAGMENT");
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, announcementsFragment);
+        if (announcementsFragment != null) {
+            fragmentTransaction.replace(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
+        } else {
+            announcementsFragment = new AnnouncementsFragment();
+            fragmentTransaction.add(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
+        }
         fragmentTransaction.addToBackStack("Announcements fragment");
         fragmentTransaction.commit();
     }
 
     private void showLogoutFragment() {
-        Fragment logoutFragment = new LogoutFragment();
+        Log.d(TAG, "User clicked logout icon.");
+        Fragment logoutFragment;
+        logoutFragment = getSupportFragmentManager().findFragmentByTag("LOGOUT_FRAGMENT");
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, logoutFragment);
+        if (logoutFragment != null) {
+            fragmentTransaction.replace(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
+        } else {
+            logoutFragment = new LogoutFragment();
+            fragmentTransaction.add(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
+        }
         fragmentTransaction.addToBackStack("Logout fragment");
         fragmentTransaction.commit();
     }
 
     private void showSetupFragment() {
-        Fragment preferencesFragment = new PreferencesFragment();
+        Log.d(TAG, "User clicked preferences icon.");
+        Fragment preferencesFragment;
+        preferencesFragment = getSupportFragmentManager().findFragmentByTag("PREFERENCES_FRAGMENT");
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.content_frame, preferencesFragment);
+        if (preferencesFragment != null) {
+            fragmentTransaction.replace(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
+        } else {
+            preferencesFragment = new PreferencesFragment();
+            fragmentTransaction.add(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
+        }
         fragmentTransaction.addToBackStack("Preferences fragment");
         fragmentTransaction.commit();
     }
