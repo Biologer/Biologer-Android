@@ -285,6 +285,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     // Remove atlas code and stage for taxa not selected from the list
                     if (!taxonSelectedFromTheList) {
                         hideStagesAndAtlasCode();
+                        selectedTaxon = null;
                     }
                     taxonSelectedFromTheList = false;
 
