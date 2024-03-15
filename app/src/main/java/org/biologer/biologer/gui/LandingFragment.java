@@ -300,7 +300,7 @@ public class LandingFragment extends Fragment {
                 entries.get(position).getMonth(),
                 entries.get(position).getDay(),
                 entries.get(position).getComment(),
-                null,"", null, null, "", "",
+                null,"", null, null, "true", "",
                 entries.get(position).getLattitude(),
                 entries.get(position).getLongitude(),
                 entries.get(position).getAccuracy(),
