@@ -31,6 +31,7 @@ public class PreparePhotos extends Service {
     private static final String TAG = "Biologer.Resize";
     LocalBroadcastManager broadcaster;
     public final static String RESIZED = "org.biologer.biologer.adapters.ResizeImage.RESIZED";
+    ExifInterface exifInterface;
 
     @Override
     public void onCreate() {
@@ -46,14 +47,25 @@ public class PreparePhotos extends Service {
         String input_image = null;
         if (intent.getExtras() != null) {
             input_image = intent.getExtras().getString("image_uri");
+            try {
+                exifInterface = getExifData(Uri.parse(input_image));
+            } catch (IOException e) {
+                Log.d(TAG, "Could not load EXIF data from uri: " + input_image);
+                throw new RuntimeException(e);
+            }
         }
         Log.d(TAG, "The image to be resized: " + input_image);
 
         // Resize the image
         Uri resizedUri = resizeImage(Uri.parse(input_image));
 
-        // When resize is complete send the image to previous Activity and close...
+        // When resized send the image to previous Activity and close...
         if (resizedUri != null) {
+            try {
+                copyExifToFile(resizedUri);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             sendResult(resizedUri.toString());
         } else {
             sendResult("error");
@@ -71,11 +83,8 @@ public class PreparePhotos extends Service {
     private Uri resizeImage(Uri path_to_image) {
         int rotation = 0;
 
-        try {
-            rotation = getExifImageRotation(path_to_image);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Can not open image stream to read EXIF data!");
+        if (exifInterface != null) {
+            rotation = getExifImageRotation(exifInterface);
         }
 
         Log.d(TAG, "Opening image for resize: " + path_to_image);
@@ -217,23 +226,29 @@ public class PreparePhotos extends Service {
         stopSelf();
     }
 
-    private int getExifImageRotation(Uri image) throws IOException {
-        int exif_orientation = 0;
-        ExifInterface exif_data = null;
+    private static Bitmap rotateImage(Bitmap image, int degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        return Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+    }
 
-        InputStream imageStream = getContentResolver().openInputStream(image);
-
+    private ExifInterface getExifData(Uri imageUri) throws IOException {
+        ExifInterface exifData = null;
+        InputStream imageStream = getContentResolver().openInputStream(imageUri);
         if (imageStream != null) {
-            exif_data = new ExifInterface(imageStream);
-        }
-        if (exif_data != null) {
-            exif_orientation = exif_data.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-        }
-        Log.d(TAG, "Exif orientation tag is set to: " + exif_orientation);
-
-        if (imageStream != null) {
+            exifData = new ExifInterface(imageStream);
             imageStream.close();
         }
+        return exifData;
+    }
+
+    private int getExifImageRotation(ExifInterface exifInterface) {
+        int exif_orientation = 0;
+
+        if (exifInterface != null) {
+            exif_orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        }
+        Log.d(TAG, "Exif orientation tag is set to: " + exif_orientation);
 
         switch (exif_orientation) {
             case ExifInterface.ORIENTATION_ROTATE_90:
@@ -247,9 +262,60 @@ public class PreparePhotos extends Service {
         }
     }
 
-    private static Bitmap rotateImage(Bitmap image, int degree) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(degree);
-        return Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+    public void copyExifToFile(Uri imageUri) throws IOException {
+
+        String[] attributes = new String[] {
+                ExifInterface.TAG_APERTURE_VALUE,
+                ExifInterface.TAG_DATETIME,
+                ExifInterface.TAG_DATETIME_DIGITIZED,
+                ExifInterface.TAG_DATETIME_ORIGINAL,
+                ExifInterface.TAG_EXIF_VERSION,
+                ExifInterface.TAG_EXPOSURE_PROGRAM,
+                ExifInterface.TAG_EXPOSURE_MODE,
+                ExifInterface.TAG_EXPOSURE_TIME,
+                ExifInterface.TAG_F_NUMBER,
+                ExifInterface.TAG_FLASH,
+                ExifInterface.TAG_FOCAL_LENGTH,
+                ExifInterface.TAG_GPS_ALTITUDE,
+                ExifInterface.TAG_GPS_ALTITUDE_REF,
+                ExifInterface.TAG_GPS_DATESTAMP,
+                ExifInterface.TAG_GPS_LATITUDE,
+                ExifInterface.TAG_GPS_LATITUDE_REF,
+                ExifInterface.TAG_GPS_LONGITUDE,
+                ExifInterface.TAG_GPS_LONGITUDE_REF,
+                ExifInterface.TAG_GPS_PROCESSING_METHOD,
+                ExifInterface.TAG_GPS_TIMESTAMP,
+                ExifInterface.TAG_ISO_SPEED,
+                ExifInterface.TAG_SHUTTER_SPEED_VALUE,
+                ExifInterface.TAG_MAKE,
+                ExifInterface.TAG_METERING_MODE,
+                ExifInterface.TAG_MODEL,
+                ExifInterface.TAG_SUBJECT_DISTANCE,
+                ExifInterface.TAG_SUBSEC_TIME,
+                ExifInterface.TAG_SUBSEC_TIME_ORIGINAL,
+                ExifInterface.TAG_SUBSEC_TIME_DIGITIZED,
+                ExifInterface.TAG_WHITE_BALANCE,
+                ExifInterface.TAG_COLOR_SPACE,
+                ExifInterface.TAG_ARTIST
+        };
+
+        ParcelFileDescriptor parcelFileDescriptor;
+        parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "rw" );
+        FileDescriptor fileDescriptor;
+        if (parcelFileDescriptor != null) {
+            fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+            ExifInterface newExifInterface;
+            newExifInterface = new ExifInterface(fileDescriptor);
+            for (String attribute : attributes) {
+                String value = exifInterface.getAttribute(attribute);
+                if (value != null)
+                    newExifInterface.setAttribute(attribute, value);
+            }
+            newExifInterface.saveAttributes();
+            Log.i(TAG, "EXIF data copied to the new image.");
+        } else {
+            Log.e(TAG, "Could not open file descriptor to copy EXIF data.");
+        }
     }
+
 }
