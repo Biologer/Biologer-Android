@@ -87,7 +87,7 @@
     <!--Logout-->
     <string name="currently_logged_data">"Тренутно сте пријављени на базу података:"</string>
     <string name="currently_logged_user_name">Као корисник:</string>
-    <string name="logout_from_biologer">Да ли желите да се одјавите са ове Биологер базе података?</string>
+    <string name="logout_from_biologer">Да ли желите да се одјавите из ове Биологерове базе података?</string>
 
     <!--Setup-->
     <string name="note">Одавде можете ажурирати списак врста и осталих таксона.</string>
@@ -480,5 +480,14 @@
     <string name="all_notifications_are_read">Сва обавештења су сада прочитана!</string>
     <string name="mark_as_read">Означи одабрано као прочитано</string>
     <string name="mark_deselect">Поништи избор</string>
+    <string name="downloading_notifications_disabled">Преузимање је онемогућено у подешавањима Биологера. Можете привремено преузети нова обавештења одавде или променити ваше поставке.</string>
+    <string name="notifications_downloaded">Обавештења су преузета.</string>
+    <string name="notifications_download_text">Обавештења су видљива само када сте на мрежи. Погледајте да ли је Биологеру омогућено преузимање мрежних података и проверите вашу везу с интернетом.</string>
+    <string name="observation_taxon">Таксон:</string>
+    <string name="duplicate_entry">Удвостручи овај налаз</string>
+    <string name="currently_logged">Тренутно сте пријављени преко</string>
+    <string name="at">на</string>
+    <string name="as_user">као</string>
+    <string name="logout_disabled_note">Важно обавештење! Морате сачувати ваше уносе пре него што се одјавите, пошто ће ова радња обрисати све налазе врста са телефона. Пошаљите налазе на Биологеров сервер пре него што се одјавите. У супротном, можете ручно обрисати теренске налазе са списка, али проверите да ли сви подаци који вам требају извезени у CSV датотеку да би избегли губитак резултата мукотрпног рада на терену.</string>
 
 </resources>
