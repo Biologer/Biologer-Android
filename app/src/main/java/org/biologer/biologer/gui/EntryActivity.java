@@ -52,6 +52,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationListenerCompat;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -85,6 +86,8 @@ import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.UserDb;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1529,6 +1532,23 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                         getString(R.string.limit_photo2) + " " + getEmptyImageSlots() + " " +
                                         getString(R.string.limit_photo3), Toast.LENGTH_LONG).show();
                     }
+
+                    // TODO get location from image Exif data of the image, issue #27
+                    Uri uri = photoPicker.get(photoPicker.size() - 1);
+                    ExifInterface exifInterface;
+                    try {
+                        exifInterface = getExifData(uri);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Log.i(TAG, "Exif data: " + exifInterface.getAttribute(ExifInterface.TAG_GPS_DATESTAMP) + " (date); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_TIMESTAMP) + " (time); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_LATITUDE) + " (lat); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_LATITUDE_REF) + " (lat_ref); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_LONGITUDE) + " (long); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF) + " (long_ref); " +
+                            exifInterface.getAttribute(ExifInterface.TAG_GPS_PROCESSING_METHOD) + " (processing).");
+
                     for (int i = 0; i < photoPicker.size(); i++) {
                         Log.d(TAG, "Getting and preparing image " + photoPicker.get(i) + ".");
                         resizeAndDisplayImage(photoPicker.get(i));
@@ -1538,6 +1558,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Toast.makeText(this, getString(R.string.no_photo_selected), Toast.LENGTH_LONG).show();
                 }
             });
+
+    private ExifInterface getExifData(Uri imageUri) throws IOException {
+        ExifInterface exifData = null;
+        InputStream imageStream = getContentResolver().openInputStream(imageUri);
+        if (imageStream != null) {
+            exifData = new ExifInterface(imageStream);
+            imageStream.close();
+        }
+        return exifData;
+    }
 
     private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {

@@ -299,22 +299,23 @@ public class PreparePhotos extends Service {
                 ExifInterface.TAG_ARTIST
         };
 
-        ParcelFileDescriptor parcelFileDescriptor;
-        parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "rw" );
-        FileDescriptor fileDescriptor;
-        if (parcelFileDescriptor != null) {
-            fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-            ExifInterface newExifInterface;
-            newExifInterface = new ExifInterface(fileDescriptor);
-            for (String attribute : attributes) {
-                String value = exifInterface.getAttribute(attribute);
-                if (value != null)
-                    newExifInterface.setAttribute(attribute, value);
+        try (ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(imageUri, "rw")) {
+            FileDescriptor fileDescriptor;
+            if (parcelFileDescriptor != null) {
+                fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+                ExifInterface newExifInterface;
+                newExifInterface = new ExifInterface(fileDescriptor);
+                for (String attribute : attributes) {
+                    String value = exifInterface.getAttribute(attribute);
+                    Log.i(TAG, "Attribute " + attribute + "; " + value);
+                    if (value != null)
+                        newExifInterface.setAttribute(attribute, value);
+                }
+                newExifInterface.saveAttributes();
+                Log.i(TAG, "EXIF data copied to the new image.");
+            } else {
+                Log.e(TAG, "Could not open file descriptor to copy EXIF data.");
             }
-            newExifInterface.saveAttributes();
-            Log.i(TAG, "EXIF data copied to the new image.");
-        } else {
-            Log.e(TAG, "Could not open file descriptor to copy EXIF data.");
         }
     }
 
