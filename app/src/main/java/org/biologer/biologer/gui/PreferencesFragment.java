@@ -6,8 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -17,15 +21,15 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import android.util.Log;
-import android.view.View;
-
+import org.apache.commons.lang3.ArrayUtils;
+import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.GetTaxaGroups;
-import org.biologer.biologer.R;
-import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.InternetConnection;
+import org.biologer.biologer.network.UpdateLicenses;
+
+import java.util.Arrays;
 
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
@@ -63,6 +67,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         setPreferencesFromResource(R.xml.preferences, rootKey);
         PreferenceScreen preferenceScreen = getPreferenceScreen();
         Log.d(TAG, "Loading preferences fragment.");
+        Log.i(TAG, "Configured locale set to: " + AppCompatDelegate.getApplicationLocales());
 
         // Fetch taxa groups from server
         Activity activity = getActivity();
@@ -105,6 +110,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         ListPreference dataLicense = findPreference("data_license");
         ListPreference imageLicense = findPreference("image_license");
         ListPreference autoDownload = findPreference("auto_download");
+        ListPreference languageSettings = findPreference("language_settings");
 
         if (dataLicense != null) {
             getDataLicences(dataLicense);
@@ -116,6 +122,10 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
 
         if (autoDownload != null) {
             getAutoDownload(autoDownload);
+        }
+
+        if (languageSettings != null) {
+            getLanguages(languageSettings);
         }
 
         // Add button fot taxa sync process
@@ -158,6 +168,19 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
+
+        if (languageSettings != null) {
+            languageSettings.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d(TAG, "Language changed to: " + newValue);
+                LocaleListCompat appLocale = LocaleListCompat.getEmptyLocaleList();
+                if (newValue != "") {
+                    appLocale = LocaleListCompat.forLanguageTags(newValue.toString());
+                }
+                AppCompatDelegate.setApplicationLocales(appLocale);
+                return true;
+            });
+        }
+
     }
 
     private void toggleFetchTaxaButton(Preference preference) {
@@ -211,6 +234,59 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
             Intent update_licences = new Intent(activity, UpdateLicenses.class);
             activity.startService(update_licences);
         }
+    }
+
+    private void getLanguages(ListPreference listPreference) {
+        CharSequence[] default_entry = {getString(R.string.defaults)};
+        CharSequence[] other_entries = {
+                getString(R.string.locale_bosnia_and_herzegovina_latin),
+                getString(R.string.locale_croatia),
+                getString(R.string.locale_english),
+                getString(R.string.locale_hungarian),
+                //getString(R.string.locale_montenegro_latin),
+                getString(R.string.locale_serbia_cyrilic),
+                getString(R.string.locale_serbia_latin)};
+        Arrays.sort(other_entries);
+        CharSequence[] entries = ArrayUtils.addAll(default_entry, other_entries);
+
+        CharSequence[] entryValues = new CharSequence[entries.length];
+        entryValues[0] = ""; // First, empty line for default value
+        for (int i = 0; i < entries.length; i++) {
+            CharSequence entry = entries[i];
+            if (entry.equals(getString(R.string.locale_croatia))) {
+                CharSequence toAdd = "hr";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+            if (entry.equals(getString(R.string.locale_english))) {
+                CharSequence toAdd = "en";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+            if (entry.equals(getString(R.string.locale_hungarian))) {
+                CharSequence toAdd = "hu";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+            if (entry.equals(getString(R.string.locale_serbia_cyrilic))) {
+                CharSequence toAdd = "sr";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+            if (entry.equals(getString(R.string.locale_serbia_latin))) {
+                CharSequence toAdd = "sr-Latn";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+            if (entry.equals(getString(R.string.locale_bosnia_and_herzegovina_latin))) {
+                CharSequence toAdd = "bs";
+                entryValues[i] = toAdd;
+                Log.i(TAG, "Adding locale: " + toAdd);
+            }
+        }
+        listPreference.setEntries(entries);
+        listPreference.setDefaultValue("2");
+        listPreference.setEntryValues(entryValues);
     }
 
     @Override

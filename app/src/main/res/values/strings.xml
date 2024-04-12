@@ -489,5 +489,15 @@
     <string name="at">at</string>
     <string name="as_user">as</string>
     <string name="logout_disabled_note">Important note! Your records must be saved before logging out, since this action will delete all species observations stored on your phone. Please upload your observations to Biologer server before logging out. Alternatively, you can manually delete field observations from the list, but ensure that you exported the needed data in CSV file to avoid losing your valuable field effort.</string>
+    <string name="choose_language">Biologer Language</string>
+    <string name="choose_language_desc">Lets you choose the language of the application.</string>
+    <string name="locale_serbia_cyrilic">Serbian (cyrillic)</string>
+    <string name="locale_serbia_latin">Serbian (latin)</string>
+    <string name="locale_montenegro_latin">Montenegrin (latin)</string>
+    <string name="locale_croatia">Croatian</string>
+    <string name="locale_english">English</string>
+    <string name="locale_bosnia_and_herzegovina_latin">Bosnian (latin)</string>
+    <string name="defaults">Default language</string>
+    <string name="locale_hungarian">Hungarian</string>
 
 </resources>

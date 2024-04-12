@@ -78,6 +78,11 @@
             android:key="taxa_button"
             android:summary="@string/update_taxa_desc"
             app:iconSpaceReserved="false"/>
+        <ListPreference
+            android:key="language_settings"
+            android:title="@string/choose_language"
+            android:summary="@string/choose_language_desc"
+            app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

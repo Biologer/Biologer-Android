@@ -489,5 +489,15 @@
     <string name="at">на</string>
     <string name="as_user">као</string>
     <string name="logout_disabled_note">Важно обавештење! Морате сачувати ваше уносе пре него што се одјавите, пошто ће ова радња обрисати све налазе врста са телефона. Пошаљите налазе на Биологеров сервер пре него што се одјавите. У супротном, можете ручно обрисати теренске налазе са списка, али проверите да ли сви подаци који вам требају извезени у CSV датотеку да би избегли губитак резултата мукотрпног рада на терену.</string>
+    <string name="choose_language">Језик за Биологер</string>
+    <string name="choose_language_desc">Дозвољава да изаберете језик који ће се користити унутар апликације.</string>
+    <string name="locale_serbia_cyrilic">српски (ћирилица)</string>
+    <string name="locale_serbia_latin">српски (латиница)</string>
+    <string name="locale_montenegro_latin">црногорски (латиница)</string>
+    <string name="locale_croatia">хрватски</string>
+    <string name="locale_english">енглески</string>
+    <string name="locale_bosnia_and_herzegovina_latin">босански (латиница)</string>
+    <string name="defaults">подразумевани језик</string>
+    <string name="locale_hungarian">мађарски</string>
 
 </resources>
