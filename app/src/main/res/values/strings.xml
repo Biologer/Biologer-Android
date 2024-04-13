@@ -499,5 +499,6 @@
     <string name="locale_bosnia_and_herzegovina_latin">Bosnian (latin)</string>
     <string name="defaults">Default language</string>
     <string name="locale_hungarian">Hungarian</string>
+    <string name="show_utm">Togle UTM squares</string>
 
 </resources>

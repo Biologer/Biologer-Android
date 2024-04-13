@@ -150,9 +150,18 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.save_menu, menu);
+        inflater.inflate(R.menu.map_activity_menu, menu);
         MenuItem item = menu.findItem(R.id.action_save);
         Objects.requireNonNull(item.getIcon()).setAlpha(255);
+
+        MenuItem itemUmt = menu.findItem(R.id.action_show_utm);
+        if (!SettingsManager.isUtmShown()) {
+            Objects.requireNonNull(itemUmt.getIcon()).setAlpha(128);
+        }
+        itemUmt.setOnMenuItemClickListener(menuItem -> {
+            toggleUtmGrid(menuItem);
+            return false;
+        });
         return true;
     }
 
@@ -167,7 +176,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         } catch (IOException | JSONException e) {
             throw new RuntimeException(e);
         }
-        utmGridLines.addLayerToMap();
 
         try {
             GeoJsonLayer utmGridPoints = new GeoJsonLayer(mMap, R.raw.utm_grid_points, this);
@@ -222,36 +230,38 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         mMap.setOnCameraIdleListener(() -> {
             float zoomLevel = mMap.getCameraPosition().zoom;
-            Log.d(TAG, "Zoom: " + zoomLevel);
+            Log.d(TAG, "Zoom: " + zoomLevel + "; UTM shown: " + SettingsManager.isUtmShown());
 
-            // Remove the UTM markers first
-            removeAllUtmMarkers();
+            if (SettingsManager.isUtmShown()) {
+                // Remove the UTM markers first
+                removeAllUtmMarkers();
 
-            // Add UTM lines
-            if (zoomLevel < 8) {
-                if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
-            } else {
-                if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
-            }
-
-            // Re-add the UTM markers
-            if (zoomLevel > 10) {
-                utmGridLines.addLayerToMap();
-                final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-                for (UTMName utmName : utmNames) {
-                    if (bounds.contains(utmName.getLatLng())) {
-                        IconGenerator iconFactory = new IconGenerator(MapActivity.this);
-                        iconFactory.setStyle(IconGenerator.STYLE_GREEN);
-
-                        MarkerOptions markerOptions = new MarkerOptions()
-                                .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
-                                .position(utmName.getLatLng())
-                                .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
-                        Marker utmMarker = mMap.addMarker(markerOptions);
-                        utmMarkers.add(utmMarker);
-                    }
+                // Add UTM lines
+                if (zoomLevel < 8) {
+                    if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+                } else {
+                    if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
                 }
-                addObservationLocationMarker((int)zoomLevel, false);
+
+                // Re-add the UTM markers
+                if (zoomLevel > 10) {
+                    utmGridLines.addLayerToMap();
+                    final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+                    for (UTMName utmName : utmNames) {
+                        if (bounds.contains(utmName.getLatLng())) {
+                            IconGenerator iconFactory = new IconGenerator(MapActivity.this);
+                            iconFactory.setStyle(IconGenerator.STYLE_GREEN);
+
+                            MarkerOptions markerOptions = new MarkerOptions()
+                                    .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
+                                    .position(utmName.getLatLng())
+                                    .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
+                            Marker utmMarker = mMap.addMarker(markerOptions);
+                            utmMarkers.add(utmMarker);
+                        }
+                    }
+                    addObservationLocationMarker((int)zoomLevel, false);
+                }
             }
         });
 
@@ -403,7 +413,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             // Get elevation from biologer server, save all data and exit
             updateElevationAndSave(latLong);
         }
+
         return true;
+    }
+
+    private void toggleUtmGrid(MenuItem menuItem) {
+        // Trigger zoom update to refresh the view
+        float zoomLevel = mMap.getCameraPosition().zoom;
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(zoomLevel));
+        if (SettingsManager.isUtmShown()) {
+            Log.d(TAG, "UTM grid is shown. Hiding the grid now.");
+            SettingsManager.setUtmShown(false);
+            Objects.requireNonNull(menuItem.getIcon()).setAlpha(128);
+            if(utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+            removeAllUtmMarkers();
+        } else {
+            Log.d(TAG, "UTM grid is hidden. Showing the grid now.");
+            SettingsManager.setUtmShown(true);
+            Objects.requireNonNull(menuItem.getIcon()).setAlpha(255);
+            if(utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
+        }
     }
 
     private void updateElevationAndSave(LatLng coordinates) {

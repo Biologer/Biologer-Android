@@ -841,7 +841,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.save_menu, menu);
+        inflater.inflate(R.menu.entry_activity_menu, menu);
         return true;
     }
 
