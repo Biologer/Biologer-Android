@@ -2,6 +2,7 @@ package org.biologer.biologer.gui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,7 +22,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
-import androidx.documentfile.provider.DocumentFile;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,23 +31,26 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Tile;
-import com.google.android.gms.maps.model.TileOverlay;
-import com.google.android.gms.maps.model.TileOverlayOptions;
-import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.material.textview.MaterialTextView;
+import com.google.maps.android.data.geojson.GeoJsonFeature;
+import com.google.maps.android.data.geojson.GeoJsonLayer;
+import com.google.maps.android.data.geojson.GeoJsonLineStringStyle;
+import com.google.maps.android.ui.IconGenerator;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.network.InternetConnection;
-import org.biologer.biologer.network.json.ElevationResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.json.ElevationResponse;
+import org.json.JSONException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -58,7 +61,7 @@ import retrofit2.Response;
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "Biologer.GoogleMaps";
-
+    private final List<UTMName> utmNames = new ArrayList<>();
     private GoogleMap mMap;
     private String accuracy;
     private String elevation;
@@ -67,10 +70,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     String google_map_type = SettingsManager.getGoogleMapType();
     String database_name = SettingsManager.getDatabaseName();
     Circle circle;
-    Marker marker;
-    Marker temporaryMarker;
+    Marker marker, temporaryMarker;
+    private final List<Marker> utmMarkers = new ArrayList<>();
     MaterialTextView textView;
-    TileOverlay customTile;
+    GeoJsonLayer utmGridLines;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +160,25 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
+        try {
+            utmGridLines = new GeoJsonLayer(mMap, R.raw.utm_grid_lines, this);
+            GeoJsonLineStringStyle geoJsonLineStringStyle = utmGridLines.getDefaultLineStringStyle();
+            geoJsonLineStringStyle.setColor(Color.parseColor("#ff669900"));
+        } catch (IOException | JSONException e) {
+            throw new RuntimeException(e);
+        }
+        utmGridLines.addLayerToMap();
+
+        try {
+            GeoJsonLayer utmGridPoints = new GeoJsonLayer(mMap, R.raw.utm_grid_points, this);
+            Iterable<GeoJsonFeature> pointNames = utmGridPoints.getFeatures();
+            for(GeoJsonFeature i: pointNames){
+                utmNames.add(new UTMName(i.getProperty("Name"), (LatLng)i.getGeometry().getGeometryObject()));
+            }
+        } catch (IOException | JSONException e) {
+            throw new RuntimeException(e);
+        }
+
         // Update text
         String accuracy_text = getString(R.string.accuracy_a1) +
                 " " + accuracy + " " + getString(R.string.meter) + "\n" + getString(R.string.drag_marker);
@@ -179,20 +201,59 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // Add marker at the GPS position on the map
         if (latLong.latitude == 0.0) {
             if (database_name.equals("https://biologer.hr")) {
-                addMarker(new LatLng(45.5, 16.3), 7);
+                latLong = new LatLng(45.5, 16.3);
+                addObservationLocationMarker(7, true);
             }
             if (database_name.equals("https://biologer.ba")) {
-                addMarker(new LatLng(44.3, 17.9), 7);
+                latLong = new LatLng(44.3, 17.9);
+                addObservationLocationMarker(7, true);
             }
             if (database_name.equals("https://biologer.me")) {
-                addMarker(new LatLng(42.8, 19.1), 9);
+                latLong = new LatLng(42.8, 19.1);
+                addObservationLocationMarker(9, true);
             }
             if (database_name.equals("https://biologer.rs") || database_name.equals("https://dev.biologer.org")) {
-                addMarker(new LatLng(44.1, 20.7), 7);
+                latLong = new LatLng(44.1, 20.7);
+                addObservationLocationMarker(7, true);
             }
         } else {
-            addMarker(latLong, 16);
+            addObservationLocationMarker(16, true);
         }
+
+        mMap.setOnCameraIdleListener(() -> {
+            float zoomLevel = mMap.getCameraPosition().zoom;
+            Log.d(TAG, "Zoom: " + zoomLevel);
+
+            // Remove the UTM markers first
+            removeAllUtmMarkers();
+
+            // Add UTM lines
+            if (zoomLevel < 8) {
+                if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+            } else {
+                if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
+            }
+
+            // Re-add the UTM markers
+            if (zoomLevel > 10) {
+                utmGridLines.addLayerToMap();
+                final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+                for (UTMName utmName : utmNames) {
+                    if (bounds.contains(utmName.getLatLng())) {
+                        IconGenerator iconFactory = new IconGenerator(MapActivity.this);
+                        iconFactory.setStyle(IconGenerator.STYLE_GREEN);
+
+                        MarkerOptions markerOptions = new MarkerOptions()
+                                .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
+                                .position(utmName.getLatLng())
+                                .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
+                        Marker utmMarker = mMap.addMarker(markerOptions);
+                        utmMarkers.add(utmMarker);
+                    }
+                }
+                addObservationLocationMarker((int)zoomLevel, false);
+            }
+        });
 
         mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
             @Override
@@ -244,75 +305,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
 
         addCircle();
-
-        TileProvider tileProvider = (x, y, zoom) -> {
-            Uri uri = null;
-
-            try {
-
-                String original_path = SettingsManager.getCustomMapsDir();
-                DocumentFile documentFile = DocumentFile.fromTreeUri(MapActivity.this, Uri.parse(original_path));
-                if (documentFile != null) {
-                    DocumentFile[] documents_zoom = documentFile.listFiles();
-                    for (DocumentFile file : documents_zoom) {
-                        if (Objects.requireNonNull(file.getName()).equals(String.valueOf(zoom))) {
-                            DocumentFile[] documents_x = file.listFiles();
-                            Log.d(TAG, "There are " + documents_x.length + " directories for X coordinates.");
-
-                            for (DocumentFile documentsX : documents_x) {
-                                if (Objects.requireNonNull(documentsX.getName()).equals(String.valueOf(x))) {
-                                    DocumentFile[] documents_y = documentsX.listFiles();
-                                    Log.d(TAG, "There are " + documents_y.length + " directories for Y coordinates.");
-
-                                    for (DocumentFile value : documents_y) {
-                                        if (Objects.requireNonNull(value.getName()).equals(y + ".png") || value.getName().equals(y + ".webp") || value.getName().equals(y + ".jpg")) {
-                                                uri = value.getUri();
-                                        }
-                                    }
-
-                                }
-                            }
-
-                        }
-                    }
-                } else {
-                    Log.e(TAG, "There are no filed in this directory?");
-                }
-
-                ByteArrayOutputStream output;
-                if (uri != null) {
-                    try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
-                        byte[] buffer = new byte[8192];
-                        int bytesRead;
-                        output = new ByteArrayOutputStream();
-
-                        while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
-                            output.write(buffer, 0, bytesRead);
-                        }
-                        byte[] file = output.toByteArray();
-
-                        return new Tile(256, 256, file);
-                    }
-                } else {
-                    Log.e(TAG, "The uri for the image tile is null.");
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        };
-
-        customTile = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(tileProvider));
-
     }
 
-        private void addMarker(LatLng latLng, int zoom) {
-        marker = mMap.addMarker(new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
-        mMap.animateCamera(CameraUpdateFactory.zoomIn());
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
-        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+    private void removeAllUtmMarkers() {
+        for (int r = 0; r < utmMarkers.size(); r++) {
+            Marker utmMarker = utmMarkers.get(r);
+            utmMarker.remove();
+        }
+        utmMarkers.clear();
+    }
+
+    private void addObservationLocationMarker(int zoom, boolean updateCamera) {
+        marker = mMap.addMarker(new MarkerOptions().position(latLong).title(getString(R.string.you_are_here)).draggable(true));
+        if (marker != null) {
+            marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+        }
+        if (updateCamera) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
+            mMap.animateCamera(CameraUpdateFactory.zoomIn());
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
+        }
     }
 
     private void addCircle() {
@@ -458,17 +470,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         this.latLong = new LatLng(lat, lon);
     }
 
-    /*
-     * Check that the tile server supports the requested x, y and zoom.
-     * Complete this stub according to the tile range you support.
-     * If you support a limited range of tiles at different zoom levels, then you
-     * need to define the supported x, y range at each zoom level.
-     */
-    private boolean checkTileExists(int x, int y, int zoom) {
-        int minZoom = 0;
-        int maxZoom = 16;
+    private static class UTMName {
+        private String name;
+        private final LatLng latLng;
 
-        return (zoom >= minZoom && zoom <= maxZoom);
+        public UTMName(String name, LatLng latLng) {
+            this.name = name;
+            this.latLng = latLng;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(final String name) {
+            this.name = name;
+        }
+
+        public LatLng getLatLng() {
+            return latLng;
+        }
     }
 
 }
