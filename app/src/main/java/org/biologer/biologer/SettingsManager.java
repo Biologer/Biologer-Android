@@ -14,7 +14,7 @@ public class SettingsManager {
 
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
-        GOOGLE_MAP_TYPE, CUSTOM_MAP_TILES_FOLDER, MAP_UTM_OVERLAY,
+        GOOGLE_MAP_TYPE, CUSTOM_MAP_TILES_FOLDER, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
@@ -121,6 +121,15 @@ public class SettingsManager {
         return sharedPreferences.getBoolean(KEY.MAP_UTM_OVERLAY.toString(), false);
     }
 
+    public static void setKmlFile(String kmlFile) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.MAP_KML_FILE.toString(), kmlFile);
+        editor.apply();
+    }
+
+    public static String getKmlFile() {
+        return sharedPreferences.getString(KEY.MAP_KML_FILE.toString(),null);
+    }
 
     public static void setTaxaUpdatedAt(String taxaUpdatedAt) {
         SharedPreferences.Editor editor = sharedPreferences.edit();

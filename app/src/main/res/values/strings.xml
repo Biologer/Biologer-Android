@@ -500,5 +500,6 @@
     <string name="defaults">Default language</string>
     <string name="locale_hungarian">Hungarian</string>
     <string name="show_utm">Togle UTM squares</string>
+    <string name="load_kml_map">Load KML map file</string>
 
 </resources>
