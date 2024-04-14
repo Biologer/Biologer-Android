@@ -126,15 +126,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     }
 
-    // Add Save button in the right part of the toolbar
+    // Get the action bar (toolbar)
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.map_activity_menu, menu);
 
+        // Save manu
         MenuItem menuItemSave = menu.findItem(R.id.action_save);
         Objects.requireNonNull(menuItemSave.getIcon()).setAlpha(255);
 
+        // Show UTM menu
         MenuItem menuItemUtm = menu.findItem(R.id.action_show_utm);
         if (!SettingsManager.isUtmShown()) {
             Objects.requireNonNull(menuItemUtm.getIcon()).setAlpha(128);
@@ -144,6 +146,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             return false;
         });
 
+        // Load KMZ/KML menu
         menuItemLoadKML = menu.findItem(R.id.action_load_kml);
         if (SettingsManager.getKmlFile() != null) {
             menuItemLoadKML.setIcon(R.drawable.ic_kmz_remove);
@@ -168,8 +171,125 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
             return false;
         });
-
         return true;
+    }
+
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Update text
+        String accuracy_text = getString(R.string.accuracy_a1) +
+                " " + accuracy + " " + getString(R.string.meter) +
+                "\n" + getString(R.string.drag_marker);
+        textView.setText(accuracy_text);
+
+        // Select the type of the map according to the user’s settings
+        if (google_map_type.equals("NORMAL")) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
+        if (google_map_type.equals("SATELLITE")) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        }
+        if (google_map_type.equals("TERRAIN")) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+        }
+        if (google_map_type.equals("HYBRID")) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        }
+
+        // Add handlers to be able to set marker
+        MarkerManager markerManager = new MarkerManager(googleMap);
+        MarkerManager.Collection markerCollectionLocation = markerManager.newCollection("location");
+        MarkerManager.Collection markerCollectionUtm = markerManager.newCollection("utm");
+
+        // Add marker at the GPS position on the map
+        if (latLong.latitude == 0.0) {
+            if (database_name.equals("https://biologer.hr")) {
+                latLong = new LatLng(45.5, 16.3);
+                addLocationMarker(7, markerManager);
+            }
+            if (database_name.equals("https://biologer.ba")) {
+                latLong = new LatLng(44.3, 17.9);
+                addLocationMarker(7, markerManager);
+            }
+            if (database_name.equals("https://biologer.me")) {
+                latLong = new LatLng(42.8, 19.1);
+                addLocationMarker(9, markerManager);
+            }
+            if (database_name.equals("https://biologer.rs") || database_name.equals("https://dev.biologer.org")) {
+                latLong = new LatLng(44.1, 20.7);
+                addLocationMarker(7, markerManager);
+            }
+        } else {
+            addLocationMarker(16, markerManager);
+        }
+
+        // Add a circle to display coordinate precision.
+        addCircle();
+
+        // Add UTM 10×10 km grid lines and label points over the map
+        addUTMLines();
+        addUTMPoints();
+
+        // Handle UTM grid visibility on Zoom
+        addZoomHandler(markerCollectionUtm);
+
+        // Load custom KML/KMZ file if chosen
+        if (SettingsManager.getKmlFile() != null) {loadKmlFile(null);}
+
+        // Click on the map should change the locality
+        mMap.setOnMapClickListener(latLng -> {
+            setLatLong(latLng.latitude, latLng.longitude);
+            Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
+            if (marker == null) {
+                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true);
+                marker = markerCollectionLocation.addMarker(markerOptions);
+                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+            } else {
+                marker.setPosition(latLng);
+            }
+            circle.setCenter(latLng);
+        });
+    }
+
+    private void addZoomHandler(MarkerManager.Collection collection) {
+
+        mMap.setOnCameraIdleListener(() -> {
+            float zoomLevel = mMap.getCameraPosition().zoom;
+            Log.d(TAG, "Zoom: " + zoomLevel + "; UTM shown: " + SettingsManager.isUtmShown());
+
+            if (SettingsManager.isUtmShown()) {
+                // Remove the UTM markers first
+                removeAllUtmMarkers();
+
+                // Add UTM lines
+                if (zoomLevel < 8) {
+                    if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+                } else {
+                    if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
+                }
+
+                // Re-add the UTM markers
+                if (zoomLevel > 10) {
+                    utmGridLines.addLayerToMap();
+                    final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+                    for (UTMName utmName : utmNames) {
+                        if (bounds.contains(utmName.getLatLng())) {
+                            IconGenerator iconFactory = new IconGenerator(MapActivity.this);
+                            iconFactory.setStyle(IconGenerator.STYLE_GREEN);
+
+                            MarkerOptions markerOptions = new MarkerOptions()
+                                    .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
+                                    .position(utmName.getLatLng())
+                                    .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
+                            Marker utmMarker = collection.addMarker(markerOptions);
+                            utmMarkers.add(utmMarker);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void addKmlFile() {
@@ -238,153 +358,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        mMap = googleMap;
-
-        // Update text
-        String accuracy_text = getString(R.string.accuracy_a1) +
-                " " + accuracy + " " + getString(R.string.meter) +
-                "\n" + getString(R.string.drag_marker);
-        textView.setText(accuracy_text);
-
-        // Select the type of the map according to the user’s settings
-        if (google_map_type.equals("NORMAL")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        }
-        if (google_map_type.equals("SATELLITE")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        }
-        if (google_map_type.equals("TERRAIN")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
-        }
-        if (google_map_type.equals("HYBRID")) {
-            mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        }
-
-        // Add marker at the GPS position on the map
-        MarkerManager markerManager = new MarkerManager(mMap);
-        MarkerManager.Collection markerManagerCollection = markerManager.newCollection();
-        if (latLong.latitude == 0.0) {
-            if (database_name.equals("https://biologer.hr")) {
-                latLong = new LatLng(45.5, 16.3);
-                addLocationMarker(7, markerManagerCollection);
-            }
-            if (database_name.equals("https://biologer.ba")) {
-                latLong = new LatLng(44.3, 17.9);
-                addLocationMarker(7, markerManagerCollection);
-            }
-            if (database_name.equals("https://biologer.me")) {
-                latLong = new LatLng(42.8, 19.1);
-                addLocationMarker(9, markerManagerCollection);
-            }
-            if (database_name.equals("https://biologer.rs") || database_name.equals("https://dev.biologer.org")) {
-                latLong = new LatLng(44.1, 20.7);
-                addLocationMarker(7, markerManagerCollection);
-            }
-        } else {
-            addLocationMarker(16, markerManagerCollection);
-        }
-
-        // Add a circle to display coordinate precision.
-        addCircle();
-
-        // Add UTM 10×10 km grid lines and label points over the map
-        addUTMLines();
-        addUTMPoints();
-
-        // Handle UTM grid visibility on Zoom
-        mMap.setOnCameraIdleListener(() -> {
-            float zoomLevel = mMap.getCameraPosition().zoom;
-            Log.d(TAG, "Zoom: " + zoomLevel + "; UTM shown: " + SettingsManager.isUtmShown());
-
-            if (SettingsManager.isUtmShown()) {
-                // Remove the UTM markers first
-                removeAllUtmMarkers();
-
-                // Add UTM lines
-                if (zoomLevel < 8) {
-                    if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
-                } else {
-                    if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
-                }
-
-                // Re-add the UTM markers
-                if (zoomLevel > 10) {
-                    utmGridLines.addLayerToMap();
-                    final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-                    for (UTMName utmName : utmNames) {
-                        if (bounds.contains(utmName.getLatLng())) {
-                            IconGenerator iconFactory = new IconGenerator(MapActivity.this);
-                            iconFactory.setStyle(IconGenerator.STYLE_GREEN);
-
-                            MarkerOptions markerOptions = new MarkerOptions()
-                                    .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
-                                    .position(utmName.getLatLng())
-                                    .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
-                            Marker utmMarker = markerManagerCollection.addMarker(markerOptions);
-                            utmMarkers.add(utmMarker);
-                        }
-                    }
-                }
-            }
-        });
-
-        // Load custom KML/KMZ file if chosen
-        if (SettingsManager.getKmlFile() != null) {loadKmlFile(null);}
-
-        // Click on the map should change the locality
-        mMap.setOnMapClickListener(latLng -> {
-            setLatLong(latLng.latitude, latLng.longitude);
-            Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
-            if (marker == null) {
-                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true);
-                marker = markerManagerCollection.addMarker(markerOptions);
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-            } else {
-                marker.setPosition(latLng);
-            }
-            circle.setCenter(latLng);
-        });
-
-        markerManagerCollection.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-            @Override
-            public void onMarkerDrag(@NonNull Marker marker) {
-                Log.d(TAG, "Location at starting point: " + latLong.latitude + "; " + latLong.longitude + ".");
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_radius));
-                MarkerOptions markerOptions = new MarkerOptions().position(latLong);
-                temporaryMarker = markerManagerCollection.addMarker(markerOptions);
-                if (temporaryMarker != null) {
-                    temporaryMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-                }
-            }
-
-            @Override
-            public void onMarkerDragEnd(@NonNull Marker marker) {
-                Location old_location = new Location("");
-                old_location.setLongitude(latLong.longitude);
-                old_location.setLatitude(latLong.latitude);
-                Location new_location = new Location("");
-                new_location.setLongitude(marker.getPosition().longitude);
-                new_location.setLatitude(marker.getPosition().latitude);
-                double distance = old_location.distanceTo(new_location);
-                Log.d(TAG, "Distance between central point and the drown circle is " + distance);
-                accuracy = String.format(Locale.ENGLISH, "%.0f", distance);
-                circle.setRadius(Double.parseDouble(accuracy));
-                String text = getString(R.string.accuracy_a1) + " " + accuracy + " m";
-                textView.setText(text);
-            }
-
-            @Override
-            public void onMarkerDragStart(@NonNull Marker marker) {
-                Log.d(TAG, "Location at ending point: " + latLong.latitude + "; " + latLong.longitude + ".");
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-                marker.setPosition(latLong);
-                temporaryMarker.remove();
-            }
-        });
-    }
-
     private void addUTMLines() {
         try {
             utmGridLines = new GeoJsonLayer(mMap, R.raw.utm_grid_lines, this);
@@ -416,15 +389,58 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         utmMarkers.clear();
     }
 
-    private void addLocationMarker(int zoom, MarkerManager.Collection markerManagerCollection) {
-        MarkerOptions markerOptions = new MarkerOptions().position(latLong).title(getString(R.string.you_are_here)).draggable(true);
-        marker = markerManagerCollection.addMarker(markerOptions);
+    private void addLocationMarker(int zoom, MarkerManager markerManager) {
+        MarkerManager.Collection collection = markerManager.getCollection("location");
+        MarkerOptions markerOptions = new MarkerOptions()
+                .position(latLong)
+                .title(getString(R.string.you_are_here))
+                .draggable(true);
+
+        marker = collection.addMarker(markerOptions);
         if (marker != null) {
             marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
         mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
+
+        collection.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDrag(@NonNull Marker marker) {
+                Log.d(TAG, "Location at starting point: " + latLong.latitude + "; " + latLong.longitude + ".");
+                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_radius));
+                MarkerOptions markerOptions = new MarkerOptions().position(latLong);
+                temporaryMarker = collection.addMarker(markerOptions);
+                if (temporaryMarker != null) {
+                    temporaryMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+                }
+            }
+
+            @Override
+            public void onMarkerDragEnd(@NonNull Marker marker) {
+                Location old_location = new Location("");
+                old_location.setLongitude(latLong.longitude);
+                old_location.setLatitude(latLong.latitude);
+                Location new_location = new Location("");
+                new_location.setLongitude(marker.getPosition().longitude);
+                new_location.setLatitude(marker.getPosition().latitude);
+                double distance = old_location.distanceTo(new_location);
+                Log.d(TAG, "Distance between central point and the drown circle is " + distance);
+                accuracy = String.format(Locale.ENGLISH, "%.0f", distance);
+                circle.setRadius(Double.parseDouble(accuracy));
+                String text = getString(R.string.accuracy_a1) + " " + accuracy + " m";
+                textView.setText(text);
+            }
+
+            @Override
+            public void onMarkerDragStart(@NonNull Marker marker) {
+                Log.d(TAG, "Location at ending point: " + latLong.latitude + "; " + latLong.longitude + ".");
+                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
+                marker.setPosition(latLong);
+                temporaryMarker.remove();
+            }
+        });
+
     }
 
     private void addCircle() {
