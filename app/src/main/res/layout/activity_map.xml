@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,31 +10,23 @@
 
     <include
         layout="@layout/toolbar_main"
+        android:id="@+id/map_actionbar"
+        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/coordinate_accuracy_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/accuracy"
-        android:gravity="center"
-        android:textSize="16sp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"/>
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         tools:context="org.biologer.biologer.gui.MapActivity"
+        android:layout_below="@id/map_actionbar"
+        android:layout_above="@+id/map_slider"
         tools:ignore="FragmentTagUsage">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fbtn_mapType"
+            android:id="@+id/float_button_map_type"
             android:layout_width="40dp"
             android:layout_height="40dp"
             app:fabCustomSize="40dp"
@@ -45,7 +37,14 @@
             android:layout_marginEnd="16dp"
             app:backgroundTint="@color/white"
             android:contentDescription="@string/map_type" />
-
     </fragment>
 
-</LinearLayout>
+    <com.google.android.material.slider.Slider
+        android:id="@+id/map_slider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:valueFrom="1"
+        android:valueTo="100"/>
+
+</RelativeLayout>

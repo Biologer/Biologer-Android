@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,7 +30,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.material.textview.MaterialTextView;
+import com.google.android.material.slider.Slider;
 import com.google.maps.android.collections.CircleManager;
 import com.google.maps.android.collections.MarkerManager;
 import com.google.maps.android.data.geojson.GeoJsonFeature;
@@ -73,9 +72,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     String google_map_type = SettingsManager.getGoogleMapType();
     String database_name = SettingsManager.getDatabaseName();
     Circle circle;
-    Marker marker, temporaryMarker;
+    Marker marker;
     private final List<Marker> utmMarkers = new ArrayList<>();
-    MaterialTextView textView;
     GeoJsonLayer utmGridLines;
     KmlLayer kmlLayer;
     MenuItem menuItemLoadKML;
@@ -86,7 +84,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_map);
 
         // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.map_actionbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
         // Add the back button to the toolbar
@@ -119,11 +117,45 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             Toast.makeText(this, getString(R.string.no_map_fragment), Toast.LENGTH_LONG).show();
         }
 
-        floatButtonMapType = findViewById(R.id.fbtn_mapType);
+        floatButtonMapType = findViewById(R.id.float_button_map_type);
         floatButtonMapType.setOnClickListener(view -> showMapTypeSelectorDialog());
 
-        textView = findViewById(R.id.coordinate_accuracy_text);
+        // Add slider for setting coordinate precision.
+        addSlider();
 
+    }
+
+    private void addSlider() {
+        Slider slider = findViewById(R.id.map_slider);
+        float current_value = Float.parseFloat(accuracy);
+        if (current_value >= 100) {
+            slider.setValueTo(500);
+        } if (current_value >= 500) {
+            slider.setValueTo(1000);
+        } if (current_value >= 1000) {
+            slider.setValueTo(10000);
+        } if (current_value >= 10000) {
+            slider.setValueTo(50000);
+        }
+        slider.setValue(current_value);
+        slider.setLabelFormatter(value -> getString(R.string.precision) + " " + Math.round(value) + " m");
+        slider.addOnChangeListener((slider1, value, fromUser) -> circle.setRadius(value));
+        slider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+            @Override
+            public void onStartTrackingTouch(@NonNull Slider slider) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(@NonNull Slider slider) {
+                Log.d(TAG, "The final value: " + slider.getValue());
+                int value = Math.round(slider.getValue());
+                if (value == 100) {slider.setValueTo(500);}
+                if (value == 500) {slider.setValueTo(1000);}
+                if (value == 1000) {slider.setValueTo(10000);}
+                if (value == 10000) {slider.setValueTo(50000);}
+                accuracy = String.valueOf(value);
+            }
+        });
     }
 
     // Get the action bar (toolbar)
@@ -179,10 +211,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Update text
-        String accuracy_text = getString(R.string.accuracy_a1) +
-                " " + accuracy + " " + getString(R.string.meter) +
-                "\n" + getString(R.string.drag_marker);
-        textView.setText(accuracy_text);
+        //String accuracy_text = getString(R.string.accuracy_a1) +
+        //        " " + accuracy + " " + getString(R.string.meter) +
+        //        "\n" + getString(R.string.drag_marker);
+        //textView.setText(accuracy_text);
 
         // Select the type of the map according to the user’s settings
         if (google_map_type.equals("NORMAL")) {
@@ -200,7 +232,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         // Add handlers to be able to set marker
         MarkerManager markerManager = new MarkerManager(googleMap);
-        MarkerManager.Collection markerCollectionLocation = markerManager.newCollection("location");
         MarkerManager.Collection markerCollectionUtm = markerManager.newCollection("utm");
 
         // Add marker at the GPS position on the map
@@ -242,13 +273,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mMap.setOnMapClickListener(latLng -> {
             setLatLong(latLng.latitude, latLng.longitude);
             Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
-            if (marker == null) {
-                MarkerOptions markerOptions = new MarkerOptions().position(latLng).title(getString(R.string.you_are_here)).draggable(true);
-                marker = markerCollectionLocation.addMarker(markerOptions);
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-            } else {
-                marker.setPosition(latLng);
-            }
+            marker.setPosition(latLng);
             circle.setCenter(latLng);
         });
     }
@@ -390,57 +415,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     private void addLocationMarker(int zoom, MarkerManager markerManager) {
-        MarkerManager.Collection collection = markerManager.getCollection("location");
+        MarkerManager.Collection collection = markerManager.newCollection("location");
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(latLong)
                 .title(getString(R.string.you_are_here))
-                .draggable(true);
-
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker))
+                .draggable(false);
         marker = collection.addMarker(markerOptions);
-        if (marker != null) {
-            marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-        }
+
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
         mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
-
-        collection.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-            @Override
-            public void onMarkerDrag(@NonNull Marker marker) {
-                Log.d(TAG, "Location at starting point: " + latLong.latitude + "; " + latLong.longitude + ".");
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_radius));
-                MarkerOptions markerOptions = new MarkerOptions().position(latLong);
-                temporaryMarker = collection.addMarker(markerOptions);
-                if (temporaryMarker != null) {
-                    temporaryMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-                }
-            }
-
-            @Override
-            public void onMarkerDragEnd(@NonNull Marker marker) {
-                Location old_location = new Location("");
-                old_location.setLongitude(latLong.longitude);
-                old_location.setLatitude(latLong.latitude);
-                Location new_location = new Location("");
-                new_location.setLongitude(marker.getPosition().longitude);
-                new_location.setLatitude(marker.getPosition().latitude);
-                double distance = old_location.distanceTo(new_location);
-                Log.d(TAG, "Distance between central point and the drown circle is " + distance);
-                accuracy = String.format(Locale.ENGLISH, "%.0f", distance);
-                circle.setRadius(Double.parseDouble(accuracy));
-                String text = getString(R.string.accuracy_a1) + " " + accuracy + " m";
-                textView.setText(text);
-            }
-
-            @Override
-            public void onMarkerDragStart(@NonNull Marker marker) {
-                Log.d(TAG, "Location at ending point: " + latLong.latitude + "; " + latLong.longitude + ".");
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker));
-                marker.setPosition(latLong);
-                temporaryMarker.remove();
-            }
-        });
-
     }
 
     private void addCircle() {
@@ -450,7 +435,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 .center(latLong)
                 .radius(Double.parseDouble(accuracy))
                 .fillColor(0x66c5e1a5)
-                .clickable(true)
+                .clickable(false)
                 .zIndex(5)
                 .strokeColor(0xff689f38)
                 .strokeWidth(4.0f);
@@ -479,8 +464,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 list_of_map_types,
                 checkItem,
                 (dialog, item) -> {
-                    // Locally create a finalised object.
-
                     // Perform an action depending on which item was selected.
                     switch (item) {
                         case 1:

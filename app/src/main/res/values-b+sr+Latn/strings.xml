@@ -6,34 +6,20 @@
     <string name="password">Lozinka</string>
     <string name="login">Prijavi me</string>
     <string name="invalid_email">Adresa e-pošte je pogrešno uneta</string>
-    <string name="valid_pass">Unesite lozinku</string>
     <string name="wrong_creds">Pogrešna e-pošta ili lozinka</string>
     <string name="no_account1">Možete</string>
     <string name="no_account2">se registrovati ovde</string>
     <string name="no_account3">ukoliko nemate nalog</string>
     <string name="pass_forgotten">Povratite zaboravljenu lozinku preko mreže!</string>
-    <string name="email_wrong_format">Nije ispravan format e-adrese</string>
-    <string name="devDatabase">Ovo je samo za programere!</string>
 
     <!--  Unos  -->
-    <string name="GPSaccuracy">"Preciznost koordinate:"</string>
     <string name="latitude">Geografska širina:</string>
     <string name="longitude">Geografska dužina:</string>
-    <string name="not_available">nedostupno</string>
     <string name="unknown">nepoznato</string>
-    <string name="taxon_hint">Počnite da kucate…</string>
-    <string name="more">Još…</string>
     <string name="naziv_taksona">Naziv taksona</string>
-    <string name="pleaseSelect">Izaberite</string>
     <string name="broj_jedinki">Broj jedinki</string>
-    <string name="pol">Pol</string>
-    <string name="M">Mužjak</string>
-    <string name="Z">Ženka</string>
-    <string name="razvojni_stadijum">Stadijum</string>
     <string name="stage_hint">Razvojni stadijum taksona</string>
     <string name="jedinka_je">Jedinka je nađena mrtva?</string>
-    <string name="ziva">živa</string>
-    <string name="mrtva">mrtva</string>
     <string name="razlog_smrti">Uzrok smrti</string>
     <string name="habitat">Stanište</string>
     <string name="komentar">Beleška</string>
@@ -42,27 +28,13 @@
     <string name="upload">Pošalji</string>
     <string name="title_activity_map">Karta</string>
     <string name="entry_title">Terenski nalaz</string>
-    <string name="taxa_mandatory">Morate uneti ispravan naziv vrste (taksona).</string>
-    <string name="please_select">Izaberite</string>
-    <string name="enable_location">Praćenje lokacije mora biti omogućeno u podešavanjima uređaja.</string>
-    <string name="enable_location_yes">Omogući</string>
-    <string name="enable_location_no">Otkaži</string>
     <string name="saved">Unos je sačuvan.</string>
     <string name="location_is_zero">Još uvek nije pronađena vaša lokacija. Da li želite da sačekate na lokaciju ili da otkažete ovaj unos?</string>
     <string name="wait">Sačekaj</string>
 
-    <!--picture dialog-->
-    <string name="choose_picture">Izaberite fotografiju</string>
-    <string name="choose_picture_gallery">Izaberi sliku iz galerije</string>
-    <string name="choose_picture_camera">Napravi sliku kamerom</string>
-    <!--map-->
-    <string name="accurcy">Preciznost lokacije (m)</string>
-
     <!--LandingActivity-->
-    <string name="confirmExit">Da li želite da napustite aplikaciju?</string>
     <string name="yes">Da</string>
     <string name="no">Ne</string>
-    <string name="updating_database">Ažuriram bazu taksona…</string>
     <string name="new_database_available">Baza taksona na serveru je novija od vaše. Možete je preuzeti sada ili kasnije iz Podešavanja aplikacije. Da li želite da ažurirate bazu taksona?</string>
 
     <!--Details-->
@@ -86,13 +58,9 @@
 
     <!--Logout-->
     <string name="currently_logged_data">"Trenutno ste prijavljeni na bazu podataka:"</string>
-    <string name="currently_logged_user_name">Kao korisnik:</string>
     <string name="logout_from_biologer">Da li želite da se odjavite iz ove Biologerove baze podataka?</string>
 
     <!--Setup-->
-    <string name="note">Odavde možete ažurirati spisak vrsta i ostalih taksona.</string>
-    <string name="button_update">Ažuriraj vrste</string>
-    <string name="database_updated">Baza taskona je ažurirana.</string>
     <string name="database_connect_error">Aplikacije nije uspela da se poveže sa bazom podataka!</string>
 
     <!--First time run-->
@@ -116,14 +84,12 @@
     <string name="hybrid">Hibridna</string>
     <string name="terrain">Prikaz terena</string>
     <string name="sattelite">Satelitska slika</string>
-    <string name="title_setup_activity">Podešavanja Biologera</string>
     <string name="license10">Slobodna (CC BY-SA)</string>
     <string name="license_default">Preuzmi sa servera</string>
     <string name="license_timed">Privremeno zatvorena (objavi za 3 godine kao slobodno)</string>
     <string name="license20">Slobodna, nekomercijalna (CC BY-SA-NC)</string>
     <string name="license30">Delimično otvorena (ograničena na od 10km)</string>
     <string name="license40">Zatvorena (dostupno vama i urednicima)</string>
-    <string name="setup_title">Podešavanja biologera</string>
     <string name="choose_dlicense">Omogućava izbor drugačije licence za podatke koje prikupljate iz Biologer aplikacije.</string>
     <string name="choose_ilicense">Omogućava izbor drugačije licence za fotografije koje šaljete iz Biologer aplikacije.</string>
     <string name="choose_project">Postavlja ime projekta ukoliko su vaši podaci prikupljeni tokom reazlizacije nekog projekta.</string>
@@ -138,28 +104,13 @@
     <string name="notify_desc_taxa_failed">Takosnomska baza nije ažurirana sa servera. Uverite se da imate stabilan internet i pokušajte ponovo.</string>
     <string name="retry">Pokušaj ponovo</string>
     <string name="OK">U redu</string>
-    <string name="exit_application">Nakon što se odjavite sa Biologera možete ponovo pokrenuti aplikaciju i prijaviti se na neku drugu bazu podataka.</string>
-    <string name="user_is_logged_out">Izgleda da nijedan korisnik nije prijavljen. Biologeć će izaći omogućivši vam da ponovo pokrenete aplikaciju i da se prijavite.</string>
-    <string name="should_cancel_taxa_update">Biologer trenutno ažurira bazu podataka za taksone. Da li želite da otkažete ažuriranje?</string>
-    <string name="continue_update">Nastavi ažuriranje</string>
-    <string name="notify_title_taxa_partially_updated">Samo deo vrsta je preuzet</string>
-    <string name="notify_desc_taxa_partially_updated">Taksonomsko stablo je delimično preuzeto. Možete ga skinuti u potpunosti iz Podešavanja Biologera kako bi vam aplikacija pružila sve mogućnosti.</string>
-    <string name="stop_action">Zaustavi</string>
     <string name="resume_action">Nastavi</string>
-    <string name="cancel_update">Otkaži ažuriranje</string>
     <string name="data_license">Licenca za podatke</string>
-    <string name="data_sharing">Deljenje podataka</string>
     <string name="image_license">Licenca za slike</string>
-    <string name="retry_licence_from_server">Biologer nije uspeo da preuzme izabrane licence podataka i slika sa servera. Ukoliko imate stabilan internet možete ponoviti preuzimanje podataka ili podesiti proizvoljne licence iz Podešavanja Biologera.</string>
-    <string name="go_to_preferences">Idi u podešavanja</string>
     <string name="update_taxa">Preuzmi sve vrste</string>
     <string name="update_taxa_desc">Preuzima celokupno taksonomsko stablo u aplikaciji sa Biologerovog servera.</string>
-    <string name="data_synchronisation">Usaglašavanje podataka</string>
-    <string name="additional_options">Dodatne opcije</string>
     <string name="updating_taxa_be_patient">Sačekajte dok se ne završi preuzimanje taksonomske baze sa servera.</string>
     <string name="pause_action">Zaustavi</string>
-    <string name="notify_title_taxa_paused">Ažuriranje je zaustavljeno</string>
-    <string name="notify_desc_taxa_paused">Preuzimanje novog taksonomskog stabla sa servera je pauzirano.</string>
     <string name="notify_title_taxa_canceled">Ažuriranje je otkazano</string>
     <string name="notify_desc_taxa_canceled">Preuzimanje novog taksonomskog stabla sa servera je otkazano.</string>
     <string name="invalid_taxon_name">Izgleda da ste uneli nepoznati takson. Da li želite da ga ipak sačuvate?</string>
@@ -169,13 +120,11 @@
     <string name="map">Karta</string>
     <string name="advanced_entry">Detaljniji unos nalaza</string>
     <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što su broj jedinki, razvojni stadijum ili pol.</string>
-    <string name="select_sex">Pol jedinke</string>
     <string name="stage_egg">Jaje</string>
     <string name="stage_larva">Larva</string>
     <string name="stage_pupa">Lutka</string>
     <string name="stage_adult">Odrasli</string>
     <string name="Biologer">Biologer</string>
-    <string name="logging_in">Prijavljujem se…</string>
     <string name="cannot_connect_token">Ne mogu da dobijem odgovor (token) sa servera. Proverite internet vezu.</string>
     <string name="database">Baza</string>
     <string name="User">Korisnik</string>
@@ -200,8 +149,6 @@
     <string name="database_bih">Bosna i Hercegovina</string>
     <string name="database_dev_version">Za programere</string>
     <string name="URL_address">Adresa: </string>
-    <string name="notifications_disabled1">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_taxa“. Biologer neće moći da preuzme spisak vrsta sa mreže, što je neophodno da bi program ispravno upisivao nazive vrsta uz vaše terenske nalaze.</string>
-    <string name="notifications_disabled2">Važna napomena! Obaveštenja su onemogućena na kanalu „biologer_entries“. Biologer neće moći da šalje vaše terenske nalaze na server, što je jedna od ključnih mogućnosti ove aplikacije.</string>
     <string name="notifications_disabled">Važna napomena! Obaveštenja su onemogućena! To znači da Biologer neće moći da preuzima spisak vrsta, niti da šalje vaše nalaze na server. Za većinu osnovnih mogućnosti ovog programa morate da omogućite obaveštenja u podešavanjima vašeg Android uređaja.</string>
     <string name="auto_download">Sam pošalji i preuzmi</string>
     <string name="auto_download_desc">Dozvoljava programu da sam preuzima i šalje podatke bez pomoći korisnika. Podrazumevano se podaci šalju kada je dostupna bežična mreža.</string>
@@ -209,9 +156,6 @@
     <string name="any_network">Na bilo kojoj mreži</string>
     <string name="always_ask">Uvek pitaj korisnika</string>
     <string name="found_on">Nađeno na</string>
-    <string name="is_male">Muški</string>
-    <string name="is_female">Ženski</string>
-    <string name="unknown_sex">Nepoznat pol</string>
     <string name="preferences_data_entry">Unos podataka</string>
     <string name="allow_english_names">Pretražuj i nazive na engleskom</string>
     <string name="allow_english_names_desc">Dozvoljava Biologeru da prikazuje i nazive vrsta na engleskom čak i kada je drugačije podešen jezik telefona</string>
@@ -219,10 +163,6 @@
     <string name="preferences_other">Ostala podešavanja</string>
     <string name="number_of_males">Br. mužjaka</string>
     <string name="number_of_females">Br. ženki</string>
-    <string name="both_sexes">Oba pola</string>
-    <string name="both">Oba</string>
-    <string name="unknown_sex_short">Nepoznat</string>
-    <string name="image_deleted">Izgleda da ova slika više nije na vašem uređaju!</string>
     <string name="select_atlas_code">Atlas kodovi gnežđenja</string>
     <string name="atlas_code_0">0. Sumnja se da je jedinka na seobi ili da se samo zadržava tokom letnjeg perioda, ali se ne gnezdi</string>
     <string name="atlas_code_1">1. Vrsta posmatrana u gnezdećoj sezoni u mogućem gnezdećem staništu</string>
@@ -242,7 +182,6 @@
     <string name="atlas_code_15">15. Pronađeno gnezdo sa jajima</string>
     <string name="atlas_code_16">16. Pronađeno gnezdo sa mladuncima (posmatranim ili slušanim)</string>
     <string name="not_selected">Nije izabrano</string>
-    <string name="display_image_on_full_screen">Prikaži sliku na celom ekranu.</string>
     <string name="image_view">Pregled slike</string>
     <string name="taxon_name">Naziv taksona</string>
     <string name="developmental_stage">Razvojni stadijum</string>
@@ -264,17 +203,11 @@
     <string name="institution">Institucija</string>
     <string name="email">Adresa e-pošte</string>
     <string name="password2">Ponovite lozinku</string>
-    <string name="register_intro1">Možete se registrovati na</string>
-    <string name="register_intro2">popunjavanjem jednostavnog obrasca. Najpre </string>
-    <string name="register_intro3">pročitajte našu politiku privatnosti</string>
-    <string name="register_intro4">i izaberite licence, koje određuju kako delite podatke sa ostalima. Detalji o licencama su dostupni na vebu</string>
     <string name="i_accept_privacy_policy">Prihvatam politiku privatnosti</string>
     <string name="email_already_exist">Ova adresa e-pošte je već registrovana</string>
     <string name="email_domain_wrong_500">Greška 500: Adresa e-pošte nije dostupna!</string>
     <string name="email_domain_wrong_404">Greška 404: Adresa e-pošte nije dostupna!</string>
-    <string name="registering">Registrujem novog korisnika</string>
     <string name="register_succesfull">Registracija je skoro završena! Kako bi proverili da ste to bili vi, poslali smo vam poruku na adresu e-pošte sa vezom za potvrdu. Otvorite je da potvrdite vašu adresu, a zatim se možete prijaviti na Biologer.</string>
-    <string name="confirm_email">Adresa vaše e-pošte još uvek nije potvrđena! Poslali smo vam poruku na e-poštu sa vezom za potvrdu. Samo kliknite na nju i bićete spremni. U zavisnosti od opterećenja servera, može se desiti da poruka zakasni.</string>
     <string name="unauthorised">Izabrani korisnik ne postoji na ovom serveru. Možda pokušavate da se prijavite na pogrešnu bazu podataka?</string>
     <string name="cannot_connect_server">Ne mogu da dobijem odgovor sa servera!</string>
     <string name="refresh_token_failed">Vaš žeton za prijavu je istekao i ne možemo ga osvežiti preko interneta!</string>
@@ -286,15 +219,11 @@
     <string name="sql_updated_message">Promenjena je struktura SQL baze podataka. Biologer će vas ponovo prijaviti i preuzeti korisničke podatke sa servera.</string>
     <string name="login_after_sql_update_fail">Ne mogu da se prijavim nakon nadogradnje SQL baze podataka. Biologer će biti zatvoren, pa ga možete ponovo pokrenuti kada budete povezani na internet.</string>
     <string name="groups_of_taxa">Dostupne grupe vrsta</string>
-    <string name="deselect_all_groups">Isključi sve grupe</string>
     <string name="license_image_30">Zadrži autorstvo i deli sa vodenim žigom</string>
     <string name="license_image_10">Deli slobodno (CC-BY-SA)</string>
     <string name="license_image_20">Deli slike nekomercijalno (CC-BY-SA-NC)</string>
     <string name="license_image_40">Zadrži autorstvo i zabrani prikaz slika u javnom delu</string>
-    <string name="no_map_activity">Aktivnost za karte ne može biti učitana iz nekog razloga.</string>
     <string name="no_map_fragment">Fragment za mape ne može biti učitan iz nekog razloga.</string>
-    <string name="accuracy_a1">Preciznost koordinate:</string>
-    <string name="drag_marker">Prevucite markaciju da je promenite.</string>
     <string name="export_to_csv_success">Izvoz je uspeo. Datoteka je sačuvana u:</string>
     <string name="dataset">Android aplikacija za Biologer</string>
     <string name="taxon">Takson</string>
@@ -345,7 +274,6 @@
     <string name="request_file_camera_permissions">Biologer ne može da prikuplja fotografije bez dozvole za pristup sistemu datoteka i kameri. Da li želite da omogućite ove dozvole?</string>
     <string name="request_camera_permissions">Biologer ne može da napravi fotografiju ukoliko mu me omogućite da pristupi kameri uređaja. Da li želite da mu omogućite pristup?</string>
     <string name="request_location_permissions">Biologer služi za sakupljanje podataka o prisustvu vrsta na terenu, zbog čega je veoma važno da svaki unos sadrži i geografsku odrednicu. Da bi sve radilo kako treba, potrebno je da mu omogućite pristup lokaciji uređaja, iako je lokaciju moguće odabrati i sa karte.</string>
-    <string name="request_read_external_permission">Biologeru je potrebna dozvola za pristup vašim slikama iz galerije. Da li želite da mu omogućite čitanje datoteka na vašem uređaju?</string>
     <string name="database_birdloger">Pticologer (DZPPS)</string>
     <string name="entry_info_first_run">Vaša posmatranja sa terena će se pojaviti ovde. Da dodate novo posmatranje neke vrste, pritisnite znak „+“ i popunite formular. Nakon što dođete do stabilnog interneta, kliknite na dugme za slanje podataka kako bi ih poslali na server.</string>
     <string name="entry_info_uploaded">Čestitamo! Vaši podaci su sada sigurno pristigli na %1$s server. Možete im pristupiti ili ih uređivati i izvoziti ukoliko se prijavite na ovu veb stranicu iz nekog programa za pregled internet sadržaja.</string>
@@ -415,13 +343,11 @@
     <string name="image_resize_error">Nepoznata greška! Ne mogu da promenim veličinu slike.</string>
     <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
     <string name="enable">Enable</string>
-    <string name="disable">Disable</string>
     <string name="montenegro">Montenegro</string>
     <string name="community_montenegro">Lokalna Biologer zajednica u Crnoj Gori</string>
     <string name="ignore">Zanemari</string>
     <string name="notifications_are_disabled">Obaveštenja su onemogućena. Zbog toga neke od osnovnih Biologerovih mogućnosti neće raditi.</string>
     <string name="no_permission_camera">Nemate dozvolu da napravite fotografiju. Vaši nalazi neće imati slike.</string>
-    <string name="no_permission_gallery">Nemate dozvolu da dodate sliku iz galerije. Važi nalazi neće imati slike.</string>
     <string name="refresh_token_text">Izgleda da je žeton za prijavu neispravan ili istekao. Unesite vašu lozinku kako bi ponovo mogli da se prijavite u Biologer.</string>
     <string name="channel_observation_name">Nepročitana obaveštenja</string>
     <string name="channel_observation_description">Preuzmite obaveštenja o vašim terenskim nalazima.</string>
@@ -431,19 +357,13 @@
     <string name="observation_changed">Nalaz je promenjen</string>
     <string name="no_login_token_falling_back_to_login_screen">Nema žetona za prijavu, vraćam na početni ekran.</string>
     <string name="both_login_and_refresh_tokens_expired">Žetoni za prijavu i osvežavanje prijave su istekli.</string>
-    <string name="all_read">Označi sve kao pročitano</string>
-    <string name="there_are_at_least">Ima</string>
-    <string name="changes_to_your_field_observations">promena vaših terenskih nalaza.</string>
     <string name="biologer">Biologer</string>
-    <string name="your_field_observations_were_changed">Vaši terenski nalazi su promenjeni.</string>
     <string name="unknown_date">nepoznato</string>
     <string name="on">dana</string>
     <string name="next_unread">Sledeće nepročitano</string>
     <string name="marked_unidentifiable">je označio/la nalaz taksona</string>
     <string name="marked_unidentifiable2">kao nemoguću identifikaciju</string>
-    <string name="marked_as_unidentifiable">označio/la kao nemoguće identifikovati</string>
     <string name="first_unread_notification">Prvo nepročitano</string>
-    <string name="go_back">Nazad u Biologer</string>
     <string name="hurray_you_just_read_all_the_notifications">Ura! Upravo ste pročitali sva obaveštenja.</string>
     <string name="failed_to_upload_photo">Ne mogu da pošaljem fotografiju. Proverite da li ste povezani na internet ili pokušajte da otvorite poslednji nalaz, obrišete sliku koja pravi problem i ponovo pošaljete nalaze.</string>
     <string name="failed_to_upload_entry">Ne mogu da pošaljem nalaz. Ukoliko ste povezani na stabilan internet a problem i dalje postoji, kontaktirajte programere koji razvijaju aplikaciju.</string>
@@ -458,15 +378,12 @@
     <string name="announcement">Novost</string>
     <string name="created_on">Datum nastanka</string>
     <string name="by">Napisao: </string>
-    <string name="custom_maps_folder_name">Proizvoljne karte</string>
-    <string name="load_offline_map">Učitaj karte za rad van mreže</string>
     <string name="biologer_banner">Biologerov baner</string>
     <string name="banner_username">Korisničko ime</string>
     <string name="banner_mail_example">vaša_adresa@biologer.org</string>
     <string name="notifications">Obaveštenja</string>
     <string name="species_photo">Slika vrste</string>
     <string name="notification_text">Tekst obaveštenja.</string>
-    <string name="mark_all_notifications_read">Ova radnja će označiti sva obaveštenja kao pročitana, uključujući i obaveštenja na vebu. Da li želite da nastavite?</string>
     <string name="new_notification_text">vaš terenski nalaz je izmenjen na vebu. Pogledajte šta je novo!</string>
     <string name="new_notifications_text">vaših terenskih nalaza je izmenjeno na vebu. Pogledajte šta je novo!</string>
     <string name="notification">Obaveštenje</string>
@@ -493,11 +410,13 @@
     <string name="choose_language_desc">Dozvoljava da izaberete jezik koji će se koristiti unutar aplikacije.</string>
     <string name="locale_serbia_cyrilic">srpski (ćirilica)</string>
     <string name="locale_serbia_latin">srpski (latinica)</string>
-    <string name="locale_montenegro_latin">crnogorski (latinica)</string>
     <string name="locale_croatia">hrvatski</string>
     <string name="locale_english">engleski</string>
     <string name="locale_bosnia_and_herzegovina_latin">bosanski (latinica)</string>
     <string name="defaults">podrazumevani jezik</string>
     <string name="locale_hungarian">mađarski</string>
+    <string name="show_utm">Prikaz UTM kvadrata</string>
+    <string name="load_kml_map">Učitaj KML datoteku</string>
+    <string name="precision">Preciznost:</string>
 
 </resources>

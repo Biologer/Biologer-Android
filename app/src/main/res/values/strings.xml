@@ -16,19 +16,10 @@
     <string name="latitude">Latitude:</string>
     <string name="longitude">Longitude:</string>
     <string name="unknown">unknown</string>
-    <string name="taxon_hint">Start typing…</string>
-    <string name="more">More…</string>
     <string name="naziv_taksona">Taxon name</string>
-    <string name="pleaseSelect">Please select</string>
     <string name="broj_jedinki">Number of individuals</string>
-    <string name="pol">Sex</string>
-    <string name="M">Male</string>
-    <string name="Z">Female</string>
-    <string name="razvojni_stadijum">Stage</string>
     <string name="stage_hint">Developmental stage of the taxon</string>
     <string name="jedinka_je">Found dead?</string>
-    <string name="ziva">live</string>
-    <string name="mrtva">dead</string>
     <string name="razlog_smrti">Cause of death</string>
     <string name="habitat">Habitat</string>
     <string name="komentar">Comment</string>
@@ -37,27 +28,13 @@
     <string name="upload">Upload</string>
     <string name="title_activity_map">Map</string>
     <string name="entry_title">Field observation</string>
-    <string name="taxa_mandatory">You must enter the valid species (taxon) name.</string>
-    <string name="please_select">Please select</string>
-    <string name="enable_location">Location setting must be enabled on your device.</string>
-    <string name="enable_location_yes">Enable</string>
-    <string name="enable_location_no">Cancel</string>
     <string name="saved">The entry is saved.</string>
     <string name="location_is_zero">Location is not retrieved yet. Would you like to wait for location or cancel this entry?</string>
     <string name="wait">Wait</string>
 
-    <!--picture dialog-->
-    <string name="choose_picture">Choose picture</string>
-    <string name="choose_picture_gallery">Choose from gallery</string>
-    <string name="choose_picture_camera">Take photo by camera</string>
-    <!--map-->
-    <string name="accurcy">Location precision (m)</string>
-
     <!--LandingActivity-->
-    <string name="confirmExit">Do you want to exit application?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="updating_database">Updating taxonomic database…</string>
     <string name="new_database_available">New version of taxonomic database is available online. You can update it now or later from the application Setup. Would you like to update your database?</string>
 
     <!--Details-->
@@ -81,13 +58,9 @@
 
     <!--Logout-->
     <string name="currently_logged_data">You are currently logged into a database:</string>
-    <string name="currently_logged_user_name">As user:</string>
     <string name="logout_from_biologer">Do you want to logout from this Biologer database?</string>
 
     <!--Setup-->
-    <string name="note">Here you can update the list of species and other taxa.</string>
-    <string name="button_update">Update species</string>
-    <string name="database_updated">Taxon database is updated.</string>
     <string name="database_connect_error">Application was unable to connect with database!</string>
 
     <!--First time run-->
@@ -111,14 +84,12 @@
     <string name="hybrid">Hybrid</string>
     <string name="terrain">Terrain</string>
     <string name="sattelite">Satellite</string>
-    <string name="title_setup_activity">Biologer Setup</string>
     <string name="license10">Free (CC BY-SA)</string>
     <string name="license_default">Get from server</string>
     <string name="license_timed">Temporary closed (publish as free after 3 years)</string>
     <string name="license20">Free, NonCommercial (CC BY-SA-NC)</string>
     <string name="license30">Partially Open (restricted to 10km)</string>
     <string name="license40">Closed (available to you and the editors)</string>
-    <string name="setup_title">Setup Biologer</string>
     <string name="choose_dlicense">Choose different license for your data collected through the application</string>
     <string name="choose_ilicense">Choose different license for your images sent through the application</string>
     <string name="choose_project">Sets the project title if your data was collected during a project.</string>
@@ -133,28 +104,13 @@
     <string name="notify_desc_taxa_failed">Taxonomic database was not updated from the server. Ensure that you have a stable internet connection and retry.</string>
     <string name="retry">Retry</string>
     <string name="OK">OK</string>
-    <string name="exit_application">After logging out from Biologer you can start the application again and log back into some of our online databases.</string>
-    <string name="user_is_logged_out">It looks like no user is currently logged in. Biologer will now exit allowing you to restart the application and log back in.</string>
-    <string name="should_cancel_taxa_update">Biologer is currently updating taxonomic database. Would you like to cancel this operation?</string>
-    <string name="continue_update">Continue update</string>
-    <string name="notify_title_taxa_partially_updated">Species partially updated</string>
-    <string name="notify_desc_taxa_partially_updated">Taxonomic tree is partially updated. To get full options from this application you can complete updating from Biologer Preferences.</string>
-    <string name="stop_action">Stop</string>
     <string name="resume_action">Resume</string>
-    <string name="cancel_update">Cancel update</string>
     <string name="data_license">Data license</string>
-    <string name="data_sharing">Data sharing</string>
     <string name="image_license">Image license</string>
-    <string name="retry_licence_from_server">Biologer could not retrieve data about your image and data licences from server. Having stable internet you can retry this operation, or you can setup custom data licenses from the Biologer Preferences.</string>
-    <string name="go_to_preferences">Open preferences</string>
     <string name="update_taxa">Download all species</string>
     <string name="update_taxa_desc">Re-downloads entire taxonomic tree in your application from Biologer server.</string>
-    <string name="data_synchronisation">Data synchronisation</string>
-    <string name="additional_options">Additional options</string>
     <string name="updating_taxa_be_patient">Updating taxonomic database from the server. Please be patient.</string>
     <string name="pause_action">Pause</string>
-    <string name="notify_title_taxa_paused">Update paused</string>
-    <string name="notify_desc_taxa_paused">Downloading new taxonomic database from the server is paused.</string>
     <string name="notify_title_taxa_canceled">Update canceled</string>
     <string name="notify_desc_taxa_canceled">Downloading new taxonomic database is canceled by the user.</string>
     <string name="invalid_taxon_name">It looks like you selected an unknown taxon. Do you want to save it anyway?</string>
@@ -164,13 +120,11 @@
     <string name="map">Map</string>
     <string name="advanced_entry">Advanced observation entry</string>
     <string name="advanced_entry_desc">Enables advanced options that could be entered with your occurrence (i.e. number of individuals, stage, sex).</string>
-    <string name="select_sex">Sex of the individual</string>
     <string name="stage_egg">Egg</string>
     <string name="stage_larva">Larva</string>
     <string name="stage_pupa">Pupa</string>
     <string name="stage_adult">Adult</string>
     <string name="Biologer">Biologer</string>
-    <string name="logging_in">Logging in…</string>
     <string name="cannot_connect_token">Cannot get response (token) from the server. Check the internet connection.</string>
     <string name="database">Database</string>
     <string name="User">User</string>
@@ -195,8 +149,6 @@
     <string name="database_bih">Bosnia and Herzegovina</string>
     <string name="database_dev_version">For developers</string>
     <string name="URL_address">"URL: "</string>
-    <string name="notifications_disabled1">Important notice! Notifications are not enabled for channel \"biologer_taxa\". Biologer will not be able to receive species list from internet, which is required for sending correct species names along with field observations.</string>
-    <string name="notifications_disabled2">Important notice! Notifications are not enabled for channel \"biologer_entries\". Biologer will not be able to upload your observations online, which is one of its core functionality.</string>
     <string name="notifications_disabled">Important notice: notifications are not enabled! This means that Biologer will not be able to receive species list or upload your records online. Enabling notifications in Android OS is required for most of application core functions and it will not work properly without this settings enabled.</string>
     <string name="auto_download">Auto download and upload</string>
     <string name="auto_download_desc">Allows data to be automatically downloaded and uploaded without user intervention. By default the data will be transferred only on WiFi.</string>
@@ -204,9 +156,6 @@
     <string name="any_network">On any network</string>
     <string name="always_ask">Always ask user</string>
     <string name="found_on">Found on</string>
-    <string name="is_male">Male</string>
-    <string name="is_female">Female</string>
-    <string name="unknown_sex">Unknown sex</string>
     <string name="preferences_data_entry">Data entry</string>
     <string name="allow_english_names">Always list english names</string>
     <string name="allow_english_names_desc">Allows Biologer to list english names for the species even if the phone locale is set to other language.</string>
@@ -214,10 +163,6 @@
     <string name="preferences_other">Other settings</string>
     <string name="number_of_males">No. males</string>
     <string name="number_of_females">No. females</string>
-    <string name="both_sexes">Both sexes</string>
-    <string name="both">Both</string>
-    <string name="unknown_sex_short">Unknown</string>
-    <string name="image_deleted">This image does not exist on your device anymore!</string>
     <string name="select_atlas_code">Nesting atlas code</string>
     <string name="atlas_code_0">0. Species observed but suspected to be still on migration or to be summering non-breeder</string>
     <string name="atlas_code_1">1. Species observed in breeding season in possible nesting habitat</string>
@@ -237,7 +182,6 @@
     <string name="atlas_code_15">15. Nest containing eggs</string>
     <string name="atlas_code_16">16. Nest with young seen or heard</string>
     <string name="not_selected">Not selected</string>
-    <string name="display_image_on_full_screen">Display image on full screen.</string>
     <string name="image_view">Image View</string>
     <string name="taxon_name">Taxon name</string>
     <string name="developmental_stage">Developmental stage</string>
@@ -259,17 +203,11 @@
     <string name="institution">Institution</string>
     <string name="email">Email address</string>
     <string name="password2">Repeat password</string>
-    <string name="register_intro1">You can register to</string>
-    <string name="register_intro2">by filling this simple form. Make sure you</string>
-    <string name="register_intro3">read our privacy policy</string>
-    <string name="register_intro4">and choose license to define how you share data with others. Detailed description of the licenses could be found on the web</string>
     <string name="i_accept_privacy_policy">I accept privacy policy</string>
     <string name="email_already_exist">This email address is already registered</string>
     <string name="email_domain_wrong_500">Error 500: Email address not reachable!</string>
     <string name="email_domain_wrong_404">Error 404: Email address not reachable!</string>
-    <string name="registering">Registering new user</string>
     <string name="register_succesfull">Registration is almost complete! To check it this was you, we will send an email with confirmation link. Open that link to verify your email and you could login to Biologer.</string>
-    <string name="confirm_email">Your email address is not confirmed yet! We have sent you an email with confirmation link, just click on it and you are good to go. Depending on the server overload, there could be some delay before you receive the confirmation link.</string>
     <string name="unauthorised">The given user does not exist on this server. Maybe you are trying to connect to the wrong database?</string>
     <string name="cannot_connect_server">Cannot get response from the server!</string>
     <string name="refresh_token_failed">Your login token has expired, but we could not refresh it from the internet! Biologer could continue to work, but you could not send the data to the server.</string>
@@ -281,15 +219,11 @@
     <string name="sql_updated_message">SQL database structure changed. Biologer will log you back in and download user data from server.</string>
     <string name="login_after_sql_update_fail">Could not login after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of species</string>
-    <string name="deselect_all_groups">Deselect all groups</string>
     <string name="license_image_30">Keep authorship and share online with watermark</string>
     <string name="license_image_10">Share images for free (CC-BY-SA)</string>
     <string name="license_image_20">Share images as noncommercial (CC-BY-SA-NC)</string>
     <string name="license_image_40">Keep authorship and restrict images from public domain</string>
-    <string name="no_map_activity">Map activity could not be loaded for some reason.</string>
     <string name="no_map_fragment">Map fragment could not be loaded for some reason.</string>
-    <string name="accuracy_a1">Coordinate accuracy:</string>
-    <string name="drag_marker">Drag marker to change.</string>
     <string name="export_to_csv_success">"Export was successful. File is saved in: "</string>
     <string name="dataset">Biologer Android Application</string>
     <string name="taxon">Taxon</string>
@@ -340,7 +274,6 @@
     <string name="request_file_camera_permissions">Biologer could not take a photo without permission to access your file system and camera. Would you like to enable this permissions?</string>
     <string name="request_camera_permissions">Biologer could not take a photo without your permission to access camera. Would you like to enable this permissions?</string>
     <string name="request_location_permissions">Biologer is intended to collect species occurrences in the field, thus the geographic location is very important for each record. It is highly recommended that you allow Biologer to access your location, but you can also manually pick a location using map.</string>
-    <string name="request_read_external_permission">Biologer needs a permission to access your image files from gallery. Would you like to give it a permit to read storage on your phone?</string>
     <string name="database_birdloger">Birdloger (DZPPS)</string>
     <string name="entry_info_first_run">Your field records will appear here. To add new observation of a species, just use the “+” sign and fill in the form. After you rich the stable internet connection, use the upload button to send all your records on the server.</string>
     <string name="entry_info_uploaded">Congratulations! Your data is now safely uploaded on %1$s server. You can access, edit and export them by logging in the web page using web browser.</string>
@@ -410,13 +343,11 @@
     <string name="image_resize_error">Unknown error occurred! Couldn\'t get resized image.</string>
     <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
     <string name="enable">Enable</string>
-    <string name="disable">Disable</string>
     <string name="montenegro">Montenegro</string>
     <string name="community_montenegro">Local Biologer community in Montenegro</string>
     <string name="ignore">Ignore</string>
     <string name="notifications_are_disabled">Notifications are disabled. Some basic Biologer features will not work.</string>
     <string name="no_permission_camera">No permission to take picture from camera. Observations will have no images.</string>
-    <string name="no_permission_gallery">No permission to take picture from gallery. Observations will have no images.</string>
     <string name="refresh_token_text">It looks like the login token is invalid or expired. Please enter your password in order to log back into Biologer.</string>
     <string name="channel_observation_name">Unread notifications</string>
     <string name="channel_observation_description">Get unread notifications on your field observations.</string>
@@ -426,11 +357,7 @@
     <string name="observation_changed">Observation changed</string>
     <string name="no_login_token_falling_back_to_login_screen">No login token, falling back to login screen.</string>
     <string name="both_login_and_refresh_tokens_expired">Both login and refresh tokens expired.</string>
-    <string name="all_read">Mark all notifications as read</string>
-    <string name="there_are_at_least">"There are"</string>
-    <string name="changes_to_your_field_observations">"changes to your field observations."</string>
     <string name="biologer">Biologer</string>
-    <string name="your_field_observations_were_changed">Your field observations were changed.</string>
     <string name="unknown_date">unknown</string>
     <string name="on">on</string>
     <string name="next_unread">Next unread notification</string>
@@ -490,5 +417,6 @@
     <string name="locale_hungarian">Hungarian</string>
     <string name="show_utm">Togle UTM squares</string>
     <string name="load_kml_map">Load KML map file</string>
+    <string name="precision">Precision:</string>
 
 </resources>
