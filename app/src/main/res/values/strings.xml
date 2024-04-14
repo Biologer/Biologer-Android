@@ -6,20 +6,15 @@
     <string name="password">Password</string>
     <string name="login">Log in</string>
     <string name="invalid_email">Email is mistyped</string>
-    <string name="valid_pass">No password provided</string>
     <string name="wrong_creds">Wrong email or password</string>
     <string name="no_account1">You can</string>
     <string name="no_account2">register here</string>
     <string name="no_account3">if you don’t have an account</string>
     <string name="pass_forgotten">Reset forgotten password online!</string>
-    <string name="email_wrong_format">Wrong email format</string>
-    <string name="devDatabase">This is only for developers!</string>
 
     <!--  Unos  -->
-    <string name="GPSaccuracy">Coordinate accuracy:</string>
     <string name="latitude">Latitude:</string>
     <string name="longitude">Longitude:</string>
-    <string name="not_available">unavailable</string>
     <string name="unknown">unknown</string>
     <string name="taxon_hint">Start typing…</string>
     <string name="more">More…</string>
@@ -441,9 +436,7 @@
     <string name="next_unread">Next unread notification</string>
     <string name="marked_unidentifiable">marked observation of</string>
     <string name="marked_unidentifiable2">as unidentifiable</string>
-    <string name="marked_as_unidentifiable">marked unidentifiable</string>
     <string name="first_unread_notification">First unread notification</string>
-    <string name="go_back">Go back to Biologer</string>
     <string name="hurray_you_just_read_all_the_notifications">Hurray! You just read all the notifications.</string>
     <string name="failed_to_upload_photo">Failed to upload photo. Check your internet connection or try to reopen the last entry, delete corrupted photo and upload data again.</string>
     <string name="failed_to_upload_entry">Failed to upload observation. If you have a good internet connection but the problem continues, contact the app developers.</string>
@@ -458,15 +451,12 @@
     <string name="announcement">Announcement</string>
     <string name="created_on">"Created on"</string>
     <string name="by">By:</string>
-    <string name="custom_maps_folder_name">Custom Maps</string>
-    <string name="load_offline_map">Load offline map</string>
     <string name="biologer_banner">Biologer banner</string>
     <string name="banner_username">Username</string>
     <string name="banner_mail_example">your_address@biologer.org</string>
     <string name="notifications">Notifications</string>
     <string name="species_photo">Species photo</string>
     <string name="notification_text">Notification text.</string>
-    <string name="mark_all_notifications_read">This action will mark all the notifications as read including the ones on the web. Do you want to continue anyway?</string>
     <string name="new_notification_text">of your field observations is changed online. See what’s new!</string>
     <string name="new_notifications_text">of your field observations are changed online. See what’s new!</string>
     <string name="notification">Notification</string>
@@ -493,7 +483,6 @@
     <string name="choose_language_desc">Lets you choose the language of the application.</string>
     <string name="locale_serbia_cyrilic">Serbian (cyrillic)</string>
     <string name="locale_serbia_latin">Serbian (latin)</string>
-    <string name="locale_montenegro_latin">Montenegrin (latin)</string>
     <string name="locale_croatia">Croatian</string>
     <string name="locale_english">English</string>
     <string name="locale_bosnia_and_herzegovina_latin">Bosnian (latin)</string>
