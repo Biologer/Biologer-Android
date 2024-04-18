@@ -128,6 +128,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void addSlider() {
         Slider slider = findViewById(R.id.map_slider);
         float current_value = Float.parseFloat(accuracy);
+        // Update the values of the slider based on current coordinate precision
         if (current_value >= 100) {
             slider.setValueTo(500);
         } if (current_value >= 500) {
@@ -137,7 +138,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         } if (current_value >= 10000) {
             slider.setValueTo(50000);
         }
-        slider.setValue(current_value);
+        // Check if accuracy is set and update the slider accordingly
+        if (current_value != 0.0) {
+            slider.setValue(current_value);
+        }
         slider.setLabelFormatter(value -> getString(R.string.precision) + " " + Math.round(value) + " m");
         slider.addOnChangeListener((slider1, value, fromUser) -> circle.setRadius(value));
         slider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
