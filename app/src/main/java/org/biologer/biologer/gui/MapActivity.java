@@ -350,7 +350,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     String uri_string = String.valueOf(uri);
                     String extension = uri_string.substring(uri_string.lastIndexOf("."));
                     String filename = "KmlOverlay" + extension;
+                    File filesDir = getFilesDir();
+                    if (!filesDir.exists()) {
+                        boolean created = filesDir.mkdirs();
+                        Log.d(TAG, "Creating directory for KML/KMZ file returned " + created);
+                    }
                     final File file = new File(getFilesDir(), filename);
+                    if (!file.exists()) {
+                        boolean created = file.createNewFile();
+                        Log.d(TAG, "Creating directory for KML/KMZ file returned " + created);
+                    }
                     Uri fileUri = Uri.fromFile(file);
                     Log.d(TAG, "KML/KMZ file should be saved to " + fileUri + ".");
                     FileOutputStream fileOutputStream = new FileOutputStream(file);
