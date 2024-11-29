@@ -133,7 +133,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     if (database_url != null) {
                         runServices(database_url);
                     } else {
-                        Toast.makeText(this, "The database URL is empty!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
                         fallbackToLoginScreen();
                     }
 
@@ -152,7 +152,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                         if (database_url != null) {
                             checkMailConfirmed(database_url);
                         } else {
-                            Toast.makeText(this, "The database URL is empty again!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
                             fallbackToLoginScreen();
                         }
                     }
@@ -629,8 +629,10 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             // For other Biologer databases just do the regular stuff...
             else {
                 Call<TaxaResponse> call = RetrofitClient.getService(
-                        database).getTaxa(1, 1, Integer.parseInt(timestamp), false, null, true);
-                call.enqueue(new Callback<TaxaResponse>() {
+                        database).getTaxa(1, 1,
+                        Integer.parseInt(timestamp), false,
+                        null, true);
+                call.enqueue(new Callback<>() {
 
                     @Override
                     public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
@@ -931,24 +933,14 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private String translateLicence(String data_license) {
-        if (data_license.equals("10")) {
-            return getString(R.string.export_licence_10);
-        }
-        if (data_license.equals("11")) {
-            return getString(R.string.export_licence_11);
-        }
-        if (data_license.equals("20")) {
-            return getString(R.string.export_licence_20);
-        }
-        if (data_license.equals("30")) {
-            return getString(R.string.export_licence_30);
-        }
-        if (data_license.equals("40")) {
-            return getString(R.string.export_licence_40);
-        }
-        else {
-            return "";
-        }
+        return switch (data_license) {
+            case "10" -> getString(R.string.export_licence_10);
+            case "11" -> getString(R.string.export_licence_11);
+            case "20" -> getString(R.string.export_licence_20);
+            case "30" -> getString(R.string.export_licence_30);
+            case "40" -> getString(R.string.export_licence_40);
+            default -> "";
+        };
     }
 
     private String translateFoundDead(String alive) {
@@ -960,7 +952,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void uploadRecords() {
-        if (App.get().getBoxStore().boxFor(EntryDb.class).getAll().size() != 0) {
+        if (!App.get().getBoxStore().boxFor(EntryDb.class).getAll().isEmpty()) {
             Log.d(TAG, "Uploading entries to the online database.");
             final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);

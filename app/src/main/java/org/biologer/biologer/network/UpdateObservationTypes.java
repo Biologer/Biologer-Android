@@ -26,7 +26,7 @@ public class UpdateObservationTypes {
 
         Call<ObservationTypesResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
-        call.enqueue(new Callback<ObservationTypesResponse>() {
+        call.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
@@ -55,7 +55,9 @@ public class UpdateObservationTypes {
                             App.get().getBoxStore().boxFor(ObservationTypesDb.class).put(localizations);
 
                         }
-                        Log.d(TAG, "Observation types locales written to the database, there are " + App.get().getBoxStore().boxFor(ObservationTypesDb.class).count() + " records");
+                        Log.d(TAG, "Observation types locales written to the database, there are " +
+                                App.get().getBoxStore().boxFor(ObservationTypesDb.class).count() +
+                                " records");
                         SettingsManager.setObservationTypesUpdated(system_time);
                         Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
                     }

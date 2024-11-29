@@ -418,5 +418,6 @@
     <string name="show_utm">Togle UTM squares</string>
     <string name="load_kml_map">Load KML map file</string>
     <string name="precision">Precision:</string>
+    <string name="database_url_empty">The database URL address is empty!</string>
 
 </resources>
