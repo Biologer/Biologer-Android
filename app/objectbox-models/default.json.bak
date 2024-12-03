@@ -39,7 +39,7 @@
     },
     {
       "id": "10:8101485209871029404",
-      "lastPropertyId": "18:6380064111013356104",
+      "lastPropertyId": "19:6613538116525791881",
       "name": "UnreadNotificationsDb",
       "properties": [
         {
@@ -127,6 +127,11 @@
           "id": "18:6380064111013356104",
           "name": "marked",
           "type": 5
+        },
+        {
+          "id": "19:6613538116525791881",
+          "name": "finalTaxonName",
+          "type": 9
         }
       ],
       "relations": []
@@ -586,9 +591,33 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "20:1805526152392619291",
+      "lastPropertyId": "3:827402955973294739",
+      "name": "SynonymsDb",
+      "properties": [
+        {
+          "id": "1:7861228265034476473",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:7942583527376931953",
+          "name": "taxonId",
+          "type": 6
+        },
+        {
+          "id": "3:827402955973294739",
+          "name": "name",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "19:3319516000321491227",
+  "lastEntityId": "20:1805526152392619291",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",

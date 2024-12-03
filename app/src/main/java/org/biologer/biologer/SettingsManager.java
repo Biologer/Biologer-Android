@@ -16,7 +16,7 @@ public class SettingsManager {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
         GOOGLE_MAP_TYPE, CUSTOM_MAP_TILES_FOLDER, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
-        OBSERVATION_TYPES_UPDATED_AT, SQL_UPDATED, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
+        OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
 
     public static void deleteAccessToken() {
@@ -169,16 +169,6 @@ public class SettingsManager {
 
     public static String getTaxaLastPageFetched() {
         return sharedPreferences.getString(KEY.TAXA_LAST_PAGE_FETCHED.toString(),"1");
-    }
-
-    public static void setSqlUpdated(boolean sqlUpdated) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putBoolean(KEY.SQL_UPDATED.toString(), sqlUpdated);
-        editor.apply();
-    }
-
-    public static Boolean isSqlUpdated() {
-        return sharedPreferences.getBoolean(KEY.SQL_UPDATED.toString(),false);
     }
 
     public static void setFirstRun(boolean firstRun) {

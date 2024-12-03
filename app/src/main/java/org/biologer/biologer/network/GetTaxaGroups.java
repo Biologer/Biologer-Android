@@ -15,8 +15,8 @@ import org.biologer.biologer.network.json.TaxaGroups;
 import org.biologer.biologer.network.json.TaxaGroupsResponse;
 import org.biologer.biologer.network.json.TaxaGroupsTranslations;
 import org.biologer.biologer.sql.TaxonGroupsDb;
-import org.biologer.biologer.sql.TaxonGroupsTranslationData;
-import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb_;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,25 +106,25 @@ public class GetTaxaGroups extends Service {
             taxon_groups.add(taxonGroupsData);
             Log.d(TAG, "Taxon group " + i + ": id = " + taxon_id + ", name = " + taxon_name);
 
-            List<TaxonGroupsTranslationData> translationData = new ArrayList<>();
+            List<TaxonGroupsTranslationDb> translationData = new ArrayList<>();
             for (int k = 0; k < taxon_translations.size(); k++) {
                 TaxaGroupsTranslations taxon_translation = taxon_translations.get(k);
                 Long translation_id = taxon_translation.getId();
                 String locale = taxon_translation.getLocale();
                 String name = taxon_translation.getName();
                 String description = taxon_translation.getDescription();
-                Log.d(TAG, "Group ID: " + taxon_id + "; from translation: " + taxon_translation.getViewGroupId() + "; group name: " + taxon_name + "; locale ID: " + translation_id + "; locale: " + locale + "; translation: " + name);
+                //Log.d(TAG, "Group ID: " + taxon_id + "; from translation: " + taxon_translation.getViewGroupId() + "; group name: " + taxon_name + "; locale ID: " + translation_id + "; locale: " + locale + "; translation: " + name);
 
-                TaxonGroupsTranslationData taxonGroupsTranslationData = new TaxonGroupsTranslationData(
+                TaxonGroupsTranslationDb taxonGroupsTranslationDb = new TaxonGroupsTranslationDb(
                         translation_id,
                         taxon_id,
                         locale,
                         name,
                         description);
 
-                translationData.add(taxonGroupsTranslationData);
+                translationData.add(taxonGroupsTranslationDb);
             }
-            Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
+            Box<TaxonGroupsTranslationDb> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class);
             taxonGroupsTranslationDataBox.put(translationData);
         }
         Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
@@ -148,18 +148,18 @@ public class GetTaxaGroups extends Service {
 
             for (int i = 0; i < sql_ids.size(); i++) {
                 Long id = sql_ids.get(i);
-                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
-                Query<TaxonGroupsTranslationData> sql_tr_query = taxonGroupsTranslationDataBox
-                        .query(TaxonGroupsTranslationData_.viewGroupId.equal(id))
+                Box<TaxonGroupsTranslationDb> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class);
+                Query<TaxonGroupsTranslationDb> sql_tr_query = taxonGroupsTranslationDataBox
+                        .query(TaxonGroupsTranslationDb_.viewGroupId.equal(id))
                         .build();
-                List<TaxonGroupsTranslationData> sql_tr = sql_tr_query.find();
+                List<TaxonGroupsTranslationDb> sql_tr = sql_tr_query.find();
                 sql_tr_query.close();
 
                 ArrayList<Long> ids = new ArrayList<>();
                 for (int j = 0; j < sql_tr.size(); j++) {
                     ids.add(sql_tr.get(j).getId());
                 }
-                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
+                Box<TaxonGroupsTranslationDb> taxonGroupsTranslationDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class);
                 taxonGroupsTranslationDataBox1.removeByIds(ids);
             }
             Box<TaxonGroupsDb> taxonGroupsDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);

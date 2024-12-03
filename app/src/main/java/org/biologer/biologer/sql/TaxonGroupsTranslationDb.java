@@ -4,7 +4,7 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 
 @Entity
-public class TaxonGroupsTranslationData {
+public class TaxonGroupsTranslationDb {
     @Id(assignable = true)
     long id;
     private long viewGroupId;
@@ -12,7 +12,7 @@ public class TaxonGroupsTranslationData {
     private String native_name;
     private String description;
 
-    public TaxonGroupsTranslationData(long id, long viewGroupId, String locale, String native_name, String description) {
+    public TaxonGroupsTranslationDb(long id, long viewGroupId, String locale, String native_name, String description) {
         this.id = id;
         this.viewGroupId = viewGroupId;
         this.locale = locale;

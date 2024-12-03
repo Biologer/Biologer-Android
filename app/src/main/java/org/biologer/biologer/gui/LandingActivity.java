@@ -35,7 +35,9 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
@@ -45,7 +47,6 @@ import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
 import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.FetchTaxaBirdloger;
-import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
@@ -55,15 +56,23 @@ import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.network.json.RefreshTokenResponse;
 import org.biologer.biologer.network.json.TaxaResponse;
-import org.biologer.biologer.network.json.TaxaResponseBirdloger;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.SynonymsDb;
+import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxonDb;
+import org.biologer.biologer.sql.TaxonGroupsDb;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb;
 import org.biologer.biologer.sql.UserDb;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -99,6 +108,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.nav_open_drawer, R.string.nav_close_drawer);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -274,12 +284,16 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void runServices(String database_url) {
         Log.d(TAG, "Running online services");
 
-        // If SQL is updated we will try to login in the user
-        // TODO check if we still need this SQL stuff!
-        if (SettingsManager.isSqlUpdated()) {
-            onSqlUpdated(database_url);
+        // Load database from local assets folder if newer
+        int updatedAt = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
+        String assets_timestamp = "1733262799";
+        if (updatedAt < Integer.parseInt(assets_timestamp)) {
+            Log.i(TAG, "Loading taxa database from Android assets folder. Version: " +
+                    updatedAt + "; Available version: " + assets_timestamp);
+            loadInternalTaxaDataset(database_url, assets_timestamp);
         } else {
-            Log.i(TAG, "SQL is up to date!");
+            Log.i(TAG, "Loading taxa from online API. Version: " + updatedAt);
+            updateTaxa();
         }
 
         // Check if token is still valid and refresh if needed
@@ -347,7 +361,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     update_notifications.putExtra("download", true);
                     startService(update_notifications);
                 }
-                updateTaxa();
 
             } else {
                 checkNotificationPermission();
@@ -358,10 +371,141 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
     }
 
+    private void loadInternalTaxaDataset(String databaseUrl, String timestamp) {
+        Log.i(TAG, "Updating ObjectBox taxa database using local copy from assets.");
+
+        if (Objects.equals(databaseUrl, "https://biologer.rs")) {
+            Log.d(TAG, "Serbian Biologer");
+        }
+
+        List<String[]> taxa_csv = readCSV("taxa/rs_taxa.csv");
+        List<String[]> taxa_groups_csv = readCSV("taxa/rs_groups.csv");
+        List<String[]> stages_csv = readCSV("taxa/rs_stages.csv");
+
+        TaxonDb[] final_taxa = new TaxonDb[taxa_csv.size() - 1];
+        List<TaxaTranslationDb> taxa_translations = new ArrayList<>();
+        List<SynonymsDb> taxa_synonyms = new ArrayList<>();
+
+        // NOTE: Skip the first row containing column names (i = 0)!
+        for (int i = 1; i < taxa_csv.size(); i++) {
+            String[] taxon = taxa_csv.get(i);
+            long id = Long.parseLong(taxon[0]);
+            String rank = taxon[1];
+            String name = taxon[2];
+            String author = taxon[3];
+            boolean uses_atlas_codes;
+            uses_atlas_codes = Objects.equals(taxon[4], "1");
+            String translations = taxon[5];
+            String stages = taxon[6];
+            String groups = taxon[7];
+            String synonyms = taxon[8];
+
+            final_taxa[i - 1] = new TaxonDb(id, 0, name, rank, 0, author,
+                    false, uses_atlas_codes, null, groups, stages);
+            //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " with ID: " + final_taxa[i - 1].getId());
+
+            if (!Objects.equals(translations, "")) {
+                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has translations: " + translations);
+                String[] split_translations = translations.split(";");
+                for (int t = 0; t < split_translations.length; t++) {
+                    String locale = "en";
+                    if (t == 1) {
+                        locale = "sr";
+                    } else if (t == 2) {
+                        locale = "sr_Latn";
+                    } else if (t == 3) {
+                        locale = "hr";
+                    } else if (t == 4) {
+                        locale = "ba";
+                    } else if (t == 5 ) {
+                        locale = "me";
+                    }
+                    if (!Objects.equals(split_translations[t], "")) {
+                        TaxaTranslationDb translation = new TaxaTranslationDb(0, id, locale, split_translations[t], name, "");
+                        taxa_translations.add(translation);
+                    }
+                }
+            }
+
+            if (!Objects.equals(synonyms, "")) {
+                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has synonyms: " + synonyms);
+                String[] split_synonyms = synonyms.split(";");
+                for (String splitSynonym : split_synonyms) {
+                    SynonymsDb synonym = new SynonymsDb(0, id, splitSynonym);
+                    taxa_synonyms.add(synonym);
+                }
+            }
+        }
+        App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
+        TaxaTranslationDb[] final_taxa_translations = new TaxaTranslationDb[taxa_translations.size()];
+        taxa_translations.toArray(final_taxa_translations);
+        App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_taxa_translations);
+        SynonymsDb[] final_taxa_synonyms = new SynonymsDb[taxa_synonyms.size()];
+        taxa_synonyms.toArray(final_taxa_synonyms);
+        App.get().getBoxStore().boxFor(SynonymsDb.class).put(final_taxa_synonyms);
+
+        TaxonGroupsDb[] final_taxa_groups = new TaxonGroupsDb[taxa_groups_csv.size() - 1];
+        List<TaxonGroupsTranslationDb> taxa_groups_translations = new ArrayList<>();
+        for (int i = 1; i < taxa_groups_csv.size(); i++) {
+            String[] group = taxa_groups_csv.get(i);
+            long id = Long.parseLong(group[0]);
+            long parentId = Long.parseLong(group[1]);
+            String ba = group[2];
+            String en = group[3];
+            String hr = group[4];
+            String me = group[5];
+            String sr = group[6];
+            String sr_latin = group[7];
+
+            final_taxa_groups[i - 1] = new TaxonGroupsDb(id, parentId, en, "");
+
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "en", en, ""));
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr", sr, ""));
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr-Latn", sr_latin, ""));
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "hr", hr, ""));
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "ba", ba, ""));
+            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "me", me, ""));
+        }
+        App.get().getBoxStore().boxFor(TaxonGroupsDb.class).put(final_taxa_groups);
+        TaxonGroupsTranslationDb[] final_taxa_groups_translations = new TaxonGroupsTranslationDb[taxa_groups_translations.size()];
+        taxa_groups_translations.toArray(final_taxa_groups_translations);
+
+        StageDb[] final_stages = new StageDb[stages_csv.size() - 1];
+        for (int i = 1; i < stages_csv.size(); i++) {
+            String[] stage = stages_csv.get(i);
+            long id = Long.parseLong(stage[0]);
+            String name = stage[1];
+
+            final_stages[i - 1] = new StageDb(id, name);
+        }
+        App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
+
+        Log.d(TAG, "Database loaded from assets file. Checking if there is new version online.");
+        SettingsManager.setTaxaUpdatedAt(timestamp);
+        updateTaxa();
+    }
+
+    private List<String[]> readCSV(String filename) {
+        InputStream inputStream;
+        try {
+            inputStream = getAssets().open(filename);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+        List<String[]> csv;
+        try {
+            csv = new CSVReader(reader).readAll();
+        } catch (IOException | CsvException e) {
+            throw new RuntimeException(e);
+        }
+        return csv;
+    }
+
     private void checkMailConfirmed(String database_url) {
 
         Call<UserDataResponse> userData = RetrofitClient.getService(database_url).getUserData();
-        userData.enqueue(new Callback<UserDataResponse>() {
+        userData.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -411,44 +555,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         startActivity(intent);
     }
 
-    private void onSqlUpdated(String database_url) {
-        Log.i(TAG, "SQL database must be updated!");
-        Toast.makeText(LandingActivity.this, getString(R.string.sql_updated_message), Toast.LENGTH_LONG).show();
-
-        // First get the existing groups of taxa so we can fetch them again
-        if (InternetConnection.isConnected(LandingActivity.this)) {
-            final Intent getTaxaGroups = new Intent(LandingActivity.this, GetTaxaGroups.class);
-            startService(getTaxaGroups);
-
-            Call<UserDataResponse> service = RetrofitClient.getService(database_url).getUserData();
-            service.enqueue(new Callback<UserDataResponse>() {
-                @Override
-                public void onResponse(@NonNull Call<UserDataResponse> service, @NonNull Response<UserDataResponse> response) {
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            String email = response.body().getData().getEmail();
-                            String name = response.body().getData().getFullName();
-                            int data_license = response.body().getData().getSettings().getDataLicense();
-                            int image_license = response.body().getData().getSettings().getImageLicense();
-                            UserDb user = new UserDb(0, name, email, data_license, image_license);
-                            App.get().getBoxStore().boxFor(UserDb.class).removeAll();
-                            App.get().getBoxStore().boxFor(UserDb.class).put(user);
-                            SettingsManager.setSqlUpdated(false);
-                        } else {
-                            alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<UserDataResponse> service, @NonNull Throwable t) {
-                    Log.e(TAG, "Cannot get response from the server (test taxa response)");
-                    alertWarnAndExit(getString(R.string.login_after_sql_update_fail));
-                }
-            });
-        }
-    }
-
     private void RefreshToken(String database_name, boolean warn_user) {
         String refreshToken = SettingsManager.getRefreshToken();
         String rsKey = BuildConfig.BiologerRS_Key;
@@ -456,7 +562,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         String baKey = BuildConfig.BiologerBA_Key;
         String meKey = BuildConfig.BiologerME_Key;
         String devKey = BuildConfig.BiologerDEV_Key;
-        String birdKey = BuildConfig.Birdloger_Key;
 
         Call<RefreshTokenResponse> refresh_call = null;
 
@@ -476,10 +581,6 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Log.d(TAG, "Montenegrin database selected.");
             refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", meKey, refreshToken, "*");
         }
-        if (database_name.equals("https://birdloger.biologer.org")) {
-            Log.d(TAG, "Birdloger database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "3", birdKey, refreshToken, "*");
-        }
         if (database_name.equals("https://dev.biologer.org")) {
             Log.d(TAG, "Developmental database selected.");
             refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken, "*");
@@ -488,7 +589,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         Log.d(TAG, "Logging into " + database_name + " using refresh token.");
 
         if (refresh_call != null) {
-            refresh_call.enqueue(new Callback<RefreshTokenResponse>() {
+            refresh_call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
@@ -583,9 +684,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
-
+        Log.d(TAG, "Current timestamp: " + System.currentTimeMillis() / 1000);
         if (!FetchTaxa.isInstanceCreated()) {
-
             String updated_at = SettingsManager.getTaxaUpdatedAt();
             String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
             String timestamp = updated_at;
@@ -593,71 +693,37 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 timestamp = skip_this;
             }
 
-            // For Birdloger database we need to send different call
             String database = SettingsManager.getDatabaseName();
             int finalTimestamp = Integer.parseInt(timestamp);
-            if (database.equals("https://birdloger.biologer.org")) {
-                Call<TaxaResponseBirdloger> call = RetrofitClient.getService(
-                        database).getBirdlogerTaxa(1, 1, finalTimestamp);
-                call.enqueue(new Callback<TaxaResponseBirdloger>() {
+            Call<TaxaResponse> call = RetrofitClient.getService(
+                    database).getTaxa(1, 1,
+                    Integer.parseInt(timestamp), false,
+                    null, true);
+            call.enqueue(new Callback<>() {
 
-                    @Override
-                    public void onResponse(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Response<TaxaResponseBirdloger> response) {
-                        if (response.isSuccessful()) {
-                            // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                            TaxaResponseBirdloger taxaResponseBirdloger = response.body();
-                            if (taxaResponseBirdloger != null) {
-                                if (taxaResponseBirdloger.getData().isEmpty()) {
-                                    Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                                } else {
-                                    Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                                    updateTaxa2(finalTimestamp);
-                                }
+                @Override
+                public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
+                    if (response.isSuccessful()) {
+                        // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
+                        TaxaResponse taxaResponse = response.body();
+                        if (taxaResponse != null) {
+                            if (taxaResponse.getData().isEmpty()) {
+                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                            } else {
+                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                updateTaxa2(finalTimestamp);
                             }
                         }
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<TaxaResponseBirdloger> call, @NonNull Throwable t) {
-                        // Inform the user on failure and write log message
-                        //Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                        Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
-                    }
-                });
-            }
-
-            // For other Biologer databases just do the regular stuff...
-            else {
-                Call<TaxaResponse> call = RetrofitClient.getService(
-                        database).getTaxa(1, 1,
-                        Integer.parseInt(timestamp), false,
-                        null, true);
-                call.enqueue(new Callback<>() {
-
-                    @Override
-                    public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
-                        if (response.isSuccessful()) {
-                            // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
-                            TaxaResponse taxaResponse = response.body();
-                            if (taxaResponse != null) {
-                                if (taxaResponse.getData().isEmpty()) {
-                                    Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                                } else {
-                                    Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                                    updateTaxa2(finalTimestamp);
-                                }
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
-                        // Inform the user on failure and write log message
-                        Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
-                        // Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
-                    }
-                });
-            }
+                @Override
+                public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
+                    // Inform the user on failure and write log message
+                    Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                    // Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
+                }
+            });
         }
     }
 

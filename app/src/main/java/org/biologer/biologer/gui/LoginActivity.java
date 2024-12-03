@@ -83,7 +83,6 @@ public class LoginActivity extends AppCompatActivity {
             "https://biologer.hr",
             "https://biologer.ba",
             "https://biologer.me",
-            "https://birdloger.biologer.org",
             "https://dev.biologer.org"};
 
     Call <LoginResponse> login;
@@ -120,14 +119,12 @@ public class LoginActivity extends AppCompatActivity {
                 getString(R.string.database_croatia),
                 getString(R.string.database_bih),
                 getString(R.string.montenegro),
-                getString(R.string.database_birdloger),
                 getString(R.string.database_dev_version)};
         Integer[] Icons = {
                 R.drawable.flag_serbia,
                 R.drawable.flag_croatia,
                 R.drawable.flag_bosnia,
                 R.drawable.flag_montenegro,
-                R.drawable.flag_dzpps,
                 R.drawable.flag_dev};
         ImageArrayAdapter ourDatabases = new ImageArrayAdapter(this, Icons, Databases);
         spinner.setAdapter(ourDatabases);
@@ -281,7 +278,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Disable login button if there is no username and password
-        if (et_username.getText().toString().equals("") && et_password.getText().toString().equals("")) {
+        if (et_username.getText().toString().isEmpty() && et_password.getText().toString().isEmpty()) {
             loginButton.setEnabled(false);
         }
 
@@ -446,7 +443,6 @@ public class LoginActivity extends AppCompatActivity {
                         if (response.body() != null) {
                             String token = response.body().getAccessToken();
                             String refresh_token = response.body().getRefreshToken();
-                            //Log.d(TAG, "Token value is: " + token);
                             SettingsManager.setAccessToken(token);
                             SettingsManager.setRefreshToken(refresh_token);
                             long expire = response.body().getExpiresIn();
@@ -480,7 +476,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void getUserData() {
         Call<UserDataResponse> userData = RetrofitClient.getService(database_name).getUserData();
-        userData.enqueue(new Callback<UserDataResponse>() {
+        userData.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
@@ -522,10 +518,6 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e(TAG, "User data could not be taken from server!");
             }
         });
-
-        // Fetch Taxa groups for preferences
-        final Intent getTaxaGroups = new Intent(this, GetTaxaGroups.class);
-        startService(getTaxaGroups);
     }
 
     private void startLandingActivity() {
@@ -586,55 +578,33 @@ public class LoginActivity extends AppCompatActivity {
          should put the key in ~/.gradle/gradle.properties.
     */
     public String getClientKeyForDatabase(String database) {
-        if (database.equals("https://biologer.ba")) {
-            return BuildConfig.BiologerBA_Key;
-        }
-        if (database.equals("https://biologer.rs")) {
-            return BuildConfig.BiologerRS_Key;
-        }
-        if (database.equals("https://biologer.me")) {
-            return BuildConfig.BiologerME_Key;
-        }
-        if (database.equals("https://birdloger.biologer.org")) {
-            return BuildConfig.Birdloger_Key;
-        }
-        if (database.equals("https://dev.biologer.org")) {
-            return BuildConfig.BiologerDEV_Key;
-        }
-        if (database.equals("https://biologer.hr")) {
-            return BuildConfig.BiologerHR_Key;
-        } else {
-            return null;
-        }
+        return switch (database) {
+            case "https://biologer.ba" -> BuildConfig.BiologerBA_Key;
+            case "https://biologer.rs" -> BuildConfig.BiologerRS_Key;
+            case "https://biologer.me" -> BuildConfig.BiologerME_Key;
+            case "https://birdloger.biologer.org" -> BuildConfig.Birdloger_Key;
+            case "https://dev.biologer.org" -> BuildConfig.BiologerDEV_Key;
+            case "https://biologer.hr" -> BuildConfig.BiologerHR_Key;
+            default -> null;
+        };
     }
 
     public String getClientIdForDatabase(String database) {
-        if (database.equals("https://biologer.ba")) {
-            return "2";
-        }
-        if (database.equals("https://biologer.rs")) {
-            return "2";
-        }
-        if (database.equals("https://biologer.me")) {
-            return "2";
-        }
-        if (database.equals("https://birdloger.biologer.org")) {
-            return "3";
-        }
-        if (database.equals("https://dev.biologer.org")) {
-            return "6";
-        }
-        if (database.equals("https://biologer.hr")) {
-            return "2";
-        } else {
-            return null;
-        }
+        return switch (database) {
+            case "https://biologer.ba" -> "2";
+            case "https://biologer.rs" -> "2";
+            case "https://biologer.me" -> "2";
+            case "https://birdloger.biologer.org" -> "3";
+            case "https://dev.biologer.org" -> "6";
+            case "https://biologer.hr" -> "2";
+            default -> null;
+        };
     }
 
     private void backPressed() {
         Log.d(TAG, "Back button is pressed in login activity, closing the app!");
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        if (fragments.size() == 0) {
+        if (fragments.isEmpty()) {
             finishAffinity();
         } else {
             getSupportFragmentManager().popBackStack();

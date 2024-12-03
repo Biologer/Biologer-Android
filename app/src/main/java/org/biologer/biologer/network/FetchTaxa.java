@@ -267,7 +267,7 @@ public class FetchTaxa extends Service {
                     taxon.getAncestors_names(),
                     groupString.toString(),
                     stagesString.toString());
-            Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
+            //Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table
             if (!taxaTranslations.isEmpty()) {
@@ -281,8 +281,8 @@ public class FetchTaxa extends Service {
                             taxaTranslation.getNativeName(),
                             taxon_latin_name,
                             taxaTranslation.getDescription());
-                    Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
-                            " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
+                    //Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
+                    //        " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
                 App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
             }

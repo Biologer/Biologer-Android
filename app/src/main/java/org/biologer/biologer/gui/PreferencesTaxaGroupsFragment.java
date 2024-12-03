@@ -28,8 +28,8 @@ import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsDb_;
-import org.biologer.biologer.sql.TaxonGroupsTranslationData;
-import org.biologer.biologer.sql.TaxonGroupsTranslationData_;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb_;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,12 +84,12 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             String name = listParents.get(i).getName();
 
             // Get the translation for Parent groups
-            Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
-            Query<TaxonGroupsTranslationData> groups_translation = taxonGroupsTranslationDataBox
-                    .query(TaxonGroupsTranslationData_.locale.equal(locale)
-                            .and(TaxonGroupsTranslationData_.viewGroupId.equal(id)))
+            Box<TaxonGroupsTranslationDb> taxonGroupsTranslationDataBox = App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class);
+            Query<TaxonGroupsTranslationDb> groups_translation = taxonGroupsTranslationDataBox
+                    .query(TaxonGroupsTranslationDb_.locale.equal(locale)
+                            .and(TaxonGroupsTranslationDb_.viewGroupId.equal(id)))
                     .build();
-            List<TaxonGroupsTranslationData> listParentTranslation = groups_translation.find();
+            List<TaxonGroupsTranslationDb> listParentTranslation = groups_translation.find();
             groups_translation.close();
 
             if (listParentTranslation.size() >= 1) {
@@ -118,12 +118,12 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 Log.d(TAG, "Child group: " + child_name + " (" + child_id + "); parent: " + name + " (" + id + ")");
 
                 // Get the translation for Children groups
-                Box<TaxonGroupsTranslationData> taxonGroupsTranslationDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsTranslationData.class);
-                Query<TaxonGroupsTranslationData> children_translation = taxonGroupsTranslationDataBox1
-                        .query(TaxonGroupsTranslationData_.locale.equal(locale)
-                                .and(TaxonGroupsTranslationData_.viewGroupId.equal(child_id)))
+                Box<TaxonGroupsTranslationDb> taxonGroupsTranslationDataBox1 = App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class);
+                Query<TaxonGroupsTranslationDb> children_translation = taxonGroupsTranslationDataBox1
+                        .query(TaxonGroupsTranslationDb_.locale.equal(locale)
+                                .and(TaxonGroupsTranslationDb_.viewGroupId.equal(child_id)))
                         .build();
-                List<TaxonGroupsTranslationData> listChildTranslation = children_translation.find();
+                List<TaxonGroupsTranslationDb> listChildTranslation = children_translation.find();
                 children_translation.close();
 
                 if (listChildTranslation.size() >= 1) {
