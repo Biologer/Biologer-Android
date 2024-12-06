@@ -197,7 +197,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             }
             // It seems that the user is logged out, thus we need to go to the login screen
             else {
-                Toast.makeText(this, "There is no user data in SQL database!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.there_is_no_user_data_in_sql_database), Toast.LENGTH_LONG).show();
                 showUserLoginScreen(false);
             }
         }
@@ -277,7 +277,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
-        Toast.makeText(this, "Something is wrong, falling back to login screen!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, getString(R.string.something_is_wrong_falling_back_to_login_screen), Toast.LENGTH_LONG).show();
         showUserLoginScreen(false);
     }
 
@@ -286,7 +286,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         // Load database from local assets folder if newer
         int updatedAt = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
-        String assets_timestamp = "1733262799";
+        String assets_timestamp = "1733425371";
         if (updatedAt < Integer.parseInt(assets_timestamp)) {
             Log.i(TAG, "Loading taxa database from Android assets folder. Version: " +
                     updatedAt + "; Available version: " + assets_timestamp);
@@ -374,115 +374,148 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void loadInternalTaxaDataset(String databaseUrl, String timestamp) {
         Log.i(TAG, "Updating ObjectBox taxa database using local copy from assets.");
 
+        List<String[]> taxa_csv = null;
+        List<String[]> taxa_groups_csv = null;
+        List<String[]> stages_csv = null;
+
         if (Objects.equals(databaseUrl, "https://biologer.rs")) {
-            Log.d(TAG, "Serbian Biologer");
+            Log.d(TAG, "Loading assets file for Serbian Biologer");
+            taxa_csv = readCSV("taxa/rs_taxa.csv");
+            taxa_groups_csv = readCSV("taxa/rs_groups.csv");
+            stages_csv = readCSV("taxa/rs_stages.csv");
+        } if (Objects.equals(databaseUrl, "https://biologer.hr")) {
+            Log.d(TAG, "Loading assets file for Croatian Biologer");
+            taxa_csv = readCSV("taxa/hr_taxa.csv");
+            taxa_groups_csv = readCSV("taxa/hr_groups.csv");
+            stages_csv = readCSV("taxa/hr_stages.csv");
+        } if (Objects.equals(databaseUrl, "https://biologer.ba")) {
+            Log.d(TAG, "Loading assets file for Bosnian Biologer");
+            taxa_csv = readCSV("taxa/ba_taxa.csv");
+            taxa_groups_csv = readCSV("taxa/ba_groups.csv");
+            stages_csv = readCSV("taxa/ba_stages.csv");
+        } if (Objects.equals(databaseUrl, "https://biologer.me")) {
+            Log.d(TAG, "Loading assets file for Montenegrin Biologer");
+            taxa_csv = readCSV("taxa/me_taxa.csv");
+            taxa_groups_csv = readCSV("taxa/me_groups.csv");
+            stages_csv = readCSV("taxa/me_stages.csv");
+        } if (Objects.equals(databaseUrl, "https://dev.biologer.org")) {
+            Log.d(TAG, "Loading assets file for developmental Biologer");
+            taxa_csv = readCSV("taxa/dev_taxa.csv");
+            taxa_groups_csv = readCSV("taxa/dev_groups.csv");
+            stages_csv = readCSV("taxa/dev_stages.csv");
         }
 
-        List<String[]> taxa_csv = readCSV("taxa/rs_taxa.csv");
-        List<String[]> taxa_groups_csv = readCSV("taxa/rs_groups.csv");
-        List<String[]> stages_csv = readCSV("taxa/rs_stages.csv");
+        if (taxa_csv != null) {
+            // Delete old database
+            App.get().getBoxStore().boxFor(TaxonDb.class).removeAll();
+            App.get().getBoxStore().boxFor(TaxaTranslationDb.class).removeAll();
+            App.get().getBoxStore().boxFor(SynonymsDb.class).removeAll();
+            App.get().getBoxStore().boxFor(TaxonGroupsDb.class).removeAll();
+            App.get().getBoxStore().boxFor(StageDb.class).removeAll();
 
-        TaxonDb[] final_taxa = new TaxonDb[taxa_csv.size() - 1];
-        List<TaxaTranslationDb> taxa_translations = new ArrayList<>();
-        List<SynonymsDb> taxa_synonyms = new ArrayList<>();
+            TaxonDb[] final_taxa = new TaxonDb[taxa_csv.size() - 1];
+            List<TaxaTranslationDb> taxa_translations = new ArrayList<>();
+            List<SynonymsDb> taxa_synonyms = new ArrayList<>();
 
-        // NOTE: Skip the first row containing column names (i = 0)!
-        for (int i = 1; i < taxa_csv.size(); i++) {
-            String[] taxon = taxa_csv.get(i);
-            long id = Long.parseLong(taxon[0]);
-            String rank = taxon[1];
-            String name = taxon[2];
-            String author = taxon[3];
-            boolean uses_atlas_codes;
-            uses_atlas_codes = Objects.equals(taxon[4], "1");
-            String translations = taxon[5];
-            String stages = taxon[6];
-            String groups = taxon[7];
-            String synonyms = taxon[8];
+            // NOTE: Skip the first row containing column names (i = 0)!
+            for (int i = 1; i < taxa_csv.size(); i++) {
+                String[] taxon = taxa_csv.get(i);
+                long id = Long.parseLong(taxon[0]);
+                String rank = taxon[1];
+                String name = taxon[2];
+                String author = taxon[3];
+                boolean uses_atlas_codes;
+                uses_atlas_codes = Objects.equals(taxon[4], "1");
+                String translations = taxon[5];
+                String stages = taxon[6];
+                String groups = taxon[7];
+                String synonyms = taxon[8];
 
-            final_taxa[i - 1] = new TaxonDb(id, 0, name, rank, 0, author,
-                    false, uses_atlas_codes, null, groups, stages);
-            //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " with ID: " + final_taxa[i - 1].getId());
+                final_taxa[i - 1] = new TaxonDb(id, 0, name, rank, 0, author,
+                        false, uses_atlas_codes, null, groups, stages);
+                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " with ID: " + final_taxa[i - 1].getId());
 
-            if (!Objects.equals(translations, "")) {
-                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has translations: " + translations);
-                String[] split_translations = translations.split(";");
-                for (int t = 0; t < split_translations.length; t++) {
-                    String locale = "en";
-                    if (t == 1) {
-                        locale = "sr";
-                    } else if (t == 2) {
-                        locale = "sr_Latn";
-                    } else if (t == 3) {
-                        locale = "hr";
-                    } else if (t == 4) {
-                        locale = "ba";
-                    } else if (t == 5 ) {
-                        locale = "me";
+                if (!Objects.equals(translations, "")) {
+                    //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has translations: " + translations);
+                    String[] split_translations = translations.split(";");
+                    for (int t = 0; t < split_translations.length; t++) {
+                        String locale = "en";
+                        if (t == 1) {
+                            locale = "sr";
+                        } else if (t == 2) {
+                            locale = "sr_Latn";
+                        } else if (t == 3) {
+                            locale = "hr";
+                        } else if (t == 4) {
+                            locale = "ba";
+                        } else if (t == 5 ) {
+                            locale = "me";
+                        }
+                        if (!Objects.equals(split_translations[t], "")) {
+                            TaxaTranslationDb translation = new TaxaTranslationDb(0, id, locale, split_translations[t], name, "");
+                            taxa_translations.add(translation);
+                        }
                     }
-                    if (!Objects.equals(split_translations[t], "")) {
-                        TaxaTranslationDb translation = new TaxaTranslationDb(0, id, locale, split_translations[t], name, "");
-                        taxa_translations.add(translation);
+                }
+
+                if (!Objects.equals(synonyms, "")) {
+                    //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has synonyms: " + synonyms);
+                    String[] split_synonyms = synonyms.split(";");
+                    for (String splitSynonym : split_synonyms) {
+                        SynonymsDb synonym = new SynonymsDb(0, id, splitSynonym);
+                        taxa_synonyms.add(synonym);
                     }
                 }
             }
+            App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
+            TaxaTranslationDb[] final_taxa_translations = new TaxaTranslationDb[taxa_translations.size()];
+            taxa_translations.toArray(final_taxa_translations);
+            App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_taxa_translations);
+            SynonymsDb[] final_taxa_synonyms = new SynonymsDb[taxa_synonyms.size()];
+            taxa_synonyms.toArray(final_taxa_synonyms);
+            App.get().getBoxStore().boxFor(SynonymsDb.class).put(final_taxa_synonyms);
 
-            if (!Objects.equals(synonyms, "")) {
-                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has synonyms: " + synonyms);
-                String[] split_synonyms = synonyms.split(";");
-                for (String splitSynonym : split_synonyms) {
-                    SynonymsDb synonym = new SynonymsDb(0, id, splitSynonym);
-                    taxa_synonyms.add(synonym);
-                }
+            TaxonGroupsDb[] final_taxa_groups = new TaxonGroupsDb[taxa_groups_csv.size() - 1];
+            List<TaxonGroupsTranslationDb> taxa_groups_translations = new ArrayList<>();
+            for (int i = 1; i < taxa_groups_csv.size(); i++) {
+                String[] group = taxa_groups_csv.get(i);
+                long id = Long.parseLong(group[0]);
+                long parentId = Long.parseLong(group[1]);
+                String ba = group[2];
+                String en = group[3];
+                String hr = group[4];
+                String me = group[5];
+                String sr = group[6];
+                String sr_latin = group[7];
+
+                final_taxa_groups[i - 1] = new TaxonGroupsDb(id, parentId, en, "");
+
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "en", en, ""));
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr", sr, ""));
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr-Latn", sr_latin, ""));
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "hr", hr, ""));
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "ba", ba, ""));
+                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "me", me, ""));
             }
+            App.get().getBoxStore().boxFor(TaxonGroupsDb.class).put(final_taxa_groups);
+            TaxonGroupsTranslationDb[] final_taxa_groups_translations = new TaxonGroupsTranslationDb[taxa_groups_translations.size()];
+            taxa_groups_translations.toArray(final_taxa_groups_translations);
+
+            StageDb[] final_stages = new StageDb[stages_csv.size() - 1];
+            for (int i = 1; i < stages_csv.size(); i++) {
+                String[] stage = stages_csv.get(i);
+                long id = Long.parseLong(stage[0]);
+                String name = stage[1];
+
+                final_stages[i - 1] = new StageDb(id, name);
+            }
+            App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
+
+            Log.d(TAG, "Database loaded from assets file. Checking if there is new version online.");
+            SettingsManager.setTaxaUpdatedAt(timestamp);
+
+            updateTaxa();
         }
-        App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
-        TaxaTranslationDb[] final_taxa_translations = new TaxaTranslationDb[taxa_translations.size()];
-        taxa_translations.toArray(final_taxa_translations);
-        App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_taxa_translations);
-        SynonymsDb[] final_taxa_synonyms = new SynonymsDb[taxa_synonyms.size()];
-        taxa_synonyms.toArray(final_taxa_synonyms);
-        App.get().getBoxStore().boxFor(SynonymsDb.class).put(final_taxa_synonyms);
-
-        TaxonGroupsDb[] final_taxa_groups = new TaxonGroupsDb[taxa_groups_csv.size() - 1];
-        List<TaxonGroupsTranslationDb> taxa_groups_translations = new ArrayList<>();
-        for (int i = 1; i < taxa_groups_csv.size(); i++) {
-            String[] group = taxa_groups_csv.get(i);
-            long id = Long.parseLong(group[0]);
-            long parentId = Long.parseLong(group[1]);
-            String ba = group[2];
-            String en = group[3];
-            String hr = group[4];
-            String me = group[5];
-            String sr = group[6];
-            String sr_latin = group[7];
-
-            final_taxa_groups[i - 1] = new TaxonGroupsDb(id, parentId, en, "");
-
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "en", en, ""));
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr", sr, ""));
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr-Latn", sr_latin, ""));
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "hr", hr, ""));
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "ba", ba, ""));
-            taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "me", me, ""));
-        }
-        App.get().getBoxStore().boxFor(TaxonGroupsDb.class).put(final_taxa_groups);
-        TaxonGroupsTranslationDb[] final_taxa_groups_translations = new TaxonGroupsTranslationDb[taxa_groups_translations.size()];
-        taxa_groups_translations.toArray(final_taxa_groups_translations);
-
-        StageDb[] final_stages = new StageDb[stages_csv.size() - 1];
-        for (int i = 1; i < stages_csv.size(); i++) {
-            String[] stage = stages_csv.get(i);
-            long id = Long.parseLong(stage[0]);
-            String name = stage[1];
-
-            final_stages[i - 1] = new StageDb(id, name);
-        }
-        App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
-
-        Log.d(TAG, "Database loaded from assets file. Checking if there is new version online.");
-        SettingsManager.setTaxaUpdatedAt(timestamp);
-        updateTaxa();
     }
 
     private List<String[]> readCSV(String filename) {
@@ -752,7 +785,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void updateLicenses() {
         if (getLoggedUser() == null) {
-            Toast.makeText(this, "Missing user data!", Toast.LENGTH_LONG).show();
+            Toast.makeText(LandingActivity.this, getString(R.string.missing_user_data), Toast.LENGTH_LONG).show();
             fallbackToLoginScreen();
         } else {
             // Check if the licence has changed on the server and update if needed
@@ -896,7 +929,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.d(TAG, "URI is null!");
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            Toast.makeText(LandingActivity.this, getString(R.string.file_not_found) + e, Toast.LENGTH_LONG).show();
+            Log.e(TAG, "File not found: " + e);
         }
 
         CSVWriter writer;
@@ -978,7 +1012,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             writer.close();
             Toast.makeText(LandingActivity.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
         } catch (IOException e) {
-            e.printStackTrace();
+            Toast.makeText(LandingActivity.this, getString(R.string.io_error) + e, Toast.LENGTH_LONG).show();
+            Log.e(TAG, "IO Error: " + e);
         }
     }
 
