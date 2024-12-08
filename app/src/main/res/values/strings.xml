@@ -419,5 +419,10 @@
     <string name="load_kml_map">Load KML map file</string>
     <string name="precision">Precision:</string>
     <string name="database_url_empty">The database URL address is empty!</string>
+    <string name="io_error">"IO Error: "</string>
+    <string name="missing_user_data">Missing user data!</string>
+    <string name="file_not_found">"File not found: "</string>
+    <string name="there_is_no_user_data_in_sql_database">There is no user data in SQL database!</string>
+    <string name="something_is_wrong_falling_back_to_login_screen">Something is wrong, falling back to login screen!</string>
 
 </resources>

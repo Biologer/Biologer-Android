@@ -9,8 +9,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!--
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     -->
@@ -86,7 +86,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.EntryActivity" />
         </activity>
-
         <activity
             android:name=".gui.EntryActivity"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
@@ -94,26 +93,30 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-
         <activity
             android:name=".gui.LoginActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
-
         <activity android:name=".gui.IntroActivity" />
         <activity android:name=".gui.AnnouncementActivity" />
         <activity android:name=".gui.NotificationActivity" />
         <activity android:name=".gui.NotificationsActivity" />
         <activity android:name=".gui.ViewImage" />
 
-        <service
-            android:name="org.biologer.biologer.network.FetchTaxa"
-            android:foregroundServiceType="dataSync">
+        <!-- Trigger Google Play services to install the backported photo picker module. -->
+        <service android:name="com.google.android.gms.metadata.ModuleDependencies"
+            android:enabled="false"
+            android:exported="false"
+            tools:ignore="MissingClass">
+            <intent-filter>
+                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+            </intent-filter>
+            <meta-data android:name="photopicker_activity:0:required" android:value="" />
         </service>
         <service
-            android:name="org.biologer.biologer.network.FetchTaxaBirdloger"
+            android:name="org.biologer.biologer.network.FetchTaxa"
             android:foregroundServiceType="dataSync">
         </service>
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
@@ -125,7 +128,6 @@
         <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>
         <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>
-
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"
@@ -134,7 +136,6 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
-
 
     </application>
 

@@ -96,7 +96,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         EditTextPreference locationName = findPreference("location_name");
         if (locationName != null) {
             locationName.setOnPreferenceChangeListener((preference, newValue) -> {
-                if (newValue.toString().trim().equals("")) {
+                if (newValue.toString().trim().isEmpty()) {
                     Log.d(TAG, "Setting previous location to null");
                     SettingsManager.setPreviousLocationLong(null);
                     SettingsManager.setPreviousLocationLat(null);

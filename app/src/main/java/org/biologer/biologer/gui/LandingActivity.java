@@ -45,13 +45,12 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.FileManipulation;
 import org.biologer.biologer.adapters.StageAndSexLocalization;
-import org.biologer.biologer.network.FetchTaxa;
-import org.biologer.biologer.network.FetchTaxaBirdloger;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
+import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.network.json.RefreshTokenResponse;
@@ -718,7 +717,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
         Log.d(TAG, "Current timestamp: " + System.currentTimeMillis() / 1000);
-        if (!FetchTaxa.isInstanceCreated()) {
+        if (UpdateTaxa.isInstanceCreated()) {
             String updated_at = SettingsManager.getTaxaUpdatedAt();
             String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
             String timestamp = updated_at;
@@ -1080,18 +1079,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     private void startFetchingTaxa() {
-        if (SettingsManager.getDatabaseName().equals("https://birdloger.biologer.org")) {
-            if (!FetchTaxaBirdloger.isInstanceCreated()) {
-                final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxaBirdloger.class);
-                fetchTaxa.setAction(FetchTaxa.ACTION_START);
-                startService(fetchTaxa);
-            }
-        } else {
-            if (!FetchTaxa.isInstanceCreated()) {
-                final Intent fetchTaxa = new Intent(LandingActivity.this, FetchTaxa.class);
-                fetchTaxa.setAction(FetchTaxa.ACTION_START);
-                startService(fetchTaxa);
-            }
+        if (UpdateTaxa.isInstanceCreated()) {
+            final Intent updateTaxa = new Intent(LandingActivity.this, UpdateTaxa.class);
+            startService(updateTaxa);
         }
     }
 
