@@ -730,7 +730,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             Call<TaxaResponse> call = RetrofitClient.getService(
                     database).getTaxa(1, 1,
                     Integer.parseInt(timestamp), false,
-                    null, true);
+                    null, false);
             call.enqueue(new Callback<>() {
 
                 @Override
@@ -1081,6 +1081,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void startFetchingTaxa() {
         if (UpdateTaxa.isInstanceCreated()) {
             final Intent updateTaxa = new Intent(LandingActivity.this, UpdateTaxa.class);
+            updateTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD);
             startService(updateTaxa);
         }
     }

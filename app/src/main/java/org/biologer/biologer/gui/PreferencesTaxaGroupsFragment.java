@@ -20,8 +20,8 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.ArrayHelper;
-import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.InternetConnection;
+import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.sql.TaxaTranslationDb;
 import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
@@ -92,7 +92,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             List<TaxonGroupsTranslationDb> listParentTranslation = groups_translation.find();
             groups_translation.close();
 
-            if (listParentTranslation.size() >= 1) {
+            if (!listParentTranslation.isEmpty()) {
                 String localised_name = listParentTranslation.get(0).getNative_name();
                 if (localised_name != null) {
                     // Log.d(TAG, "Taxon ID: " + id + "; name: " + name + "; translation: " + localised_name);
@@ -126,7 +126,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
                 List<TaxonGroupsTranslationDb> listChildTranslation = children_translation.find();
                 children_translation.close();
 
-                if (listChildTranslation.size() >= 1) {
+                if (!listChildTranslation.isEmpty()) {
                     String localised_child_name = listChildTranslation.get(0).getNative_name();
                     if (localised_child_name != null) {
                         // Log.d(TAG, "Taxon ID: " + id + "; name: " + name + "; translation: " + localised_name);
@@ -318,7 +318,7 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
             }
 
             Log.d(TAG, "Download this: " + add_to_sql.toString());
-            if (FetchTaxa.isInstanceCreated()) {
+            if (UpdateTaxa.isInstanceCreated()) {
                 Log.d(TAG, "Already running!");
                 buildAlertOKMessage(getString(R.string.already_fetching_taxa));
             } else {
@@ -398,10 +398,10 @@ public class PreferencesTaxaGroupsFragment extends PreferenceFragmentCompat {
     }
 
     private void fetchTaxa(Activity activity) {
-        final Intent fetchTaxa = new Intent(activity, FetchTaxa.class);
-        fetchTaxa.setAction(FetchTaxa.ACTION_START);
-        fetchTaxa.putStringArrayListExtra("groups", add_to_sql);
-        activity.startService(fetchTaxa);
+        final Intent updateTaxa = new Intent(activity, UpdateTaxa.class);
+        updateTaxa.putStringArrayListExtra("groups", add_to_sql);
+        updateTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD);
+        activity.startService(updateTaxa);
     }
 
 }

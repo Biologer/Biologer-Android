@@ -38,6 +38,9 @@ public class UpdateTaxa extends Service {
 
     private static final String TAG = "Biologer.UpdateTaxa";
     static final public String TASK_COMPLETED = "org.biologer.biologer.UpdateTaxa.TASK_COMPLETED";
+    public static final String ACTION_DOWNLOAD_FROM_FIRST = "ACTION_DOWNLOAD_FROM_FIRST";
+    public static final String ACTION_DOWNLOAD = "ACTION_DOWNLOAD";
+    public static final String ACTION_STOP = "ACTION_STOP";
     LocalBroadcastManager broadcastManager;
     private static UpdateTaxa instance = null;
     ArrayList<String> taxa_groups = new ArrayList<>();
@@ -90,9 +93,26 @@ public class UpdateTaxa extends Service {
                 taxa_groups_int[i] = Integer.parseInt(taxa_groups.get(i));
             }
 
-            updated_after = SettingsManager.getTaxaUpdatedAt();
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case ACTION_DOWNLOAD_FROM_FIRST:
+                        SettingsManager.setTaxaLastPageFetched("1");
+                        SettingsManager.setTaxaUpdatedAt("0");
+                        updated_after = "0";
+                        getTaxa(1);
+                        break;
+                    case ACTION_DOWNLOAD:
+                        updated_after = SettingsManager.getTaxaUpdatedAt();
+                        int last_page_fetched = Integer.parseInt(SettingsManager.getTaxaLastPageFetched());
+                        getTaxa(last_page_fetched);
+                        break;
+                    case ACTION_STOP:
+                        stopSelf();
+                        break;
+                }
+            }
 
-            getTaxa(1);
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -102,7 +122,7 @@ public class UpdateTaxa extends Service {
 
         Call<TaxaResponse> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).getTaxa(page, 300,
-                Integer.parseInt(updated_after), true, taxa_groups_int, true);
+                Integer.parseInt(updated_after), true, taxa_groups_int, false);
 
         call.enqueue(new Callback<>() {
 
@@ -182,7 +202,6 @@ public class UpdateTaxa extends Service {
                     taxon.getAncestors_names(),
                     groupString.toString(),
                     stagesString.toString());
-            //Log.d(TAG, "Saving taxon " + taxon_id + ": " + taxon_latin_name + "(group " + taxon.getGroups() + ")");
 
             // If there are translations save them in different table
             if (!taxaTranslations.isEmpty()) {
@@ -196,8 +215,6 @@ public class UpdateTaxa extends Service {
                             taxaTranslation.getNativeName(),
                             taxon_latin_name,
                             taxaTranslation.getDescription());
-                    //Log.d(TAG, "Saving taxon translation " + taxaTranslation.getId() + ": " + taxon_latin_name +
-                    //        " (" + taxaTranslation.getLocale() + ": " + taxaTranslation.getNativeName() + taxaTranslation.getDescription() + ")");
                 }
                 App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
             }
@@ -211,8 +228,10 @@ public class UpdateTaxa extends Service {
             sendResult("success");
             // Set the preference to know when the taxonomic data was updates
             SettingsManager.setTaxaUpdatedAt(timestamp);
+            SettingsManager.setTaxaLastPageFetched("1");
             stopSelf();
         } else {
+            SettingsManager.setTaxaLastPageFetched(String.valueOf(page));
             page++;
             Log.d(TAG, "Downloading taxa from page " + page);
             getTaxa(page);

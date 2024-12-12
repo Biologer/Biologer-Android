@@ -21,7 +21,7 @@ import com.google.android.material.button.MaterialButton;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.FetchTaxa;
+import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -78,17 +78,17 @@ public class LogoutFragment extends Fragment {
                         alert.show();
                     } else {
                         // If download process is active, stop it first
-                        if (FetchTaxa.isInstanceCreated()) {
-                            final Intent fetchTaxa = new Intent(getActivity(), FetchTaxa.class);
-                            fetchTaxa.setAction(FetchTaxa.ACTION_CANCEL);
-                            requireActivity().startService(fetchTaxa);
+                        if (UpdateTaxa.isInstanceCreated()) {
+                            final Intent updateTaxa = new Intent(getActivity(), UpdateTaxa.class);
+                            updateTaxa.setAction(UpdateTaxa.ACTION_STOP);
+                            requireActivity().startService(updateTaxa);
 
                             final Handler handler = new Handler(Looper.getMainLooper());
                             final Runnable runnable = new Runnable() {
                                 public void run() {
                                     // need to do tasks on the UI thread
                                     Log.d(TAG, "Waiting for downloading to finish...");
-                                    if (FetchTaxa.isInstanceCreated()) {
+                                    if (UpdateTaxa.isInstanceCreated()) {
                                         handler.postDelayed(this, 2000);
                                     } else {
                                         deleteDataAndLogout(activity);
@@ -120,26 +120,15 @@ public class LogoutFragment extends Fragment {
     }
 
     public String getBiologerCommunity(String database) {
-        if (database.equals("https://biologer.ba")) {
-            return "Bosnia and Herzegovina Biologer Community";
-        }
-        if (database.equals("https://biologer.rs")) {
-            return "Serbian Biologer Community";
-        }
-        if (database.equals("https://biologer.me")) {
-            return "Montenegrin Biologer Community";
-        }
-        if (database.equals("https://birdloger.biologer.org")) {
-            return "Birdloger Community";
-        }
-        if (database.equals("https://dev.biologer.org")) {
-            return "Global Biologer Community";
-        }
-        if (database.equals("https://biologer.hr")) {
-            return "Croatian Biologer Community";
-        } else {
-            return "";
-        }
+        return switch (database) {
+            case "https://biologer.ba" -> "Bosnia and Herzegovina Biologer Community";
+            case "https://biologer.rs" -> "Serbian Biologer Community";
+            case "https://biologer.me" -> "Montenegrin Biologer Community";
+            case "https://birdloger.biologer.org" -> "Birdloger Community";
+            case "https://dev.biologer.org" -> "Global Biologer Community";
+            case "https://biologer.hr" -> "Croatian Biologer Community";
+            default -> "";
+        };
     }
 
     private void deleteDataAndLogout(Activity activity) {

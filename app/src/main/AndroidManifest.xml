@@ -115,15 +115,12 @@
             </intent-filter>
             <meta-data android:name="photopicker_activity:0:required" android:value="" />
         </service>
-        <service
-            android:name="org.biologer.biologer.network.FetchTaxa"
-            android:foregroundServiceType="dataSync">
-        </service>
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
         <service
             android:name="org.biologer.biologer.network.UploadRecords"
             android:foregroundServiceType="dataSync">
         </service>
+        <service android:name="org.biologer.biologer.network.UpdateTaxa"/>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>

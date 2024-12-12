@@ -24,10 +24,10 @@ import androidx.preference.PreferenceScreen;
 import org.apache.commons.lang3.ArrayUtils;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.FetchTaxa;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.UpdateLicenses;
+import org.biologer.biologer.network.UpdateTaxa;
 
 import java.util.Arrays;
 
@@ -139,9 +139,11 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
             preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient));
             // Start the service for fetching taxa
             Activity activity_fetch = getActivity();
-            final Intent fetchTaxa = new Intent(activity_fetch, FetchTaxa.class);
-            fetchTaxa.setAction(FetchTaxa.ACTION_START_NEW);
-            activity_fetch.startService(fetchTaxa);
+            final Intent fetchTaxa = new Intent(activity_fetch, UpdateTaxa.class);
+            fetchTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD_FROM_FIRST);
+            if (activity_fetch != null) {
+                activity_fetch.startService(fetchTaxa);
+            }
             return true;
         });
 
@@ -186,7 +188,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     private void toggleFetchTaxaButton(Preference preference) {
         // If already fetching taxa disable the fetch taxa button
         assert preference != null;
-        if (FetchTaxa.isInstanceCreated()) {
+        if (UpdateTaxa.isInstanceCreated()) {
             preference.setEnabled(false);
             preference.setSummary(getString(R.string.updating_taxa_be_patient));
         } else {

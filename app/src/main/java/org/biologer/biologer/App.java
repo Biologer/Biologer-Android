@@ -27,7 +27,6 @@ public class App extends MultiDexApplication {
         initializeBoxStore();
 
         // Create Notification channel in order to send notification to android API 26+
-        createNotificationChannelTaxa();
         createNotificationChannelEntries();
         createNotificationChannelUnreadNotifications();
         createNotificationChannelAnnouncements();
@@ -50,24 +49,6 @@ public class App extends MultiDexApplication {
     public void deleteAllBoxes() {
         boxStore.close();
         boxStore.deleteAllFiles();
-    }
-
-    public void createNotificationChannelTaxa() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channel_id = "biologer_taxa";
-            CharSequence name = getString(R.string.channel_name);
-            String description = getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            assert notificationManager != null;
-            notificationManager.createNotificationChannel(channel);
-        }
     }
 
     public void createNotificationChannelEntries() {
