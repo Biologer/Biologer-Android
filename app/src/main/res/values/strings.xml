@@ -424,5 +424,14 @@
     <string name="file_not_found">"File not found: "</string>
     <string name="there_is_no_user_data_in_sql_database">There is no user data in SQL database!</string>
     <string name="something_is_wrong_falling_back_to_login_screen">Something is wrong, falling back to login screen!</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_summary">Allows you to delete user account and the collected data associated with that account.</string>
+    <string name="delete_field_observations">Delete species observations</string>
+    <string name="delete">Delete</string>
+    <string name="delete_account_alert_title">Delete account?</string>
+    <string name="delete_msg1">"This action will delete user account for "</string>
+    <string name="delete_msg2">" and you will not be able to login at "</string>
+    <string name="delete_msg3">" again. Here you can also delete all your species observations."</string>
+    <string name="delete_msg4">" Are you sure you want to delete your account?"</string>
 
 </resources>

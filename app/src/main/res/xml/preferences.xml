@@ -62,6 +62,11 @@
             android:summary="@string/choose_ilicense"
             app:iconSpaceReserved="false"
             android:defaultValue="0" />
+        <Preference
+            android:key="delete_account"
+            android:title="@string/delete_account"
+            android:summary="@string/delete_account_summary"
+            app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -1,13 +1,19 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -22,14 +28,19 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateTaxa;
+import org.biologer.biologer.sql.UserDb;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
@@ -101,7 +112,7 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                     SettingsManager.setPreviousLocationLong(null);
                     SettingsManager.setPreviousLocationLat(null);
                 }
-                    return true;
+                return true;
             });
         }
 
@@ -111,6 +122,75 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         ListPreference imageLicense = findPreference("image_license");
         ListPreference autoDownload = findPreference("auto_download");
         ListPreference languageSettings = findPreference("language_settings");
+
+        Preference deleteAccount = findPreference("delete_account");
+        if (deleteAccount != null) {
+            deleteAccount.setOnPreferenceClickListener(preference -> {
+
+                final CheckBox checkboxDeleteData = new CheckBox(requireContext());
+                checkboxDeleteData.setText(R.string.delete_field_observations);
+                LinearLayout container = new LinearLayout(requireContext());
+                LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                container.setLayoutParams(containerParams);
+                container.setPadding(48, 12, 24, 24);
+                container.addView(checkboxDeleteData);
+
+                // Build the alert dialog
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+
+                List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+                UserDb userData = userDataList.get(0);
+                String username = userData.getUsername();
+                String database = SettingsManager.getDatabaseName();
+
+                builder.setTitle(R.string.delete_account_alert_title)
+                        .setMessage(getString(R.string.delete_msg1) + username +
+                                getString(R.string.delete_msg2) + database +
+                                getString(R.string.delete_msg3) +
+                                getString(R.string.delete_msg4))
+                        .setView(container)
+                        .setPositiveButton(R.string.delete, (dialog, which) -> {
+                            boolean deleteData = checkboxDeleteData.isChecked();
+                            deleteAccount(deleteData);
+                        })
+                        .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
+
+                final AlertDialog alert = builder.create();
+                alert.setOnShowListener(new DialogInterface.OnShowListener() {
+                    private static final int AUTO_DISMISS_MILLIS = 10000;
+                    @Override
+                    public void onShow(DialogInterface dialogInterface) {
+                        final Button defaultButton = alert.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
+                        defaultButton.setEnabled(false);
+                        final CharSequence negativeButtonText = defaultButton.getText();
+                        new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
+                            @Override
+                            public void onTick(long l) {
+                                defaultButton.setText(String.format(
+                                        Locale.getDefault(), "%s (%d)",
+                                        negativeButtonText,
+                                        TimeUnit.MILLISECONDS.toSeconds(l) + 1
+                                ));
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                if (alert.isShowing()) {
+                                    defaultButton.setEnabled(true);
+                                    defaultButton.setText(negativeButtonText);
+                                }
+                            }
+                        }.start();
+                    }
+                });
+                alert.show();
+
+                return true;
+            });
+        }
 
         if (dataLicense != null) {
             getDataLicences(dataLicense);
@@ -289,6 +369,13 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         listPreference.setEntries(entries);
         listPreference.setDefaultValue("2");
         listPreference.setEntryValues(entryValues);
+    }
+
+    private void deleteAccount(boolean deleteData) {
+        // TODO
+        if (deleteData) {
+            // TODO
+        }
     }
 
     @Override
