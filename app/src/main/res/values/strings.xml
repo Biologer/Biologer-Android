@@ -433,5 +433,11 @@
     <string name="delete_msg2">" and you will not be able to login at "</string>
     <string name="delete_msg3">" again. Here you can also delete all your species observations."</string>
     <string name="delete_msg4">" Are you sure you want to delete your account?"</string>
+    <string name="ok">OK</string>
+    <string name="account_deleted">Account deleted</string>
+    <string name="your_user_account_has_been_deleted_from">Your user account has been deleted from</string>
+    <string name="error">Error</string>
+    <string name="delete_account_error2">User account could not be deleted. Callback failed with error message:</string>
+    <string name="delete_account_error1">User account could not be deleted. Server returned the error code</string>
 
 </resources>

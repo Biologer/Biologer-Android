@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -25,6 +26,7 @@ import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -33,6 +35,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.sql.UserDb;
@@ -41,6 +44,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
@@ -372,10 +380,53 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     }
 
     private void deleteAccount(boolean deleteData) {
-        // TODO
-        if (deleteData) {
-            // TODO
-        }
+        Call<ResponseBody> deleteUser = RetrofitClient
+                .getService(SettingsManager.getDatabaseName()).deleteUser(deleteData);
+        deleteUser.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    // Delete user preferences and database
+                    App.get().deleteAllBoxes();
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.clear();
+                    editor.apply();
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    builder.setTitle(R.string.account_deleted)
+                            .setMessage(getString(R.string.your_user_account_has_been_deleted_from)
+                                    + " " + SettingsManager.getDatabaseName() + ".")
+                            .setPositiveButton(R.string.ok, (dialog, which) -> {
+                                // Go back to login activity and exit the dialog
+                                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                dialog.dismiss();
+                            });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                } else {
+                    int code = response.code();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    builder.setTitle(R.string.error)
+                            .setMessage(getString(R.string.delete_account_error1) + " " + code + ".")
+                            .setPositiveButton(R.string.ok, (dialog, which) -> dialog.dismiss());
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle(R.string.error)
+                        .setMessage(getString(R.string.delete_account_error2) + " " + t)
+                        .setPositiveButton(R.string.ok, (dialog, which) -> dialog.dismiss());
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+        });
     }
 
     @Override

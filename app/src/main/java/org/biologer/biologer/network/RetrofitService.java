@@ -21,6 +21,7 @@ import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -120,6 +121,11 @@ public interface RetrofitService {
     @POST("/api/my/read-notifications/batch")
     Call<ResponseBody> setAllNotificationAsRead(
             @Query("all[]") boolean read_all);
+
+    @Headers({"Accept: application/json" })
+    @DELETE("/api/users")
+    Call<ResponseBody> deleteUser(
+            @Query("delete_observations") boolean delete_observations);
 
     @Headers({"Accept: application/json"})
     @GET("/api/announcements")
