@@ -380,8 +380,21 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     }
 
     private void deleteAccount(boolean deleteData) {
+        List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        UserDb userData = userDataList.get(0);
+        long user_id = userData.getUserId();
+        Log.d(TAG, "This is the user ID: " + userData.getUserId());
+
+        // Must send true/false as 0/1
+        int delete;
+        if (deleteData) {
+            delete = 1;
+        } else {
+            delete = 0;
+        }
+
         Call<ResponseBody> deleteUser = RetrofitClient
-                .getService(SettingsManager.getDatabaseName()).deleteUser(deleteData);
+                .getService(SettingsManager.getDatabaseName()).deleteUser(user_id, delete);
         deleteUser.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {

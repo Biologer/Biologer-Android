@@ -32,6 +32,8 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.json.RegisterResponse;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.json.UserDataResponse;
+import org.biologer.biologer.network.json.UserDataSer;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
@@ -211,7 +213,7 @@ public class RegisterFragment3 extends Fragment {
                 ((LoginActivity) requireActivity()).register_institution,
                 ((LoginActivity) requireActivity()).et_username.getText().toString(),
                 ((LoginActivity) requireActivity()).et_password.getText().toString());
-        registerResponseCall.enqueue(new Callback<RegisterResponse>() {
+        registerResponseCall.enqueue(new Callback<>() {
 
             @Override
             public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
@@ -255,7 +257,7 @@ public class RegisterFragment3 extends Fragment {
                         Log.d(TAG, "Token will expire on timestamp: " + expire_date);
 
                         progressBar.setVisibility(View.GONE);
-                        saveUserData();
+                        getUserData(database);
                     } else {
                         Log.e(TAG, "Register response is null!");
                     }
@@ -275,12 +277,34 @@ public class RegisterFragment3 extends Fragment {
         });
     }
 
-    private void saveUserData() {
-        String full_name =  ((LoginActivity) requireActivity()).register_name + " " +  ((LoginActivity) requireActivity()).register_surname;
-        String email = ((LoginActivity) requireActivity()).et_username.getText().toString();
-        UserDb userData = new UserDb(0, full_name, email, getDataLicense(), getImageLicense());
-        App.get().getBoxStore().boxFor(UserDb.class).put(userData);
-        displaySuccess();
+    private void getUserData(String database) {
+        Call<UserDataResponse> userData = RetrofitClient.getService(database).getUserData();
+        userData.enqueue(new Callback<>() {
+
+            @Override
+            public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        UserDataSer userdata = response.body().getData();
+                        String email = userdata.getEmail();
+                        String name = userdata.getFullName();
+                        int id = userdata.getId();
+                        int data_license = userdata.getSettings().getDataLicense();
+                        int image_license = userdata.getSettings().getImageLicense();
+
+                        // Write data in SQL
+                        UserDb user = new UserDb(0, name, email, data_license, image_license, id);
+                        App.get().getBoxStore().boxFor(UserDb.class).put(user);
+                        displaySuccess();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "User data could not be taken from server: " + t);
+            }
+        });
     }
 
     private void displaySuccess() {
@@ -290,7 +314,7 @@ public class RegisterFragment3 extends Fragment {
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.OK), (dialog, id) -> {
                     List<Fragment> fragments = requireActivity().getSupportFragmentManager().getFragments();
-                        if (fragments.size() != 0) {
+                        if (!fragments.isEmpty()) {
                             for (Fragment fragment : fragments) {
                                 requireActivity().getSupportFragmentManager().beginTransaction().remove(fragment).commit();
                             }

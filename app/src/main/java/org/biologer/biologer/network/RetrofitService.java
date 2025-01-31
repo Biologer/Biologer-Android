@@ -29,6 +29,7 @@ import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
@@ -123,9 +124,10 @@ public interface RetrofitService {
             @Query("all[]") boolean read_all);
 
     @Headers({"Accept: application/json" })
-    @DELETE("/api/users")
+    @DELETE("/api/users/{user_id}")
     Call<ResponseBody> deleteUser(
-            @Query("delete_observations") boolean delete_observations);
+            @Path("user_id") long userId,
+            @Query("delete_observations") int delete_observations);
 
     @Headers({"Accept: application/json"})
     @GET("/api/announcements")

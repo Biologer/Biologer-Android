@@ -4,40 +4,6 @@
   "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
   "entities": [
     {
-      "id": "7:4160714141529379114",
-      "lastPropertyId": "5:538337462075283703",
-      "name": "TaxonGroupsTranslationData",
-      "properties": [
-        {
-          "id": "1:7015557323909119318",
-          "name": "id",
-          "type": 6,
-          "flags": 129
-        },
-        {
-          "id": "2:663772822347069923",
-          "name": "viewGroupId",
-          "type": 6
-        },
-        {
-          "id": "3:2394783495475227943",
-          "name": "locale",
-          "type": 9
-        },
-        {
-          "id": "4:1019653800727113008",
-          "name": "native_name",
-          "type": 9
-        },
-        {
-          "id": "5:538337462075283703",
-          "name": "description",
-          "type": 9
-        }
-      ],
-      "relations": []
-    },
-    {
       "id": "10:8101485209871029404",
       "lastPropertyId": "19:6613538116525791881",
       "name": "UnreadNotificationsDb",
@@ -615,9 +581,43 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "21:1356762403395008272",
+      "lastPropertyId": "5:7903474695452245682",
+      "name": "TaxonGroupsTranslationDb",
+      "properties": [
+        {
+          "id": "1:432275688242991491",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:2564473592014997332",
+          "name": "viewGroupId",
+          "type": 6
+        },
+        {
+          "id": "3:5257684115209524594",
+          "name": "locale",
+          "type": 9
+        },
+        {
+          "id": "4:7764573325437111415",
+          "name": "native_name",
+          "type": 9
+        },
+        {
+          "id": "5:7903474695452245682",
+          "name": "description",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "20:1805526152392619291",
+  "lastEntityId": "21:1356762403395008272",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
@@ -631,7 +631,8 @@
     7330716352569191141,
     6601372733143688461,
     5874353726160023535,
-    2032654077862712983
+    2032654077862712983,
+    4160714141529379114
   ],
   "retiredIndexUids": [],
   "retiredPropertyUids": [
@@ -721,7 +722,12 @@
     975154538842802633,
     7227728808887489237,
     332187706126650152,
-    5343253244022423976
+    5343253244022423976,
+    7015557323909119318,
+    663772822347069923,
+    2394783495475227943,
+    1019653800727113008,
+    538337462075283703
   ],
   "retiredRelationUids": [],
   "version": 1

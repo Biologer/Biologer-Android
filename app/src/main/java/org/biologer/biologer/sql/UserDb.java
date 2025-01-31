@@ -15,13 +15,15 @@ public class UserDb {
     private String email;
     private int dataLicense;
     private int imageLicense;
+    private int userId;
 
-    public UserDb(long id, String username, String email, int dataLicense, int imageLicense) {
+    public UserDb(long id, String username, String email, int dataLicense, int imageLicense, int userId) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.dataLicense = dataLicense;
         this.imageLicense = imageLicense;
+        this.userId = userId;
     }
 
     public long getId() {
@@ -55,4 +57,11 @@ public class UserDb {
         this.imageLicense = image_license;
     }
 
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 }

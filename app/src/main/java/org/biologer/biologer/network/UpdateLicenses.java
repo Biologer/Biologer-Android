@@ -52,7 +52,7 @@ public class UpdateLicenses extends Service {
         if (data_license.equals("0") || image_license.equals("0")) {
             // Get User data from a server
             Call<UserDataResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUserData();
-            call.enqueue(new Callback<UserDataResponse>() {
+            call.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                     if (response.isSuccessful()) {
@@ -61,24 +61,25 @@ public class UpdateLicenses extends Service {
                             UserDataSer user = response.body().getData();
                             final String email = user.getEmail();
                             String name = user.getFullName();
+                            int id = user.getId();
                             int server_data_license = user.getSettings().getDataLicense();
                             int server_image_license = user.getSettings().getImageLicense();
 
                             // If both data and image licence should be retrieved from server
                             if (data_license.equals("0") && image_license.equals("0")) {
-                                UserDb uData = new UserDb(getUserID(), name, email, server_data_license, server_image_license);
+                                UserDb uData = new UserDb(getID(), name, email, server_data_license, server_image_license, id);
                                 App.get().getBoxStore().boxFor(UserDb.class).put(uData);
                                 Log.d(TAG, "Image and data licenses updated from the server.");
                             }
                             // If only Data License should be retrieved from server
                             if (data_license.equals("0") && !image_license.equals("0")) {
-                                UserDb uData = new UserDb(getUserID(), name, email, server_data_license, Integer.parseInt(image_license));
+                                UserDb uData = new UserDb(getID(), name, email, server_data_license, Integer.parseInt(image_license), id);
                                 App.get().getBoxStore().boxFor(UserDb.class).put(uData);
                                 Log.d(TAG, "Data licenses updated from the server. Image licence set by user to: " + image_license);
                             }
                             // If only Image License should be retrieved from server
                             if (!data_license.equals("0")) {
-                                UserDb uData = new UserDb(getUserID(), name, email, Integer.parseInt(data_license), server_image_license);
+                                UserDb uData = new UserDb(getID(), name, email, Integer.parseInt(data_license), server_image_license, id);
                                 App.get().getBoxStore().boxFor(UserDb.class).put(uData);
                                 Log.d(TAG, "Image licenses updated from the server. Data license set by user to: " + data_license);
                             }
@@ -100,7 +101,12 @@ public class UpdateLicenses extends Service {
         } else {
             // If both data ind image license should be taken from preferences
             Log.d(TAG, "User selected custom licences for images (" + image_license + ") and data (" + data_license + ").");
-            UserDb uData = new UserDb(getUserID(), getUserName(), getUserEmail(), Integer.parseInt(data_license), Integer.parseInt(image_license));
+            UserDb uData = new UserDb(getID(),
+                    getUserName(),
+                    getUserEmail(),
+                    Integer.parseInt(data_license),
+                    Integer.parseInt(image_license),
+                    getUserID());
             App.get().getBoxStore().boxFor(UserDb.class).put(uData);
         }
         stopSelf();
@@ -111,8 +117,12 @@ public class UpdateLicenses extends Service {
         return userdata_list.get(0);
     }
 
-    public Long getUserID() {
+    public Long getID() {
         return getLoggedUser().getId();
+    }
+
+    public int getUserID() {
+        return getLoggedUser().getUserId();
     }
 
     private String getUserName() {

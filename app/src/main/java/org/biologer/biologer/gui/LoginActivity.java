@@ -46,7 +46,6 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.json.LoginResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.json.UserDataSer;
@@ -433,7 +432,7 @@ public class LoginActivity extends AppCompatActivity {
 
             // Get the response from the call
             Log.d(TAG, "Getting Token from server.");
-            login.enqueue(new Callback<LoginResponse>() {
+            login.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<LoginResponse> login, @NonNull Response<LoginResponse> response) {
                     if (response.code() == 404) {
@@ -492,6 +491,7 @@ public class LoginActivity extends AppCompatActivity {
                         UserDataSer userdata = response.body().getData();
                         String email = userdata.getEmail();
                         String name = userdata.getFullName();
+                        int id = userdata.getId();
                         int data_license = userdata.getSettings().getDataLicense();
                         int image_license = userdata.getSettings().getImageLicense();
 
@@ -501,7 +501,7 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         // Write data in SQL
-                        UserDb user = new UserDb(0, name, email, data_license, image_license);
+                        UserDb user = new UserDb(0, name, email, data_license, image_license, id);
                         Box<UserDb> userDataBox = App.get().getBoxStore().boxFor(UserDb.class);
                         userDataBox.removeAll();
                         userDataBox.put(user);
