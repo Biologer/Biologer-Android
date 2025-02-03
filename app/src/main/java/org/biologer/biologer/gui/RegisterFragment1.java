@@ -160,10 +160,6 @@ public class RegisterFragment1 extends Fragment {
             flag.setImageResource(R.drawable.flag_montenegro);
             textViewDatabaseInfo.setText(R.string.community_montenegro);
         }
-        if (database.equals("https://birdloger.biologer.org")) {
-            flag.setImageResource(R.drawable.flag_dzpps);
-            textViewDatabaseInfo.setText(R.string.community_dzpps);
-        }
         if (database.equals("https://dev.biologer.org")) {
             flag.setImageResource(R.drawable.flag_dev);
             textViewDatabaseInfo.setText(R.string.community_developers);
@@ -192,7 +188,7 @@ public class RegisterFragment1 extends Fragment {
 
             Fragment fragment = new RegisterFragment2();
             FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.login_frame, fragment);
+            fragmentTransaction.replace(R.id.login_layout, fragment);
             fragmentTransaction.addToBackStack("Register fragment 2");
             fragmentTransaction.commit();
     }

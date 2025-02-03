@@ -85,7 +85,7 @@ public class RegisterFragment3 extends Fragment {
                     public void onClick(@NonNull View textView) {
                         Fragment fragment = new RegisterPrivacyPolicy();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.login_frame, fragment);
+                        fragmentTransaction.replace(R.id.login_layout, fragment);
                         fragmentTransaction.addToBackStack("Register fragment privacy");
                         fragmentTransaction.commit();
                     }
@@ -114,7 +114,7 @@ public class RegisterFragment3 extends Fragment {
                     public void onClick(@NonNull View textView) {
                         Fragment fragment = new LicenseFragment();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.login_frame, fragment);
+                        fragmentTransaction.replace(R.id.login_layout, fragment);
                         fragmentTransaction.addToBackStack("License Fragment");
                         fragmentTransaction.commit();
                     }

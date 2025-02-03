@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
@@ -274,6 +275,23 @@ public class LoginActivity extends AppCompatActivity {
                 };
                 handler.postDelayed(runnable, 1500);
             }
+        });
+
+        ImageView imageViewShowPassword = findViewById(R.id.show_password_icon);
+        imageViewShowPassword.setOnClickListener(view -> {
+            int inputType = et_password.getInputType();
+            if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                imageViewShowPassword.setImageResource(R.drawable.eye_open);
+                et_password.setInputType(InputType.TYPE_CLASS_TEXT
+                        | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
+            } else {
+                imageViewShowPassword.setImageResource(R.drawable.eye_closed);
+                et_password.setInputType(InputType.TYPE_CLASS_TEXT
+                        | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                imageViewShowPassword.setContentDescription(getString(R.string.show_password));
+            }
+            et_password.setSelection(et_password.getText().length());
         });
 
         // Disable login button if there is no username and password
@@ -559,7 +577,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onRegister(View view) {
         Fragment fragment = new RegisterFragment1();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.login_frame, fragment);
+        fragmentTransaction.replace(R.id.login_layout, fragment);
         fragmentTransaction.addToBackStack("Register fragment 1");
         fragmentTransaction.commit();
     }

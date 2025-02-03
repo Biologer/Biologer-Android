@@ -3,6 +3,7 @@ package org.biologer.biologer.gui;
 import android.app.Activity;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -152,6 +154,40 @@ public class RegisterFragment2 extends Fragment {
                     }
                 });
 
+                ImageView imageViewShowPassword = activity.findViewById(R.id.show_password_icon_type);
+                imageViewShowPassword.setOnClickListener(view1 -> {
+                    int inputType = editTextPassword.getInputType();
+                    if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                        imageViewShowPassword.setImageResource(R.drawable.eye_open);
+                        editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
+                                | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                        imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
+                    } else {
+                        imageViewShowPassword.setImageResource(R.drawable.eye_closed);
+                        editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
+                                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                        imageViewShowPassword.setContentDescription(getString(R.string.show_password));
+                    }
+                    editTextPassword.setSelection(editTextPassword.getText().length());
+                });
+
+                ImageView imageViewShowPasswordRepeat = activity.findViewById(R.id.show_password_icon_retype);
+                imageViewShowPasswordRepeat.setOnClickListener(view2 -> {
+                    int inputType = editTextPasswordRepeat.getInputType();
+                    if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                        imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_open);
+                        editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
+                                | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                        imageViewShowPasswordRepeat.setContentDescription(getString(R.string.hide_password));
+                    } else {
+                        imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_closed);
+                        editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
+                                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                        imageViewShowPasswordRepeat.setContentDescription(getString(R.string.show_password));
+                    }
+                    editTextPasswordRepeat.setSelection(editTextPasswordRepeat.getText().length());
+                });
+
             }
             
         }
@@ -166,7 +202,7 @@ public class RegisterFragment2 extends Fragment {
 
             Fragment fragment = new RegisterFragment3();
             FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.login_frame, fragment);
+            fragmentTransaction.replace(R.id.login_layout, fragment);
             fragmentTransaction.addToBackStack("Register fragment 3");
             fragmentTransaction.commit();
 
