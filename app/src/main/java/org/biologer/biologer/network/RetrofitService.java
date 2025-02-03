@@ -28,6 +28,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -128,6 +129,18 @@ public interface RetrofitService {
     Call<ResponseBody> deleteUser(
             @Path("user_id") long userId,
             @Query("delete_observations") int delete_observations);
+
+    @Headers({"Accept: application/json" })
+    @PUT("/api/users/{user_id}")
+    Call<ResponseBody> editUserEmail(
+            @Path("user_id") long userId,
+            @Query("email") String email);
+
+    @Headers({"Accept: application/json" })
+    @PUT("/api/users/{user_id}")
+    Call<ResponseBody> editUserPassword(
+            @Path("user_id") long userId,
+            @Query("password") String password);
 
     @Headers({"Accept: application/json"})
     @GET("/api/announcements")

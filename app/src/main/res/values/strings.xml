@@ -439,5 +439,36 @@
     <string name="error">Error</string>
     <string name="delete_account_error2">User account could not be deleted. Callback failed with error message:</string>
     <string name="delete_account_error1">User account could not be deleted. Server returned the error code</string>
+    <string name="account_settings">Account settings</string>
+    <string name="account_setup_desc">Allows you to change email address, password, or delete user account.</string>
+    <string name="change_email">Change email address</string>
+    <string name="change_email_desc">Lets you change email address linked with your account.</string>
+    <string name="type_email">Type new email address</string>
+    <string name="retype_email">Retype email for confirmation</string>
+    <string name="change_password">Change password</string>
+    <string name="change_email_msg1">This action will change email address for</string>
+    <string name="change_email_msg2">Verification link will be send to your new email address for confirmation.</string>
+    <string name="change_email_button">Change email</string>
+    <string name="pass_not_match">Passwords did not match</string>
+    <string name="pass_short">Password too short</string>
+    <string name="email_not_match">Emails did not match</string>
+    <string name="type_password">Type new password</string>
+    <string name="retype_password">Retype new password</string>
+    <string name="email_now_changed">Email is now changed</string>
+    <string name="email_changed_desc1">Your email address is now changed to</string>
+    <string name="email_changed_desc2">To confirm it was you, an activation link has been sent to your new address.</string>
+    <string name="email_changed_desc3">After confirming the email address you can use Biologer as usual.</string>
+    <string name="email_changed_error_desc2">Email address could not be changed. Callback failed with error message:</string>
+    <string name="email_changed_error_desc1">Email address could not be changed. Server returned the error code</string>
+    <string name="email_changed_error_desc5">The email address</string>
+    <string name="email_changed_error_desc6">has already been taken at</string>
+    <string name="change_pass_desc1">This action will change your account password for</string>
+    <string name="change_pass_desc2">For security reasons, you will be prompted to enter your old password.</string>
+    <string name="password_changed">Password has been changed</string>
+    <string name="password_changed_desc1">Your password is now changed. Use new password for future logins to</string>
+    <string name="error_pass_changed_desc1">Password could not be changed. Server returned the error code</string>
+    <string name="error_pass_changed_desc2">Email address could not be changed. Callback failed with error message:</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
 
 </resources>

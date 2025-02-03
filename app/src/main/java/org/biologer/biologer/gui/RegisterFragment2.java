@@ -76,7 +76,7 @@ public class RegisterFragment2 extends Fragment {
                         ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
                         ((LoginActivity)activity).runnable = () -> {
                             if (!(editTextPassword.getText().length() > 8)) {
-                                passwordLayout.setError("Password too short");
+                                passwordLayout.setError(getString(R.string.pass_short));
                             } else {
                                 passwordLayout.setError(null);
 
@@ -85,7 +85,7 @@ public class RegisterFragment2 extends Fragment {
                                     if (editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString())) {
                                         passwordRepeatLayout.setError(null);
                                     } else {
-                                        passwordRepeatLayout.setError("Passwords did not match");
+                                        passwordRepeatLayout.setError(getString(R.string.pass_not_match));
                                     }
                                 }
 
@@ -113,11 +113,11 @@ public class RegisterFragment2 extends Fragment {
                             if (editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString())) {
                                 passwordRepeatLayout.setError(null);
                             } else {
-                                passwordRepeatLayout.setError("Passwords did not match");
+                                passwordRepeatLayout.setError(getString(R.string.pass_not_match));
                             }
 
                             if (!(editTextPassword.getText().length() > 8)) {
-                                passwordLayout.setError("Password too short");
+                                passwordLayout.setError(getString(R.string.pass_short));
                             } else {
                                 passwordLayout.setError(null);
                             }

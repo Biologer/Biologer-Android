@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:iconSpaceReserved="false">
+
+    <PreferenceCategory
+        android:title="@string/preferences_user_settings"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="change_email"
+            android:title="@string/change_email"
+            android:summary="@string/change_email_desc"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:key="change_password"
+            android:title="@string/change_password"
+            android:summary="Lets you change the password linked with your account."
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:key="delete_account"
+            android:title="@string/delete_account"
+            android:summary="@string/delete_account_summary"
+            app:iconSpaceReserved="false"/>
+
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>
