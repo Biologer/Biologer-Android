@@ -312,7 +312,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         List<TaxaTranslationDb> nativeNames = query_taxon_translation.find();
                         query_taxon_translation.close();
 
-                        if (nativeNames.size() >= 1) {
+                        if (!nativeNames.isEmpty()) {
                             String native_name = nativeNames.get(0).getNativeName();
                             if (native_name != null) {
                                 TaxonDb taxon = latinNames.get(i);
@@ -501,7 +501,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             // Step 1: Get the preferences
             if (preferences.getBoolean("adult_by_default", false)) {
                 // If stage is already selected ignore this...
-                if (textViewStage.getText().toString().equals("")) {
+                if (textViewStage.getText().toString().isEmpty()) {
                     Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
                     Query<StageDb> query = stageBox
                             .query(StageDb_.name.equal("adult"))
@@ -811,10 +811,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         // Get other values
-        if (currentItem.get(0).getCauseOfDeath().length() != 0) {
+        if (!currentItem.get(0).getCauseOfDeath().isEmpty()) {
             editTextDeathComment.setText(currentItem.get(0).getCauseOfDeath());
         }
-        if (currentItem.get(0).getComment().length() != 0) {
+        if (!currentItem.get(0).getComment().isEmpty()) {
             editTextComment.setText(currentItem.get(0).getComment());
         }
         if (currentItem.get(0).getNoSpecimens() != null) {
@@ -1059,7 +1059,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (location_name == null) {
             saveEntry4(taxon);
         } else {
-            if (location_name.equals("")) {
+            if (location_name.isEmpty()) {
                 saveEntry4(taxon);
             } else {
                 Location old_location = new Location("");
@@ -1104,7 +1104,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     builder1.setCancelable(false);
                                     builder1.setPositiveButton("OK", (dialog1, which) -> {
                                         String new_location_name = input.getText().toString();
-                                        if (new_location_name.equals("")) {
+                                        if (new_location_name.isEmpty()) {
                                             SettingsManager.setPreviousLocationLong(null);
                                             SettingsManager.setPreviousLocationLat(null);
                                         }
@@ -1174,7 +1174,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     //  Gather all the data into the Entry and wright it into the GreenDao database.
     private void entrySaver(TaxonDb taxon, String specimens, String sex, int entry_id) {
         String comment = editTextComment.getText().toString();
-        Integer numberOfSpecimens = (!specimens.equals("")) ? Integer.valueOf(specimens) : null;
+        Integer numberOfSpecimens = (!specimens.isEmpty()) ? Integer.valueOf(specimens) : null;
         Long selectedStage = (textViewStage.getTag() != null) ? Long.parseLong(textViewStage.getTag().toString()) : null;
         String deathComment = (editTextDeathComment.getText() != null) ? editTextDeathComment.getText().toString() : "";
         String habitat = editTextHabitat.getText() != null ? editTextHabitat.getText().toString() : "";
@@ -1506,7 +1506,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Taking pictures from camera
     private final ActivityResultLauncher<Uri> takePictureFromCamera = registerForActivityResult(
             new ActivityResultContracts.TakePicture(),
-            new ActivityResultCallback<Boolean>() {
+            new ActivityResultCallback<>() {
                 @Override
                 public void onActivityResult(Boolean result) {
                     if (result) {
@@ -1570,7 +1570,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
+            new ActivityResultCallback<>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     locationManager.removeUpdates(locationListener);

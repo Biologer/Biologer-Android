@@ -442,7 +442,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                         if (t == 1) {
                             locale = "sr";
                         } else if (t == 2) {
-                            locale = "sr_Latn";
+                            locale = "sr-Latn";
                         } else if (t == 3) {
                             locale = "hr";
                         } else if (t == 4) {
