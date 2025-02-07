@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.os.LocaleListCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.EditTextPreference;
@@ -41,10 +42,8 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
-            Log.e(TAG, "Broadcast received something: ");
-
             if (intent != null) {
+                // This code is used to listen if download is successfully completed.
                 if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_COMPLETED)) {
                     String message = intent.getStringExtra(UpdateTaxa.EXTRA_TASK_COMPLETED);
                     if (message != null) {
@@ -58,9 +57,11 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                             preferenceButton.setSummary(getString(R.string.update_taxa_error));
                         }
                     }
-                } else if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_PERCENT)) {
+                }
+
+                // This code is used to listen how much data is downloaded (in %)
+                else if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_PERCENT)) {
                     int percent = intent.getIntExtra(UpdateTaxa.EXTRA_TASK_PERCENT, 0);
-                    Log.e(TAG, "Broadcast received percent: " +  percent);
                     if (percent == 0) {
                         preferenceButton.setEnabled(true);
                         preferenceButton.setSummary(getString(R.string.update_taxa_desc));
@@ -103,11 +104,20 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         if (taxaGroups != null) {
             taxaGroups.setOnPreferenceClickListener(preference -> {
                 Log.d(TAG, "Preferences for taxa groups clicked.");
-                fragment = new PreferencesTaxaGroupsFragment();
-                FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.add(R.id.content_frame, fragment);
-                fragmentTransaction.addToBackStack("taxa preferences");
-                fragmentTransaction.commit();
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        fragment = new PreferencesTaxaGroupsFragment();
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                        fragmentTransaction.add(R.id.content_frame, fragment);
+                        fragmentTransaction.addToBackStack("taxa preferences");
+                        fragmentTransaction.commit();
+                    });
+                } else {
+                    Log.e(TAG, "Activity is null in OnPreferenceClickListener!");
+                }
+
                 return true;
             });
         }
@@ -116,11 +126,20 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         if (accountSetup != null) {
             accountSetup.setOnPreferenceClickListener(preference -> {
                 Log.d(TAG, "Preferences for account setup clicked.");
-                fragment = new PreferencesAccountSetup();
-                FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.add(R.id.content_frame, fragment);
-                fragmentTransaction.addToBackStack("account preferences");
-                fragmentTransaction.commit();
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        fragment = new PreferencesAccountSetup();
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                        fragmentTransaction.add(R.id.content_frame, fragment);
+                        fragmentTransaction.addToBackStack("account preferences");
+                        fragmentTransaction.commit();
+                    });
+                } else {
+                    Log.e(TAG, "Activity is null in OnPreferenceClickListener!");
+                }
+
                 return true;
             });
         }
