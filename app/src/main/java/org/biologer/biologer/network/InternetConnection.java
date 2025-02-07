@@ -6,6 +6,8 @@ import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.preference.PreferenceManager;
+
 public class InternetConnection {
 
     private static final String TAG = "Biologer.Internet";
@@ -122,6 +124,31 @@ public class InternetConnection {
             }
             Log.d(TAG, "There is no internet connection.");
             return null;
+        }
+    }
+
+    public static boolean downloadEnabled(Context context) {
+        String network_type = networkType(context);
+        String how_to_use_network = PreferenceManager
+                .getDefaultSharedPreferences(context)
+                .getString("auto_download", "wifi");
+
+        if (network_type != null) {
+            if (InternetConnection.isConnected(context)) {
+                if (how_to_use_network.equals("all") ||
+                        (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
+                    return true;
+                } else {
+                    Log.d(TAG, "User preferences set to ask before download.");
+                    return false;
+                }
+            } else {
+                Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
+                return false;
+            }
+        } else {
+            Log.e(TAG, "Network type returned null. No internet connection.");
+            return false;
         }
     }
 }

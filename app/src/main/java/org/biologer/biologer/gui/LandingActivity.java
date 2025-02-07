@@ -499,6 +499,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             App.get().getBoxStore().boxFor(TaxonGroupsDb.class).put(final_taxa_groups);
             TaxonGroupsTranslationDb[] final_taxa_groups_translations = new TaxonGroupsTranslationDb[taxa_groups_translations.size()];
             taxa_groups_translations.toArray(final_taxa_groups_translations);
+            App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class).put(final_taxa_groups_translations);
 
             StageDb[] final_stages = new StageDb[stages_csv.size() - 1];
             for (int i = 1; i < stages_csv.size(); i++) {

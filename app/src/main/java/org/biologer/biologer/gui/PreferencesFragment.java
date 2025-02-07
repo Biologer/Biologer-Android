@@ -25,8 +25,6 @@ import androidx.preference.PreferenceScreen;
 import org.apache.commons.lang3.ArrayUtils;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.network.GetTaxaGroups;
-import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateTaxa;
 
@@ -89,16 +87,6 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
         PreferenceScreen preferenceScreen = getPreferenceScreen();
         Log.d(TAG, "Loading preferences fragment.");
         Log.i(TAG, "Configured locale set to: " + AppCompatDelegate.getApplicationLocales());
-
-        // Fetch taxa groups from server
-        Activity activity = getActivity();
-        if (activity != null) {
-            if (InternetConnection.isConnected(activity)) {
-                final Intent getTaxaGroups = new Intent(activity, GetTaxaGroups.class);
-                Activity getGroups = getActivity();
-                getGroups.startService(getTaxaGroups);
-            }
-        }
 
         PreferenceScreen taxaGroups = findPreference("species_groups");
         if (taxaGroups != null) {

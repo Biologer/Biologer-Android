@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.json.TaxaGroups;
 import org.biologer.biologer.network.json.TaxaGroupsResponse;
@@ -30,9 +31,8 @@ import retrofit2.Response;
 public class GetTaxaGroups extends Service {
 
     private static final String TAG = "Biologer.GetTaxaGroups";
-
-    static final String TASK_COMPLETED = "org.biologer.biologer.network.GetTaxaGroups.TASK_COMPLETED";
-
+    public static final String TASK_COMPLETED = "org.biologer.biologer.network.GetTaxaGroups.TASK_COMPLETED";
+    public static final String TASK_COMPLETED_MESSAGE = "org.biologer.biologer.network.GetTaxaGroups.TASK_COMPLETED_MESSAGE";
     LocalBroadcastManager broadcaster;
 
     @Override
@@ -59,7 +59,7 @@ public class GetTaxaGroups extends Service {
 
             if (database_url != null) {
                 Call<TaxaGroupsResponse> call = RetrofitClient.getService(database_url).getTaxaGroupsResponse();
-                call.enqueue(new Callback<TaxaGroupsResponse>() {
+                call.enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<TaxaGroupsResponse> call, @NonNull Response<TaxaGroupsResponse> response) {
                         if (response.isSuccessful()) {
@@ -74,6 +74,7 @@ public class GetTaxaGroups extends Service {
                     @Override
                     public void onFailure(@NonNull Call<TaxaGroupsResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Failed to get Taxa Groups from server " + t);
+                        sendResult(getString(R.string.error) + ": " + t);
                     }
                 });
             }
@@ -184,8 +185,8 @@ public class GetTaxaGroups extends Service {
     public void sendResult(String message) {
         Log.d(TAG, "Sending the result to broadcaster! Message: " + message + ".");
         Intent intent = new Intent(TASK_COMPLETED);
-        if(message != null)
-            intent.putExtra(TASK_COMPLETED, message);
+        if (message != null)
+            intent.putExtra(TASK_COMPLETED_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
     }
 
