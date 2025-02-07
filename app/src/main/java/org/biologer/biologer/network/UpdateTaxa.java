@@ -38,6 +38,9 @@ public class UpdateTaxa extends Service {
 
     private static final String TAG = "Biologer.UpdateTaxa";
     static final public String TASK_COMPLETED = "org.biologer.biologer.UpdateTaxa.TASK_COMPLETED";
+    static final public String EXTRA_TASK_COMPLETED = "org.biologer.biologer.UpdateTaxa.EXTRA_TASK_COMPLETED";
+    static final public String TASK_PERCENT = "org.biologer.biologer.UpdateTaxa.TASK_PERCENT";
+    static final public String EXTRA_TASK_PERCENT = "org.biologer.biologer.UpdateTaxa.EXTRA_TASK_PERCENT";
     public static final String ACTION_DOWNLOAD_FROM_FIRST = "ACTION_DOWNLOAD_FROM_FIRST";
     public static final String ACTION_DOWNLOAD = "ACTION_DOWNLOAD";
     public static final String ACTION_STOP = "ACTION_STOP";
@@ -152,7 +155,7 @@ public class UpdateTaxa extends Service {
             @Override
             public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-                sendResult("failed");
+                broadcastResult("failed");
                 stopSelf();
             }
         });
@@ -161,7 +164,9 @@ public class UpdateTaxa extends Service {
 
     private void saveFetchedPage(TaxaResponse taxaResponse, int page) {
         int last_page = taxaResponse.getMeta().getLastPage();
-        Log.i(TAG, "Page " + page + " downloaded, total " + last_page + " pages");
+        int percent = (page * 100 ) / last_page;
+        broadcastPercent(percent);
+        Log.i(TAG, "Page " + page + " downloaded, total " + last_page + " pages (" + percent + "%).");
 
         List<TaxaData> taxaData = taxaResponse.getData();
 
@@ -170,7 +175,7 @@ public class UpdateTaxa extends Service {
             TaxaData taxon = taxaData.get(i);
             long taxon_id = taxon.getId();
             String taxon_latin_name = taxon.getName();
-            Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
+            //Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
 
             List<TaxaStages> stages = taxon.getStages();
             StageDb[] final_stages = new StageDb[stages.size()];
@@ -225,7 +230,7 @@ public class UpdateTaxa extends Service {
         // loader. Otherwise we continue fetching taxa from the API on the next page.
         if (page == last_page) {
             Log.i(TAG, "All taxa were successfully updated from the server!");
-            sendResult("success");
+            broadcastResult("success");
             // Set the preference to know when the taxonomic data was updates
             SettingsManager.setTaxaUpdatedAt(timestamp);
             SettingsManager.setTaxaLastPageFetched("1");
@@ -239,12 +244,24 @@ public class UpdateTaxa extends Service {
     }
 
     public static boolean isInstanceCreated() {
-        return instance == null;
+        return instance != null;
     }
 
-    public void sendResult(String message) {
+    public void broadcastResult(String message) {
         Intent intent = new Intent(TASK_COMPLETED);
-        intent.putExtra(TASK_COMPLETED, message);
+        intent.putExtra(EXTRA_TASK_COMPLETED, message);
         broadcastManager.sendBroadcast(intent);
+    }
+
+    public void broadcastPercent(int percent) {
+        Intent intent = new Intent(TASK_PERCENT);
+        intent.putExtra(EXTRA_TASK_PERCENT, percent);
+        broadcastManager.sendBroadcast(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        instance = null;
     }
 }

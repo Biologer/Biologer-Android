@@ -30,6 +30,7 @@ import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateTaxa;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class PreferencesFragment extends PreferenceFragmentCompat {
 
@@ -40,14 +41,33 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     private final BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            Log.e(TAG, "Broadcast received something: ");
+
             if (intent != null) {
-                String message = intent.getStringExtra("org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED");
-                if (message != null) {
-                    Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
-                    if (message.equals("fetched") || message.equals("paused") || message.equals("canceled")) {
-                        Log.d(TAG, "Re-enabling preferences entry for fetching taxa.");
+                if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_COMPLETED)) {
+                    String message = intent.getStringExtra(UpdateTaxa.EXTRA_TASK_COMPLETED);
+                    if (message != null) {
+                        Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
+                        if (message.equals("success")) {
+                            Log.d(TAG, "Re-enabling preferences entry for fetching taxa.");
+                            preferenceButton.setEnabled(true);
+                            preferenceButton.setSummary(getString(R.string.update_taxa_desc));
+                        } else if (message.equals("failed")) {
+                            preferenceButton.setEnabled(true);
+                            preferenceButton.setSummary(getString(R.string.update_taxa_error));
+                        }
+                    }
+                } else if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_PERCENT)) {
+                    int percent = intent.getIntExtra(UpdateTaxa.EXTRA_TASK_PERCENT, 0);
+                    Log.e(TAG, "Broadcast received percent: " +  percent);
+                    if (percent == 0) {
                         preferenceButton.setEnabled(true);
                         preferenceButton.setSummary(getString(R.string.update_taxa_desc));
+                    } else {
+                        preferenceButton.setEnabled(false);
+                        preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient) +
+                                " " + getString(R.string.currently_downloaded) + " " + percent + "%.");
                     }
                 }
             }
@@ -200,13 +220,14 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
 
     private void toggleFetchTaxaButton(Preference preference) {
         // If already fetching taxa disable the fetch taxa button
-        assert preference != null;
-        if (UpdateTaxa.isInstanceCreated()) {
-            preference.setEnabled(false);
-            preference.setSummary(getString(R.string.updating_taxa_be_patient));
-        } else {
-            preference.setEnabled(true);
-            preference.setSummary(getString(R.string.update_taxa_desc));
+        if (preference != null) {
+            if (UpdateTaxa.isInstanceCreated()) {
+                preference.setEnabled(false);
+                preference.setSummary(getString(R.string.updating_taxa_be_patient));
+            } else {
+                preference.setEnabled(true);
+                preference.setSummary(getString(R.string.update_taxa_desc));
+            }
         }
     }
 
@@ -308,8 +329,10 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
     public void onResume() {
         super.onResume();
         if (getActivity() != null) {
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
-                    new IntentFilter("org.biologer.biologer.network.FetchTaxa.TASK_COMPLETED"));
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(UpdateTaxa.TASK_COMPLETED);
+            filter.addAction(UpdateTaxa.TASK_PERCENT);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, filter);
         }
         Log.d(TAG, "Resuming Preferences Fragment.");
         toggleFetchTaxaButton(preferenceButton);

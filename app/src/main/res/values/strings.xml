@@ -470,5 +470,7 @@
     <string name="error_pass_changed_desc2">Email address could not be changed. Callback failed with error message:</string>
     <string name="show_password">Show password</string>
     <string name="hide_password">Hide password</string>
+    <string name="update_taxa_error">Something went wrong when downloading taxa! Please check the internet connection and try again.</string>
+    <string name="currently_downloaded">Currently downloaded</string>
 
 </resources>
