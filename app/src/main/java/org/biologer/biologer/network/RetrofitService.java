@@ -125,6 +125,11 @@ public interface RetrofitService {
             @Query("all[]") boolean read_all);
 
     @Headers({"Accept: application/json" })
+    @POST("/api/password/forgot")
+    Call<ResponseBody> resetForgottenPassword(
+            @Query("email") String email);
+
+    @Headers({"Accept: application/json" })
     @DELETE("/api/users/{user_id}")
     Call<ResponseBody> deleteUser(
             @Path("user_id") long userId,

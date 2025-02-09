@@ -472,5 +472,14 @@
     <string name="hide_password">Hide password</string>
     <string name="update_taxa_error">Something went wrong when downloading taxa! Please check the internet connection and try again.</string>
     <string name="currently_downloaded">Currently downloaded</string>
+    <string name="send_email">Send email</string>
+    <string name="change_password_dialog">Change password</string>
+    <string name="change_pass_msg1">You can change the password by entering email address of your user account</string>
+    <string name="change_pass_msg2">Biologer will email you the link to be used for setting a new password</string>
+    <string name="success_check_email">Success! Check your email.</string>
+    <string name="failed_code">"Failed! Code: "</string>
+    <string name="no_account_with_this_email">No account with this email!</string>
+    <string name="email_mistyped">Email mistyped</string>
+    <string name="enter_your_email">Enter your email</string>
 
 </resources>

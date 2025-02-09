@@ -3,7 +3,6 @@ package org.biologer.biologer.gui;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -57,6 +56,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.objectbox.Box;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -64,19 +64,15 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Login";
-
     int retry_login = 1;
-
     Handler handler = new Handler(Looper.getMainLooper());
     Runnable runnable;
-
     EditText et_username, et_password;
     TextInputLayout til_username, til_password;
     TextView tv_devDatabase, forgotPassTextView;
     Button loginButton;
     public String database_name;
     ProgressBar progressBar;
-
     String old_username, old_password,
             register_name, register_surname, register_institution;
     static String[] allDatabases = {"https://biologer.rs",
@@ -185,10 +181,6 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
                         setEmailError();
                         enableButton();
 
@@ -198,6 +190,10 @@ public class LoginActivity extends AppCompatActivity {
                                 SettingsManager.deleteAccessToken();
                             }
                         }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
                     }
                 });
             }
@@ -217,10 +213,6 @@ public class LoginActivity extends AppCompatActivity {
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
                         setPasswordError();
                         enableButton();
 
@@ -230,6 +222,10 @@ public class LoginActivity extends AppCompatActivity {
                                 SettingsManager.deleteAccessToken();
                             }
                         }
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
                     }
                 });
             }
@@ -242,10 +238,6 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
                 Log.d(TAG, "Listening on password changes.");
                 handler.removeCallbacks(runnable);
                 runnable = () -> {
@@ -253,6 +245,10 @@ public class LoginActivity extends AppCompatActivity {
                     enableButton();
                 };
                 handler.postDelayed(runnable, 1500);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
 
@@ -263,10 +259,6 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
                 Log.d(TAG, "Listening on email changes.");
                 handler.removeCallbacks(runnable);
                 runnable = () -> {
@@ -274,6 +266,10 @@ public class LoginActivity extends AppCompatActivity {
                     enableButton();
                 };
                 handler.postDelayed(runnable, 1500);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
             }
         });
 
@@ -335,7 +331,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void setPasswordError() {
-        if (et_password.getText().length() < 8) {
+        int passwordLength = et_password.getText().length();
+
+        if (passwordLength == 0) {
+            til_password.setError(null);
+        } else if (passwordLength < 8) {
             til_password.setError(getString(R.string.password_too_short));
         } else {
             til_password.setError(null);
@@ -582,12 +582,91 @@ public class LoginActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
-    // TODO app crashes if there is no browser with ActivityNotFoundException
     public void onForgotPass(View view) {
-        String url = SettingsManager.getDatabaseName() + "/password/reset";
-        Intent defaultBrowser = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER);
-        defaultBrowser.setData(Uri.parse(url));
-        startActivity(defaultBrowser);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_reset_email, null);
+        builder.setView(dialogView);
+
+        EditText editTextEmail = dialogView.findViewById(R.id.dialog_edit_text);
+
+        builder.setTitle(getString(R.string.change_password_dialog));
+        builder.setMessage(getString(R.string.change_pass_msg1) + ". " +
+                getString(R.string.change_pass_msg2) + ".");
+        builder.setPositiveButton(getString(R.string.send_email), null);
+        builder.setNegativeButton(getString(R.string.cancel), (dialogInterface, id) -> dialogInterface.cancel());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setEnabled(false);
+
+        positiveButton.setOnClickListener(v -> {
+            String emailText = editTextEmail.getText().toString();
+            Call<ResponseBody> resetForgottenPassword = RetrofitClient.getService(database_name).resetForgottenPassword(emailText);
+            resetForgottenPassword.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getApplicationContext(), getString(R.string.success_check_email), Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "Link to change email is sent to " + editTextEmail.getText().toString() +
+                                ". Code: " + response.code());
+                        et_password.setText("");
+                        til_password.setError(null);
+                        til_username.setError(null);
+                        dialog.dismiss();
+                    } else {
+                        Log.e(TAG, "Password change failed with okhttp code " + response.code());
+                        if (response.code() == 400) {
+                            Log.e(TAG, "Email address does not exist online!");
+                            editTextEmail.setError(getString(R.string.no_account_with_this_email));
+                            positiveButton.setEnabled(false);
+                        } else {
+                            String error = getString(R.string.failed_code) + response.code();
+                            editTextEmail.setError(error);
+                            positiveButton.setEnabled(false);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                    Toast.makeText(getApplicationContext(), "Error: " + t, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "Password change error: " + t);
+                    dialog.dismiss();
+                }
+            });
+        });
+
+        editTextEmail.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                handler.removeCallbacks(runnable);
+                runnable = () -> {
+                    // Set the error if email is mistyped
+                    if (isValidEmail(editTextEmail.getText().toString())) {
+                        editTextEmail.setError(null);
+                    } else {
+                        editTextEmail.setError(getString(R.string.email_mistyped));
+                    }
+                    // Enable/disable the button
+                    Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    if (positiveButton != null) {
+                        positiveButton.setEnabled(isValidEmail(editTextEmail.getText().toString()));
+                    }
+                };
+                handler.postDelayed(runnable, 1500);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
     }
 
     /*
@@ -600,7 +679,6 @@ public class LoginActivity extends AppCompatActivity {
             case "https://biologer.ba" -> BuildConfig.BiologerBA_Key;
             case "https://biologer.rs" -> BuildConfig.BiologerRS_Key;
             case "https://biologer.me" -> BuildConfig.BiologerME_Key;
-            case "https://birdloger.biologer.org" -> BuildConfig.Birdloger_Key;
             case "https://dev.biologer.org" -> BuildConfig.BiologerDEV_Key;
             case "https://biologer.hr" -> BuildConfig.BiologerHR_Key;
             default -> null;
@@ -609,12 +687,9 @@ public class LoginActivity extends AppCompatActivity {
 
     public String getClientIdForDatabase(String database) {
         return switch (database) {
-            case "https://biologer.ba" -> "2";
-            case "https://biologer.rs" -> "2";
-            case "https://biologer.me" -> "2";
-            case "https://birdloger.biologer.org" -> "3";
+            case "https://biologer.ba", "https://biologer.rs", "https://biologer.me",
+                 "https://biologer.hr" -> "2";
             case "https://dev.biologer.org" -> "6";
-            case "https://biologer.hr" -> "2";
             default -> null;
         };
     }
