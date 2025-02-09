@@ -26,10 +26,8 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ArrayHelper;
 import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.json.APIEntry;
-import org.biologer.biologer.network.json.APIEntryBirdloger;
 import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
-import org.biologer.biologer.network.json.APIEntryResponseBirdloger;
 import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
 
@@ -169,7 +167,7 @@ public class UploadRecords extends Service {
         images_array.clear();
 
         // When all entries are uploaded
-        if (entryList.size() == 0) {
+        if (entryList.isEmpty()) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
             App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
             //App.get().getDaoSession().getEntryDao().deleteAll();
@@ -223,15 +221,6 @@ public class UploadRecords extends Service {
     // Checks weather to upload data on Birdloger or standard Biologer
     private void uploadStep2() {
         Log.d(TAG, "Upload data step 2 started...");
-        if (SettingsManager.getDatabaseName().equals("https://birdloger.biologer.org")) {
-            uploadStep2Birdloger();
-        } else {
-            uploadStep2Biologer();
-        }
-    }
-
-    // Upload records one by one
-    private void uploadStep2Biologer() {
         APIEntry apiEntry = new APIEntry();
         photos = new ArrayList<>();
         // Create apiEntry object
@@ -290,11 +279,11 @@ public class UploadRecords extends Service {
             String s = mapper.writeValueAsString(apiEntry);
             Log.i(TAG, "Upload Entry " + s);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error converting object to JSON: ", e);
         }
 
         Call<APIEntryResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<APIEntryResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
 
@@ -353,143 +342,6 @@ public class UploadRecords extends Service {
         });
     }
 
-    private void uploadStep2Birdloger() {
-        APIEntryBirdloger apiEntry = new APIEntryBirdloger();
-        photos = new ArrayList<>();
-        // Create apiEntry object
-        EntryDb entryDb = entryList.get(0);
-        if (entryDb.getTaxonId() != 0) {
-            apiEntry.setTaxonId((int) entryDb.getTaxonId());
-        } else {
-            apiEntry.setTaxonId(null);
-        }
-        apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
-        apiEntry.setYear(entryDb.getYear());
-        apiEntry.setMonth(entryDb.getMonth());
-        apiEntry.setDay(entryDb.getDay());
-        apiEntry.setLatitude(entryDb.getLattitude());
-        apiEntry.setLongitude(entryDb.getLongitude());
-        if (entryDb.getAccuracy() == 0.0) {
-            apiEntry.setAccuracy(null);
-        } else {
-            apiEntry.setAccuracy((int) entryDb.getAccuracy());
-        }
-        apiEntry.setLocation(entryDb.getLocation());
-        apiEntry.setElevation((int) entryDb.getElevation());
-        apiEntry.setNote(entryDb.getComment());
-        String sex = entryDb.getSex();
-        if (sex.equals("")) {
-            apiEntry.setSex(null);
-        } else {
-            apiEntry.setSex(sex);
-        }
-        apiEntry.setNumber(entryDb.getNoSpecimens());
-        apiEntry.setProject(entryDb.getProjectId());
-        apiEntry.setLocation(entryDb.getLocation());
-        apiEntry.setFoundOn(entryDb.getFoundOn());
-        apiEntry.setStageId(entryDb.getStage());
-        apiEntry.setAtlasCode(entryDb.getAtlasCode());
-        apiEntry.setFoundDead(!entryDb.getDeadOrAlive().equals("true"));
-        apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
-        apiEntry.setDataLicense(null);
-        apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
-        // Handle situations when observation types are not downloaded from server
-        if (observation_types == null) {
-            Log.e(TAG, "Observation types are null!");
-            int[] null_observation_types = new int[1];
-            null_observation_types[0] = 1;
-            apiEntry.setTypes(null_observation_types);
-        } else {
-            apiEntry.setTypes(observation_types);
-        }
-        for (int i = 0; i < n; i++) {
-            APIEntryPhotos p = new APIEntryPhotos();
-            p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImageLicence());
-            photos.add(p);
-        }
-        apiEntry.setPhotos(photos);
-        apiEntry.setHabitat(entryDb.getHabitat());
-        apiEntry.setObserver("");
-        apiEntry.setIdentifier("");
-        apiEntry.setNote("");
-        apiEntry.setNumberOf("individual");
-        String[] empty = {};
-        apiEntry.setTypesField(empty);
-        apiEntry.setObservers(empty);
-        List<APIEntryBirdloger.FieldObservers> observers = new ArrayList<>();
-        apiEntry.setFieldObservers(observers);
-        apiEntry.setDescription("");
-        apiEntry.setComment("");
-        apiEntry.setFid("");
-        apiEntry.setDataLimit("");
-        apiEntry.setIdentifiedById(1);
-
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            String s = mapper.writeValueAsString(apiEntry);
-            Log.i(TAG, "Upload Entry " + s);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        Call<APIEntryResponseBirdloger> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<APIEntryResponseBirdloger>() {
-            @Override
-            public void onResponse(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Response<APIEntryResponseBirdloger> response) {
-
-                // Retry if server deny your access
-                if (response.code() == 429) {
-                    String retry_after = response.headers().get("Retry-After");
-                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
-                    if (retry_after != null) {
-                        int wait = Integer.parseInt(retry_after) * 1000;
-                        SystemClock.sleep(wait);
-                        uploadStep2();
-                    }
-                }
-
-                if (response.isSuccessful()) {
-                    if (keep_going) {
-                        // Wait... Don’t send too many requests to the server!
-                        SystemClock.sleep(300);
-                        // Delete uploaded entry
-                        App.get().getBoxStore().boxFor(EntryDb.class).remove(entryDb);
-                        if (!entryList.isEmpty()) {
-                            sendResult("id_uploaded", entryList.get(0).getId());
-                            entryList.remove(0);
-                        }
-
-                        // Delete image files from internal storage
-                        for (String filename : filenames) {
-                            if (filename != null) {
-                                final File file = new File(getFilesDir(), filename);
-                                boolean b = file.delete();
-                                Log.d(TAG, "Deleting image " + filename + " returned: " + b);
-                            }
-                        }
-                        filenames = new String[3];
-                        // Reset the counter
-                        m = 0;
-                        // All done! Upload next entry :)
-                        uploadStep1();
-                    } else {
-                        Log.i(TAG, "Uploading has bean canceled by the user.");
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<APIEntryResponseBirdloger> call, @NonNull Throwable t) {
-                Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
-                cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry", 0);
-                stopSelf();
-            }
-        });
-    }
-
     private void uploadPhoto(File image) {
         Log.i(TAG, "Opening image from the path: " + image.getAbsolutePath() + ".");
 
@@ -498,7 +350,7 @@ public class UploadRecords extends Service {
 
         Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
 
-        call.enqueue(new Callback<UploadFileResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
