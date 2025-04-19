@@ -575,9 +575,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onRegister(View view) {
+        LinearLayout linearLayout = findViewById(R.id.login_layout);
+        linearLayout.setVisibility(View.GONE);
         Fragment fragment = new RegisterFragment1();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.login_layout, fragment);
+        fragmentTransaction.replace(R.id.login_container, fragment);
         fragmentTransaction.addToBackStack("Register fragment 1");
         fragmentTransaction.commit();
     }
@@ -700,6 +702,10 @@ public class LoginActivity extends AppCompatActivity {
         if (fragments.isEmpty()) {
             finishAffinity();
         } else {
+            if (fragments.size() == 1) {
+                LinearLayout linearLayout = findViewById(R.id.login_layout);
+                linearLayout.setVisibility(View.VISIBLE);
+            }
             getSupportFragmentManager().popBackStack();
         }
     }

@@ -31,11 +31,70 @@ public class RegisterFragment2 extends Fragment {
     Button buttonNext;
     EditText editTextEmail, editTextPassword, editTextPasswordRepeat;
     TextInputLayout emailLayout, passwordLayout, passwordRepeatLayout;
-    
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_register2, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        buttonNext = view.findViewById(R.id.buttonRegisterNext2);
+        buttonNext.setOnClickListener(this::onNextClicked);
+        buttonNext.setEnabled(false);
+
+        editTextEmail = view.findViewById(R.id.editText_register_email);
+        emailLayout = view.findViewById(R.id.editTextLayout_register_email);
+        editTextPassword = view.findViewById(R.id.editText_register_password);
+        passwordLayout = view.findViewById(R.id.editTextLayout_register_password);
+        editTextPasswordRepeat = view.findViewById(R.id.editText_register_password_confirm);
+        passwordRepeatLayout = view.findViewById(R.id.editTextLayout_register_password_confirm);
+
+        Activity activity = getActivity();
+        if (activity != null) {
+            editTextEmail.setText(((LoginActivity) activity).et_username.getText().toString());
+            editTextPassword.setText(((LoginActivity) activity).et_password.getText().toString());
+
+            ImageView imageViewShowPassword = activity.findViewById(R.id.show_password_icon_type);
+            imageViewShowPassword.setOnClickListener(view1 -> {
+                int inputType = editTextPassword.getInputType();
+                if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                    imageViewShowPassword.setImageResource(R.drawable.eye_open);
+                    editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
+                } else {
+                    imageViewShowPassword.setImageResource(R.drawable.eye_closed);
+                    editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    imageViewShowPassword.setContentDescription(getString(R.string.show_password));
+                }
+                editTextPassword.setSelection(editTextPassword.getText().length());
+            });
+
+            ImageView imageViewShowPasswordRepeat = activity.findViewById(R.id.show_password_icon_retype);
+            imageViewShowPasswordRepeat.setOnClickListener(view2 -> {
+                int inputType = editTextPasswordRepeat.getInputType();
+                if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                    imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_open);
+                    editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    imageViewShowPasswordRepeat.setContentDescription(getString(R.string.hide_password));
+                } else {
+                    imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_closed);
+                    editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    imageViewShowPasswordRepeat.setContentDescription(getString(R.string.show_password));
+                }
+                editTextPasswordRepeat.setSelection(editTextPasswordRepeat.getText().length());
+            });
+        }
+
+        validateFields();
+
     }
 
     @Override
@@ -44,25 +103,9 @@ public class RegisterFragment2 extends Fragment {
 
         View view = getView();
         if (view != null) {
-
+            enableButton();
             Activity activity = getActivity();
             if (activity != null) {
-
-                buttonNext = activity.findViewById(R.id.buttonRegisterNext2);
-                buttonNext.setOnClickListener(this::onNextClicked);
-                buttonNext.setEnabled(false);
-
-                editTextEmail = activity.findViewById(R.id.editText_register_email);
-                emailLayout = activity.findViewById(R.id.editTextLayout_register_email);
-                editTextPassword = activity.findViewById(R.id.editText_register_password);
-                passwordLayout = activity.findViewById(R.id.editTextLayout_register_password);
-                editTextPasswordRepeat = activity.findViewById(R.id.editText_register_password_confirm);
-                passwordRepeatLayout = activity.findViewById(R.id.editTextLayout_register_password_confirm);
-
-                editTextEmail.setText(((LoginActivity)activity).et_username.getText().toString());
-                editTextPassword.setText(((LoginActivity)activity).et_password.getText().toString());
-
-                enableButton();
 
                 editTextPassword.addTextChangedListener(new TextWatcher() {
                     @Override
@@ -75,8 +118,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
-                        ((LoginActivity)activity).runnable = () -> {
+                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
+                        ((LoginActivity) activity).runnable = () -> {
                             if (!(editTextPassword.getText().length() > 8)) {
                                 passwordLayout.setError(getString(R.string.pass_short));
                             } else {
@@ -95,7 +138,7 @@ public class RegisterFragment2 extends Fragment {
 
                             enableButton();
                         };
-                        ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);
+                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
                     }
                 });
 
@@ -110,8 +153,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
-                        ((LoginActivity)activity).runnable = () -> {
+                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
+                        ((LoginActivity) activity).runnable = () -> {
                             if (editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString())) {
                                 passwordRepeatLayout.setError(null);
                             } else {
@@ -126,7 +169,7 @@ public class RegisterFragment2 extends Fragment {
 
                             enableButton();
                         };
-                        ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);
+                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
                     }
                 });
 
@@ -153,66 +196,57 @@ public class RegisterFragment2 extends Fragment {
                         ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
                     }
                 });
-
-                ImageView imageViewShowPassword = activity.findViewById(R.id.show_password_icon_type);
-                imageViewShowPassword.setOnClickListener(view1 -> {
-                    int inputType = editTextPassword.getInputType();
-                    if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
-                        imageViewShowPassword.setImageResource(R.drawable.eye_open);
-                        editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
-                                | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                        imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
-                    } else {
-                        imageViewShowPassword.setImageResource(R.drawable.eye_closed);
-                        editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
-                                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                        imageViewShowPassword.setContentDescription(getString(R.string.show_password));
-                    }
-                    editTextPassword.setSelection(editTextPassword.getText().length());
-                });
-
-                ImageView imageViewShowPasswordRepeat = activity.findViewById(R.id.show_password_icon_retype);
-                imageViewShowPasswordRepeat.setOnClickListener(view2 -> {
-                    int inputType = editTextPasswordRepeat.getInputType();
-                    if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
-                        imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_open);
-                        editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
-                                | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                        imageViewShowPasswordRepeat.setContentDescription(getString(R.string.hide_password));
-                    } else {
-                        imageViewShowPasswordRepeat.setImageResource(R.drawable.eye_closed);
-                        editTextPasswordRepeat.setInputType(InputType.TYPE_CLASS_TEXT
-                                | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                        imageViewShowPasswordRepeat.setContentDescription(getString(R.string.show_password));
-                    }
-                    editTextPasswordRepeat.setSelection(editTextPasswordRepeat.getText().length());
-                });
-
             }
-            
         }
-        
+
     }
 
+
     private void onNextClicked(View view) {
-            ((LoginActivity) requireActivity()).et_username.setText(editTextEmail.getText().toString());
-            ((LoginActivity) requireActivity()).et_password.setText(editTextPassword.getText().toString());
+        ((LoginActivity) requireActivity()).et_username.setText(editTextEmail.getText().toString());
+        ((LoginActivity) requireActivity()).et_password.setText(editTextPassword.getText().toString());
 
-            Log.d(TAG, "Registering with email address: " + editTextEmail.getText().toString());
+        Log.d(TAG, "Registering with email address: " + editTextEmail.getText().toString());
 
-            Fragment fragment = new RegisterFragment3();
-            FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.login_layout, fragment);
-            fragmentTransaction.addToBackStack("Register fragment 3");
-            fragmentTransaction.commit();
+        Fragment fragment = new RegisterFragment3();
+        FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.login_container, fragment);
+        fragmentTransaction.addToBackStack("Register fragment 3");
+        fragmentTransaction.commit();
 
+    }
+
+    private void validateFields() {
+        String email = editTextEmail.getText().toString();
+        String password = editTextPassword.getText().toString();
+        String passwordRepeat = editTextPasswordRepeat.getText().toString();
+
+        if (email.isEmpty()) {
+            emailLayout.setError(null);
+        } else if (isValidEmail(email)) {
+            emailLayout.setError(null);
+        } else {
+            emailLayout.setError(getString(R.string.invalid_email));
+        }
+
+        if (password.isEmpty() || password.length() > 8) {
+            passwordLayout.setError(null);
+        } else {
+            passwordLayout.setError(getString(R.string.pass_short));
+        }
+
+        if (!password.equals(passwordRepeat) && !passwordRepeat.isEmpty()) {
+            passwordRepeatLayout.setError(getString(R.string.pass_not_match));
+        }
+
+        enableButton();
     }
 
     private void enableButton() {
         buttonNext.setEnabled(
                 editTextPassword.getText().length() > 8 &&
-                editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString()) &&
-                isValidEmail(editTextEmail.getText().toString()));
+                        editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString()) &&
+                        isValidEmail(editTextEmail.getText().toString()));
     }
 
     public static boolean isValidEmail(CharSequence target) {

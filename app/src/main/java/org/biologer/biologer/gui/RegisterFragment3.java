@@ -60,6 +60,21 @@ public class RegisterFragment3 extends Fragment {
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        buttonRegister = view.findViewById(R.id.buttonRegisterUser);
+        buttonRegister.setOnClickListener(this::onRegisterClicked);
+        buttonRegister.setEnabled(false);
+
+        checkBox = view.findViewById(R.id.checkBox_privacy_policy);
+        dataLicense = view.findViewById(R.id.autoComplete_register_dataLicense);
+        imageLicense = view.findViewById(R.id.autoComplete_register_imageLicense);
+        textViewError = view.findViewById(R.id.register_error_into_text);
+
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -68,10 +83,6 @@ public class RegisterFragment3 extends Fragment {
 
             Activity activity = getActivity();
             if (activity != null) {
-
-                buttonRegister = activity.findViewById(R.id.buttonRegisterUser);
-                buttonRegister.setOnClickListener(this::onRegisterClicked);
-                buttonRegister.setEnabled(false);
 
                 // Privacy policy text
                 TextView textViewPrivacy = activity.findViewById(R.id.register_privacy_general_info);
@@ -131,11 +142,6 @@ public class RegisterFragment3 extends Fragment {
                 textViewLicense.setText(spannableStringLicense);
                 textViewLicense.setMovementMethod(LinkMovementMethod.getInstance());
                 textViewLicense.setHighlightColor(Color.TRANSPARENT);
-
-                checkBox = activity.findViewById(R.id.checkBox_privacy_policy);
-                dataLicense = activity.findViewById(R.id.autoComplete_register_dataLicense);
-                imageLicense = activity.findViewById(R.id.autoComplete_register_imageLicense);
-                textViewError = activity.findViewById(R.id.register_error_into_text);
 
                 enableButton();
 

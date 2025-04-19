@@ -42,6 +42,29 @@ public class RegisterFragment1 extends Fragment {
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        buttonNext = view.findViewById(R.id.buttonRegisterNext1);
+        buttonNext.setOnClickListener(this::onNextClicked);
+        buttonNext.setEnabled(false);
+
+        editTextName = view.findViewById(R.id.editText_given_name);
+        nameLayout = view.findViewById(R.id.editTextLayout_given_name);
+        editTextSurname = view.findViewById(R.id.editText_family_name);
+        surnameLayout = view.findViewById(R.id.editTextLayout_family_name);
+        editTextInstitution = view.findViewById(R.id.editText_institution_name);
+
+        textViewDatabaseText = view.findViewById(R.id.register_database_text);
+
+        textViewDatabaseInfo = view.findViewById(R.id.register_database_description);
+
+        enableButton();
+
+        rightArrow = view.findViewById(R.id.register_right_arrow);
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
 
@@ -51,23 +74,7 @@ public class RegisterFragment1 extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
-                buttonNext = activity.findViewById(R.id.buttonRegisterNext1);
-                buttonNext.setOnClickListener(this::onNextClicked);
-                buttonNext.setEnabled(false);
 
-                editTextName = activity.findViewById(R.id.editText_given_name);
-                nameLayout = activity.findViewById(R.id.editTextLayout_given_name);
-                editTextSurname = activity.findViewById(R.id.editText_family_name);
-                surnameLayout = activity.findViewById(R.id.editTextLayout_family_name);
-                editTextInstitution = activity.findViewById(R.id.editText_institution_name);
-
-                textViewDatabaseText = activity.findViewById(R.id.register_database_text);
-
-                textViewDatabaseInfo = activity.findViewById(R.id.register_database_description);
-
-                enableButton();
-
-                rightArrow = activity.findViewById(R.id.register_right_arrow);
                 rightArrow.setOnClickListener(view1 -> {
                     String current_database = ((LoginActivity) requireActivity()).database_name;
                     String[] databases = LoginActivity.allDatabases;
@@ -177,19 +184,19 @@ public class RegisterFragment1 extends Fragment {
 
     private void onNextClicked(View view) {
 
-            ((LoginActivity) requireActivity()).register_name = editTextName.getText().toString();
-            ((LoginActivity) requireActivity()).register_surname = editTextSurname.getText().toString();
-            ((LoginActivity) requireActivity()).register_institution = editTextInstitution.getText().toString();
+        ((LoginActivity) requireActivity()).register_name = editTextName.getText().toString();
+        ((LoginActivity) requireActivity()).register_surname = editTextSurname.getText().toString();
+        ((LoginActivity) requireActivity()).register_institution = editTextInstitution.getText().toString();
 
-            Log.d(TAG, "Registering as " +
-                    editTextName.getText().toString() + " " +
-                    editTextSurname.getText().toString() + " (from " +
-                    editTextInstitution.getText().toString() + ").");
+        Log.d(TAG, "Registering as " +
+                editTextName.getText().toString() + " " +
+                editTextSurname.getText().toString() + " (from " +
+                editTextInstitution.getText().toString() + ").");
 
-            Fragment fragment = new RegisterFragment2();
-            FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.login_layout, fragment);
-            fragmentTransaction.addToBackStack("Register fragment 2");
-            fragmentTransaction.commit();
+        Fragment fragment = new RegisterFragment2();
+        FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.login_container, fragment);
+        fragmentTransaction.addToBackStack("Register fragment 2");
+        fragmentTransaction.commit();
     }
 }
