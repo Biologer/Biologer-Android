@@ -1,16 +1,14 @@
 package org.biologer.biologer;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.preference.PreferenceManager;
 
-/**
- * Created by brjovanovic on 12/24/2017.
- */
-
 public class SettingsManager {
 
-    private static final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
+    private static SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
+    private static final String PREFERENCES_NAME = "biologer_prefs";
 
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
@@ -18,6 +16,13 @@ public class SettingsManager {
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
     }
+
+    public static void init(Context context) {
+        if (sharedPreferences == null) {
+            sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+        }
+    }
+
 
     public static void deleteAccessToken() {
         SharedPreferences.Editor editor = sharedPreferences.edit();

@@ -26,6 +26,9 @@ public class App extends MultiDexApplication {
 
         initializeBoxStore();
 
+        // Initialize settings trying to fix an error with missing database name
+        SettingsManager.init(getApplicationContext());
+
         // Create Notification channel in order to send notification to android API 26+
         createNotificationChannelEntries();
         createNotificationChannelUnreadNotifications();

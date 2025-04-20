@@ -336,7 +336,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         String network_type = InternetConnection.networkType(this);
         if (network_type != null) {
             updateLicenses();
-            UpdateObservationTypes.updateObservationTypes();
+            UpdateObservationTypes.updateObservationTypes(database_url);
 
             // Check if notifications are enabled and download/upload data
             if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {

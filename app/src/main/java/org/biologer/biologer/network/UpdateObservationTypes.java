@@ -20,12 +20,13 @@ public class UpdateObservationTypes {
 
     private static final String TAG = "Biologer.ObsTypes";
 
-    public static void updateObservationTypes() {
+    public static void updateObservationTypes(String database_url) {
         String system_time = String.valueOf(System.currentTimeMillis()/1000);
         String updated_at = SettingsManager.getObservationTypesUpdated();
 
-        Call<ObservationTypesResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getObservationTypes(Integer.parseInt(updated_at));
+        Call<ObservationTypesResponse> call = RetrofitClient
+                .getService(database_url)
+                .getObservationTypes(Integer.parseInt(updated_at));
         call.enqueue(new Callback<>() {
 
             @Override
