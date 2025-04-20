@@ -306,9 +306,7 @@ public class UploadRecords extends Service {
                             // Call the same method again on background thread after wait
                             if (keep_going) {
                                 // run on main thread to keep Retrofit happy
-                                new Handler(Looper.getMainLooper()).post(() -> {
-                                    uploadStep2();
-                                });
+                                new Handler(Looper.getMainLooper()).post(() -> uploadStep2());
                             }
                         }).start();
                         return;
@@ -384,9 +382,7 @@ public class UploadRecords extends Service {
                             // Call the same method again on background thread after wait
                             if (keep_going) {
                                 // run on main thread to keep Retrofit happy
-                                new Handler(Looper.getMainLooper()).post(() -> {
-                                    uploadPhoto(image);
-                                });
+                                new Handler(Looper.getMainLooper()).post(() -> uploadPhoto(image));
                             }
                         }).start();
                         return;
