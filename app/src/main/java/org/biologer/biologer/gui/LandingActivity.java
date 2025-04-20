@@ -703,14 +703,15 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     public static boolean shouldDownload(Context context) {
         String network_type = InternetConnection.networkType(context);
-        if (network_type != null) {
-            if (how_to_use_network.equals("all") || (how_to_use_network.equals("wifi") && network_type.equals("wifi"))) {
-                return true;
-            } else {
-                Log.d(TAG, "Should ask user weather to download new taxonomic database (if there is one).");
-                return false;
-            }
+
+        if (network_type == null || how_to_use_network == null) {
+            return true;
+        }
+
+        if ("all".equals(how_to_use_network) || ("wifi".equals(how_to_use_network) && "wifi".equals(network_type))) {
+            return true;
         } else {
+            Log.d(TAG, "Should ask user whether to download new taxonomic database (if there is one).");
             return false;
         }
     }

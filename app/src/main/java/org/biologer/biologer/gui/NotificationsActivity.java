@@ -175,9 +175,9 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
     private final ActivityResultLauncher<Intent> notificationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
+            new ActivityResultCallback<>() {
                 @Override
-                    public void onActivityResult(ActivityResult result) {
+                public void onActivityResult(ActivityResult result) {
                     if (result.getData() != null) {
                         long index = result.getData().getIntExtra("index_id", 0);
                         String downloaded = result.getData().getStringExtra("downloaded");
@@ -189,7 +189,7 @@ public class NotificationsActivity extends AppCompatActivity {
                             Log.i(TAG, "Activity returned result: " + downloaded);
                             if (downloaded.equals("yes")) {
                                 Log.i(TAG, "Removing notification no. " + index + " from RecyclerView.");
-                                notifications.remove( (int) index);
+                                notifications.remove((int) index);
                                 notificationsAdapter.notifyItemRemoved((int) index);
                                 NotificationsHelper.setOnlineNotificationAsRead(realId);
                                 if (notificationId != 0) {
@@ -204,9 +204,11 @@ public class NotificationsActivity extends AppCompatActivity {
                             if (notifications.isEmpty()) {
                                 Log.i(TAG, "No more notifications");
                                 selectedNotificationsMenuItemsEnabled(false);
-                            } if (notifications.size() == index) {
+                            }
+                            if (notifications.size() == index) {
                                 openNotification(0);
-                            } if (notifications.size() > index) {
+                            }
+                            if (notifications.size() > index) {
                                 openNotification((int) index);
                             }
                         }
