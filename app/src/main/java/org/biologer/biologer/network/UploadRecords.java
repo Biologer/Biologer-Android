@@ -8,7 +8,9 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -152,9 +154,13 @@ public class UploadRecords extends Service {
                 .setAutoCancel(false);
 
         Notification notification = mBuilder.build();
-        startForeground(1, notification);
 
-        uploadStep1();
+        // Delay starting the upload, trying to fix an issue on some phones.
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            Log.d(TAG, "Starting foreground service after delay.");
+            startForeground(1, notification);
+            uploadStep1();
+        }, 150);
     }
 
     // This checks if there are photos in the Entry Record.
@@ -287,14 +293,25 @@ public class UploadRecords extends Service {
             @Override
             public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
 
-                // Retry if server deny your access
+                // Retry on server resource limit
                 if (response.code() == 429) {
                     String retry_after = response.headers().get("Retry-After");
                     Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
                     if (retry_after != null) {
                         int wait = Integer.parseInt(retry_after) * 1000;
-                        SystemClock.sleep(wait);
-                        uploadStep2();
+
+                        // Move the sleep and retry to a background thread
+                        new Thread(() -> {
+                            SystemClock.sleep(wait);
+                            // Call the same method again on background thread after wait
+                            if (keep_going) {
+                                // run on main thread to keep Retrofit happy
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    uploadStep2();
+                                });
+                            }
+                        }).start();
+                        return;
                     }
                 }
 
@@ -354,13 +371,25 @@ public class UploadRecords extends Service {
             @Override
             public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
 
+                // Retry on server resources limit
                 if (response.code() == 429) {
                     String retry_after = response.headers().get("Retry-After");
                     Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
                     if (retry_after != null) {
                         int wait = Integer.parseInt(retry_after) * 1000;
-                        SystemClock.sleep(wait);
-                        uploadPhoto(image);
+
+                        // Move the sleep and retry to a background thread
+                        new Thread(() -> {
+                            SystemClock.sleep(wait);
+                            // Call the same method again on background thread after wait
+                            if (keep_going) {
+                                // run on main thread to keep Retrofit happy
+                                new Handler(Looper.getMainLooper()).post(() -> {
+                                    uploadPhoto(image);
+                                });
+                            }
+                        }).start();
+                        return;
                     }
                 }
 

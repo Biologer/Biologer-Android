@@ -107,6 +107,8 @@ public class RegisterFragment2 extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
+                editTextEmail.setText(((LoginActivity) activity).et_username.getText().toString());
+                editTextPassword.setText(((LoginActivity) activity).et_password.getText().toString());
                 editTextPassword.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {

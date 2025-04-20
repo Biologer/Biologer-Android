@@ -64,8 +64,9 @@ public class App extends MultiDexApplication {
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            assert notificationManager != null;
-            notificationManager.createNotificationChannel(channel);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 
@@ -88,7 +89,7 @@ public class App extends MultiDexApplication {
             String channel_id = "biologer_announcements";
             CharSequence name = getString(R.string.channel_announcements);
             String description = getString(R.string.channel_announcements_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
