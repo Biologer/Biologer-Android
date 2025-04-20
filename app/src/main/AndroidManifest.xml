@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -90,6 +91,12 @@
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
         <activity
+            android:name=".gui.TimedCountActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.biologer.biologer.gui.LandingActivity" />
+        </activity>
+        <activity
             android:name=".gui.LoginActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -116,11 +123,15 @@
             android:name="org.biologer.biologer.network.UploadRecords"
             android:foregroundServiceType="dataSync">
         </service>
+        <service
+            android:name="org.biologer.biologer.services.LocationTrackingService"
+            android:foregroundServiceType="location">
+        </service>
         <service android:name="org.biologer.biologer.network.UpdateTaxa"/>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
         <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>
-        <service android:name="org.biologer.biologer.adapters.PreparePhotos"/>
+        <service android:name="org.biologer.biologer.services.PreparePhotos"/>
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

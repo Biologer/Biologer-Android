@@ -481,5 +481,20 @@
     <string name="no_account_with_this_email">No account with this email!</string>
     <string name="email_mistyped">Email mistyped</string>
     <string name="enter_your_email">Enter your email</string>
+    <string name="species_observation">Species observation</string>
+    <string name="timed_count">Timed count</string>
+    <string name="clock_icon">Clock icon</string>
+    <string name="pause_time_icon">Pause time icon</string>
+    <string name="minutes">Minutes:</string>
+    <string name="min">min</string>
+    <string name="select_group_for_timed_count">Select group for timed count</string>
+    <string name="setup_your_timed_count">Setup your timed count</string>
+    <string name="start_counting">Start counting</string>
+    <string name="_00_00">00:00</string>
+    <string name="paused">Paused</string>
+    <string name="duration">Duration:</string>
+    <string name="channel_location">Location tracking</string>
+    <string name="channel_location_description">Display notification while obtaining location for species counts.</string>
+    <string name="finished">Finished!</string>
 
 </resources>

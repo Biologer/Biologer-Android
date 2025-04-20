@@ -10,10 +10,12 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,8 +33,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.EntryAdapter;
-import org.biologer.biologer.adapters.RecyclerOnClickListener;
+import org.biologer.biologer.services.EntryAdapter;
+import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
@@ -102,6 +104,7 @@ public class LandingFragment extends Fragment {
             floatingActionButton.setEnabled(false);
             floatingActionButton.setAlpha(0.25f);
         }
+
         floatingActionButton.setOnClickListener(v -> {
             // When user opens the EntryActivity for the first time set this to true.
             // This is used to display intro message for new users.
@@ -109,9 +112,13 @@ public class LandingFragment extends Fragment {
                 SettingsManager.setEntryOpen(true);
             }
             // Start the new Entry Activity.
-            Intent intent = new Intent(getActivity(), EntryActivity.class);
-            intent.putExtra("IS_NEW_ENTRY", "YES");
-            openEntry.launch(intent);
+            newObservation();
+        });
+
+        floatingActionButton.setOnLongClickListener(v -> {
+            // Show the context menu
+            showContextMenu(v);
+            return true;
         });
 
         // Broadcast will watch if upload service is active
@@ -156,6 +163,18 @@ public class LandingFragment extends Fragment {
         };
 
         return rootView;
+    }
+
+    private void newObservation() {
+        Intent intent = new Intent(getActivity(), EntryActivity.class);
+        intent.putExtra("IS_NEW_ENTRY", "YES");
+        openEntry.launch(intent);
+    }
+
+    private void newTimedCount() {
+        Intent intent = new Intent(getActivity(), TimedCountActivity.class);
+        intent.putExtra("IS_NEW_ENTRY", "YES");
+        openEntry.launch(intent);
     }
 
     private void loadAllEntries() {
@@ -212,6 +231,30 @@ public class LandingFragment extends Fragment {
             return true;
         }
         return super.onContextItemSelected(item);
+    }
+
+    // Method to show the context menu on + button long press
+    private void showContextMenu(View view) {
+        // Create the context menu and set its items
+        PopupMenu popupMenu = new PopupMenu(getActivity(), view);
+        MenuInflater inflater = popupMenu.getMenuInflater();
+        inflater.inflate(R.menu.menu_add_entry_long_press, popupMenu.getMenu());
+
+        // Handle item selection
+        popupMenu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.menu_entry_timed_count:
+                    newTimedCount();
+                    return true;
+                case R.id.menu_entry_observation:
+                    newObservation();
+                    return true;
+                default:
+                    return false;
+            }
+        });
+
+        popupMenu.show();
     }
 
     private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),

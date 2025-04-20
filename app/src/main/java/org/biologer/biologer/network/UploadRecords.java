@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.ArrayHelper;
+import org.biologer.biologer.services.ArrayHelper;
 import org.biologer.biologer.gui.LandingActivity;
 import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryPhotos;

@@ -1,4 +1,4 @@
-package org.biologer.biologer.adapters;
+package org.biologer.biologer.services;
 
 import android.graphics.drawable.Drawable;
 import android.util.Log;

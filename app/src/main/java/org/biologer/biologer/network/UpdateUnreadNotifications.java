@@ -17,7 +17,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.NotificationsHelper;
+import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.gui.NotificationsActivity;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;

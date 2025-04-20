@@ -1,4 +1,4 @@
-package org.biologer.biologer.adapters;
+package org.biologer.biologer.services;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
