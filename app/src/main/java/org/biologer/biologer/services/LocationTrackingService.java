@@ -89,7 +89,7 @@ public class LocationTrackingService extends Service {
         return new NotificationCompat.Builder(this, "biologer_location")
                 .setContentTitle("Tracking route")
                 .setContentText("GPS tracking is running...")
-                .setSmallIcon(R.drawable.ic_gps_turtle)
+                .setSmallIcon(R.drawable.ic_notification_location)
                 .build();
     }
 

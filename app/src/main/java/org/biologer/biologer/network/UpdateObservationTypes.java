@@ -32,9 +32,9 @@ public class UpdateObservationTypes {
             @Override
             public void onResponse(@NonNull Call<ObservationTypesResponse> call, @NonNull Response<ObservationTypesResponse> response) {
                 ObservationTypesResponse observationsResponse = response.body();
-                if (observationsResponse != null) {
-                    if (observationsResponse.getData().length == 0) {
-                        Log.d(TAG, "Recent observation types are already downloaded from server.");
+                if (response.isSuccessful() && observationsResponse != null) {
+                    if (observationsResponse.getData() == null || observationsResponse.getData().length == 0) {
+                        Log.d(TAG, "Recent observation types are already downloaded from server or server returned null.");
                     } else {
                         org.biologer.biologer.network.json.ObservationTypes[] obs = observationsResponse.getData();
                         for (org.biologer.biologer.network.json.ObservationTypes ob : obs) {
@@ -42,25 +42,35 @@ public class UpdateObservationTypes {
 
                             // Save translations in a separate table...
                             List<ObservationTypesTranslations> observation_translations = ob.getTranslations();
-                            ObservationTypesDb[] localizations = new ObservationTypesDb[observation_translations.size()];
-                            for (int j = 0; j < observation_translations.size(); j++) {
-                                ObservationTypesDb localization = new ObservationTypesDb(
-                                        0,
-                                        observation_translations.get(j).getId(),
-                                        ob.getId().longValue(),
-                                        ob.getSlug(),
-                                        observation_translations.get(j).getLocale(),
-                                        observation_translations.get(j).getName());
-                                localizations[j] = localization;
-                            }
-                            App.get().getBoxStore().boxFor(ObservationTypesDb.class).put(localizations);
 
+                            if (observation_translations != null && !observation_translations.isEmpty()) {
+                                ObservationTypesDb[] localizations = new ObservationTypesDb[observation_translations.size()];
+                                for (int j = 0; j < observation_translations.size(); j++) {
+                                    ObservationTypesDb localization = new ObservationTypesDb(
+                                            0,
+                                            observation_translations.get(j).getId(),
+                                            ob.getId().longValue(),
+                                            ob.getSlug(),
+                                            observation_translations.get(j).getLocale(),
+                                            observation_translations.get(j).getName());
+                                    localizations[j] = localization;
+                                }
+                                App.get().getBoxStore().boxFor(ObservationTypesDb.class).put(localizations);
+                            } else {
+                                Log.d(TAG, "No translations found for observation type ID: " + ob.getId());
+                            }
                         }
                         Log.d(TAG, "Observation types locales written to the database, there are " +
                                 App.get().getBoxStore().boxFor(ObservationTypesDb.class).count() +
                                 " records");
                         SettingsManager.setObservationTypesUpdated(system_time);
                         Log.d(TAG, "Timestamp for observation time update is set to " + system_time);
+                    }
+                } else {
+                    if (response.code() == 404) {
+                        Log.e(TAG, "API endpoint for observation types not found (404). Check URL.");
+                    } else {
+                        Log.e(TAG, "Unsuccessful response for observation types: Code " + response.code() + ", Message: " + response.message());
                     }
                 }
             }

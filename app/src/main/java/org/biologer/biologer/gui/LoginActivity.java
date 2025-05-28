@@ -507,26 +507,37 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         UserDataSer userdata = response.body().getData();
-                        String email = userdata.getEmail();
-                        String name = userdata.getFullName();
-                        int id = userdata.getId();
-                        int data_license = userdata.getSettings().getDataLicense();
-                        int image_license = userdata.getSettings().getImageLicense();
+                        if (userdata != null) {
+                            String email = userdata.getEmail();
+                            String name = userdata.getFullName();
+                            int id = userdata.getId();
+                            int data_license = userdata.getSettings().getDataLicense();
+                            int image_license = userdata.getSettings().getImageLicense();
 
-                        // Check if email is confirmed
-                        if (userdata.isEmailVerified()) {
-                            SettingsManager.setMailConfirmed(true);
+                            // Check if email is confirmed
+                            if (userdata.isEmailVerified()) {
+                                SettingsManager.setMailConfirmed(true);
+                            }
+
+                            // Write data in SQL
+                            UserDb user = new UserDb(0, name, email, data_license, image_license, id);
+                            Box<UserDb> userDataBox = App.get().getBoxStore().boxFor(UserDb.class);
+                            userDataBox.removeAll();
+                            userDataBox.put(user);
                         }
 
-                        // Write data in SQL
-                        UserDb user = new UserDb(0, name, email, data_license, image_license, id);
-                        Box<UserDb> userDataBox = App.get().getBoxStore().boxFor(UserDb.class);
-                        userDataBox.removeAll();
-                        userDataBox.put(user);
+                        startLandingActivity();
+                    } else {
+                        Log.e(TAG, "User data (response.body().getData()) is null for successful response. Response code: " + response.code());
+                        displayProgressBar(false);
+                        Toast.makeText(LoginActivity.this, getString(R.string.error_fetching_user_data), Toast.LENGTH_LONG).show();
                     }
-
-                    startLandingActivity();
-
+                }
+                else {
+                    Log.e(TAG, "Response body is null for successful login. Response code: " + response.code());
+                    displayProgressBar(false);
+                    // Optionally show an error message to the user
+                    Toast.makeText(LoginActivity.this, getString(R.string.error_fetching_user_data1), Toast.LENGTH_LONG).show();
                 }
             }
 

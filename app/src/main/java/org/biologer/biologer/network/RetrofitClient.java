@@ -1,5 +1,7 @@
 package org.biologer.biologer.network;
 
+import android.util.Log;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,41 +18,47 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class RetrofitClient {
 
+    private static final String TAG = "Biologer.RetroClient";
     private static Retrofit retrofit = null;
 
     private static Retrofit getClient(String base_url) {
-        if (retrofit == null || !retrofit.baseUrl().toString().equals(base_url)) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        if (base_url == null || base_url.trim().isEmpty()) {
+            Log.e(TAG, "Database URL is null or empty. Cannot build Retrofit client.");
+            throw new IllegalArgumentException("Database URL cannot be null or empty for RetrofitClient.");
+        } else {
+            if (retrofit == null || !retrofit.baseUrl().toString().equals(base_url)) {
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+                HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+                logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .readTimeout(15, TimeUnit.SECONDS)
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .writeTimeout(15, TimeUnit.SECONDS)
-                    .addInterceptor(
-                            chain -> {
-                                Request request = chain.request();
-                                Request.Builder builder = request.newBuilder()
-                                        .header("Authorization", "Bearer " + SettingsManager.getAccessToken());
-                                request = builder.build();
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .readTimeout(15, TimeUnit.SECONDS)
+                        .connectTimeout(10, TimeUnit.SECONDS)
+                        .writeTimeout(15, TimeUnit.SECONDS)
+                        .addInterceptor(
+                                chain -> {
+                                    Request request = chain.request();
+                                    Request.Builder builder = request.newBuilder()
+                                            .header("Authorization", "Bearer " + SettingsManager.getAccessToken());
+                                    request = builder.build();
 
-                                return chain.proceed(request);
-                            }
-                    )
-                    .addInterceptor(logging)
-                    .build();
+                                    return chain.proceed(request);
+                                }
+                        )
+                        .addInterceptor(logging)
+                        .build();
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(base_url)
-                    .client(client)
-                    .addConverterFactory(JacksonConverterFactory.create(mapper))
-                    .build();
+                retrofit = new Retrofit.Builder()
+                        .baseUrl(base_url)
+                        .client(client)
+                        .addConverterFactory(JacksonConverterFactory.create(mapper))
+                        .build();
+            }
+            return retrofit;
         }
-        return retrofit;
     }
 
     public static RetrofitService getService(String base_url) {

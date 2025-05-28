@@ -16,8 +16,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 163
-        versionName "4.0.4"
+        versionCode 164
+        versionName "4.0.5"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -103,7 +103,7 @@ dependencies {
     })
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation "androidx.drawerlayout:drawerlayout:1.2.0"
-    implementation "androidx.exifinterface:exifinterface:1.4.0"
+    implementation "androidx.exifinterface:exifinterface:1.4.1"
     implementation "androidx.activity:activity-ktx:1.10.1"
     implementation "androidx.core:core-ktx:1.16.0"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'

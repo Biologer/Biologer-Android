@@ -71,93 +71,103 @@ public class UpdateUnreadNotifications extends Service {
     // to notify user
     private void updateNotifications() {
 
-        // Get new notifications from the API
-        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(1);
-        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        int size = response.body().getMeta().getTotal();
-                        int pages = response.body().getMeta().getLastPage();
-                        Log.d(TAG, "Number of unread notifications: " + size + " – on " + pages + " pages.");
-                        // If there are notification...
-                        if (size >= 1) {
-                            // Check if the number of notifications in local SQL equals the number of notifications online.
-                            // If not synchronise, other-ways assume that nothing changed since the last time.
-                            int size_in_sql = (int) App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count();
-                            Log.d(TAG, "There are " + size_in_sql + " notifications stored locally.");
-                            if (size != size_in_sql) {
+        String databaseName = SettingsManager.getDatabaseName();
+        if (databaseName != null) {
+            // Get new notifications from the API
+            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(1);
+            unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            int size = response.body().getMeta().getTotal();
+                            int pages = response.body().getMeta().getLastPage();
+                            Log.d(TAG, "Number of unread notifications: " + size + " – on " + pages + " pages.");
+                            // If there are notification...
+                            if (size >= 1) {
+                                // Check if the number of notifications in local SQL equals the number of notifications online.
+                                // If not synchronise, other-ways assume that nothing changed since the last time.
+                                int size_in_sql = (int) App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count();
+                                Log.d(TAG, "There are " + size_in_sql + " notifications stored locally.");
+                                if (size != size_in_sql) {
 
-                                // First delete photos from internal storage
-                                Log.i(TAG, "Trying to remove all images from internal storage.");
-                                NotificationsHelper.deleteAllNotificationsLocally(UpdateUnreadNotifications.this);
+                                    // First delete photos from internal storage
+                                    Log.i(TAG, "Trying to remove all images from internal storage.");
+                                    NotificationsHelper.deleteAllNotificationsLocally(UpdateUnreadNotifications.this);
 
-                                for (int p = 0; p < pages; p++) {
-                                    int real_page = p + 1;
-                                    Log.d(TAG, "Updating notifications, page " + real_page + ".");
-                                    if (real_page == 1) {
-                                        saveNotificationsToObjectBox(response.body());
-                                    } else {
-                                        // Delay requests a bit...
-                                        Handler handler = new Handler(Looper.getMainLooper());
-                                        Runnable runnable;
-                                        runnable = () -> getAndSaveNotificationsToObjectBox(real_page);
-                                        handler.postDelayed(runnable, 1000);
+                                    for (int p = 0; p < pages; p++) {
+                                        int real_page = p + 1;
+                                        Log.d(TAG, "Updating notifications, page " + real_page + ".");
+                                        if (real_page == 1) {
+                                            saveNotificationsToObjectBox(response.body());
+                                        } else {
+                                            // Delay requests a bit...
+                                            Handler handler = new Handler(Looper.getMainLooper());
+                                            Runnable runnable;
+                                            runnable = () -> getAndSaveNotificationsToObjectBox(real_page);
+                                            handler.postDelayed(runnable, 1000);
+                                        }
+
                                     }
-
+                                } else {
+                                    Log.d(TAG, "Number of notifications online equals the ones stored locally.");
                                 }
+                                displayUnreadNotifications(size);
+                                sendBroadcast();
                             } else {
-                                Log.d(TAG, "Number of notifications online equals the ones stored locally.");
+                                Log.d(TAG, "No unread notifications online, Hurray!");
                             }
-                            displayUnreadNotifications(size);
-                            sendBroadcast();
-                        } else {
-                            Log.d(TAG, "No unread notifications online, Hurray!");
                         }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-            }
-        });
+                @Override
+                public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
+                }
+            });
+        } else {
+            Log.e(TAG, "The database URL is empty! The notifications will not be updated.");
+        }
 
     }
 
     private void getAndSaveNotificationsToObjectBox(int page) {
-        Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(SettingsManager.getDatabaseName()).getUnreadNotifications(page);
-        unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+        String databaseName = SettingsManager.getDatabaseName();
+        if (databaseName != null) {
+            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(page);
+            unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
 
-            @Override
-            public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        saveNotificationsToObjectBox(response.body());
+                @Override
+                public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
+                    if (response.isSuccessful()) {
+                        if (response.body() != null) {
+                            saveNotificationsToObjectBox(response.body());
+                        }
+                    } else if (response.code() == 429) {
+                        String retryAfter = response.headers().get("retry-after");
+                        long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
+                        Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
+                        // Add handler to delay fetching
+                        Handler handler = new Handler();
+                        Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
+                        handler.postDelayed(runnable, sec * 1000);
+                    } else if (response.code() == 508) {
+                        Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
+                        Handler handler = new Handler();
+                        Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
+                        handler.postDelayed(runnable, 5000);
                     }
-                } else if (response.code() == 429) {
-                    String retryAfter = response.headers().get("retry-after");
-                    long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
-                    Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
-                    // Add handler to delay fetching
-                    Handler handler = new Handler();
-                    Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
-                    handler.postDelayed(runnable, sec * 1000);
-                } else if (response.code() == 508) {
-                    Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
-                    Handler handler = new Handler();
-                    Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
-                    handler.postDelayed(runnable, 5000);
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
-            }
-        });
+                @Override
+                public void onFailure(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
+                }
+            });
+        } else {
+            Log.e(TAG, "The database URL is empty! The notifications will not be updated.");
+        }
     }
 
     private void saveNotificationsToObjectBox(UnreadNotificationsResponse response) {

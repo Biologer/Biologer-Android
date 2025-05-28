@@ -496,5 +496,7 @@
     <string name="channel_location">Location tracking</string>
     <string name="channel_location_description">Display notification while obtaining location for species counts.</string>
     <string name="finished">Finished!</string>
+    <string name="error_fetching_user_data">Could not get user data: data is null.</string>
+    <string name="error_fetching_user_data1">Could not get user data: response is null.</string>
 
 </resources>

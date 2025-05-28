@@ -349,7 +349,15 @@ public class UploadRecords extends Service {
 
             @Override
             public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
-                Log.i(TAG, "Uploading of entry failed for some reason: " + Objects.requireNonNull(t.getLocalizedMessage()));
+                String errorMessage = t.getLocalizedMessage();
+                if (errorMessage == null || errorMessage.isEmpty()) {
+                    errorMessage = t.getMessage();
+                    if (errorMessage == null || errorMessage.isEmpty()) {
+                        errorMessage = "Unknown reason (no localized or general message)";
+                    }
+                }
+                Log.i(TAG, "Uploading of entry failed for some reason: " + errorMessage);
+                Log.e(TAG, "Full stack trace of upload failure:", t);
                 cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
                 sendResult("failed_entry", 0);
                 stopSelf();

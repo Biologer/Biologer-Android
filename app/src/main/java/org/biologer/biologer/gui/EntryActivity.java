@@ -276,6 +276,14 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
                 handler.removeCallbacks(runnable);
 
                 final String typed_name = String.valueOf(s);
@@ -289,6 +297,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     if (!taxonSelectedFromTheList) {
                         hideStagesAndAtlasCode();
                         selectedTaxon = null;
+                        Log.d(TAG, "User typed, selectedTaxon set to null.");
                     }
                     taxonSelectedFromTheList = false;
 
@@ -346,7 +355,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         } else {
                             Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
                                     .query(TaxaTranslationDb_.locale.equal("sr")
-                                                    .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
+                                            .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
                                             .or(TaxaTranslationDb_.locale.equal("sr-Latn")
                                                     .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
                                     .build();
@@ -418,14 +427,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                 };
                 handler.postDelayed(runnable, 300);
             }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
         });
 
         // Activate the field for species name and show the keyboard.
@@ -492,27 +493,29 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         Log.i(TAG, "This are the stages for " + selectedTaxon.getLatinName() + ": " + stages);
 
         if (stages != null) {
-            Log.d(TAG, "Enabling Stages for this taxon.");
-            textInputStages.setVisibility(View.VISIBLE);
+            if (!stages.isEmpty()) {
+                Log.d(TAG, "Enabling Stages for this taxon.");
+                textInputStages.setVisibility(View.VISIBLE);
 
-            String[] all_stages = stages.split(";");
+                String[] all_stages = stages.split(";");
 
-            // If user preferences are selected, the stage for taxa will be set to adult by default.
-            // Step 1: Get the preferences
-            if (preferences.getBoolean("adult_by_default", false)) {
-                // If stage is already selected ignore this...
-                if (textViewStage.getText().toString().isEmpty()) {
-                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                    Query<StageDb> query = stageBox
-                            .query(StageDb_.name.equal("adult"))
-                            .build();
-                    StageDb stage = query.findFirst();
-                    query.close();
-                    if (stage != null) {
-                        String s = String.valueOf(stage.getId());
-                        if (Arrays.asList(all_stages).contains(s)) {
-                            textViewStage.setText(getString(R.string.stage_adult));
-                            textViewStage.setTag(stage.getId());
+                // If user preferences are selected, the stage for taxa will be set to adult by default.
+                // Step 1: Get the preferences
+                if (preferences.getBoolean("adult_by_default", false)) {
+                    // If stage is already selected ignore this...
+                    if (textViewStage.getText().toString().isEmpty()) {
+                        Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+                        Query<StageDb> query = stageBox
+                                .query(StageDb_.name.equal("adult"))
+                                .build();
+                        StageDb stage = query.findFirst();
+                        query.close();
+                        if (stage != null) {
+                            String s = String.valueOf(stage.getId());
+                            if (Arrays.asList(all_stages).contains(s)) {
+                                textViewStage.setText(getString(R.string.stage_adult));
+                                textViewStage.setTag(stage.getId());
+                            }
                         }
                     }
                 }
@@ -1315,37 +1318,42 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     private void getStageForTaxon() {
         String stages = selectedTaxon.getStages();
-        String[] all_stages_ids = stages.split(";");
-        if (all_stages_ids.length != 0) {
-            final String[] all_stages_names = new String[all_stages_ids.length + 1];
-            all_stages_names[0] = getString(R.string.not_selected);
-            for (int i = 0; i < all_stages_ids.length; i++) {
-                Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                Query<StageDb> query = stageBox
-                        .query(StageDb_.id.equal(Long.parseLong(all_stages_ids[i])))
-                        .build();
-                StageDb stage = query.findFirst();
-                query.close();
-                if (stage != null) {
-                    all_stages_names[i + 1] = StageAndSexLocalization.getStageLocale(this, stage.getName());
-                }
-            }
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(all_stages_names, (DialogInterface dialogInterface, int i) -> {
-                textViewStage.setText(all_stages_names[i]);
-                if (i == 0) {
-                    textViewStage.setTag(null); // If no stage selected
-                } else {
-                    textViewStage.setTag(all_stages_ids[i - 1]);
-                }
-            });
-            builder.show();
-            Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(all_stages_names));
-
-        } else {
+        if (stages == null || stages.trim().isEmpty()) {
             textViewStage.setEnabled(false);
-            Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
+            Log.d(TAG, "Stage list from selectedTaxon is null or empty for taxon " + getLatinName() + ".");
+        } else {
+            String[] all_stages_ids = stages.split(";");
+            if (all_stages_ids.length != 0) {
+                final String[] all_stages_names = new String[all_stages_ids.length + 1];
+                all_stages_names[0] = getString(R.string.not_selected);
+                for (int i = 0; i < all_stages_ids.length; i++) {
+                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+                    Query<StageDb> query = stageBox
+                            .query(StageDb_.id.equal(Long.parseLong(all_stages_ids[i])))
+                            .build();
+                    StageDb stage = query.findFirst();
+                    query.close();
+                    if (stage != null) {
+                        all_stages_names[i + 1] = StageAndSexLocalization.getStageLocale(this, stage.getName());
+                    }
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setItems(all_stages_names, (DialogInterface dialogInterface, int i) -> {
+                    textViewStage.setText(all_stages_names[i]);
+                    if (i == 0) {
+                        textViewStage.setTag(null); // If no stage selected
+                    } else {
+                        textViewStage.setTag(all_stages_ids[i - 1]);
+                    }
+                });
+                builder.show();
+                Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(all_stages_names));
+
+            } else {
+                textViewStage.setEnabled(false);
+                Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
+            }
         }
     }
 
