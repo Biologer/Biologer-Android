@@ -273,6 +273,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler(Looper.getMainLooper());
             Runnable runnable;
+            String entered_name = null;
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -280,152 +281,151 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                entered_name = String.valueOf(s);
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                handler.removeCallbacks(runnable);
+                final String changed_entered_name = String.valueOf(s);
+                if (changed_entered_name.equals(entered_name)) {
+                    Log.d(TAG, "TextChanged call ignored, previous text and entered text is the same.");
+                } else {
+                    // Try to get the latin name from ObjectBox database
+                    handler.removeCallbacks(runnable);
+                    runnable = () -> {
 
-                final String typed_name = String.valueOf(s);
+                        // Remove atlas code and stage for taxa not selected from the list
+                        if (!taxonSelectedFromTheList) {
+                            hideStagesAndAtlasCode();
+                            selectedTaxon = null;
+                        }
+                        taxonSelectedFromTheList = false;
 
-                runnable = () -> {
-                    /*
-                    Get the list of taxa from the GreenDao database
-                    */
+                        // This will bee the list of all IDs from all the queries
+                        List<TaxonDb> allTaxaLists = new ArrayList<>();
 
-                    // Remove atlas code and stage for taxa not selected from the list
-                    if (!taxonSelectedFromTheList) {
-                        hideStagesAndAtlasCode();
-                        selectedTaxon = null;
-                        Log.d(TAG, "User typed, selectedTaxon set to null.");
-                    }
-                    taxonSelectedFromTheList = false;
-
-                    // This will bee the list of all IDs from all the queries
-                    List<TaxonDb> allTaxaLists = new ArrayList<>();
-
-                    // Query latin names
-                    Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-                    Query<TaxonDb> query_latin_name = taxonDataBox
-                            .query(TaxonDb_.latinName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                            .build();
-                    List<TaxonDb> latinNames = query_latin_name.find(0, 10);
-                    query_latin_name.close();
-
-                    for (int i = 0; i < latinNames.size(); i++) {
-                        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-                        Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
-                                .query(TaxaTranslationDb_.taxonId.equal(latinNames.get(i).getId())
-                                        .and(TaxaTranslationDb_.locale.equal(locale_script)))
+                        // Query latin names
+                        Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
+                        Query<TaxonDb> query_latin_name = taxonDataBox
+                                .query(TaxonDb_.latinName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
                                 .build();
-                        List<TaxaTranslationDb> nativeNames = query_taxon_translation.find();
-                        query_taxon_translation.close();
+                        List<TaxonDb> latinNames = query_latin_name.find(0, 10);
+                        query_latin_name.close();
 
-                        if (!nativeNames.isEmpty()) {
-                            String native_name = nativeNames.get(0).getNativeName();
-                            if (native_name != null) {
-                                TaxonDb taxon = latinNames.get(i);
-                                taxon.setLatinName(taxon.getLatinName() + " (" + native_name + ")");
-                                allTaxaLists.add(taxon);
-                            }
-                            else {
+                        for (int i = 0; i < latinNames.size(); i++) {
+                            Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+                            Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
+                                    .query(TaxaTranslationDb_.taxonId.equal(latinNames.get(i).getId())
+                                            .and(TaxaTranslationDb_.locale.equal(locale_script)))
+                                    .build();
+                            List<TaxaTranslationDb> nativeNames = query_taxon_translation.find();
+                            query_taxon_translation.close();
+
+                            if (!nativeNames.isEmpty()) {
+                                String native_name = nativeNames.get(0).getNativeName();
+                                if (native_name != null) {
+                                    TaxonDb taxon = latinNames.get(i);
+                                    taxon.setLatinName(taxon.getLatinName() + " (" + native_name + ")");
+                                    allTaxaLists.add(taxon);
+                                } else {
+                                    allTaxaLists.add(latinNames.get(i));
+
+                                }
+                            } else {
                                 allTaxaLists.add(latinNames.get(i));
-
-                            }
-                        } else {
-                            allTaxaLists.add(latinNames.get(i));
-                        }
-                    }
-
-                    Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-                    List<TaxaTranslationDb> nativeList;
-                    // For Serbian language we should also search for Latin and Cyrillic names
-                    if (locale_script.equals("sr")) {
-                        if (preferences.getBoolean("english_names", false)) {
-                            Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
-                                    .query(TaxaTranslationDb_.locale.equal("en")
-                                            .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                                            .or(TaxaTranslationDb_.locale.equal("sr")
-                                                    .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE)))
-                                            .or(TaxaTranslationDb_.locale.equal("sr-Latn")
-                                                    .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
-                                    .build();
-                            nativeList = nativeQuery.find(0, 10);
-                            nativeQuery.close();
-                        } else {
-                            Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
-                                    .query(TaxaTranslationDb_.locale.equal("sr")
-                                            .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                                            .or(TaxaTranslationDb_.locale.equal("sr-Latn")
-                                                    .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
-                                    .build();
-                            nativeList = nativeQuery.find(0, 10);
-                            nativeQuery.close();
-                        }
-                    }
-
-                    // For other languages it is more simple...
-                    else {
-                        if (preferences.getBoolean("english_names", false)) {
-                            Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
-                                    .query(TaxaTranslationDb_.locale.equal("en")
-                                            .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                                            .or(TaxaTranslationDb_.locale.equal(locale_script)
-                                                    .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
-                                    .build();
-                            nativeList = nativeQuery.find(0, 10);
-                            nativeQuery.close();
-                        } else {
-                            Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
-                                    .query(TaxaTranslationDb_.locale.equal(locale_script)
-                                            .and(TaxaTranslationDb_.nativeName.contains(typed_name, QueryBuilder.StringOrder.CASE_INSENSITIVE)))
-                                    .build();
-                            nativeList = nativeQuery.find(0, 10);
-                            nativeQuery.close();
-                        }
-                    }
-
-                    for (int i = 0; i < nativeList.size(); i++) {
-                        TaxaTranslationDb taxaTranslationData = nativeList.get(i);
-                        // Don’t add taxa if already on the list
-                        boolean duplicated = false;
-                        for (int j = 0; j < allTaxaLists.size(); j++) {
-                            if (allTaxaLists.get(j).getId() == taxaTranslationData.getTaxonId()) {
-                                duplicated = true;
                             }
                         }
-                        if (!duplicated) {
-                            Box<TaxonDb> taxonDbBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-                            Query<TaxonDb> taxonDbQuery = taxonDbBox
-                                    .query(TaxonDb_.id.equal(taxaTranslationData.getTaxonId()))
-                                    .build();
-                            TaxonDb taxon = taxonDbQuery.findFirst();
-                            taxonDbQuery.close();
 
-                            if (taxon != null) {
-                                taxon.setLatinName(taxon.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")");
-                                allTaxaLists.add(taxon);
+                        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+                        List<TaxaTranslationDb> nativeList;
+                        // For Serbian language we should also search for Latin and Cyrillic names
+                        if (locale_script.equals("sr")) {
+                            if (preferences.getBoolean("english_names", false)) {
+                                Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
+                                        .query(TaxaTranslationDb_.locale.equal("en")
+                                                .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
+                                                .or(TaxaTranslationDb_.locale.equal("sr")
+                                                        .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE)))
+                                                .or(TaxaTranslationDb_.locale.equal("sr-Latn")
+                                                        .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
+                                        .build();
+                                nativeList = nativeQuery.find(0, 10);
+                                nativeQuery.close();
+                            } else {
+                                Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
+                                        .query(TaxaTranslationDb_.locale.equal("sr")
+                                                .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
+                                                .or(TaxaTranslationDb_.locale.equal("sr-Latn")
+                                                        .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
+                                        .build();
+                                nativeList = nativeQuery.find(0, 10);
+                                nativeQuery.close();
                             }
                         }
-                    }
 
-                    // Add the Query to the drop down list (adapter)
-                    TaxaListAdapter adapter1 =
-                            new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, allTaxaLists);
-                    autoCompleteTextView_speciesName.setAdapter(adapter1);
-                    adapter1.notifyDataSetChanged();
+                        // For other languages it is more simple...
+                        else {
+                            if (preferences.getBoolean("english_names", false)) {
+                                Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
+                                        .query(TaxaTranslationDb_.locale.equal("en")
+                                                .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))
+                                                .or(TaxaTranslationDb_.locale.equal(locale_script)
+                                                        .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE))))
+                                        .build();
+                                nativeList = nativeQuery.find(0, 10);
+                                nativeQuery.close();
+                            } else {
+                                Query<TaxaTranslationDb> nativeQuery = taxaTranslationDataBox
+                                        .query(TaxaTranslationDb_.locale.equal(locale_script)
+                                                .and(TaxaTranslationDb_.nativeName.contains(changed_entered_name, QueryBuilder.StringOrder.CASE_INSENSITIVE)))
+                                        .build();
+                                nativeList = nativeQuery.find(0, 10);
+                                nativeQuery.close();
+                            }
+                        }
 
-                    // Enable/disable Save button in the Toolbar
-                    if (autoCompleteTextView_speciesName.getText().toString().length() > 1) {
-                        save_enabled = true;
-                        Log.d(TAG, "Taxon is set to: " + autoCompleteTextView_speciesName.getText());
-                    } else {
-                        save_enabled = false;
-                        Log.d(TAG, "Taxon entry field is empty.");
-                    }
-                    invalidateOptionsMenu();
-                };
-                handler.postDelayed(runnable, 300);
+                        for (int i = 0; i < nativeList.size(); i++) {
+                            TaxaTranslationDb taxaTranslationData = nativeList.get(i);
+                            // Don’t add taxa if already on the list
+                            boolean duplicated = false;
+                            for (int j = 0; j < allTaxaLists.size(); j++) {
+                                if (allTaxaLists.get(j).getId() == taxaTranslationData.getTaxonId()) {
+                                    duplicated = true;
+                                }
+                            }
+                            if (!duplicated) {
+                                Box<TaxonDb> taxonDbBox = App.get().getBoxStore().boxFor(TaxonDb.class);
+                                Query<TaxonDb> taxonDbQuery = taxonDbBox
+                                        .query(TaxonDb_.id.equal(taxaTranslationData.getTaxonId()))
+                                        .build();
+                                TaxonDb taxon = taxonDbQuery.findFirst();
+                                taxonDbQuery.close();
+
+                                if (taxon != null) {
+                                    taxon.setLatinName(taxon.getLatinName() + " (" + taxaTranslationData.getNativeName() + ")");
+                                    allTaxaLists.add(taxon);
+                                }
+                            }
+                        }
+
+                        // Add the Query to the drop down list (adapter)
+                        TaxaListAdapter adapter1 =
+                                new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, allTaxaLists);
+                        autoCompleteTextView_speciesName.setAdapter(adapter1);
+                        adapter1.notifyDataSetChanged();
+
+                        // Enable/disable Save button in the Toolbar
+                        if (autoCompleteTextView_speciesName.getText().toString().length() > 1) {
+                            save_enabled = true;
+                            Log.d(TAG, "Taxon is set to: " + autoCompleteTextView_speciesName.getText());
+                        } else {
+                            save_enabled = false;
+                            Log.d(TAG, "Taxon entry field is empty.");
+                        }
+                        invalidateOptionsMenu();
+                    };
+                    handler.postDelayed(runnable, 300);
+                }
             }
         });
 
