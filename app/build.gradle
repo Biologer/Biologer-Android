@@ -11,13 +11,13 @@ repositories {
 }
 
 android {
-    compileSdk 35
+    compileSdk 36
     defaultConfig {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
-        targetSdkVersion 35
-        versionCode 164
-        versionName "4.0.5"
+        targetSdk 35
+        versionCode 165
+        versionName '4.0.6'
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -95,13 +95,14 @@ android {
     buildFeatures {
         buildConfig true
     }
+    buildToolsVersion '36.0.0'
 }
 
 dependencies {
-    androidTestImplementation('androidx.test.espresso:espresso-core:3.5.1', {
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.6.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.drawerlayout:drawerlayout:1.2.0"
     implementation "androidx.exifinterface:exifinterface:1.4.1"
     implementation "androidx.activity:activity-ktx:1.10.1"
@@ -112,7 +113,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'com.google.android.gms:play-services-maps:19.2.0'
-    implementation 'com.google.maps.android:android-maps-utils:3.8.2'
+    implementation 'com.google.maps.android:android-maps-utils:3.14.0'
     implementation 'com.google.firebase:firebase-crash:16.2.1'
     implementation 'com.google.firebase:firebase-core:21.1.1'
     implementation 'com.google.firebase:firebase-iid:21.1.0'
@@ -122,15 +123,15 @@ dependencies {
 
     // Non Google
     implementation 'com.github.AppIntro:AppIntro:6.1.0'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11'
-    implementation ('com.opencsv:opencsv:5.8') {
+    implementation 'com.squareup.retrofit2:retrofit:3.0.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:3.0.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.1.0'
+    implementation ('com.opencsv:opencsv:5.11.2') {
         exclude group: 'commons-logging'
     }
     implementation 'com.github.MikeOrtiz:TouchImageView:3.1.1'
-    implementation ('com.github.bumptech.glide:glide:4.15.1')
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
+    implementation ('com.github.bumptech.glide:glide:4.16.0')
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 
 }
 
