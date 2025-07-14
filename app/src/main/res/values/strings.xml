@@ -196,7 +196,7 @@
     <string name="accuracy">Accuracy:</string>
     <string name="male">♂</string>
     <string name="female">♀</string>
-    <string name="add_new_observetion">Add new observetion</string>
+    <string name="add_new_observation">Add new observetion</string>
     <string name="register_btn">Register</string>
     <string name="name">Name</string>
     <string name="surname">Surname</string>
@@ -498,5 +498,6 @@
     <string name="finished">Finished!</string>
     <string name="error_fetching_user_data">Could not get user data: data is null.</string>
     <string name="error_fetching_user_data1">Could not get user data: response is null.</string>
+    <string name="timed_count_title">Timed count</string>
 
 </resources>

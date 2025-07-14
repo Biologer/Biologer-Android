@@ -1,8 +1,11 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -24,11 +27,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.services.LocationTrackingService;
@@ -47,18 +57,50 @@ public class TimedCountActivity extends AppCompatActivity {
     private long timeRemaining;
     private boolean isTimerRunning = false;
     ImageView pauseTimerImage;
-
+    FloatingActionButton floatingActionButton;
+    RecyclerView recyclerView;
+    private FusedLocationProviderClient fusedLocationClient;
+    double latitude, longitude, accuracy;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timed_count);
 
+        // Add a toolbar to the Activity
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.timed_count_title);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
+
         elapsed_time = findViewById(R.id.time_elapsed);
         timerLayout = findViewById(R.id.timed_count_timer);
         pauseTimerImage = findViewById(R.id.pause_timer_image);
+        floatingActionButton = findViewById(R.id.float_button_new_timed_entry);
+        recyclerView = findViewById(R.id.recycled_view_timed_counts);
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Check the location permission and start all other stuff...
         checkLocationPermission();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Register the BroadcastReceiver when the activity starts
+        //IntentFilter filter = new IntentFilter(LocationTrackingService.ACTION_LOCATION_UPDATE);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(locationReceiver, filter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(locationReceiver);
     }
 
     // Create AlertDialog to setup before starting the timed count.
@@ -207,6 +249,11 @@ public class TimedCountActivity extends AppCompatActivity {
     }
 
     private void startCount(int minutes) {
+        // Record location
+        Intent serviceIntent = new Intent(this, LocationTrackingService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+
+        // Setup timer
         long millisInFuture = minutes * 60 * 1000L; // minutes to milliseconds
         long countDownInterval = 1000L; // 1 second
         timeRemaining = millisInFuture;
@@ -227,13 +274,40 @@ public class TimedCountActivity extends AppCompatActivity {
                 resumeIntent.setAction(LocationTrackingService.ACTION_RESUME);
                 startService(resumeIntent);
             }
-
         });
 
-        Intent serviceIntent = new Intent(this, LocationTrackingService.class);
-        ContextCompat.startForegroundService(this, serviceIntent);
+        floatingActionButton.setOnClickListener(v -> addTaxon());
 
     }
+
+    private void addTaxon() {
+        getLatestLocationOnRequest();
+    }
+
+    private void getLatestLocationOnRequest() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Permissions are not granted, request them
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+            return;
+        }
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        latitude = location.getLatitude();
+                        longitude = location.getLongitude();
+                        accuracy = location.getAccuracy();
+                        Log.d(TAG, "Observation location: " + latitude + "; " + longitude + " (" + accuracy + ")");
+                    } else {
+                        Log.d(TAG, "Directly requested location is null. Device location might be off or not recorded.");
+                    }
+                })
+                .addOnFailureListener(this, e -> Log.e(TAG, "Error getting direct location: " + e.getMessage()));
+    }
+
 
     private void startOrResumeTimer(long millisInFuture, long interval) {
         countDownTimer = new CountDownTimer(millisInFuture, interval) {
@@ -296,11 +370,31 @@ public class TimedCountActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Location permission is required to track your route.", Toast.LENGTH_LONG).show();
                 Intent fallBack = new Intent(this, LandingActivity.class);
-                startService(fallBack);
+                startActivity(fallBack);
+                finish();
             }
         }
     }
 
+//    // BroadcastReceiver to get observation location on user request
+//    private final BroadcastReceiver locationReceiver = new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            if (LocationTrackingService.ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
+//                Location location = intent.getParcelableExtra(LocationTrackingService.EXTRA_LOCATION);
+//                if (location != null) {
+//                    double latitude = location.getLatitude();
+//                    double longitude = location.getLongitude();
+//                    float accuracy = location.getAccuracy();
+//
+//                    Log.d(TAG, "Received location: Lat=" + latitude + ", Lng=" + longitude + ", Accuracy=" + accuracy);
+//                }
+//            }
+//        }
+//    };
 
-
+    public void stopLocationTracking() {
+        Intent serviceIntent = new Intent(this, LocationTrackingService.class);
+        stopService(serviceIntent);
+    }
 }

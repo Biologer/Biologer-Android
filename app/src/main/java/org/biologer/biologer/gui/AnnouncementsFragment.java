@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.AnnouncementsAdapter;
+import org.biologer.biologer.adapters.AnnouncementsAdapter;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;

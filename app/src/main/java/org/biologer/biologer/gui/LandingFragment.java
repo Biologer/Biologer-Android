@@ -33,7 +33,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.services.EntryAdapter;
+import org.biologer.biologer.adapters.EntryAdapter;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
@@ -242,17 +242,17 @@ public class LandingFragment extends Fragment {
 
         // Handle item selection
         popupMenu.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.menu_entry_timed_count:
-                    newTimedCount();
-                    return true;
-                case R.id.menu_entry_observation:
-                    newObservation();
-                    return true;
-                default:
-                    return false;
+            if (item.getItemId() == R.id.menu_entry_timed_count) {
+                newTimedCount();
+                return true;
+            } else if (item.getItemId() == R.id.menu_entry_observation) {
+                newObservation();
+                return true;
+            } else {
+                return false;
             }
         });
+
 
         popupMenu.show();
     }

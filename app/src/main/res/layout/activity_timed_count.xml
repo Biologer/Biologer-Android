@@ -1,58 +1,100 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="org.biologer.biologer.gui.TimedCountActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:id="@+id/timed_count_timer"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="0dp"
-            android:paddingEnd="16dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/clock_icon"
-            android:src="@drawable/ic_timer"/>
+        <include
+            layout="@layout/toolbar_main"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textSize="24sp"
-            android:gravity="start|center_vertical"
-            android:text="@string/duration" />
-
-        <TextView
-            android:id="@+id/time_elapsed"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textSize="24sp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:gravity="center_vertical"
-            android:text="@string/_00_00"/>
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/pause_timer_image"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:id="@+id/timed_count_timer"
             android:paddingStart="16dp"
-            android:paddingEnd="0dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/pause_time_icon"
-            android:src="@drawable/ic_pause"/>
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dp"
+                android:paddingEnd="16dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/clock_icon"
+                android:src="@drawable/ic_timer"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="24sp"
+                android:gravity="start|center_vertical"
+                android:text="@string/duration" />
+
+            <TextView
+                android:id="@+id/time_elapsed"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="24sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:gravity="center_vertical"
+                android:text="@string/_00_00"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/pause_timer_image"
+                android:paddingStart="16dp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/pause_time_icon"
+                android:src="@drawable/ic_pause"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-</LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/fragment_background">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycled_view_timed_counts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
+
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/float_button_new_timed_entry"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:fabCustomSize="56dp"
+        app:tint="@color/white"
+        android:src="@drawable/ic_add_black_24dp"
+        android:scaleType="center"
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:enabled="true"
+        android:contentDescription="@string/add_new_observation"
+        app:backgroundTint="@color/colorPrimary"/>
+
+</FrameLayout>

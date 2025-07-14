@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.adapters;
 
 import android.graphics.Typeface;
 import android.text.Html;

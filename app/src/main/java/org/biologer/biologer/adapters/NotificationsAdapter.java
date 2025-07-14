@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -23,6 +23,9 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationResponse;
+import org.biologer.biologer.services.DateHelper;
+import org.biologer.biologer.services.FileManipulation;
+import org.biologer.biologer.services.PreparePhotos;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 

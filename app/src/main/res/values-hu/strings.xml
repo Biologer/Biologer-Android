@@ -6,31 +6,17 @@
     <string name="password">Jelszó</string>
     <string name="login">Bejelentkezés</string>
     <string name="invalid_email">Érvénytelen vagy téves jelszó</string>
-    <string name="valid_pass">Nincs megadva a jelszó</string>
     <string name="wrong_creds">Rossz emailcím vagy jelszó</string>
     <string name="pass_forgotten">Elfelejtette a jelszót?</string>
-    <string name="email_wrong_format">Rosszul megadott emailcím</string>
-    <string name="devDatabase">Fejlesztőknek fenntartott terület!</string>
 
     <!--  Unos  -->
-    <string name="GPSaccuracy">Koordináta pontosság:</string>
     <string name="latitude">Földr. szélesség:</string>
     <string name="longitude">Földr. hosszúság:</string>
-    <string name="not_available">ismeretlen</string>
     <string name="unknown">nem elérhető</string>
-    <string name="taxon_hint">Gépelés megkezdése…</string>
-    <string name="more">Tovább…</string>
     <string name="naziv_taksona">Fajnév</string>
-    <string name="pleaseSelect">Kiválasztás</string>
     <string name="broj_jedinki">Egyedszám</string>
-    <string name="pol">Nem</string>
-    <string name="M">Hím egyed</string>
-    <string name="Z">Nőstény egyed</string>
-    <string name="razvojni_stadijum">Kor</string>
     <string name="stage_hint">Faj fejlettségi stádiuma</string>
     <string name="jedinka_je">Elpusztult egyed?</string>
-    <string name="ziva">élő</string>
-    <string name="mrtva">halott</string>
     <string name="razlog_smrti">Pusztulás oka</string>
     <string name="habitat">Élőhely</string>
     <string name="komentar">Megjegyzés</string>
@@ -39,27 +25,13 @@
     <string name="upload">Feltöltés</string>
     <string name="title_activity_map">Térkép</string>
     <string name="entry_title">Adatbevitel</string>
-    <string name="taxa_mandatory">Érvénytelen fajnév!</string>
-    <string name="please_select">Kiválasztás</string>
-    <string name="enable_location">A készülék lokáció beállítása nem aktív!</string>
-    <string name="enable_location_yes">Bekapcsol</string>
-    <string name="enable_location_no">Visszavon</string>
     <string name="saved">A bevitel elmentve.</string>
     <string name="location_is_zero">A készülék még nem találta meg a lokációját. Szeretné megvárni a lokáció meghatározást vagy kilépne?</string>
     <string name="wait">Várakozás</string>
 
-    <!--picture dialog-->
-    <string name="choose_picture">Kép kiválasztása</string>
-    <string name="choose_picture_gallery">Választás a telefongalériából.</string>
-    <string name="choose_picture_camera">Fotó készítése</string>
-    <!--map-->
-    <string name="accurcy">Helyszínpontosság (m)</string>
-
     <!--LandingActivity-->
-    <string name="confirmExit">Kilépés?</string>
     <string name="yes">Igen</string>
     <string name="no">Nem</string>
-    <string name="updating_database">Rendszertan-adatbázis frissítése</string>
     <string name="new_database_available"><b>Elérhető a rendszertani adatbázis frissített változata.</b> Letölthető azonnal, vagy a Beállítások menüpontból később. Frissít most? <b>Figyelem:</b> a folyamathoz élő internet kapcsolat szükséges.</string>
 
     <!--Details-->
@@ -83,13 +55,9 @@
 
     <!--Logout-->
     <string name="currently_logged_data">Bejelentkezve az adatbázisba:</string>
-    <string name="currently_logged_user_name">Mint:</string>
     <string name="logout_from_biologer">Kilép?</string>
 
     <!--Setup-->
-    <string name="note">A fajok rendszertani adatbázisa itt frissíthető.</string>
-    <string name="button_update">Rendszertan és fajnevek frissítése</string>
-    <string name="database_updated">A fajnevek és rendszertanuk frissítése befejeződött.</string>
     <string name="database_connect_error">Hiba az online bázis elérésében! Újracsatlakozás?</string>
 
     <!--First time run-->
@@ -113,13 +81,11 @@
     <string name="hybrid">Kombinált</string>
     <string name="terrain">Topográfia</string>
     <string name="sattelite">Műholdkép</string>
-    <string name="title_setup_activity">Biologer Beállításai</string>
     <string name="license10">Szabad felhasználású</string>
     <string name="license_default">Kérd le a szerverről</string>
     <string name="license20">Ingyenesen használható, de csak nem kommerciális célra</string>
     <string name="license30">Részben nyitott, feltételesen használható</string>
     <string name="license40">Adatok zárása</string>
-    <string name="setup_title">Biologer beállítások</string>
     <string name="choose_dlicense">Adataink jogvédettégi fokozatának kiválasztása</string>
     <string name="choose_ilicense">Fotóink jogvédettégi fokozatának kiválasztása</string>
     <string name="choose_project">Itt jelölhető meg, ha az adatgyűjtés projekt keretében történik.</string>
@@ -135,29 +101,13 @@
     <string name="notify_desc_taxa_failed">A Biologer rendszertani bázisa nem frissült fel, rossz internet kapcsolat miatt a letöltés megszakadt. A művelet ismételt indítása szükséges.</string>
     <string name="retry">Újrapróbál?</string>
     <string name="OK">Rendben</string>
-    <string name="exit_application">Kijelentkezés után, beléphet a Biologer valamely más nyelvű onlájn adatbázisába.</string>
-    <string name="user_is_logged_out">Jelenleg nincs felhasználó bejelentkezve. A Biologer ezért kilép.
-Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a program felületére.</string>
-    <string name="should_cancel_taxa_update">A Biologer jelenleg a program taxonómiai bázisát frissíti. Meg szeretné szakítani a műveletet?</string>
-    <string name="continue_update">Frissítés folytatása</string>
-    <string name="notify_title_taxa_partially_updated">A rendszertani bázis csak részben frissült</string>
-    <string name="notify_desc_taxa_partially_updated">A rendszertan bázisa csak részlegesen került frissítésre. Hogy a program jól működjön, a Biologer beállítási menüpontjából meg kell ismételnie a frissítést.</string>
-    <string name="stop_action">Megállít</string>
     <string name="resume_action">Művelet folytatása</string>
-    <string name="cancel_update">Frissítés visszavonása</string>
     <string name="data_license">Adatok jogvédettségi formája</string>
-    <string name="data_sharing">Adatok közzététele</string>
     <string name="image_license">Fotók jogvédettségi foka</string>
-    <string name="retry_licence_from_server">A Biologer nem tudja elérni a fotói és adatai jogvédettségi fokát. A művelet megismétléséhez stabil internet-kapcsolatra van szükség. A Biologer beállításaiban új jogvédettégi fokozatokat is választhat.</string>
-    <string name="go_to_preferences">Beállítások menüpont megnyitása</string>
     <string name="update_taxa">Taxonómia letöltése</string>
     <string name="update_taxa_desc">Itt újratöltheti a biológiai rendszertan adatbázisát a készülékére.</string>
-    <string name="data_synchronisation">Adat szinkronizálás folyamatban</string>
-    <string name="additional_options">További beállítások</string>
     <string name="updating_taxa_be_patient">A Biologer taxonómiai bázisa frissül. Egy kis türelmet.</string>
     <string name="pause_action">Megállít</string>
-    <string name="notify_title_taxa_paused">Frissítés szünetel</string>
-    <string name="notify_desc_taxa_paused">A frissített rendszertan letöltése a szerverről szünetel.</string>
     <string name="notify_title_taxa_canceled">Frissítés leállítva</string>
     <string name="notify_desc_taxa_canceled">A frissített rendszertan letöltése felhasználó részéről stoppolva.</string>
     <string name="invalid_taxon_name">Úgy tűnik, ismeretlen taxont választott. Mégis szeretné elmenteni?</string>
@@ -167,13 +117,11 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="map">Térkép</string>
     <string name="advanced_entry">Adatbevitel haladó opciókkal.</string>
     <string name="advanced_entry_desc">Lehetővé teszi, hogy a bevitelt haladó opciókkal vihessük be (pl. egyedeszám, kor, nem).</string>
-    <string name="select_sex">Egyed neme</string>
     <string name="stage_egg">Tojás</string>
     <string name="stage_larva">Lárva</string>
     <string name="stage_pupa">Bábállapot</string>
     <string name="stage_adult">Kifejlett egyed</string>
     <string name="Biologer">Biologer</string>
-    <string name="logging_in">Kapcsolódás…</string>
     <string name="cannot_connect_token">Nincs visszajelzés (token) a szervertől. Ellenőrizd az internet kapcsolatot.</string>
     <string name="database">Adatbázis</string>
     <string name="User">Felhasználó</string>
@@ -198,8 +146,6 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="database_bih">Bosznia-Hercegovina</string>
     <string name="database_dev_version">Fejlesztőknek fenntartott</string>
     <string name="URL_address">URL:</string>
-    <string name="notifications_disabled1">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_taxa\" csatornán. A Biologer nem fogja tudni megkapni az internetről a fajok listáját, amely a helyes fajnevek és a terepi megfigyelések elküldéséhez szükséges.</string>
-    <string name="notifications_disabled2">Fontos figyelmeztetés! Az értesítések nem engedélyezettek a \"biologer_entries\" csatornán. A Biologer nem fogja tudni feltölteni megfigyeléseit online, ez az egyik alapvető funkciója.</string>
     <string name="notifications_disabled">Fontos figyelmeztetés: az értesítések nem engedélyezettek! Ez azt jelenti, hogy a Biologer nem fogja tudni megkapni a fajok listáját vagy feltölteni az adatait online. Az értesítések Android operációs rendszerben történő engedélyezéséhez az alkalmazás alapvető funkcióinak nagy része szükséges, és nem működik megfelelően, ha ez a beállítás nem engedélyezett.</string>
     <string name="auto_download">Automatikus le- és feltöltés</string>
     <string name="auto_download_desc">Lehetővé teszi az adatok automatikus be- és feltöltését felhasználói beavatkozás nélkül. Alapértelmezés szerint az adatokat csak a WiFi-n továbbítják.</string>
@@ -207,9 +153,6 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="any_network">Bármely hálózaton</string>
     <string name="always_ask">Mindig kérdezze meg a felhasználót</string>
     <string name="found_on">Megtalálható a</string>
-    <string name="is_male">Hím</string>
-    <string name="is_female">Nőstény</string>
-    <string name="unknown_sex">Ismeretlen nem</string>
     <string name="preferences_data_entry">Adat bevitel</string>
     <string name="allow_english_names">Mindig listázd ki az angol neveket</string>
     <string name="allow_english_names_desc">Lehetővé teszi a Biologer számára a fajok angol neveinek felsorolását akkor is, ha a telefon nyelve más nyelvre van beállítva.</string>
@@ -217,10 +160,6 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="preferences_other">Egyéb beállítások</string>
     <string name="number_of_males">Hím egyedek száma</string>
     <string name="number_of_females">Nőstény egyedek száma</string>
-    <string name="both_sexes">Mindkét nem</string>
-    <string name="both">Mindkét</string>
-    <string name="unknown_sex_short">Ismeretlen</string>
-    <string name="image_deleted">This image does not exist on your device anymore!</string>
     <string name="select_atlas_code">Nesting atlas code</string>
     <string name="atlas_code_0">0. Species observed but suspected to be still on migration or to be summering non-breeder</string>
     <string name="atlas_code_1">1. Species observed in breeding season in possible nesting habitat</string>
@@ -240,7 +179,6 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="atlas_code_15">15. Nest containing eggs</string>
     <string name="atlas_code_16">16. Nest with young seen or heard</string>
     <string name="not_selected">Not selected</string>
-    <string name="display_image_on_full_screen">Display image on full screen.</string>
     <string name="image_view">Image View</string>
     <string name="taxon_name">Taxon name</string>
     <string name="developmental_stage">Developmental stage</string>
@@ -255,21 +193,15 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="accuracy">Accuracy</string>
     <string name="male">♂</string>
     <string name="female">♀</string>
-    <string name="add_new_observetion">Add new observetion</string>
+    <string name="add_new_observation">Add new observetion</string>
     <string name="register_btn">Register</string>
     <string name="name">Name</string>
     <string name="institution">Institution</string>
     <string name="email">Email address</string>
     <string name="password2">Repeat password</string>
-    <string name="register_intro1">\"You can register to \"</string>
-    <string name="register_intro2">\" by filling this simple form. Please note that you must confirm your account using valid email address.\"</string>
-    <string name="register_intro3">read and accept privacy policy.</string>
     <string name="i_accept_privacy_policy">I accept privacy policy</string>
-    <string name="register_intro4">and choose how you share data with others</string>
     <string name="email_already_exist">This email address is already registered</string>
-    <string name="registering">Registering new user</string>
     <string name="register_succesfull">Registration is almost complete. To make sure this was you, we will send an email with confirmation link. After verifying your email you could login to biologer.</string>
-    <string name="confirm_email">Your email addres is not confirmed yet! We have sent you an email with confirmation link to the given address, just click on it and you are good to go.</string>
     <string name="unauthorised">The given user does not exist on this server. Maybe you are trying to connect to the wrong database?</string>
     <string name="cannot_connect_server">Cannot get response from the server!</string>
     <string name="refresh_token_failed">Your login token has expired, but we could not refresh it from the internet!</string>
@@ -281,10 +213,8 @@ Kérjük indítsa újra és felhasználónév+jelszó megadásával lépjen be a
     <string name="sql_updated_message">SQL database structire changed. Biologer will log you back in and redownload data from server.</string>
     <string name="login_after_sql_update_fail">Could not loggin after internal Biologer SQL database updated. Biologer will be closed now. You should check your network and try to login later.</string>
     <string name="groups_of_taxa">Available groups of taxaData</string>
-    <string name="deselect_all_groups">Unselect all groups</string>
     <string name="notificationPermit">Biologer uses notifications to receive species list or upload your records online and will not work properly without them.</string>
     <string name="enable">Enable</string>
-    <string name="disable">Disable</string>
     <string name="montenegro">Montenegro</string>
 
 </resources>

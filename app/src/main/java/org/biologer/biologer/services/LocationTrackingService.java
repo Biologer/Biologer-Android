@@ -10,8 +10,10 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -27,6 +29,8 @@ public class LocationTrackingService extends Service {
     private static final String TAG = "Biologer.TrackLocation";
     public static final String ACTION_PAUSE = "org.biologer.biologer.action.PAUSE";
     public static final String ACTION_RESUME = "org.biologer.biologer.action.RESUME";
+    public static final String ACTION_LOCATION_UPDATE = "org.biologer.biologer.action.LOCATION_UPDATE";
+    public static final String EXTRA_LOCATION = "extra_location";
     private boolean isTracking = true;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -39,11 +43,17 @@ public class LocationTrackingService extends Service {
 
         locationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(LocationResult locationResult) {
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 if (!isTracking) return;
 
                 for (Location location : locationResult.getLocations()) {
                     Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
+
+                    // Broadcast the location on user request (i.e. receive observation location)
+                    Intent intent = new Intent(ACTION_LOCATION_UPDATE);
+                    intent.putExtra(EXTRA_LOCATION, location);
+                    LocalBroadcastManager.getInstance(LocationTrackingService.this).sendBroadcast(intent);
+
                     // Save location to your route list
                 }
             }
@@ -73,12 +83,11 @@ public class LocationTrackingService extends Service {
 
     private void requestLocationUpdates() {
         LocationRequest locationRequest = LocationRequest.create()
-                .setInterval(5000)
-                .setFastestInterval(2000)
+                .setInterval(2500)
+                .setFastestInterval(1000)
                 .setPriority(Priority.PRIORITY_HIGH_ACCURACY);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Handle permission check externally before starting the service
             return;
         }
 

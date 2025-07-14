@@ -35,7 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.NotificationsAdapter;
+import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UpdateUnreadNotifications;

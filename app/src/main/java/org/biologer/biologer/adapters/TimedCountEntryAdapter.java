@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.adapters;
 
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -18,6 +18,7 @@ import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
+import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
@@ -28,14 +29,14 @@ import java.util.List;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryAdapter
-        extends RecyclerView.Adapter<EntryAdapter.ViewHolder> {
+public class TimedCountEntryAdapter
+        extends RecyclerView.Adapter<TimedCountEntryAdapter.ViewHolder> {
     private final List<EntryDb> myEntries;
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
 
-    public EntryAdapter(ArrayList<EntryDb> entries) {
+    public TimedCountEntryAdapter(ArrayList<EntryDb> entries) {
         myEntries = entries;
     }
 
