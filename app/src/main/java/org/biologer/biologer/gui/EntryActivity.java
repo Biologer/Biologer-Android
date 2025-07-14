@@ -231,6 +231,13 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             image1 = savedInstanceState.getString("image1");
             image2 = savedInstanceState.getString("image2");
             image3 = savedInstanceState.getString("image3");
+            list_new_images = savedInstanceState.getStringArrayList("list_new_images");
+
+            if (savedInstanceState.containsKey("current_image")) {
+                current_image = savedInstanceState.getParcelable("current_image");
+                Log.d(TAG, "Restored current_image URI: " + current_image);
+            }
+
             if (image1 != null) {
                 Glide.with(this)
                         .load(image1)
@@ -252,7 +259,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         .into(imageViewPicture3);
                 frameLayoutPicture3.setVisibility(View.VISIBLE);
             }
-            list_new_images = savedInstanceState.getStringArrayList("list_new_images");
         }
 
         // Fill in the drop down menu with list of taxa
@@ -1793,6 +1799,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         outState.putString("image2", image2);
         outState.putString("image3", image3);
         outState.putStringArrayList("list_new_images", list_new_images);
+        if (current_image != null) {
+            outState.putParcelable("current_image", current_image);
+            Log.d(TAG, "Saved current_image URI: " + current_image);
+        }
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         Log.d(TAG, "Activity will be recreated. Saving the state!");
         super.onSaveInstanceState(outState);
