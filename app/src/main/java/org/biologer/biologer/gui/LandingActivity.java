@@ -285,7 +285,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         // Load database from local assets folder if newer
         int updatedAt = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
-        String assets_timestamp = "1733425371";
+        String assets_timestamp = "1752595284";
         if (updatedAt < Integer.parseInt(assets_timestamp)) {
             Log.i(TAG, "Loading taxa database from Android assets folder. Version: " +
                     updatedAt + "; Available version: " + assets_timestamp);
