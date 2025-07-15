@@ -720,6 +720,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void updateTaxa() {
         Log.d(TAG, "Current timestamp: " + System.currentTimeMillis() / 1000);
         if (UpdateTaxa.isInstanceCreated()) {
+            Log.d(TAG, "UpdateTaxa is already running. Skipping update for now!");
+        } else {
             String updated_at = SettingsManager.getTaxaUpdatedAt();
             String skip_this = SettingsManager.getSkipTaxaDatabaseUpdate();
             String timestamp = updated_at;
@@ -729,6 +731,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
             String database = SettingsManager.getDatabaseName();
             int finalTimestamp = Integer.parseInt(timestamp);
+            Log.d(TAG, "Checking if there is new taxa for " + timestamp + " at " + database);
             Call<TaxaResponse> call = RetrofitClient.getService(
                     database).getTaxa(1, 1,
                     Integer.parseInt(timestamp), false,
@@ -1082,6 +1085,8 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void startFetchingTaxa() {
         if (UpdateTaxa.isInstanceCreated()) {
+            Log.d(TAG, "UpdateTaxa is already running, skipping for now…");
+        } else {
             final Intent updateTaxa = new Intent(LandingActivity.this, UpdateTaxa.class);
             updateTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD);
             startService(updateTaxa);
