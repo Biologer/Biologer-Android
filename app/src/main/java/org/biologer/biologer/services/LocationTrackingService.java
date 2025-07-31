@@ -22,18 +22,40 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.osgeo.proj4j.CRSFactory;
+import org.osgeo.proj4j.CoordinateReferenceSystem;
+import org.osgeo.proj4j.CoordinateTransform;
+import org.osgeo.proj4j.CoordinateTransformFactory;
+import org.osgeo.proj4j.ProjCoordinate;
+
 import org.biologer.biologer.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LocationTrackingService extends Service {
 
     private static final String TAG = "Biologer.TrackLocation";
     public static final String ACTION_PAUSE = "org.biologer.biologer.action.PAUSE";
     public static final String ACTION_RESUME = "org.biologer.biologer.action.RESUME";
+    public static final String ACTION_STOP = "org.biologer.biologer.action.STOP";
     public static final String ACTION_LOCATION_UPDATE = "org.biologer.biologer.action.LOCATION_UPDATE";
-    public static final String EXTRA_LOCATION = "extra_location";
+    public static final String CURRENT_LOCATION = "current_location";
+    public static final String ACTION_ROUTE_RESULT = "org.biologer.biologer.action.ROUTE_RESULT";
+    public static final String WALKED_AREA = "walked_area";
     private boolean isTracking = true;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private final List<UTMPoint> routeUtmPoints = new ArrayList<>();
+    private final CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
+    private final CRSFactory crsFactory = new CRSFactory();
+    private CoordinateTransform lonLatToUtmTransform;
+    private int currentUtmZone = -1;
 
     @Override
     public void onCreate() {
@@ -49,12 +71,16 @@ public class LocationTrackingService extends Service {
                 for (Location location : locationResult.getLocations()) {
                     Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
 
+                    // Save location to route list
+                    UTMPoint utmPoint = convertToUtm(location);
+                    if (utmPoint != null) {
+                        routeUtmPoints.add(utmPoint);
+                    }
+
                     // Broadcast the location on user request (i.e. receive observation location)
                     Intent intent = new Intent(ACTION_LOCATION_UPDATE);
-                    intent.putExtra(EXTRA_LOCATION, location);
+                    intent.putExtra(CURRENT_LOCATION, location);
                     LocalBroadcastManager.getInstance(LocationTrackingService.this).sendBroadcast(intent);
-
-                    // Save location to your route list
                 }
             }
         };
@@ -75,9 +101,12 @@ public class LocationTrackingService extends Service {
                     isTracking = true;
                     Log.d(TAG, "Tracking resumed.");
                     break;
+                case ACTION_STOP:
+                    Log.d(TAG, "Tracking completed, sending results...");
+                    stopTrackingAndCalculate();
+                    break;
             }
         }
-
         return START_STICKY;
     }
 
@@ -110,6 +139,91 @@ public class LocationTrackingService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        // Also remove location tracking here as a fallback...
         fusedLocationClient.removeLocationUpdates(locationCallback);
     }
+
+    // A helper class to store UTM coordinates.
+    public static class UTMPoint {
+        public double easting;
+        public double northing;
+        public int utmZone;
+
+        public UTMPoint(double easting, double northing, int utmZone) {
+            this.easting = easting;
+            this.northing = northing;
+            this.utmZone = utmZone;
+        }
+    }
+
+    // Convert geographic coordinates to UTM
+    private UTMPoint convertToUtm(Location location) {
+        // Determine the UTM zone based on longitude.
+        int utmZone = (int) Math.floor((location.getLongitude() + 180) / 6) + 1;
+
+        // If the UTM zone changes, we need to create a new transformation.
+        if (utmZone != currentUtmZone) {
+            currentUtmZone = utmZone;
+
+            String utmProj4String = "+proj=utm +zone=" + currentUtmZone + " +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
+            CoordinateReferenceSystem utmCrs = crsFactory.createFromParameters("utm", utmProj4String);
+
+            CoordinateReferenceSystem WGS84Crs = crsFactory.createFromParameters("WGS84", "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
+
+            lonLatToUtmTransform = ctFactory.createTransform(WGS84Crs, utmCrs);
+        }
+
+        if (lonLatToUtmTransform != null) {
+            ProjCoordinate lonLatCoord = new ProjCoordinate(location.getLongitude(), location.getLatitude());
+            ProjCoordinate utmCoord = new ProjCoordinate();
+            lonLatToUtmTransform.transform(lonLatCoord, utmCoord);
+
+            Log.d(TAG, "UTM coordinates: " + utmCoord.x + ", " + utmCoord.y + " (zone " + utmZone + ").");
+            return new UTMPoint(utmCoord.x, utmCoord.y, utmZone);
+        }
+
+        return null;
+    }
+
+    // Calculate area in square meters from UTM coordinates
+    public double calculateArea() {
+        if (routeUtmPoints.size() < 3) {
+            return 0.0; // A polygon needs at least 3 vertices
+        }
+
+        // Use JTS to create a polygon and calculate its area.
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 0);
+
+        // Convert your UTMPoints to JTS Coordinates
+        Coordinate[] coordinates = new Coordinate[routeUtmPoints.size() + 1];
+        for (int i = 0; i < routeUtmPoints.size(); i++) {
+            UTMPoint utmPoint = routeUtmPoints.get(i);
+            coordinates[i] = new Coordinate(utmPoint.easting, utmPoint.northing);
+        }
+        // Close the polygon by adding the first point again
+        coordinates[routeUtmPoints.size()] = new Coordinate(routeUtmPoints.get(0).easting, routeUtmPoints.get(0).northing);
+
+        LinearRing shell = geometryFactory.createLinearRing(coordinates);
+        Polygon polygon = geometryFactory.createPolygon(shell);
+
+        // The getArea() method of a JTS polygon returns the area in the units of the
+        // coordinate system, which is square meters for UTM.
+        return polygon.getArea();
+    }
+
+    private void stopTrackingAndCalculate() {
+        fusedLocationClient.removeLocationUpdates(locationCallback);
+
+        double totalArea = calculateArea();
+        Log.d(TAG, "Total area walked: " + totalArea + " square meters.");
+
+        // Broadcast the result back to the Activity
+        Intent resultIntent = new Intent(ACTION_ROUTE_RESULT);
+        resultIntent.putExtra(WALKED_AREA, totalArea);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(resultIntent);
+
+        stopSelf(); // Stop the service
+    }
+
+
 }

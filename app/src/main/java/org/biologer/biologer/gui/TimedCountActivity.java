@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -93,14 +95,16 @@ public class TimedCountActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         // Register the BroadcastReceiver when the activity starts
-        //IntentFilter filter = new IntentFilter(LocationTrackingService.ACTION_LOCATION_UPDATE);
-        //LocalBroadcastManager.getInstance(this).registerReceiver(locationReceiver, filter);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(LocationTrackingService.ACTION_LOCATION_UPDATE);
+        filter.addAction(LocationTrackingService.ACTION_ROUTE_RESULT);
+        LocalBroadcastManager.getInstance(this).registerReceiver(locationReceiver, filter);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        //LocalBroadcastManager.getInstance(this).unregisterReceiver(locationReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(locationReceiver);
     }
 
     // Create AlertDialog to setup before starting the timed count.
@@ -325,7 +329,12 @@ public class TimedCountActivity extends AppCompatActivity {
             public void onFinish() {
                 isTimerRunning = false;
                 Log.d(TAG, "Countdown finished!");
-                stopService(new Intent(TimedCountActivity.this, LocationTrackingService.class));
+
+                // Create an Intent to stop the service with the custom action
+                Intent stopIntent = new Intent(TimedCountActivity.this, LocationTrackingService.class);
+                stopIntent.setAction(LocationTrackingService.ACTION_STOP);
+                startService(stopIntent);
+
                 elapsed_time.setText(R.string.finished);
                 timerLayout.setEnabled(false);
             }
@@ -376,22 +385,26 @@ public class TimedCountActivity extends AppCompatActivity {
         }
     }
 
-//    // BroadcastReceiver to get observation location on user request
-//    private final BroadcastReceiver locationReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            if (LocationTrackingService.ACTION_LOCATION_UPDATE.equals(intent.getAction())) {
-//                Location location = intent.getParcelableExtra(LocationTrackingService.EXTRA_LOCATION);
-//                if (location != null) {
-//                    double latitude = location.getLatitude();
-//                    double longitude = location.getLongitude();
-//                    float accuracy = location.getAccuracy();
-//
-//                    Log.d(TAG, "Received location: Lat=" + latitude + ", Lng=" + longitude + ", Accuracy=" + accuracy);
-//                }
-//            }
-//        }
-//    };
+    // BroadcastReceiver to get observation location on user request
+    private final BroadcastReceiver locationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() != null) {
+                if (intent.getAction().equals(LocationTrackingService.ACTION_LOCATION_UPDATE)) {
+                    Location location = intent.getParcelableExtra(LocationTrackingService.CURRENT_LOCATION);
+                    if (location != null) {
+                        double latitude = location.getLatitude();
+                        double longitude = location.getLongitude();
+                        float accuracy = location.getAccuracy();
+                        Log.d(TAG, "Received location: Lat=" + latitude + ", Lng=" + longitude + ", Accuracy=" + accuracy);
+                    }
+                } else if (intent.getAction().equals(LocationTrackingService.ACTION_ROUTE_RESULT)) {
+                    double totalArea = intent.getDoubleExtra(LocationTrackingService.WALKED_AREA, 0.0);
+                    Log.d(TAG, "Received total area: " + totalArea);
+                }
+            }
+        }
+    };
 
     public void stopLocationTracking() {
         Intent serviceIntent = new Intent(this, LocationTrackingService.class);
