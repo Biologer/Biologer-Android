@@ -499,5 +499,6 @@
     <string name="error_fetching_user_data">Could not get user data: data is null.</string>
     <string name="error_fetching_user_data1">Could not get user data: response is null.</string>
     <string name="timed_count_title">Timed count</string>
+    <string name="add">Add</string>
 
 </resources>

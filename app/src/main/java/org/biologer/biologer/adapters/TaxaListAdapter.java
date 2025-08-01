@@ -15,6 +15,10 @@ import org.biologer.biologer.sql.TaxonDb;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * This adapter is used to query taxa from ObjectBox database.
+ */
+
 public class TaxaListAdapter extends ArrayAdapter<TaxonDb> {
 
     public TaxaListAdapter(@NonNull Context context, int resource, @NonNull List<TaxonDb> taxaLists) {

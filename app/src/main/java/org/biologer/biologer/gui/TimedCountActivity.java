@@ -40,13 +40,17 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 import org.biologer.biologer.R;
+import org.biologer.biologer.adapters.EntryAdapter;
+import org.biologer.biologer.adapters.SpeciesCount;
 import org.biologer.biologer.adapters.TaxaListAdapter;
+import org.biologer.biologer.adapters.TimedCountAdapter;
 import org.biologer.biologer.services.LocationTrackingService;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.sql.TaxonDb;
@@ -64,7 +68,7 @@ public class TimedCountActivity extends AppCompatActivity {
     private CountDownTimer countDownTimer;
     private long timeRemaining;
     private boolean isTimerRunning = false;
-    ImageView pauseTimerImage;
+    ImageView pauseTimerImage, plusButton;
     AutoCompleteTextView autoCompleteTextView_speciesName;
     private TaxonSearchHelper taxonSearchHelper;
     TaxonDb selectedTaxon = null;
@@ -72,6 +76,8 @@ public class TimedCountActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     private FusedLocationProviderClient fusedLocationClient;
     double latitude, longitude, accuracy;
+    private TimedCountAdapter timedCountAdapter;
+    private ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +97,11 @@ public class TimedCountActivity extends AppCompatActivity {
         elapsed_time = findViewById(R.id.time_elapsed);
         timerLayout = findViewById(R.id.timed_count_timer);
         pauseTimerImage = findViewById(R.id.pause_timer_image);
+
         recyclerView = findViewById(R.id.recycled_view_timed_counts);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        timedCountAdapter = new TimedCountAdapter(speciesCounts);
+        recyclerView.setAdapter(timedCountAdapter);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -115,6 +125,11 @@ public class TimedCountActivity extends AppCompatActivity {
             autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
             selectedTaxon = taxonDb;
             taxonSelectedFromTheList = true;
+            SpeciesCount new_species = new SpeciesCount(selectedTaxon.getLatinName(),
+                    selectedTaxon.getId(), 1);
+            speciesCounts.add(new_species);
+            timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+            autoCompleteTextView_speciesName.setText("");
         });
 
         // When user type taxon name...
@@ -166,6 +181,8 @@ public class TimedCountActivity extends AppCompatActivity {
         // Activate the field for species name and show the keyboard.
         autoCompleteTextView_speciesName.requestFocus();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+
 
     }
 

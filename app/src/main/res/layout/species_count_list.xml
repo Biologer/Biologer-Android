@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/species_count_no"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:text=""
+        android:textSize="20sp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:textColor="@color/colorPrimary"/>
+
+    <ImageView
+        android:id="@+id/species_count_plus"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:src="@drawable/ic_plus"
+        android:contentDescription="@string/add" />
+
+    <TextView
+        android:id="@+id/species_count_name"
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:text="@string/taxon_name"
+        android:paddingStart="12dp"
+        android:paddingEnd="0dp"
+        android:textSize="16sp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:textColor="@color/colorPrimary"/>
+
+
+</LinearLayout>

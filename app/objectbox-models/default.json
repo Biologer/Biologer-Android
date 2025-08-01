@@ -620,9 +620,83 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "22:5077654541060987432",
+      "lastPropertyId": "13:2146561128621106321",
+      "name": "TimedCountDb",
+      "properties": [
+        {
+          "id": "1:4243967429266409303",
+          "name": "id",
+          "type": 6,
+          "flags": 129
+        },
+        {
+          "id": "2:1368560095505349989",
+          "name": "timedCountId",
+          "type": 5
+        },
+        {
+          "id": "3:6943168398254565037",
+          "name": "startTime",
+          "type": 9
+        },
+        {
+          "id": "4:4632300191205636751",
+          "name": "endTime",
+          "type": 9
+        },
+        {
+          "id": "5:2077530220365559556",
+          "name": "countDurationMinutes",
+          "type": 5
+        },
+        {
+          "id": "6:833264832822501360",
+          "name": "cloudCoverPercentage",
+          "type": 5
+        },
+        {
+          "id": "7:2359067596169370104",
+          "name": "atmosphericPressureHPa",
+          "type": 5
+        },
+        {
+          "id": "8:1358986215993769460",
+          "name": "humidityPercentage",
+          "type": 5
+        },
+        {
+          "id": "9:5682438883417848710",
+          "name": "temperatureCelsius",
+          "type": 8
+        },
+        {
+          "id": "10:8789483320980712468",
+          "name": "windDirection",
+          "type": 9
+        },
+        {
+          "id": "11:1403878875175829347",
+          "name": "windSpeed",
+          "type": 5
+        },
+        {
+          "id": "12:6724583908652897633",
+          "name": "habitat",
+          "type": 9
+        },
+        {
+          "id": "13:2146561128621106321",
+          "name": "taxonGroup",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "21:1356762403395008272",
+  "lastEntityId": "22:5077654541060987432",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
