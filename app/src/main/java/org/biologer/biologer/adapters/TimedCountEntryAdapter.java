@@ -33,7 +33,7 @@ public class TimedCountEntryAdapter
         extends RecyclerView.Adapter<TimedCountEntryAdapter.ViewHolder> {
     private final List<EntryDb> myEntries;
     private int position;
-    private static final String TAG = "Biologer.EntryAdapter";
+    private static final String TAG = "Biologer.TCEntryAdapter";
     View view;
 
     public TimedCountEntryAdapter(ArrayList<EntryDb> entries) {

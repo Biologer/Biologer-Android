@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -18,7 +20,9 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -40,10 +44,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.biologer.biologer.R;
+import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.services.LocationTrackingService;
+import org.biologer.biologer.services.TaxonSearchHelper;
+import org.biologer.biologer.sql.TaxonDb;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +65,10 @@ public class TimedCountActivity extends AppCompatActivity {
     private long timeRemaining;
     private boolean isTimerRunning = false;
     ImageView pauseTimerImage;
-    FloatingActionButton floatingActionButton;
+    AutoCompleteTextView autoCompleteTextView_speciesName;
+    private TaxonSearchHelper taxonSearchHelper;
+    TaxonDb selectedTaxon = null;
+    boolean taxonSelectedFromTheList = false;
     RecyclerView recyclerView;
     private FusedLocationProviderClient fusedLocationClient;
     double latitude, longitude, accuracy;
@@ -82,13 +91,82 @@ public class TimedCountActivity extends AppCompatActivity {
         elapsed_time = findViewById(R.id.time_elapsed);
         timerLayout = findViewById(R.id.timed_count_timer);
         pauseTimerImage = findViewById(R.id.pause_timer_image);
-        floatingActionButton = findViewById(R.id.float_button_new_timed_entry);
         recyclerView = findViewById(R.id.recycled_view_timed_counts);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Check the location permission and start all other stuff...
         checkLocationPermission();
+
+        // Fill in the drop down menu with list of taxa
+        TaxaListAdapter adapter = new TaxaListAdapter(this,
+                R.layout.taxa_dropdown_list,
+                new ArrayList<>());
+        autoCompleteTextView_speciesName = findViewById(R.id.textview_list_of_taxa_time_count);
+        autoCompleteTextView_speciesName.setAdapter(adapter);
+        autoCompleteTextView_speciesName.setThreshold(2);
+        taxonSearchHelper = new TaxonSearchHelper(this);
+
+        autoCompleteTextView_speciesName.setOnItemClickListener((parent,
+                                                                 view,
+                                                                 position,
+                                                                 id) -> {
+            TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
+            autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
+            selectedTaxon = taxonDb;
+            taxonSelectedFromTheList = true;
+        });
+
+        // When user type taxon name...
+        autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
+            final Handler handler = new Handler(Looper.getMainLooper());
+            Runnable runnable;
+            String entered_name = null;
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                entered_name = String.valueOf(s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                final String changed_entered_name = String.valueOf(s);
+                if (changed_entered_name.equals(entered_name)) {
+                    Log.d(TAG, "TextChanged call ignored, previous text and entered text is the same.");
+                } else {
+                    // Try to get the latin name from ObjectBox database
+                    handler.removeCallbacks(runnable);
+                    runnable = () -> {
+
+                        // Remove atlas code and stage for taxa not selected from the list
+                        if (!taxonSelectedFromTheList) {
+                            selectedTaxon = null;
+                        }
+                        taxonSelectedFromTheList = false;
+
+                        List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
+
+                        // Add the Query to the drop down list (adapter)
+                        TaxaListAdapter adapter1 =
+                                new TaxaListAdapter(TimedCountActivity.this,
+                                        R.layout.taxa_dropdown_list,
+                                        allTaxaLists);
+                        autoCompleteTextView_speciesName.setAdapter(adapter1);
+                        adapter1.notifyDataSetChanged();
+                    };
+                    handler.postDelayed(runnable, 300);
+                }
+            }
+        });
+
+        // Activate the field for species name and show the keyboard.
+        autoCompleteTextView_speciesName.requestFocus();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
     }
 
     @Override
@@ -280,12 +358,6 @@ public class TimedCountActivity extends AppCompatActivity {
             }
         });
 
-        floatingActionButton.setOnClickListener(v -> addTaxon());
-
-    }
-
-    private void addTaxon() {
-        getLatestLocationOnRequest();
     }
 
     private void getLatestLocationOnRequest() {
@@ -406,8 +478,4 @@ public class TimedCountActivity extends AppCompatActivity {
         }
     };
 
-    public void stopLocationTracking() {
-        Intent serviceIntent = new Intent(this, LocationTrackingService.class);
-        stopService(serviceIntent);
-    }
 }

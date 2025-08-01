@@ -69,6 +69,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.services.ArrayHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.PreparePhotos;
@@ -267,7 +268,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         autoCompleteTextView_speciesName = findViewById(R.id.textview_list_of_taxa);
         autoCompleteTextView_speciesName.setAdapter(adapter);
         autoCompleteTextView_speciesName.setThreshold(2);
-        taxonSearchHelper = new TaxonSearchHelper(App.get().getBoxStore(), preferences, locale_script);
+        taxonSearchHelper = new TaxonSearchHelper(this);
 
         autoCompleteTextView_speciesName.setOnItemClickListener((parent, view, position, id) -> {
             TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
@@ -437,37 +438,6 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         textViewAtlasCodeLayout.setVisibility(View.GONE);
         textViewAtlasCode.setText("");
         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
-    }
-
-    public static class TaxaListAdapter extends ArrayAdapter<TaxonDb> {
-
-        public TaxaListAdapter(@NonNull Context context, int resource, @NonNull List<TaxonDb> taxaLists) {
-            super(context, resource, taxaLists);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable @org.jetbrains.annotations.Nullable View convertView, @NonNull ViewGroup parent) {
-            ViewHolder rowViewHolder;
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.taxa_dropdown_list, parent, false);
-                rowViewHolder = new ViewHolder();
-                rowViewHolder.taxonNames = convertView.findViewById(R.id.textView_taxon_text);
-                convertView.setTag(rowViewHolder);
-            } else {
-                rowViewHolder = (ViewHolder) convertView.getTag();
-            }
-
-            String taxon = Objects.requireNonNull(getItem(position)).getLatinName();
-
-            rowViewHolder.taxonNames.setText(taxon);
-
-            return convertView;
-        }
-
-        private static class ViewHolder {
-            TextView taxonNames;
-        }
     }
 
     private void setAccuracyColor() {

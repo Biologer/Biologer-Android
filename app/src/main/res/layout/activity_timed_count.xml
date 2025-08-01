@@ -7,7 +7,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <include
@@ -66,35 +66,31 @@
 
         </LinearLayout>
 
-    </LinearLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:endIconMode="clear_text"
+            style="@style/Widget.AppCompat.DropDownItem.Spinner"
+            app:boxBackgroundColor="@android:color/transparent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/fragment_background">
+            <AutoCompleteTextView
+                android:id="@+id/textview_list_of_taxa_time_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/naziv_taksona"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="28dp"
+                android:paddingBottom="10dp"
+                android:textSize="16sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycled_view_timed_counts"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </androidx.recyclerview.widget.RecyclerView>
+
     </LinearLayout>
-
-
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/float_button_new_timed_entry"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        app:fabCustomSize="56dp"
-        app:tint="@color/white"
-        android:src="@drawable/ic_add_black_24dp"
-        android:scaleType="center"
-        android:layout_gravity="end|bottom"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
-        android:enabled="true"
-        android:contentDescription="@string/add_new_observation"
-        app:backgroundTint="@color/colorPrimary"/>
 
 </FrameLayout>

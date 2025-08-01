@@ -1,8 +1,12 @@
 package org.biologer.biologer.services;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.preference.PreferenceManager;
+
 import org.biologer.biologer.App;
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.sql.TaxaTranslationDb;
 import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
@@ -17,18 +21,17 @@ import java.util.List;
 
 public class TaxonSearchHelper {
 
-    private final BoxStore boxStore;
-    private final SharedPreferences preferences;
-    private final String localeScript;
+    private final Context context;
 
-
-    public TaxonSearchHelper(BoxStore boxStore, SharedPreferences preferences, String localeScript) {
-        this.boxStore = boxStore;
-        this.preferences = preferences;
-        this.localeScript = localeScript;
+    public TaxonSearchHelper(Context context) {
+        this.context = context;
     }
 
     public List<TaxonDb> searchTaxa(String searchText) {
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String localeScript = Localisation.getLocaleScript();
+        BoxStore boxStore = App.get().getBoxStore();
 
         if (searchText == null || searchText.trim().isEmpty()) {
             return new ArrayList<>();
