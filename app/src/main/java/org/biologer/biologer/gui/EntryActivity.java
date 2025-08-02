@@ -21,14 +21,12 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -44,7 +42,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -932,18 +929,25 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private void saveEntry3 (TaxonDb taxon) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String location_name = sharedPreferences.getString("location_name", null);
-        if (location_name == null) {
+        // If the location is not given or the user opened existing entry, just continue.
+        if (location_name == null || !isNewEntry()) {
             saveEntry4(taxon);
         } else {
             if (location_name.isEmpty()) {
                 saveEntry4(taxon);
-            } else {
+            }
+            // If the user selected the location name we should check if he left the location.
+            // or if he is still there
+            else {
                 Location old_location = new Location("");
+                // For the first time, just write the coordinates in the SettingsManager.
                 if (SettingsManager.getPreviousLocationLong() == null) {
                     SettingsManager.setPreviousLocationLong(String.valueOf(currentLocation.longitude));
                     SettingsManager.setPreviousLocationLat(String.valueOf(currentLocation.latitude));
                     saveEntry4(taxon);
-                } else {
+                }
+                // After writing the coordinates, read them and compare to the current location.
+                else {
                     old_location.setLongitude(Double.parseDouble(SettingsManager.getPreviousLocationLong()));
                     old_location.setLatitude(Double.parseDouble(SettingsManager.getPreviousLocationLat()));
                     Location current_location = new Location("");

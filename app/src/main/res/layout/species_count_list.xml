@@ -11,7 +11,7 @@
 
     <TextView
         android:id="@+id/species_count_no"
-        android:layout_width="24dp"
+        android:layout_width="wrap_content"
         android:layout_height="24dp"
         android:text=""
         android:textSize="20sp"
@@ -23,7 +23,7 @@
         android:id="@+id/species_count_plus"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:paddingStart="0dp"
+        android:paddingStart="8dp"
         android:paddingEnd="0dp"
         android:src="@drawable/ic_plus"
         android:contentDescription="@string/add" />
@@ -39,6 +39,5 @@
         android:gravity="center_vertical"
         android:includeFontPadding="false"
         android:textColor="@color/colorPrimary"/>
-
 
 </LinearLayout>

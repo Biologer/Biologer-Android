@@ -47,7 +47,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.EntryAdapter;
 import org.biologer.biologer.adapters.SpeciesCount;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.adapters.TimedCountAdapter;
@@ -68,7 +67,7 @@ public class TimedCountActivity extends AppCompatActivity {
     private CountDownTimer countDownTimer;
     private long timeRemaining;
     private boolean isTimerRunning = false;
-    ImageView pauseTimerImage, plusButton;
+    ImageView pauseTimerImage;
     AutoCompleteTextView autoCompleteTextView_speciesName;
     private TaxonSearchHelper taxonSearchHelper;
     TaxonDb selectedTaxon = null;
@@ -77,7 +76,7 @@ public class TimedCountActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     double latitude, longitude, accuracy;
     private TimedCountAdapter timedCountAdapter;
-    private ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
+    private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -456,6 +455,7 @@ public class TimedCountActivity extends AppCompatActivity {
             setupCount();
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
