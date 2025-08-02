@@ -75,7 +75,7 @@ public class UpdateUnreadNotifications extends Service {
         if (databaseName != null) {
             // Get new notifications from the API
             Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(1);
-            unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+            unreadNotificationsResponseCall.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
                     if (response.isSuccessful()) {
@@ -136,7 +136,7 @@ public class UpdateUnreadNotifications extends Service {
         String databaseName = SettingsManager.getDatabaseName();
         if (databaseName != null) {
             Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(page);
-            unreadNotificationsResponseCall.enqueue(new Callback<UnreadNotificationsResponse>() {
+            unreadNotificationsResponseCall.enqueue(new Callback<>() {
 
                 @Override
                 public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
@@ -149,12 +149,12 @@ public class UpdateUnreadNotifications extends Service {
                         long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
                         Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
                         // Add handler to delay fetching
-                        Handler handler = new Handler();
+                        Handler handler = new Handler(Looper.getMainLooper());
                         Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
                         handler.postDelayed(runnable, sec * 1000);
                     } else if (response.code() == 508) {
                         Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
-                        Handler handler = new Handler();
+                        Handler handler = new Handler(Looper.getMainLooper());
                         Runnable runnable = () -> getAndSaveNotificationsToObjectBox(page);
                         handler.postDelayed(runnable, 5000);
                     }

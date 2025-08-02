@@ -1,5 +1,6 @@
 package org.biologer.biologer.gui;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -86,7 +87,11 @@ public class AnnouncementActivity extends AppCompatActivity {
         if (translation != null) {
             text = translation.getMessage();
         }
-        textText.setText(Html.fromHtml(text));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            textText.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            textText.setText(Html.fromHtml(text));
+        }
 
         TextView textAuthor = findViewById(R.id.announcement_reading_author);
         String author = announcements.get(index).getCreatorName();
@@ -118,7 +123,7 @@ public class AnnouncementActivity extends AppCompatActivity {
         // Mark announcement as read online
         Call<ResponseBody> call = RetrofitClient.getService(
                 SettingsManager.getDatabaseName()).setAnnouncementAsRead(id);
-        call.enqueue(new Callback<ResponseBody>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful()) {

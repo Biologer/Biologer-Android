@@ -4,7 +4,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
@@ -86,16 +89,20 @@ public class NotificationsAdapter
         UnreadNotificationsDb notification = notifications.get(position);
 
         TextView textNotifications = viewHolder.textNotification;
-        textNotifications.setText(Html.fromHtml(getFormattedMessage(notification)));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            textNotifications.setText(Html.fromHtml(getFormattedMessage(notification), Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            textNotifications.setText(Html.fromHtml(getFormattedMessage(notification)));
+        }
 
         ImageView imageView = viewHolder.observationPhoto;
         imageView.setImageDrawable(null); // Clear the previous image
         imageView.setImageResource(R.mipmap.ic_kornjaca); // Set the icon before the real image is loaded
         setPhoto(notification, imageView); // Download and display image
         if (notification.getMarked() == 1) {
-            viewHolder.itemView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.colorPrimaryLight));
+            viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryLight));
         } else {
-            viewHolder.itemView.setBackgroundColor(viewHolder.itemView.getResources().getColor(R.color.fragment_background));
+            viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.fragment_background));
         }
 
     }
@@ -329,12 +336,12 @@ public class NotificationsAdapter
                                 long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
                                 Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
                                 // Add handler to delay fetching
-                                Handler handler = new Handler();
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 Runnable runnable = () -> setPhoto(unreadNotificationsDb, imageView);
                                 handler.postDelayed(runnable, sec * 1000);
                             } else if (response.code() == 508) {
                                 Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
-                                Handler handler = new Handler();
+                                Handler handler = new Handler(Looper.getMainLooper());
                                 Runnable runnable = () -> setPhoto(unreadNotificationsDb, imageView);
                                 handler.postDelayed(runnable, 5000);
                             } else {

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
@@ -91,7 +92,11 @@ public class NotificationActivity extends AppCompatActivity {
         queryNotification.close();
 
         textView = findViewById(R.id.notification_text);
-        textView.setText(Html.fromHtml(getFormattedMessage()));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            textView.setText(Html.fromHtml(getFormattedMessage(), Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            textView.setText(Html.fromHtml(getFormattedMessage()));
+        }
         textViewID = findViewById(R.id.notification_text_id);
         textViewFinalTaxon = findViewById(R.id.notification_text_final_taxon);
         textViewDate = findViewById(R.id.notification_text_date);
@@ -207,7 +212,11 @@ public class NotificationActivity extends AppCompatActivity {
     private void getFieldObservationData() {
         // Show current identification of the taxon online
         String finalTaxon = getString(R.string.observation_taxon) + " <i>" + notification.getFinalTaxonName() + "</i>";
-        textViewFinalTaxon.setText(Html.fromHtml(finalTaxon));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            textViewFinalTaxon.setText(Html.fromHtml(finalTaxon, Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            textViewFinalTaxon.setText(Html.fromHtml(finalTaxon));
+        }
 
         // Show field observation ID
         String idText = getString(R.string.observation_id) + " " + notification.getFieldObservationId();
@@ -228,7 +237,7 @@ public class NotificationActivity extends AppCompatActivity {
         // Get the name of the project if it exist
         String project = notification.getProject();
         if (project != null) {
-            if (!project.equals("")) {
+            if (!project.isEmpty()) {
                 String projectText = getString(R.string.notification_project_name) + " " +  project;
                 textViewProject.setText(projectText);
             }
@@ -331,7 +340,7 @@ public class NotificationActivity extends AppCompatActivity {
     private void downloadPhoto(String url, int position, String realNotificationID) {
 
         Call<ResponseBody> photoResponse = RetrofitClient.getService(SettingsManager.getDatabaseName()).getPhoto(url);
-        photoResponse.enqueue(new Callback<ResponseBody>() {
+        photoResponse.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -397,9 +406,11 @@ public class NotificationActivity extends AppCompatActivity {
                         UnreadNotificationsDb notification = notifications.get(i);
                         if (position == 0) {
                             notification.setImage1(imageUri);
-                        } if (position == 1) {
+                        }
+                        if (position == 1) {
                             notification.setImage2(imageUri);
-                        } if (position == 2) {
+                        }
+                        if (position == 2) {
                             notification.setImage3(imageUri);
                         }
 

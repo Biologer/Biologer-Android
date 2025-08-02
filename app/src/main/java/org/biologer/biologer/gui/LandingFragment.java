@@ -68,9 +68,6 @@ public class LandingFragment extends Fragment {
         recyclerView.setAdapter(entriesAdapter);
         recyclerView.setClickable(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.setItemViewCacheSize(20);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         recyclerView.addOnItemTouchListener(
                 new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override

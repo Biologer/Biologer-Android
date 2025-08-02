@@ -233,7 +233,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             list_new_images = savedInstanceState.getStringArrayList("list_new_images");
 
             if (savedInstanceState.containsKey("current_image")) {
-                current_image = savedInstanceState.getParcelable("current_image");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    current_image = savedInstanceState.getParcelable("current_image", Uri.class);
+                } else {
+                    current_image = savedInstanceState.getParcelable("current_image");
+                }
                 Log.d(TAG, "Restored current_image URI: " + current_image);
             }
 
