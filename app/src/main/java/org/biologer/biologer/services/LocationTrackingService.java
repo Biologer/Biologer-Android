@@ -27,13 +27,13 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.osgeo.proj4j.CRSFactory;
-import org.osgeo.proj4j.CoordinateReferenceSystem;
-import org.osgeo.proj4j.CoordinateTransform;
-import org.osgeo.proj4j.CoordinateTransformFactory;
-import org.osgeo.proj4j.ProjCoordinate;
 
 import org.biologer.biologer.R;
+import org.locationtech.proj4j.CRSFactory;
+import org.locationtech.proj4j.CoordinateReferenceSystem;
+import org.locationtech.proj4j.CoordinateTransform;
+import org.locationtech.proj4j.CoordinateTransformFactory;
+import org.locationtech.proj4j.ProjCoordinate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,10 +111,9 @@ public class LocationTrackingService extends Service {
     }
 
     private void requestLocationUpdates() {
-        LocationRequest locationRequest = LocationRequest.create()
-                .setInterval(2500)
-                .setFastestInterval(1000)
-                .setPriority(Priority.PRIORITY_HIGH_ACCURACY);
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2500)
+                .setMinUpdateIntervalMillis(1000)
+                .build();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -166,20 +165,32 @@ public class LocationTrackingService extends Service {
             currentUtmZone = utmZone;
 
             String utmProj4String = "+proj=utm +zone=" + currentUtmZone + " +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
-            CoordinateReferenceSystem utmCrs = crsFactory.createFromParameters("utm", utmProj4String);
-
-            CoordinateReferenceSystem WGS84Crs = crsFactory.createFromParameters("WGS84", "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs");
-
+            String[] utmParams = {
+                    "+proj=utm",
+                    "+zone=" + currentUtmZone,
+                    "+ellps=WGS84",
+                    "+datum=WGS84",
+                    "+units=m",
+                    "+no_defs"
+            };
+            CoordinateReferenceSystem utmCrs = crsFactory.createFromParameters("utm", utmParams);
+            String[] wgs84Params = {
+                    "+proj=longlat",
+                    "+ellps=WGS84",
+                    "+datum=WGS84",
+                    "+no_defs"
+            };
+            CoordinateReferenceSystem WGS84Crs = crsFactory.createFromParameters("WGS84", wgs84Params);
             lonLatToUtmTransform = ctFactory.createTransform(WGS84Crs, utmCrs);
         }
 
         if (lonLatToUtmTransform != null) {
-            ProjCoordinate lonLatCoord = new ProjCoordinate(location.getLongitude(), location.getLatitude());
-            ProjCoordinate utmCoord = new ProjCoordinate();
-            lonLatToUtmTransform.transform(lonLatCoord, utmCoord);
+            ProjCoordinate lonLatCoordinates = new ProjCoordinate(location.getLongitude(), location.getLatitude());
+            ProjCoordinate utmCoordinates = new ProjCoordinate();
+            lonLatToUtmTransform.transform(lonLatCoordinates, utmCoordinates);
 
-            Log.d(TAG, "UTM coordinates: " + utmCoord.x + ", " + utmCoord.y + " (zone " + utmZone + ").");
-            return new UTMPoint(utmCoord.x, utmCoord.y, utmZone);
+            //Log.d(TAG, "UTM coordinates: " + utmCoordinates.x + ", " + utmCoordinates.y + " (zone " + utmZone + ").");
+            return new UTMPoint(utmCoordinates.x, utmCoordinates.y, utmZone);
         }
 
         return null;
@@ -224,6 +235,5 @@ public class LocationTrackingService extends Service {
 
         stopSelf(); // Stop the service
     }
-
 
 }

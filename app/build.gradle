@@ -15,9 +15,9 @@ android {
     defaultConfig {
         applicationId "org.biologer.biologer"
         minSdkVersion 21
-        targetSdk 35
-        versionCode 167
-        versionName '4.0.8'
+        targetSdk 36
+        versionCode 168
+        versionName '4.0.9'
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -52,6 +52,7 @@ android {
             buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
             buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
             buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
+            buildConfigField 'String', "OpenWeather_Key", OpenWeather_KEY
             // Add the key here if you need to access it from XML files
             // Rightmost value is retrieved from ~/.gradle/gradle.properties
             resValue 'string', "MAP_KEY", GoogleMAP_KEY
@@ -124,7 +125,8 @@ dependencies {
     // Non Google
     // GIS
     implementation 'org.locationtech.jts:jts-core:1.20.0'
-    implementation 'org.osgeo:proj4j:0.1.0'
+    implementation 'org.locationtech.proj4j:proj4j:1.4.1'
+    implementation "org.locationtech.proj4j:proj4j-epsg:1.4.1"
     // Other
     implementation 'com.github.AppIntro:AppIntro:6.1.0'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'

@@ -18,6 +18,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -31,6 +32,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -44,19 +46,30 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 
+import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.SpeciesCount;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.adapters.TimedCountAdapter;
+import org.biologer.biologer.network.RetrofitWeatherClient;
+import org.biologer.biologer.network.json.WeatherResponse;
+import org.biologer.biologer.services.LocationResultCallback;
 import org.biologer.biologer.services.LocationTrackingService;
 import org.biologer.biologer.services.TaxonSearchHelper;
+import org.biologer.biologer.services.WeatherUtils;
 import org.biologer.biologer.sql.TaxonDb;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class TimedCountActivity extends AppCompatActivity {
 
@@ -74,9 +87,11 @@ public class TimedCountActivity extends AppCompatActivity {
     boolean taxonSelectedFromTheList = false;
     RecyclerView recyclerView;
     private FusedLocationProviderClient fusedLocationClient;
-    double latitude, longitude, accuracy;
     private TimedCountAdapter timedCountAdapter;
     private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
+    double temperature;
+    int cloudiness, pressure, humidity, wind_speed;
+    String wind_direction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +107,15 @@ public class TimedCountActivity extends AppCompatActivity {
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setDisplayShowHomeEnabled(true);
         }
+
+        // onBackPressed we should warn user not to quit the count
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                showExitConfirmationDialog();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
 
         elapsed_time = findViewById(R.id.time_elapsed);
         timerLayout = findViewById(R.id.timed_count_timer);
@@ -180,9 +204,19 @@ public class TimedCountActivity extends AppCompatActivity {
         // Activate the field for species name and show the keyboard.
         autoCompleteTextView_speciesName.requestFocus();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+    }
 
-
-
+    private void showExitConfirmationDialog() {
+        new AlertDialog.Builder(TimedCountActivity.this)
+                .setTitle(R.string.exit_time_count)
+                .setMessage(R.string.confirmation_exit_time_count)
+                .setPositiveButton(R.string.yes, (dialog, which) -> {
+                    Intent serviceIntent = new Intent(TimedCountActivity.this, LocationTrackingService.class);
+                    stopService(serviceIntent);
+                    finish();
+                })
+                .setNegativeButton(R.string.no, null)
+                .show();
     }
 
     @Override
@@ -200,6 +234,16 @@ public class TimedCountActivity extends AppCompatActivity {
         super.onStop();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(locationReceiver);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            showExitConfirmationDialog();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     // Create AlertDialog to setup before starting the timed count.
     private void setupCount() {
@@ -274,11 +318,62 @@ public class TimedCountActivity extends AppCompatActivity {
             String selectedOption = (String) spinnerOptions.getSelectedItem();
             Log.d("Dialog", "Minutes: " + minutes + ", Selected Option: " + selectedOption);
 
+            String OpenWeatherKey = BuildConfig.OpenWeather_Key;
+            fetchLatestLocation(new LocationResultCallback() {
+                @Override
+                public void onLocationSuccess(Location location) {
+                    Log.d(TAG, "Location for the weather data is: " + location.getLatitude() + ", " +  location.getLongitude());
+                    RetrofitWeatherClient.getClient().getCurrentWeather(
+                            String.valueOf(location.getLatitude()),
+                            String.valueOf(location.getLongitude()),
+                            OpenWeatherKey,
+                            "metric").enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<WeatherResponse> call, @NonNull Response<WeatherResponse> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                Log.d(TAG, "Weather response successful");
+                                temperature = response.body().getMain().getTemp();
+                                cloudiness = response.body().getClouds().getCloudiness();
+                                pressure = response.body().getMain().getPressure();
+                                humidity = response.body().getMain().getHumidity();
+                                wind_speed = WeatherUtils.getBeaufortScale(response.body().getWind().getSpeed());
+                                wind_direction = WeatherUtils.getWindDirection(response.body().getWind().getDeg());
+
+                                Log.d(TAG,"Temperature: " + temperature +
+                                        ", Clouds: " + cloudiness +
+                                        ", Pressure: " + pressure +
+                                        ", Humidity: " + humidity +
+                                        ", Wind speed: " + wind_speed +
+                                        ", Wind direction: " + wind_direction);
+                            } else {
+                                Log.d(TAG, "Weather response not successful: " + response.code()  + "; Message: " + response.message());
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<WeatherResponse> call, @NonNull Throwable t) {
+                            Log.d(TAG, "Weather response network error: " + t.getMessage());
+                        }
+                    });
+                }
+
+                @Override
+                public void onLocationFailure(String errorMessage) {
+                    // Handle the location error, e.g., show a Toast
+                    Toast.makeText(TimedCountActivity.this, "Weather data not available. " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+
             startCount(minutes);
 
         });
 
-        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss());
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
+            Intent serviceIntent = new Intent(TimedCountActivity.this, LocationTrackingService.class);
+            stopService(serviceIntent);
+            dialog.dismiss();
+            finish();
+        });
 
         AlertDialog dialog = builder.create();
 
@@ -347,6 +442,7 @@ public class TimedCountActivity extends AppCompatActivity {
     }
 
     private void startCount(int minutes) {
+        Log.d(TAG, "Starting the timed count and location service.");
         // Record location
         Intent serviceIntent = new Intent(this, LocationTrackingService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
@@ -376,30 +472,44 @@ public class TimedCountActivity extends AppCompatActivity {
 
     }
 
-    private void getLatestLocationOnRequest() {
+    private void fetchLatestLocation(LocationResultCallback callback) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Permissions are not granted, request them
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                     REQUEST_LOCATION_PERMISSION);
             return;
         }
 
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, location -> {
-                    if (location != null) {
-                        latitude = location.getLatitude();
-                        longitude = location.getLongitude();
-                        accuracy = location.getAccuracy();
-                        Log.d(TAG, "Observation location: " + latitude + "; " + longitude + " (" + accuracy + ")");
-                    } else {
-                        Log.d(TAG, "Directly requested location is null. Device location might be off or not recorded.");
-                    }
-                })
-                .addOnFailureListener(this, e -> Log.e(TAG, "Error getting direct location: " + e.getMessage()));
-    }
+        // Create a location request to get a high-accuracy location
+        LocationRequest locationRequest = new LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                10000 // Set the interval in milliseconds
+        )
+                .setMinUpdateIntervalMillis(5000)
+                .setMaxUpdates(1)
+                .build();
 
+        // Create a LocationCallback to receive the update
+        com.google.android.gms.location.LocationCallback locationCallback = new com.google.android.gms.location.LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull com.google.android.gms.location.LocationResult locationResult) {
+                // Get the last location from the result
+                Location location = locationResult.getLastLocation();
+                if (location != null) {
+                    // Success! Call the callback with the location.
+                    callback.onLocationSuccess(location);
+                } else {
+                    callback.onLocationFailure("Location is null. Device location might be off.");
+                }
+                // Stop receiving location updates to save battery
+                fusedLocationClient.removeLocationUpdates(this);
+            }
+        };
+
+        // Request the location update
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
 
     private void startOrResumeTimer(long millisInFuture, long interval) {
         countDownTimer = new CountDownTimer(millisInFuture, interval) {
