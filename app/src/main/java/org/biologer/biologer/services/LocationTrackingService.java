@@ -164,7 +164,6 @@ public class LocationTrackingService extends Service {
         if (utmZone != currentUtmZone) {
             currentUtmZone = utmZone;
 
-            String utmProj4String = "+proj=utm +zone=" + currentUtmZone + " +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
             String[] utmParams = {
                     "+proj=utm",
                     "+zone=" + currentUtmZone,
@@ -173,15 +172,17 @@ public class LocationTrackingService extends Service {
                     "+units=m",
                     "+no_defs"
             };
-            CoordinateReferenceSystem utmCrs = crsFactory.createFromParameters("utm", utmParams);
+            CoordinateReferenceSystem utm_crs = crsFactory.createFromParameters("utm", utmParams);
+
             String[] wgs84Params = {
                     "+proj=longlat",
                     "+ellps=WGS84",
                     "+datum=WGS84",
                     "+no_defs"
             };
-            CoordinateReferenceSystem WGS84Crs = crsFactory.createFromParameters("WGS84", wgs84Params);
-            lonLatToUtmTransform = ctFactory.createTransform(WGS84Crs, utmCrs);
+            CoordinateReferenceSystem wgs84_crs = crsFactory.createFromParameters("WGS84", wgs84Params);
+
+            lonLatToUtmTransform = ctFactory.createTransform(wgs84_crs, utm_crs);
         }
 
         if (lonLatToUtmTransform != null) {
@@ -189,7 +190,7 @@ public class LocationTrackingService extends Service {
             ProjCoordinate utmCoordinates = new ProjCoordinate();
             lonLatToUtmTransform.transform(lonLatCoordinates, utmCoordinates);
 
-            //Log.d(TAG, "UTM coordinates: " + utmCoordinates.x + ", " + utmCoordinates.y + " (zone " + utmZone + ").");
+            Log.d(TAG, "UTM coordinates: " + utmCoordinates.x + ", " + utmCoordinates.y + " (zone " + utmZone + ").");
             return new UTMPoint(utmCoordinates.x, utmCoordinates.y, utmZone);
         }
 
@@ -233,7 +234,7 @@ public class LocationTrackingService extends Service {
         resultIntent.putExtra(WALKED_AREA, totalArea);
         LocalBroadcastManager.getInstance(this).sendBroadcast(resultIntent);
 
-        stopSelf(); // Stop the service
+        stopSelf();
     }
 
 }

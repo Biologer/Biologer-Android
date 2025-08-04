@@ -19,9 +19,6 @@
 ###############################################
 # Debuging code
 ###############################################
-# This option forces Proguard to use different obfuscated names
-# for different members. It avoids the 'or' stack traces.
--useuniqueclassmembernames
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
@@ -37,37 +34,86 @@
 # Keep my entire code, damn you proguard!!!
 -keep class org.biologer.** { *; }
 
-##################################################
-# Retrofit and Ookhttp
-##################################################
--keepattributes Signature
--keepattributes *Annotation*
--keep class com.squareup.okhttp.** { *; }
--keep interface com.squareup.okhttp.** { *; }
--dontwarn com.squareup.okhttp.**
+# =================================================================================
+# ProGuard/R8 rules for Retrofit 2.x and OkHttp 3.x
+# =================================================================================
 
-#-keep class java.util.regex.** { *; }
+# 1. Rules for OkHttp
+# The OkHttp library itself is generally well-behaved and doesn't require
+# many special rules, but these help ensure its internal logic is preserved.
+-dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
 
--dontwarn retrofit2.**
--dontwarn org.codehaus.mojo.**
+# OkHttp's logging interceptor can sometimes cause issues with obfuscation.
+# This rule helps prevent that.
+-keep class okhttp3.internal.** { *; }
+
+
+# 2. Rules for Retrofit
+# Keep the Retrofit library and its annotations.
+# The `@retrofit2.http.*` annotations are especially important to keep.
 -keep class retrofit2.** { *; }
--keepattributes Exceptions
--keepattributes RuntimeVisibleAnnotations
--keepattributes RuntimeInvisibleAnnotations
--keepattributes RuntimeVisibleParameterAnnotations
--keepattributes RuntimeInvisibleParameterAnnotations
-
+-keepattributes Signature
+-keepattributes InnerClasses
 -keepattributes EnclosingMethod
--keepclasseswithmembers class * {
+
+# Keep the public methods of your Retrofit API interfaces.
+# This is the most crucial rule for Retrofit. It ensures that R8 does not
+# obfuscate or remove the methods that define your network requests.
+-keepclasseswithmembers interface * {
     @retrofit2.http.* <methods>;
 }
--keepclasseswithmembers interface * {
-    @retrofit2.* <methods>;
-}
 
-# Platform calls Class.forName on types which do not exist on Android to determine platform.
--dontnote retrofit2.Platform
+# This is an alternative rule if you're keeping a specific interface.
+# -keep class com.yourcompany.yourapp.network.YourApiService {
+#    <methods>;
+# }
+
 # Retain generic type information for use by reflection by converters and adapters.
 -keepattributes Signature
-# Retain declared checked exceptions for use by a Proxy instance.
--keepattributes Exceptions
+
+# This is for the converters, like the Jackson converter you're using.
+# It ensures that R8 knows to look for the model classes.
+-keep class com.fasterxml.** { *; }
+-keep class * implements com.fasterxml.jackson.databind.JsonDeserializer { *; }
+-keep class * implements com.fasterxml.jackson.databind.JsonSerializer { *; }
+-keep class * implements com.fasterxml.jackson.databind.InjectableValues { *; }
+
+# For Jackson-specific annotation.
+-keepattributes *Annotation*
+
+# =================================================================================
+# ProGuard/R8 rules for proj4j and jts-core on Android
+# =================================================================================
+
+# Keep all classes in the core proj4j package and subpackages.
+# This prevents ProGuard/R8 from obfuscating or removing core logic.
+-keep class org.locationtech.proj4j.** { *; }
+
+# Keep all classes in the jts-core package, as proj4j depends on it.
+-keep class org.locationtech.jts.** { *; }
+
+# Handle reflection. Proj4j might use reflection to create projections.
+# Keep the constructors of all projection classes to ensure they are available.
+-keepclassmembers class org.locationtech.proj4j.proj.* {
+    <init>(...);
+}
+
+# Keep the CRSFactory class and its members, as it is the entry point
+# for creating coordinate systems and is likely where the crash happens.
+-keep class org.locationtech.proj4j.CRSFactory { *; }
+-keepclassmembers class org.locationtech.proj4j.CRSFactory {
+    <init>(...);
+}
+
+# Ignore warnings for unresolved classes that are not essential for runtime.
+# These rules address the "Missing class java.awt.Color" issue and other similar
+# problems where desktop-specific Java classes are referenced in library code.
+-dontwarn org.locationtech.jts.util.**
+-dontwarn java.awt.Color
+-dontwarn java.awt.image.**
+
+# General don't-warn for the libraries to catch other potential issues without breaking the build.
+-dontwarn org.locationtech.proj4j.**
+-dontwarn org.locationtech.jts.**

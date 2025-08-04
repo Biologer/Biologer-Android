@@ -318,7 +318,7 @@ public class TimedCountActivity extends AppCompatActivity {
             String selectedOption = (String) spinnerOptions.getSelectedItem();
             Log.d("Dialog", "Minutes: " + minutes + ", Selected Option: " + selectedOption);
 
-            String OpenWeatherKey = BuildConfig.OpenWeather_Key;
+            String api_key = BuildConfig.OpenWeather_KEY;
             fetchLatestLocation(new LocationResultCallback() {
                 @Override
                 public void onLocationSuccess(Location location) {
@@ -326,7 +326,7 @@ public class TimedCountActivity extends AppCompatActivity {
                     RetrofitWeatherClient.getClient().getCurrentWeather(
                             String.valueOf(location.getLatitude()),
                             String.valueOf(location.getLongitude()),
-                            OpenWeatherKey,
+                            api_key,
                             "metric").enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<WeatherResponse> call, @NonNull Response<WeatherResponse> response) {
