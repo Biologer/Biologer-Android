@@ -124,7 +124,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
             imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
     ChipGroup observation_types;
-    LinearLayout detailedEntry, layoutCoordinates, layoutUnknownCoordinates;
+    LinearLayout layoutCoordinates;
+    LinearLayout layoutUnknownCoordinates;
     private boolean save_enabled = false;
     private String image1, image2, image3;
     private Uri current_image;
@@ -220,14 +221,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         // Tag cloud for observation types
         observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
-        detailedEntry = findViewById(R.id.detailed_entry);
         layoutCoordinates = findViewById(R.id.layout_coordinates);
         layoutUnknownCoordinates = findViewById(R.id.layout_unknown_coordinates);
         // This linear layout holds the stages. We will hide it before the taxon is not selected.
         textInputStages = findViewById(R.id.text_input_stages);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (preferences.getBoolean("advanced_interface", false)) {
-            detailedEntry.setVisibility(View.VISIBLE);
+        LinearLayout linearLayout = findViewById(R.id.data_and_time_entry);
+        if (!preferences.getBoolean("advanced_interface", false)) {
+            linearLayout.setVisibility(View.GONE);
+        } else {
+            linearLayout.setVisibility(View.VISIBLE);
         }
         calendar = Calendar.getInstance();
         dateSelect = findViewById(R.id.date_input);

@@ -44,7 +44,7 @@
             android:title="@string/advanced_entry"
             android:summary="@string/advanced_entry_desc"
             app:iconSpaceReserved="false"
-            android:defaultValue="true"/>
+            android:defaultValue="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory

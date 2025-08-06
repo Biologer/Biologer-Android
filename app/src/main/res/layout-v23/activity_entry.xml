@@ -127,6 +127,7 @@
                         </LinearLayout>
 
                         <LinearLayout
+                            android:id="@+id/data_and_time_entry"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
@@ -252,12 +253,10 @@
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <LinearLayout
-                            android:id="@+id/detailed_entry"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginBottom="12dp"
-                            android:visibility="visible">
+                            android:layout_marginBottom="12dp" >
 
                             <androidx.appcompat.widget.LinearLayoutCompat
                                 android:layout_width="match_parent"
