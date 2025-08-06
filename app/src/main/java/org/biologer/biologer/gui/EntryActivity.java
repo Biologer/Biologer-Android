@@ -50,6 +50,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationListenerCompat;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -87,6 +88,7 @@ import org.biologer.biologer.sql.UserDb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,7 +101,10 @@ import java.util.Objects;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryActivity extends AppCompatActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class EntryActivity extends AppCompatActivity implements View.OnClickListener,
+        SwipeRefreshLayout.OnRefreshListener,
+        DatePickerFragment.OnDateSelectedListener,
+        TimePickerFragment.OnTimeSelectedListener {
 
     private static final String TAG = "Biologer.Entry";
 
@@ -111,7 +116,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private Double acc = 0.0;
     private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment, textInputStages;
     private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
-    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat, editTextFoundOn;
+    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat,
+            editTextFoundOn, dateSelect, timeSelect;
     private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
     AutoCompleteTextView autoCompleteTextView_speciesName;
     FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
@@ -223,6 +229,25 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (preferences.getBoolean("advanced_interface", false)) {
             detailedEntry.setVisibility(View.VISIBLE);
         }
+        calendar = Calendar.getInstance();
+        dateSelect = findViewById(R.id.date_input);
+        updateDateUI();
+        dateSelect.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putSerializable("selected_date", calendar);
+            DialogFragment dateFragment = new DatePickerFragment();
+            dateFragment.setArguments(args);
+            dateFragment.show(getSupportFragmentManager(), "datePicker");
+        });
+        timeSelect = findViewById(R.id.time_input);
+        updateTimeUI();
+        timeSelect.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putSerializable("selected_date", calendar);
+            DialogFragment timeFragment = new TimePickerFragment();
+            timeFragment.setArguments(args);
+            timeFragment.show(getSupportFragmentManager(), "timePicker");
+        });
 
         // Restore images on screen rotation...
         if (savedInstanceState != null) {
@@ -389,6 +414,34 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             }
         });
 
+    }
+
+    private void updateDateUI() {
+        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG,
+                Locale.forLanguageTag(Localisation.getLocaleScript()));
+        String formattedDate = dateFormat.format(calendar.getTime());
+        dateSelect.setText(formattedDate);
+    }
+
+    private void updateTimeUI() {
+        DateFormat dateFormat = DateFormat.getTimeInstance(DateFormat.SHORT,
+                Locale.forLanguageTag(Localisation.getLocaleScript()));
+        String formattedDate = dateFormat.format(calendar.getTime());
+        timeSelect.setText(formattedDate);
+    }
+
+    @Override
+    public void onDateSelected(int year, int month, int day) {
+        calendar = Calendar.getInstance();
+        calendar.set(year, month, day);
+        updateDateUI();
+    }
+
+    @Override
+    public void onTimeSelected(int hourOfDay, int minute) {
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, minute);
+        updateTimeUI();
     }
 
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
@@ -1805,5 +1858,4 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
         return null;
     }
-
 }

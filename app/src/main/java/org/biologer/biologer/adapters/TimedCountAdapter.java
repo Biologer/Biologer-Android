@@ -92,6 +92,17 @@ public class TimedCountAdapter
             notifyItemChanged(adapterPosition);
         });
 
+        viewHolder.speciesCount.setOnClickListener(view -> {
+            int adapterPosition = viewHolder.getAdapterPosition();
+
+            Log.d(TAG, "Number os species clicked for species " + species.getSpeciesName());
+            int individuals = species.getNumberOfIndividuals();
+            individuals++;
+            species.setNumberOfIndividuals(individuals);
+
+            notifyItemChanged(adapterPosition);
+        });
+
 //        viewHolder.itemView.setOnLongClickListener(v -> {
 //            Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
 //            return false;
