@@ -8,10 +8,16 @@
         <item name="colorSecondary">@color/colorPrimary</item>
     </style>
 
+    <!-- Toolbar text color. -->
+    <style name="Theme.Biologer.Toolbar.TitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+
     <!-- Toolbar theme. -->
     <style name="Theme.Biologer.Toolbar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="titleTextAppearance">@style/Theme.Biologer.Toolbar.TitleText</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColor">@color/black_on_light_white_on_night</item>
     </style>
-
 </resources>

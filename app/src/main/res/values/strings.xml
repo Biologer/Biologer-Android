@@ -502,5 +502,6 @@
     <string name="add">Add</string>
     <string name="exit_time_count">Exit Time Count?</string>
     <string name="confirmation_exit_time_count">Are you sure you want to stop the counting? Your data will not be saved.</string>
+    <string name="biologer_login">Biologer login</string>
 
 </resources>
