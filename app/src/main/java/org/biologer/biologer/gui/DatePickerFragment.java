@@ -31,7 +31,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
             listener = (OnDateSelectedListener) context;
         } catch (ClassCastException e) {
             // The activity doesn't implement the interface, throw an exception
-            throw new ClassCastException(context.toString() + " must implement OnDateSelectedListener");
+            throw new ClassCastException(context + " must implement OnDateSelectedListener");
         }
     }
 
@@ -48,57 +48,51 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
             selectedDateFromBundle = Calendar.getInstance();
         }
 
-        final Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
+        int year = selectedDateFromBundle.get(Calendar.YEAR);
+        int month = selectedDateFromBundle.get(Calendar.MONTH);
+        int day = selectedDateFromBundle.get(Calendar.DAY_OF_MONTH);
 
         return new DatePickerDialog(requireActivity(), this, year, month, day);
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int day) {
-        // Get the current date for comparison
+        // Get the current date and time for comparison.
         Calendar now = Calendar.getInstance();
 
-        // Date and time obtained from the activity
-        Calendar selectedDateTime = (Calendar) selectedDateFromBundle.clone();
-        selectedDateTime.set(Calendar.YEAR, year);
-        selectedDateTime.set(Calendar.MONTH, month);
-        selectedDateTime.set(Calendar.DAY_OF_MONTH, day);
+        // Create a new Calendar object for the date the user selected.
+        Calendar selectedDate = Calendar.getInstance();
+        selectedDate.set(year, month, day);
 
-        // Live only date in current calendar
-        Calendar nowDay = (Calendar) now.clone();
-        nowDay.set(Calendar.HOUR_OF_DAY, 0);
-        nowDay.set(Calendar.MINUTE, 0);
-        nowDay.set(Calendar.SECOND, 0);
-        nowDay.set(Calendar.MILLISECOND, 0);
+        // Create a calendar for today with time fields zeroed out for date-only comparison.
+        Calendar todayOnly = (Calendar) now.clone();
+        todayOnly.set(Calendar.HOUR_OF_DAY, 0);
+        todayOnly.set(Calendar.MINUTE, 0);
+        todayOnly.set(Calendar.SECOND, 0);
+        todayOnly.set(Calendar.MILLISECOND, 0);
 
-        // Live only date in the calendar from the bundle
-        Calendar selectedDay = (Calendar) selectedDateFromBundle.clone();
-        selectedDay.set(Calendar.HOUR_OF_DAY, 0);
-        selectedDay.set(Calendar.MINUTE, 0);
-        selectedDay.set(Calendar.SECOND, 0);
-        selectedDay.set(Calendar.MILLISECOND, 0);
+        // Create a calendar for the selected day with time fields zeroed out.
+        Calendar selectedDayOnly = (Calendar) selectedDate.clone();
+        selectedDayOnly.set(Calendar.HOUR_OF_DAY, 0);
+        selectedDayOnly.set(Calendar.MINUTE, 0);
+        selectedDayOnly.set(Calendar.SECOND, 0);
+        selectedDayOnly.set(Calendar.MILLISECOND, 0);
 
-        // First check: Is the selected date in the future
-        if (selectedDay.after(nowDay)) {
+        // First check: Is the selected date in the future?
+        if (selectedDayOnly.after(todayOnly)) {
             Toast.makeText(getActivity(), R.string.cannot_select_a_future_date, Toast.LENGTH_LONG).show();
-            return; // Ignore the user's input
+            return;
         }
 
-        // And if the date is not in the future, but time, give different warning...
-        if (selectedDateTime.after(now)) {
+        // Second check: If the selected date is today, is the selected time in the future?
+        if (selectedDayOnly.equals(todayOnly) && selectedDateFromBundle.after(now)) {
             Toast.makeText(getActivity(), R.string.cannot_select_a_future_time, Toast.LENGTH_LONG).show();
-            // Ignore user input
         } else {
-            // The time is valid, so pass it back to the Activity
+            // The date and time are valid, so pass it back to the Activity.
             if (listener != null) {
                 listener.onDateSelected(year, month, day);
             }
         }
     }
-
-
 
 }
