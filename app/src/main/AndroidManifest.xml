@@ -21,7 +21,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <uses-feature android:name="android.hardware.location.gps" />
+    <uses-feature android:name="android.hardware.location.gps"
+        tools:ignore="UnnecessaryRequiredFeature" />
     <uses-feature
         android:name="android.hardware.camera.autofocus"
         android:required="false" />
@@ -91,7 +92,9 @@
                 android:value="org.biologer.biologer.gui.LandingActivity" />
         </activity>
         <activity
-            android:name=".gui.TimedCountActivity">
+            android:name=".gui.TimedCountActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan|stateVisible">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.biologer.biologer.gui.LandingActivity" />

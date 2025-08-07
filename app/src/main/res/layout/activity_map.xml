@@ -22,7 +22,7 @@
         android:layout_height="fill_parent"
         tools:context="org.biologer.biologer.gui.MapActivity"
         android:layout_below="@id/map_actionbar"
-        android:layout_above="@+id/map_slider"
+        android:layout_above="@+id/map_location_name"
         tools:ignore="FragmentTagUsage">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -39,12 +39,21 @@
             android:contentDescription="@string/map_type" />
     </fragment>
 
-    <com.google.android.material.slider.Slider
-        android:id="@+id/map_slider"
+    <LinearLayout
+        android:id="@+id/map_location_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:valueFrom="1"
-        android:valueTo="100"/>
+        android:valueTo="100">
+        <EditText
+            android:id="@+id/location_name_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/map_location_name_text"
+            android:autofillHints="Location name"
+            android:inputType="text">
+        </EditText>
+    </LinearLayout>
 
 </RelativeLayout>
