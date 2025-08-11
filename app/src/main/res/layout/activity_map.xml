@@ -1,29 +1,205 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:fitsSystemWindows="true"
     tools:context="org.biologer.biologer.gui.EntryActivity">
 
     <include
-        layout="@layout/toolbar_main"
         android:id="@+id/map_actionbar"
-        android:layout_alignParentTop="true"
+        layout="@layout/toolbar_main"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/map_location_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:layout_gravity="center">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/map_location_name_text"
+            app:endIconMode="clear_text"
+            android:layout_gravity="center_vertical"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/location_name_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minWidth="200dp"
+                android:autofillHints="Location name"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+        <ImageView
+            android:id="@+id/map_save_location_name"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/edit_location_coordinates"
+            android:src="@drawable/ic_save"
+            android:paddingStart="8dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="0dp"
+            android:layout_gravity="center_vertical"
+            app:tint="@color/black_on_light_white_on_night">
+        </ImageView>
+    </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/edit_location_coordinates"
+                android:src="@drawable/edit_location"
+                app:tint="@color/colorPrimaryDark">
+            </ImageView>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:text="@string/latitude"
+                android:labelFor="@+id/map_latitude_text" />
+            <EditText
+                android:id="@+id/map_latitude_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autofillHints="Latitude"
+                android:minWidth="10dp"
+                android:background="@null"
+                app:drawableTint="@color/colorPrimaryDark"
+                android:inputType="numberDecimal" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingStart="0dp"
+                android:paddingEnd="4dp"
+                android:text="@string/north"
+                android:textSize="18sp" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:text="@string/longitude"
+                android:labelFor="@+id/map_longitude_text" />
+            <EditText
+                android:id="@+id/map_longitude_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="Longitude"
+                android:minWidth="10dp"
+                android:background="@null"
+                android:inputType="numberDecimal" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/east"
+                android:paddingStart="0dp"
+                android:paddingEnd="4dp"
+                android:textSize="18sp"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:text="@string/elevation"
+                android:labelFor="@+id/map_elevation_text" />
+            <EditText
+                android:id="@+id/map_elevation_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autofillHints="Elevation"
+                android:drawableStart="@drawable/elevation"
+                android:drawablePadding="8dp"
+                app:drawableTint="@color/colorPrimaryDark"
+                android:background="@null"
+                android:minWidth="10dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="0dp"
+                android:inputType="numberDecimal" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:text="@string/meter"
+                android:textSize="18sp"/>
+        </LinearLayout>
+        <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_vertical">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/edit_location_coordinates"
+                android:src="@drawable/coordinate_precision"
+                android:paddingStart="16dp"
+                android:paddingEnd="8dp"
+                android:layout_gravity="center_vertical"
+                app:tint="@color/colorPrimaryDark">
+            </ImageView>
+            <com.google.android.material.slider.Slider
+                android:id="@+id/map_slider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:valueFrom="1"
+                android:valueTo="100"/>
+            <EditText
+                android:id="@+id/map_precision_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:autofillHints="Coordinate precision"
+                android:labelFor="@string/coordinate_precision"
+                android:background="@null"
+                android:minWidth="10dp"
+                android:layout_gravity="center_vertical"
+                android:inputType="numberDecimal" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/meter"
+                android:layout_gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="16dp"
+                android:textSize="18sp"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         tools:context="org.biologer.biologer.gui.MapActivity"
-        android:layout_below="@id/map_actionbar"
-        android:layout_above="@+id/map_location_name"
-        tools:ignore="FragmentTagUsage">
+        tools:ignore="FragmentTagUsage"
+        app:layout_constraintTop_toBottomOf="@id/map_actionbar"
+        app:layout_constraintBottom_toTopOf="@id/map_location_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/float_button_map_type"
@@ -38,22 +214,4 @@
             app:backgroundTint="@color/white"
             android:contentDescription="@string/map_type" />
     </fragment>
-
-    <LinearLayout
-        android:id="@+id/map_location_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:valueFrom="1"
-        android:valueTo="100">
-        <EditText
-            android:id="@+id/location_name_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="@string/map_location_name_text"
-            android:autofillHints="Location name"
-            android:inputType="text">
-        </EditText>
-    </LinearLayout>
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

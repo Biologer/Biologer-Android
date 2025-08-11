@@ -87,7 +87,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="match_parent"
-                                        android:text="@string/north" />
+                                        android:text="@string/north_dot_comma" />
 
                                     <TextView
                                         android:id="@+id/tv_longitude"
@@ -145,6 +145,7 @@
                                 android:focusable="false"
                                 android:drawableStart="@drawable/outline_calendar_today_24"
                                 android:drawablePadding="8dp"
+                                app:drawableTint="@color/colorPrimaryDark"
                                 android:cursorVisible="false"
                                 android:background="@null"
                                 android:textSize="14sp"
@@ -159,6 +160,7 @@
                                 android:focusable="false"
                                 android:drawableStart="@drawable/clock"
                                 android:drawablePadding="8dp"
+                                app:drawableTint="@color/colorPrimaryDark"
                                 android:paddingStart="16dp"
                                 android:paddingEnd="0dp"
                                 android:cursorVisible="false"

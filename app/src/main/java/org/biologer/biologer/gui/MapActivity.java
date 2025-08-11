@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,6 +36,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.slider.Slider;
 import com.google.maps.android.collections.CircleManager;
 import com.google.maps.android.collections.MarkerManager;
 import com.google.maps.android.data.geojson.GeoJsonFeature;
@@ -42,6 +45,7 @@ import com.google.maps.android.data.geojson.GeoJsonLineStringStyle;
 import com.google.maps.android.data.kml.KmlLayer;
 import com.google.maps.android.ui.IconGenerator;
 
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.InternetConnection;
@@ -54,6 +58,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -63,25 +70,24 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "Biologer.GoogleMaps";
     private final List<UTMName> utmNames = new ArrayList<>();
     private GoogleMap mMap;
-    private String accuracy;
-    private String elevation;
+    private String accuracy, elevation, location_name;
     private LatLng latLong;
     private final String google_map_type = SettingsManager.getGoogleMapType();
     private final String database_name = SettingsManager.getDatabaseName();
     private Circle circle;
     private Marker marker;
-    private Marker resizeHandle;
     private final List<Marker> utmMarkers = new ArrayList<>();
     private GeoJsonLayer utmGridLines;
     private KmlLayer kmlLayer;
     private MenuItem menuItemLoadKML;
     private MarkerManager.Collection myMarkers;
-    private EditText editTextLocation;
+    private EditText editTextLocation, editTextLongitude, editTextLatitude, editTextPrecision, editTextElevation;
+    Slider slider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +112,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
             accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
             elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
+            location_name = bundle.getString("LOCATION", null);
             Log.d(TAG, "Accuracy from GPS:" + accuracy + "; elevation: " + elevation + ".");
         } else {
             latLong = new LatLng(45.5, 16.3);
@@ -132,10 +139,194 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         editTextLocation = findViewById(R.id.location_name_text);
         String locationNameFromPreferences = preferences.getString("location_name", "");
-        editTextLocation.setText(locationNameFromPreferences);
+        if (location_name != null) {
+            editTextLocation.setText(location_name);
+        } else {
+            editTextLocation.setText(locationNameFromPreferences);
+        }
+        editTextLocation.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                location_name = String.valueOf(editTextLocation.getText()).trim();
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
+
+        ImageView imageViewSaveLocationName = findViewById(R.id.map_save_location_name);
+        imageViewSaveLocationName.setOnClickListener(view -> {
+            if (SettingsManager.getDisplayLocationNameInfo()) {
+                SettingsManager.setDisplayLocationNameInfo(false);
+                new AlertDialog.Builder(MapActivity.this)
+                        .setTitle(R.string.save_location_name)
+                        .setMessage(R.string.save_location_name_desc)
+                        .setPositiveButton(R.string.ok, (dialog, which) -> saveLocationName())
+                        .show();
+
+            } else {
+                saveLocationName();
+            }
+        });
+
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
+        DecimalFormat formatCoordinates = new DecimalFormat("#,##0.000000", symbols);
+        editTextLatitude = findViewById(R.id.map_latitude_text);
+        editTextLatitude.setText(formatCoordinates.format(latLong.latitude));
+        editTextLatitude.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Locale currentLocale = Locale.forLanguageTag(Localisation.getLocaleScript());
+                DecimalFormatSymbols symbols = new DecimalFormatSymbols(currentLocale);
+                DecimalFormat decimalFormat = new DecimalFormat("#.#########", symbols);
+                String latitudeString = editTextLatitude.getText().toString();
+                try {
+                    Number number = decimalFormat.parse(latitudeString);
+                    double latitude;
+                    if (number != null) {
+                        latitude = number.doubleValue();
+                        double currentLongitude = latLong.longitude;
+                        latLong = new LatLng(latitude, currentLongitude);
+                        marker.setPosition(latLong);
+                        circle.setRadius(Double.parseDouble(accuracy));
+                    }
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
+
+        editTextLongitude = findViewById(R.id.map_longitude_text);
+        editTextLongitude.setText(formatCoordinates.format(latLong.longitude));
+        editTextLongitude.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Locale currentLocale = Locale.forLanguageTag(Localisation.getLocaleScript());
+                DecimalFormatSymbols symbols = new DecimalFormatSymbols(currentLocale);
+                DecimalFormat decimalFormat = new DecimalFormat("#.#########", symbols);
+                String longitudeString = editTextLongitude.getText().toString();
+                try {
+                    Number number = decimalFormat.parse(longitudeString);
+                    double longitude;
+                    if (number != null) {
+                        longitude = number.doubleValue();
+                        double currentLatitude = latLong.latitude;
+                        latLong = new LatLng(currentLatitude, longitude);
+                        marker.setPosition(latLong);
+                        circle.setRadius(Double.parseDouble(accuracy));
+                    }
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
+
+        editTextPrecision = findViewById(R.id.map_precision_text);
+        editTextPrecision.setText(String.valueOf(accuracy));
+        editTextPrecision.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String accuracy_from_input = String.valueOf(editTextPrecision.getText());
+                if (accuracy_from_input.isEmpty()) {
+                    accuracy = "0";
+                } else {
+                    accuracy = accuracy_from_input;
+                }
+                double a = Double.parseDouble(accuracy);
+                circle.setRadius(a);
+                double a_min = (a - 50);
+                if (a_min < 0) {
+                    slider.setValueFrom(0);
+                    slider.setValueTo(100);
+                } else {
+                    slider.setValueFrom((float) a_min);
+                    slider.setValueTo((float) (a + 50));
+                }
+                slider.setValue((float) a);
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
+
+        editTextElevation = findViewById(R.id.map_elevation_text);
+        editTextElevation.setText(String.valueOf(elevation));
+        editTextElevation.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String elevation_from_input = String.valueOf(editTextElevation.getText());
+                if (elevation_from_input.isEmpty()) {
+                    elevation = "0";
+                } else {
+                    elevation = elevation_from_input;
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+        });
 
         ImageView floatButtonMapType = findViewById(R.id.float_button_map_type);
+        floatButtonMapType.setImageAlpha(255);
         floatButtonMapType.setOnClickListener(view -> showMapTypeSelectorDialog());
+    }
+
+    private void saveLocationName() {
+        String location = String.valueOf(editTextLocation.getText()).trim();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("location_name", location);
+        editor.apply();
+
+        if (location.isEmpty()) {
+            SettingsManager.setPreviousLocationLong(null);
+            SettingsManager.setPreviousLocationLat(null);
+        } else {
+            SettingsManager.setPreviousLocationLat(String.valueOf(latLong.latitude));
+            SettingsManager.setPreviousLocationLong(String.valueOf(latLong.longitude));
+        }
     }
 
     @Override
@@ -189,10 +380,23 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Create a MarkerManager and a custom collection for your markers
         MarkerManager markerManager = new MarkerManager(googleMap);
+
+        // Add UTM 10×10 km grid lines and label points over the map
+        MarkerManager.Collection markerCollectionUtm = markerManager.newCollection("utm");
+        addUTMLines();
+        addUTMPoints();
+
+        // Handle UTM grid visibility on Zoom
+        addZoomHandler(markerCollectionUtm);
+
+        // Load custom KML/KMZ file if chosen
+        if (SettingsManager.getKmlFile() != null) {
+            loadKmlFile(null);
+        }
+
+        // Create a MarkerManager and a custom collection for your markers
         myMarkers = markerManager.newCollection("my_markers");
-        myMarkers.setOnMarkerDragListener(this);
 
         // Set up map type
         if (google_map_type.equals("NORMAL")) {
@@ -208,6 +412,27 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         }
 
+        // Add slider for setting coordinate precision
+        addSlider();
+
+        // Click on the map should change the locality
+        mMap.setOnMapClickListener(latLng -> {
+            latLong = latLng;
+            Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
+            updateElevationAndSave(latLong, true, false);
+
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
+            DecimalFormat formatCoordinates = new DecimalFormat("#,##0.000000", symbols);
+            editTextLatitude.setText(formatCoordinates.format(latLong.latitude));
+            editTextLongitude.setText(formatCoordinates.format(latLong.longitude));
+            marker.setPosition(latLong);
+            circle.setCenter(latLong);
+        });
+
+        initMapObjects();
+    }
+
+    private void initMapObjects() {
         // Add marker at the GPS position on the map or default position
         if (latLong.latitude == 0.0) {
             if (database_name.equals("https://biologer.hr")) {
@@ -230,117 +455,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             addLocationMarker(16, myMarkers);
         }
 
-        // Add a circle and resize handle to display coordinate precision.
+        // Add a circle and resize handle
         addCircle();
-        addCircleResizeHandle(myMarkers);
-
-        // Add UTM 10×10 km grid lines and label points over the map
-        MarkerManager.Collection markerCollectionUtm = markerManager.newCollection("utm");
-        addUTMLines();
-        addUTMPoints();
-
-        // Handle UTM grid visibility on Zoom
-        addZoomHandler(markerCollectionUtm);
-
-        // Load custom KML/KMZ file if chosen
-        if (SettingsManager.getKmlFile() != null) {
-            loadKmlFile(null);
-        }
-
-        // Click on the map should change the locality
-        mMap.setOnMapClickListener(latLng -> {
-            setLatLong(latLng.latitude, latLng.longitude);
-            Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
-
-            // Remove old markers and add new ones at the new location
-            if (marker != null) {
-                marker.remove();
-            }
-            if (resizeHandle != null) {
-                resizeHandle.remove();
-            }
-            addLocationMarker(16, myMarkers);
-            circle.setCenter(latLng);
-            addCircleResizeHandle(myMarkers);
-        });
-    }
-
-    @Override
-    public void onMarkerDragStart(@NonNull Marker marker) {
-        // No action needed on drag start
-    }
-
-    @Override
-    public void onMarkerDrag(@NonNull Marker marker) {
-        // If the dragged marker is the resize handle, update the circle's radius.
-        if (marker.equals(resizeHandle)) {
-            double distance = calculateDistanceBetweenPoints(circle.getCenter(), marker.getPosition());
-            circle.setRadius(distance);
-            setAccuracy(String.valueOf(distance));
-        }
-        // If the dragged marker is the main location marker, move the circle and handle with it.
-        else if (marker.equals(this.marker)) {
-            circle.setCenter(marker.getPosition());
-            latLong = marker.getPosition();
-            // Update the resize handle's position to stay with the circle.
-            addCircleResizeHandle(myMarkers);
-        }
-    }
-
-    @Override
-    public void onMarkerDragEnd(@NonNull Marker marker) {
-        // If the dragged marker is the resize handle, finalize the new accuracy.
-        if (marker.equals(resizeHandle)) {
-            double distance = calculateDistanceBetweenPoints(circle.getCenter(), marker.getPosition());
-            setAccuracy(String.valueOf(distance));
-            Log.d(TAG, "New accuracy value from drag: " + accuracy);
-        }
-        // If the dragged marker is the main location marker, update the location.
-        else if (marker.equals(this.marker)) {
-            latLong = marker.getPosition();
-            // Re-add the handle to the new circle position to finalize its position.
-            addCircleResizeHandle(myMarkers);
-            Log.d(TAG, "New location from drag: " + latLong.latitude + ", " + latLong.longitude);
-        }
-    }
-
-    private double calculateDistanceBetweenPoints(LatLng point1, LatLng point2) {
-        final int R = 6371000; // Radius of the earth in meters
-        double lat1 = point1.latitude;
-        double lon1 = point1.longitude;
-        double lat2 = point2.latitude;
-        double lon2 = point2.longitude;
-
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    private void addCircleResizeHandle(MarkerManager.Collection collection) {
-        // Remove the old handle before creating a new one to prevent duplicates.
-        if (resizeHandle != null) {
-            resizeHandle.remove();
-        }
-
-        LatLng center = circle.getCenter();
-        // The simple offset calculation is flawed for different longitudes.
-        // It's better to calculate a new point on the circle's edge.
-        // A simple way is to use a fixed angle, e.g., 90 degrees (east).
-        double radius = circle.getRadius();
-        double lat = center.latitude + (radius / 6371000.0) * (180.0 / Math.PI);
-        double lon = center.longitude;
-        LatLng handlePosition = new LatLng(lat, lon);
-
-        MarkerOptions handleOptions = new MarkerOptions()
-                .position(handlePosition)
-                .draggable(true)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-                .title("Resize Handle");
-        resizeHandle = collection.addMarker(handleOptions);
     }
 
     private void addZoomHandler(MarkerManager.Collection collection) {
@@ -486,17 +602,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         utmMarkers.clear();
     }
 
-    private void addLocationMarker(int zoom, MarkerManager.Collection collection) {
+    private void addLocationMarker(Integer zoom, MarkerManager.Collection collection) {
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(latLong)
                 .title(getString(R.string.you_are_here))
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker))
-                .draggable(true); // Made draggable for better user experience
+                .zIndex(5000)
+                .draggable(false);
         marker = collection.addMarker(markerOptions);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
-        mMap.animateCamera(CameraUpdateFactory.zoomIn());
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
+        if (zoom != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
+            mMap.animateCamera(CameraUpdateFactory.zoomIn());
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
+        }
     }
 
     private void addCircle() {
@@ -564,7 +683,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             return true;
         }
         if (id == R.id.action_save) {
-            updateElevationAndSave(latLong);
+            updateElevationAndSave(latLong, elevation == null || elevation.isEmpty(), true);
         }
         return true;
     }
@@ -586,38 +705,56 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private void updateElevationAndSave(LatLng coordinates) {
+    private void updateElevationAndSave(LatLng coordinates, boolean update_elevation, boolean save) {
         if (InternetConnection.isConnected(this)) {
-            Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
-            Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
-            call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
-                    if (response.body() != null) {
-                        Long elev = response.body().getElevation();
-                        if (elev != null) {
-                            elevation = String.valueOf(elev);
+            if (update_elevation) {
+                Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
+                Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
+                call.enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
+                        if (response.body() != null) {
+                            Long elev = response.body().getElevation();
+                            if (elev != null) {
+                                elevation = String.valueOf(elev);
+                            } else {
+                                elevation = "0.0";
+                            }
                         } else {
                             elevation = "0.0";
                         }
-                    } else {
-                        elevation = "0.0";
+                        Log.d(TAG, "Elevation for this point is " + elevation + ".");
+                        if (save) {
+                            saveAndExit();
+                        } else {
+                            editTextElevation.setText(elevation);
+                        }
                     }
-                    Log.d(TAG, "Elevation for this point is " + elevation + ".");
-                    saveAndExit();
-                }
 
-                @Override
-                public void onFailure(@NonNull Call<ElevationResponse> call, @NonNull Throwable t) {
-                    Log.d(TAG, "No elevation returned from server...");
-                    elevation = "0.0";
+                    @Override
+                    public void onFailure(@NonNull Call<ElevationResponse> call, @NonNull Throwable t) {
+                        Log.d(TAG, "No elevation returned from server...");
+                        elevation = "0.0";
+                        if (save) {
+                            saveAndExit();
+                        } else {
+                            editTextElevation.setText(elevation);
+                        }
+                    }
+                });
+            } else {
+                if (save) {
                     saveAndExit();
                 }
-            });
+            }
         } else {
             Log.d(TAG, "No internet connection, won’t fetch the altitude!");
             elevation = "0.0";
-            saveAndExit();
+            if (save) {
+                saveAndExit();
+            } else {
+                editTextElevation.setText(elevation);
+            }
         }
     }
 
@@ -630,22 +767,16 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         returnLocation.putExtra("google_map_lat", String.valueOf(latLong.latitude));
         returnLocation.putExtra("google_map_long", String.valueOf(latLong.longitude));
         returnLocation.putExtra("google_map_elevation", elevation);
+        returnLocation.putExtra("google_map_location_name", location_name);
         setResult(3, returnLocation);
 
         Log.d(TAG, "Latitude: " + latLong.latitude);
         Log.d(TAG, "Longitude: " + latLong.longitude);
         Log.d(TAG, "Accuracy: " + accuracy);
         Log.d(TAG, "Elevation: " + elevation);
+        Log.d(TAG, "Location name: " + location_name);
 
         finish();
-    }
-
-    public void setAccuracy(String accuracy) {
-        this.accuracy = accuracy;
-    }
-
-    public void setLatLong(double lat, double lon) {
-        this.latLong = new LatLng(lat, lon);
     }
 
     private static class UTMName {
@@ -668,5 +799,41 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         public LatLng getLatLng() {
             return latLng;
         }
+    }
+
+    private void addSlider() {
+        slider = findViewById(R.id.map_slider);
+        float current_value = Float.parseFloat(accuracy);
+        if (current_value >= 100) {
+            slider.setValueTo(500);
+        } if (current_value >= 500) {
+            slider.setValueTo(1000);
+        } if (current_value >= 1000) {
+            slider.setValueTo(10000);
+        } if (current_value >= 10000) {
+            slider.setValueTo(50000);
+        }
+        slider.setValue(current_value);
+        slider.setLabelFormatter(value -> getString(R.string.precision) + " " + Math.round(value) + " m");
+        slider.addOnChangeListener((slider1, value, fromUser) -> circle.setRadius(value));
+        slider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+
+            @Override
+            public void onStartTrackingTouch(@NonNull Slider slider) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(@NonNull Slider slider) {
+                Log.d(TAG, "The final value: " + slider.getValue());
+                int value = Math.round(slider.getValue());
+                if (value == 100) {slider.setValueTo(500);}
+                if (value == 500) {slider.setValueTo(1000);}
+                if (value == 1000) {slider.setValueTo(10000);}
+                if (value == 10000) {slider.setValueTo(50000);}
+                accuracy = String.valueOf(value);
+                editTextPrecision.setText(accuracy);
+            }
+        });
     }
 }

@@ -190,7 +190,7 @@
     <string name="defaults_to_adult">Подразумевано уноси одрасле</string>
     <string name="defaults_to_adult_summary">Поставља стадијум на одраслу јединку, уколико тај стадијум постоји за изабрани таксон.</string>
     <string name="location_is_not_available">Чекам на координате…</string>
-    <string name="north">° С;</string>
+    <string name="north">° С</string>
     <string name="east">° И</string>
     <string name="meter">m</string>
     <string name="accuracy">Прецизност:</string>

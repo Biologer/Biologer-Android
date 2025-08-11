@@ -25,7 +25,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -61,6 +60,7 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
@@ -89,6 +89,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +113,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     private LocationManager locationManager;
     private LocationListenerCompat locationListener;
     String latitude = "0", longitude = "0";
+    String location_name = null;
     private double elev = 0.0;
     private LatLng currentLocation = new LatLng(0.0, 0.0);
     private Double acc = 0.0;
@@ -615,13 +618,16 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         currentLocation = new LatLng(currentItem.get(0).getLattitude(), currentItem.get(0).getLongitude());
         elev = currentItem.get(0).getElevation();
         acc = currentItem.get(0).getAccuracy();
-        textViewLatitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.get(0).getLattitude()));
-        textViewLongitude.setText(String.format(Locale.ENGLISH, "%.4f", currentItem.get(0).getLongitude()));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
+        DecimalFormat formatCoordinates = new DecimalFormat("#,##0.0000", symbols);
+        textViewLatitude.setText(formatCoordinates.format(currentItem.get(0).getLattitude()));
+        textViewLongitude.setText(formatCoordinates.format(currentItem.get(0).getLongitude()));
         layoutUnknownCoordinates.setVisibility(View.GONE);
         layoutCoordinates.setVisibility(View.VISIBLE);
         textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.get(0).getAccuracy()));
         textViewMeters.setVisibility(View.VISIBLE);
         setAccuracyColor();
+        location_name = currentItem.get(0).getLocation();
 
         if (currentItem.get(0).getTaxonId() != 0) {
             Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
@@ -760,7 +766,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
         if (image1 != null || image2 != null || image3 != null) {
             Log.d(TAG, "Removing image tag just in case images got deleted.");
-            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
+            Box<ObservationTypesDb> observationTypesDataBox = App.
+                    get().getBoxStore().boxFor(ObservationTypesDb.class);
             Query<ObservationTypesDb> query1 = observationTypesDataBox
                     .query(ObservationTypesDb_.slug.equal("photographed"))
                     .build();
@@ -988,12 +995,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     */
     private void saveEntry3 (TaxonDb taxon) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String location_name = sharedPreferences.getString("location_name", null);
+        String location_name_from_preferences = sharedPreferences.getString("location_name", null);
         // If the location is not given or the user opened existing entry, just continue.
-        if (location_name == null || !isNewEntry()) {
+        if (location_name_from_preferences == null || !isNewEntry()) {
             saveEntry4(taxon);
         } else {
-            if (location_name.isEmpty()) {
+            if (location_name_from_preferences.isEmpty()) {
                 saveEntry4(taxon);
             }
             // If the user selected the location name we should check if he left the location.
@@ -1020,7 +1027,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         builder.setMessage(getString(R.string.location_changed, location_name))
                                 .setCancelable(false)
-                                .setTitle("Location changed!")
+                                .setTitle(R.string.location_changed_title)
 
                                 // If a user choose to update location name
                                 .setPositiveButton(getString(R.string.update_location_name), (dialog, id) -> {
@@ -1029,27 +1036,30 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                                     dialog.dismiss();
 
                                     AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-                                    builder1.setTitle("Location");
-                                    final EditText input = new EditText(this);
-                                    FrameLayout container = new FrameLayout(this);
-                                    FrameLayout.LayoutParams params = new  FrameLayout.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            ViewGroup.LayoutParams.WRAP_CONTENT);
-                                    params.leftMargin = getResources().getDimensionPixelSize(R.dimen.edit_text_dialog_margin);
-                                    params.rightMargin = getResources().getDimensionPixelSize(R.dimen.edit_text_dialog_margin);
-                                    input.setLayoutParams(params);
+                                    builder1.setTitle(R.string.location);
+
+                                    View view = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+                                    TextInputEditText input = view.findViewById(R.id.edit_text_input);
+
+                                    input.setText(location_name_from_preferences);
                                     input.setInputType(InputType.TYPE_CLASS_TEXT);
-                                    container.addView(input);
-                                    builder1.setView(container);
+
+                                    builder1.setView(view);
                                     builder1.setCancelable(false);
-                                    builder1.setPositiveButton("OK", (dialog1, which) -> {
-                                        String new_location_name = input.getText().toString();
-                                        if (new_location_name.isEmpty()) {
+                                    builder1.setPositiveButton(R.string.ok, (dialog1, which) -> {
+                                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                                        if (input.getText() != null) {
+                                            String new_location_name = input.getText().toString();
+                                            if (new_location_name.isEmpty()) {
+                                                SettingsManager.setPreviousLocationLong(null);
+                                                SettingsManager.setPreviousLocationLat(null);
+                                            }
+                                            editor.putString("location_name", new_location_name);
+                                        } else {
                                             SettingsManager.setPreviousLocationLong(null);
                                             SettingsManager.setPreviousLocationLat(null);
+                                            editor.putString("location_name", "");
                                         }
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        editor.putString("location_name", new_location_name);
                                         editor.apply();
                                         dialog1.dismiss();
                                         saveEntry4(taxon);
@@ -1130,8 +1140,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             String time = fullDate.substring(11, 16);
             long taxon_id = taxon.getId();
             String taxon_name = taxon.getLatinName();
-            String project_name = PreferenceManager.getDefaultSharedPreferences(this).getString("project_name", "0");
-            String location = PreferenceManager.getDefaultSharedPreferences(this).getString("location_name", "");
+            String project_name = PreferenceManager.getDefaultSharedPreferences(this)
+                    .getString("project_name", "0");
+            String location;
+            if (location_name != null) {
+                location = location_name;
+            } else {
+                location = PreferenceManager.getDefaultSharedPreferences(this)
+                        .getString("location_name", "");
+            }
             getPhotoTag();
             observation_type_ids_string = Arrays.toString(observation_type_ids);
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
@@ -1181,6 +1198,10 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             currentItem.get(0).setFoundOn(foundOn);
             getPhotoTag();
             currentItem.get(0).setObservationTypeIds(Arrays.toString(observation_type_ids));
+
+            if (location_name != null) {
+                currentItem.get(0).setLocation(location_name);
+            }
 
             // Now just update the database with new data...
             Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
@@ -1372,6 +1393,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         bundle.putDouble("LONGITUDE", currentLocation.longitude);
         bundle.putDouble("ACCURACY", acc);
         bundle.putDouble("ELEVATION", elev);
+        bundle.putString("LOCATION", location_name);
         intent.putExtras(bundle);
         openMap.launch(intent);
     }
@@ -1514,7 +1536,8 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         return exifData;
     }
 
-    private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+    private final ActivityResultLauncher<Intent> openMap = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<>() {
                 @Override
                 public void onActivityResult(ActivityResult result) {
@@ -1526,6 +1549,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         setLocationValues(currentLocation.latitude, currentLocation.longitude);
                         acc = getAccuracyFromMap(result);
                         elev = getElevationFromMap(result);
+                        location_name = getLocationNameFromMap(result);
                     }
 
                     // Update the coordinate accuracy labels
@@ -1584,14 +1608,18 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         }
 
         else {
-            String[] perm = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION};
+            String[] perm = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION};
             requestLocationPermissions.launch(perm);
         }
     }
 
     private void setLocationValues(double latitude_value, double longitude_value) {
-        latitude = String.format(Locale.ENGLISH, "%.4f", (latitude_value));
-        longitude = String.format(Locale.ENGLISH, "%.4f", (longitude_value));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.
+                forLanguageTag(Localisation.getLocaleScript()));
+        DecimalFormat formatCoordinates = new DecimalFormat("#,##0.0000", symbols);
+        latitude = formatCoordinates.format(latitude_value);
+        longitude = formatCoordinates.format(longitude_value);
         textViewLatitude.setText(latitude);
         textViewLongitude.setText(longitude);
         layoutUnknownCoordinates.setVisibility(View.GONE);
@@ -1857,6 +1885,15 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (result.getData() != null) {
             if (result.getData().getExtras() != null) {
                 return Double.valueOf(Objects.requireNonNull(result.getData().getExtras().getString("google_map_elevation"), "Map elevation must not be null!"));
+            }
+        }
+        return null;
+    }
+
+    public String getLocationNameFromMap(ActivityResult result) {
+        if (result.getData() != null) {
+            if (result.getData().getExtras() != null) {
+                return result.getData().getExtras().getString("google_map_location_name");
             }
         }
         return null;

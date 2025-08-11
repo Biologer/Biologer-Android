@@ -190,7 +190,8 @@
     <string name="defaults_to_adult">Set as adult by default</string>
     <string name="defaults_to_adult_summary">Sets the life stage to adult by default, if adult stage exist for observed taxa.</string>
     <string name="location_is_not_available">Waiting for the coordinates…</string>
-    <string name="north">° N;</string>
+    <string name="north_dot_comma">° N;</string>
+    <string name="north">° N</string>
     <string name="east">° E</string>
     <string name="meter">m</string>
     <string name="accuracy">Accuracy:</string>
@@ -507,5 +508,11 @@
     <string name="select_time">Select Time</string>
     <string name="cannot_select_a_future_time">Cannot select a future time.</string>
     <string name="cannot_select_a_future_date">Cannot select a future date.</string>
+    <string name="map_location_name_text">Location name</string>
+    <string name="edit_location_coordinates">Edit location coordinates</string>
+    <string name="save_location_name">Save Location Name</string>
+    <string name="save_location_name_desc">The current location name has been saved for future species observations. To change location name for this observation only, use the save button at the top of the map.</string>
+    <string name="location_changed_title">Location changed</string>
+    <string name="coordinate_precision">Coordinate precision</string>
 
 </resources>

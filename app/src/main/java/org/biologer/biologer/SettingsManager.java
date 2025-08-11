@@ -12,9 +12,10 @@ public class SettingsManager {
 
     public enum KEY {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
-        GOOGLE_MAP_TYPE, CUSTOM_MAP_TILES_FOLDER, MAP_UTM_OVERLAY, MAP_KML_FILE,
+        GOOGLE_MAP_TYPE, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
-        OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT
+        OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
+        DISPLAY_LOCATION_NAME_INFO
     }
 
     public static void init(Context context) {
@@ -104,16 +105,6 @@ public class SettingsManager {
 
     public static String getGoogleMapType() {
         return sharedPreferences.getString(KEY.GOOGLE_MAP_TYPE.toString(),"NORMAL");
-    }
-
-    public static void setCustomMapsDir(String uri) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY.CUSTOM_MAP_TILES_FOLDER.toString(), uri);
-        editor.apply();
-    }
-
-    public static String getCustomMapsDir() {
-        return sharedPreferences.getString(KEY.CUSTOM_MAP_TILES_FOLDER.toString(),null);
     }
 
     public static void setUtmShown(boolean showUtm) {
@@ -213,6 +204,16 @@ public class SettingsManager {
     public static void setLastInternetCheckout(String s) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(KEY.LAST_INTERNET_CHECK.toString(), s);
+        editor.apply();
+    }
+
+    public static boolean getDisplayLocationNameInfo() {
+        return sharedPreferences.getBoolean(KEY.DISPLAY_LOCATION_NAME_INFO.toString(),true);
+    }
+
+    public static void setDisplayLocationNameInfo(boolean b) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(KEY.DISPLAY_LOCATION_NAME_INFO.toString(), b);
         editor.apply();
     }
 
