@@ -36,7 +36,6 @@ import org.biologer.biologer.sql.EntryDb;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -77,12 +76,6 @@ public class UploadRecords extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        sendResult("success", 0);
-        Log.d(TAG, "Running onDestroy().");
     }
 
     @Override
@@ -176,6 +169,7 @@ public class UploadRecords extends Service {
         if (entryList.isEmpty()) {
             Log.i(TAG, "All entries seems to be uploaded to the server!");
             App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
+            sendResult("success", 0);
             //App.get().getDaoSession().getEntryDao().deleteAll();
             // Stop the foreground service and update the notification
             stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
