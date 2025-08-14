@@ -148,6 +148,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     boolean callTagAutoChecked = false;
     Integer callTagIndexNumber = null;
     private TaxonSearchHelper taxonSearchHelper;
+    String selected_stage = null;
 
     BroadcastReceiver receiver;
 
@@ -463,6 +464,25 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                 String[] all_stages = stages.split(";");
 
+                // If the user changed the taxon in the mean time, we'll try to get the previous stage
+                if (selected_stage != null) {
+                    Log.d(TAG, "There is a stage already selected. ID: " + selected_stage + "; ");
+                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+                    Query<StageDb> query = stageBox
+                            .query(StageDb_.id.equal(Long.parseLong(selected_stage)))
+                            .build();
+                    StageDb stage = query.findFirst();
+                    query.close();
+                    if (stage != null) {
+                        if (Arrays.asList(all_stages).contains(selected_stage)) {
+                            String stageName = StageAndSexLocalization
+                                    .getStageLocaleFromID(this, Long.parseLong(selected_stage));
+                            textViewStage.setText(stageName);
+                            textViewStage.setTag(selected_stage);
+                        }
+                    }
+                }
+
                 // If user preferences are selected, the stage for taxa will be set to adult by default.
                 // Step 1: Get the preferences
                 if (preferences.getBoolean("adult_by_default", false)) {
@@ -477,7 +497,9 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                         if (stage != null) {
                             String s = String.valueOf(stage.getId());
                             if (Arrays.asList(all_stages).contains(s)) {
-                                textViewStage.setText(getString(R.string.stage_adult));
+                                String stageName = StageAndSexLocalization
+                                        .getStageLocaleFromID(this, Long.parseLong(s));
+                                textViewStage.setText(stageName);
                                 textViewStage.setTag(stage.getId());
                             }
                         }
@@ -1301,8 +1323,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     textViewStage.setText(all_stages_names[i]);
                     if (i == 0) {
                         textViewStage.setTag(null); // If no stage selected
+                        selected_stage = null;
                     } else {
                         textViewStage.setTag(all_stages_ids[i - 1]);
+                        selected_stage = all_stages_ids[i - 1];
+                        Log.d(TAG, "Setting stage to: " + all_stages_ids[i - 1]);
                     }
                 });
                 builder.show();
