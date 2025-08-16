@@ -515,5 +515,7 @@
     <string name="location_changed_title">Location changed</string>
     <string name="coordinate_precision">Coordinate precision</string>
     <string name="edit_location_name">Edit location name</string>
+    <string name="butterflies">Butterflies</string>
+    <string name="birds">Birds</string>
 
 </resources>

@@ -45,10 +45,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.SpeciesCount;
@@ -61,11 +64,16 @@ import org.biologer.biologer.services.LocationTrackingService;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.services.WeatherUtils;
 import org.biologer.biologer.sql.TaxonDb;
+import org.biologer.biologer.sql.TaxonGroupsDb;
+import org.biologer.biologer.sql.TaxonGroupsDb_;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -91,6 +99,8 @@ public class TimedCountActivity extends AppCompatActivity {
     double temperature;
     int cloudiness, pressure, humidity, wind_speed;
     String wind_direction;
+    Spinner spinnerTaxaGroup;
+    long selectedTaxaGroupID = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,10 +157,14 @@ public class TimedCountActivity extends AppCompatActivity {
             autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
             selectedTaxon = taxonDb;
             taxonSelectedFromTheList = true;
-            SpeciesCount new_species = new SpeciesCount(selectedTaxon.getLatinName(),
-                    selectedTaxon.getId(), 1);
-            speciesCounts.add(new_species);
-            timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+            if (timedCountAdapter.hasSpeciesWithID(selectedTaxon.getId())) {
+                timedCountAdapter.addToSpeciesCount(selectedTaxon.getId());
+            } else {
+                SpeciesCount new_species = new SpeciesCount(selectedTaxon.getLatinName(),
+                        selectedTaxon.getId(), 1);
+                speciesCounts.add(new_species);
+                timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+            }
             autoCompleteTextView_speciesName.setText("");
         });
 
@@ -185,7 +199,12 @@ public class TimedCountActivity extends AppCompatActivity {
                         }
                         taxonSelectedFromTheList = false;
 
-                        List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
+                        List<TaxonDb> allTaxaLists;
+                        if (selectedTaxaGroupID == 0) {
+                            allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
+                        } else {
+                            allTaxaLists = taxonSearchHelper.searchTaxaByGroup(s.toString(), selectedTaxaGroupID);
+                        }
 
                         // Add the Query to the drop down list (adapter)
                         TaxaListAdapter adapter1 =
@@ -296,15 +315,15 @@ public class TimedCountActivity extends AppCompatActivity {
         textViewGroups.setPadding(24, 24, 24, 24);
         layout.addView(textViewGroups);
 
-        Spinner spinnerOptions = new Spinner(this);
+        spinnerTaxaGroup = new Spinner(this);
         List<String> options = new ArrayList<>();
-        options.add("Butterflies");
-        options.add("Birds");
+        options.add(getString(R.string.butterflies));
+        options.add(getString(R.string.birds));
 
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, options);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerOptions.setAdapter(spinnerAdapter);
-        layout.addView(spinnerOptions);
+        spinnerTaxaGroup.setAdapter(spinnerAdapter);
+        layout.addView(spinnerTaxaGroup);
 
         builder.setView(layout);
 
@@ -314,8 +333,33 @@ public class TimedCountActivity extends AppCompatActivity {
             if (!minutesString.isEmpty()) {
                 minutes = Integer.parseInt(minutesString);
             }
-            String selectedOption = (String) spinnerOptions.getSelectedItem();
-            Log.d("Dialog", "Minutes: " + minutes + ", Selected Option: " + selectedOption);
+
+            // Get the taxa group ID for selected taxa
+            String selectedTaxa = (String) spinnerTaxaGroup.getSelectedItem();
+            Log.d("Dialog", "Minutes: " + minutes + ", Selected Option: " + selectedTaxa);
+            Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
+            if (selectedTaxa.equals(getString(R.string.butterflies))) {
+                Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                        .query(TaxonGroupsDb_.name.contains("butterfly", QueryBuilder.StringOrder.CASE_INSENSITIVE)
+                                .or(TaxonGroupsDb_.name.contains("butterflies", QueryBuilder.StringOrder.CASE_INSENSITIVE)))
+                        .build();
+                List<TaxonGroupsDb> listParents = query.find();
+                query.close();
+                if (!listParents.isEmpty()) {
+                    selectedTaxaGroupID = listParents.get(0).getId();
+                }
+            }
+            if (selectedTaxa.equals(getString(R.string.birds))) {
+                Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                        .query(TaxonGroupsDb_.name.contains("bird", QueryBuilder.StringOrder.CASE_INSENSITIVE))
+                        .build();
+                List<TaxonGroupsDb> listParents = query.find();
+                query.close();
+                if (!listParents.isEmpty()) {
+                    selectedTaxaGroupID = listParents.get(0).getId();
+                }
+            }
+            Log.d(TAG, "Selected taxa (" + selectedTaxa + ") has ID: " + selectedTaxaGroupID);
 
             String api_key = BuildConfig.OpenWeather_KEY;
             fetchLatestLocation(new LocationResultCallback() {
@@ -490,9 +534,9 @@ public class TimedCountActivity extends AppCompatActivity {
                 .build();
 
         // Create a LocationCallback to receive the update
-        com.google.android.gms.location.LocationCallback locationCallback = new com.google.android.gms.location.LocationCallback() {
+        LocationCallback locationCallback = new LocationCallback() {
             @Override
-            public void onLocationResult(@NonNull com.google.android.gms.location.LocationResult locationResult) {
+            public void onLocationResult(@NonNull LocationResult locationResult) {
                 // Get the last location from the result
                 Location location = locationResult.getLastLocation();
                 if (location != null) {

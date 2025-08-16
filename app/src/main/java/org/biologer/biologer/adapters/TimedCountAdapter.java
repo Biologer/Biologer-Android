@@ -126,6 +126,33 @@ public class TimedCountAdapter
         this.position = position;
     }
 
+    public boolean hasSpeciesWithID(long speciesID) {
+        if (observedSpecies == null) {
+            return false;
+        }
+        for (SpeciesCount species : observedSpecies) {
+            if (species.getSpeciesID() == speciesID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void addToSpeciesCount(long speciesID) {
+        if (observedSpecies == null) {
+            return;
+        }
+        for (int i = 0; i < observedSpecies.size(); i++) {
+            SpeciesCount species = observedSpecies.get(i);
+            if (species.getSpeciesID() == speciesID) {
+                int individuals = species.getNumberOfIndividuals() + 1;
+                species.setNumberOfIndividuals(individuals);
+                notifyItemChanged(i);
+                return;
+            }
+        }
+    }
+
 //    @Override
 //    public void onViewRecycled(ViewHolder viewHolder) {
 //        viewHolder.itemView.setOnLongClickListener(null);

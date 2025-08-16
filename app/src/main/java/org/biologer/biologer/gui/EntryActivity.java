@@ -1195,13 +1195,12 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             intent.putExtra("ENTRY_LIST_ID", new_entry_id);
             setResult(RESULT_OK, intent);
             finish();
-
         }
 
-        // If the entry exist already
+        // If the entry already exist
         else {
             currentItem.get(0).setTaxonId(taxon.getId());
-            currentItem.get(0).setTaxonSuggestion(taxon.getLatinName());
+            currentItem.get(0).setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
             currentItem.get(0).setComment(comment);
             currentItem.get(0).setNoSpecimens(numberOfSpecimens);
             currentItem.get(0).setSex(sex);
