@@ -88,6 +88,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private MarkerManager.Collection myMarkers;
     private EditText editTextLocation, editTextLongitude, editTextLatitude, editTextPrecision, editTextElevation;
     Slider slider;
+    private ImageView imageViewSaveLocationName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,6 +138,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             linearLayout.setVisibility(View.VISIBLE);
         }
 
+        imageViewSaveLocationName = findViewById(R.id.map_save_location_name);
+        imageViewSaveLocationName.setClickable(false);
+        imageViewSaveLocationName.setAlpha(0.25f);
+
         editTextLocation = findViewById(R.id.location_name_text);
         String locationNameFromPreferences = preferences.getString("location_name", "");
         if (location_name != null) {
@@ -148,6 +153,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             @Override
             public void afterTextChanged(Editable editable) {
                 location_name = String.valueOf(editTextLocation.getText()).trim();
+                imageViewSaveLocationName.setClickable(true);
+                imageViewSaveLocationName.setAlpha(1.0f);
             }
 
             @Override
@@ -161,7 +168,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
-        ImageView imageViewSaveLocationName = findViewById(R.id.map_save_location_name);
         imageViewSaveLocationName.setOnClickListener(view -> {
             if (SettingsManager.getDisplayLocationNameInfo()) {
                 SettingsManager.setDisplayLocationNameInfo(false);
@@ -195,6 +201,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         double currentLongitude = latLong.longitude;
                         latLong = new LatLng(latitude, currentLongitude);
                         marker.setPosition(latLong);
+                        circle.setCenter(latLong);
                         circle.setRadius(Double.parseDouble(accuracy));
                     }
                 } catch (ParseException e) {
@@ -230,6 +237,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         double currentLatitude = latLong.latitude;
                         latLong = new LatLng(currentLatitude, longitude);
                         marker.setPosition(latLong);
+                        circle.setCenter(latLong);
                         circle.setRadius(Double.parseDouble(accuracy));
                     }
                 } catch (ParseException e) {
@@ -327,6 +335,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             SettingsManager.setPreviousLocationLat(String.valueOf(latLong.latitude));
             SettingsManager.setPreviousLocationLong(String.valueOf(latLong.longitude));
         }
+        imageViewSaveLocationName.setClickable(false);
+        imageViewSaveLocationName.setAlpha(0.25f);
     }
 
     @Override

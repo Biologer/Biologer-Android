@@ -56,7 +56,7 @@
             android:id="@+id/map_save_location_name"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:contentDescription="@string/edit_location_coordinates"
+            android:contentDescription="@string/edit_location_name"
             android:src="@drawable/ic_save"
             android:paddingStart="8dp"
             android:paddingEnd="16dp"
@@ -165,7 +165,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:valueFrom="1"
+                android:valueFrom="0"
                 android:valueTo="100"/>
             <EditText
                 android:id="@+id/map_precision_text"
