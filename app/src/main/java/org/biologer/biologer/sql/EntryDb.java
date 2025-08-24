@@ -13,6 +13,7 @@ public class EntryDb {
     @Id(assignable = true)
     long id;
     private long taxonId;
+    private Integer timedCoundId;
     private String taxonSuggestion;
     private String year;
     private String month;
@@ -40,13 +41,14 @@ public class EntryDb {
     private String habitat;
     private String observationTypeIds;
 
-    public EntryDb(long id, long taxonId, String taxonSuggestion, String year, String month, String day,
+    public EntryDb(long id, long taxonId, Integer timedCoundId, String taxonSuggestion, String year, String month, String day,
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
                    String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
                    String dataLicence, int imageLicence, String time, String habitat, String observationTypeIds) {
         this.id = id;
         this.taxonId = taxonId;
+        this.timedCoundId = timedCoundId;
         this.taxonSuggestion = taxonSuggestion;
         this.year = year;
         this.month = month;
@@ -248,5 +250,13 @@ public class EntryDb {
 
     public void setImageLicence(int imageLicence) {
         this.imageLicence = imageLicence;
+    }
+
+    public Integer getTimedCoundId() {
+        return timedCoundId;
+    }
+
+    public void setTimedCoundId(Integer timedCoundId) {
+        this.timedCoundId = timedCoundId;
     }
 }

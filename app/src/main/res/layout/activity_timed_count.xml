@@ -2,90 +2,179 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="org.biologer.biologer.gui.TimedCountActivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context="org.biologer.biologer.gui.TimedCountActivity">
 
     <include
         layout="@layout/toolbar_main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/timed_count_additional_data_fragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/timed_count_main_layout"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:id="@+id/timed_count_timer"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="16dp">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="0dp"
-            android:paddingEnd="16dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/clock_icon"
-            android:src="@drawable/ic_timer"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textSize="24sp"
-            android:gravity="start|center_vertical"
-            android:text="@string/duration" />
-
-        <TextView
-            android:id="@+id/time_elapsed"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textSize="24sp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:gravity="center_vertical"
-            android:text="@string/_00_00"/>
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/pause_timer_image"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:id="@+id/timed_count_timer"
             android:paddingStart="16dp"
-            android:paddingEnd="0dp"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/pause_time_icon"
-            android:src="@drawable/ic_pause"/>
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp">
 
-    </LinearLayout>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dp"
+                android:paddingEnd="16dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/clock_icon"
+                android:src="@drawable/ic_timer"/>
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:endIconMode="clear_text"
-        style="@style/Widget.AppCompat.DropDownItem.Spinner"
-        app:boxBackgroundColor="@android:color/transparent">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="20sp"
+                android:gravity="start|center_vertical"
+                android:text="@string/duration" />
 
-        <AutoCompleteTextView
-            android:id="@+id/textview_list_of_taxa_time_count"
+            <TextView
+                android:id="@+id/time_elapsed"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="20sp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:gravity="center_vertical"
+                android:text="@string/_00_00"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/pause_timer_image"
+                android:paddingStart="16dp"
+                android:paddingEnd="0dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/pause_time_icon"
+                android:src="@drawable/ic_pause"/>
+
+        </LinearLayout>
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/naziv_taksona"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="28dp"
-            android:paddingBottom="10dp"
-            android:textSize="16sp" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:id="@+id/timed_count_on_complete_text"
+            android:textSize="16sp"
+            android:text="@string/timed_count_finished"
+            android:visibility="gone">
+        </TextView>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycled_view_timed_counts"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </androidx.recyclerview.widget.RecyclerView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/timed_count_additional_data"
+            android:paddingStart="16dp"
+            android:paddingEnd="24dp"
+            android:layout_gravity="center_vertical"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dp"
+                android:paddingEnd="2dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/clock_icon"
+                android:src="@drawable/ic_temperature"/>
+            <TextView
+                android:id="@+id/timed_count_text_temperature"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </TextView>
+            <TextView
+                android:text="@string/c"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </TextView>
 
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="16dp"
+                android:paddingEnd="2dp"
+                android:layout_gravity="center_vertical"
+                android:contentDescription="@string/clock_icon"
+                android:src="@drawable/ic_cloud"/>
+            <TextView
+                android:id="@+id/timed_count_text_cloudiness"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </TextView>
+            <TextView
+                android:text="@string/percent"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </TextView>
+
+            <TextView
+                android:text="@string/fill_additional_data"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:paddingStart="16dp"
+                android:paddingEnd="0dp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </TextView>
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:endIconMode="clear_text"
+            style="@style/Widget.AppCompat.DropDownItem.Spinner"
+            app:boxBackgroundColor="@android:color/transparent">
+
+            <AutoCompleteTextView
+                android:id="@+id/textview_list_of_taxa_time_count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/naziv_taksona"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="28dp"
+                android:paddingBottom="10dp"
+                android:textSize="16sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycled_view_timed_counts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </androidx.recyclerview.widget.RecyclerView>
+
+    </LinearLayout>
 </LinearLayout>

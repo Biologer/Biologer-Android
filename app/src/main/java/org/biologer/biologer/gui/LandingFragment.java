@@ -77,7 +77,7 @@ public class LandingFragment extends Fragment {
                         long l = entryDb.getId();
                         Activity activity = getActivity();
                         if (activity != null) {
-                            Intent intent = new Intent(activity.getApplicationContext(), EntryActivity.class);
+                            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
                             intent.putExtra("IS_NEW_ENTRY", "NO");
                             intent.putExtra("ENTRY_ID", l);
                             openEntry.launch(intent);
@@ -163,7 +163,7 @@ public class LandingFragment extends Fragment {
     }
 
     private void newObservation() {
-        Intent intent = new Intent(getActivity(), EntryActivity.class);
+        Intent intent = new Intent(getActivity(), ActivityEntry.class);
         intent.putExtra("IS_NEW_ENTRY", "YES");
         openEntry.launch(intent);
     }
@@ -335,6 +335,7 @@ public class LandingFragment extends Fragment {
         EntryDb entry = new EntryDb(
                 0,
                 entries.get(position).getTaxonId(),
+                entries.get(position).getTimedCoundId(),
                 entries.get(position).getTaxonSuggestion(),
                 entries.get(position).getYear(),
                 entries.get(position).getMonth(),
@@ -370,7 +371,7 @@ public class LandingFragment extends Fragment {
         // Open EntryActivity to edit the new record
         Activity activity = getActivity();
         if (activity != null) {
-            Intent intent = new Intent(activity.getApplicationContext(), EntryActivity.class);
+            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
             intent.putExtra("IS_NEW_ENTRY", "NO");
             intent.putExtra("ENTRY_ID", new_entry_id);
             openEntry.launch(intent);

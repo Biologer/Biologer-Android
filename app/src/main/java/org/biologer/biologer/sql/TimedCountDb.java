@@ -8,8 +8,7 @@ public class TimedCountDb {
 
     @Id(assignable = true)
     long id;
-
-    private int timedCountId;
+    private Integer timedCountId;
     private String startTime;
     private String endTime;
     private int countDurationMinutes;
@@ -22,11 +21,7 @@ public class TimedCountDb {
     private String habitat;
     private String taxonGroup;
 
-    public TimedCountDb() {
-        // Default constructor for ObjectBox
-    }
-
-    public TimedCountDb(long id, int timedCountId, String startTime, String endTime, int countDurationMinutes,
+    public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, int countDurationMinutes,
                         int cloudCoverPercentage, int atmosphericPressureHPa, int humidityPercentage,
                         double temperatureCelsius, String windDirection, int windSpeed, String habitat,
                         String taxonGroup) {
@@ -54,11 +49,11 @@ public class TimedCountDb {
         this.id = id;
     }
 
-    public int getTimedCountId() {
+    public Integer getTimedCountId() {
         return timedCountId;
     }
 
-    public void setTimedCountId(int timedCountId) {
+    public void setTimedCountId(Integer timedCountId) {
         this.timedCountId = timedCountId;
     }
 

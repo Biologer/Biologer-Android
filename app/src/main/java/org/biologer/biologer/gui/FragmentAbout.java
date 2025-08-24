@@ -14,7 +14,7 @@ import android.widget.TextView;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 
-public class AboutFragment extends Fragment {
+public class FragmentAbout extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

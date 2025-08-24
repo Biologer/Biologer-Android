@@ -867,7 +867,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (aboutFragment != null) {
             fragmentTransaction.replace(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
         } else {
-            aboutFragment = new AboutFragment();
+            aboutFragment = new FragmentAbout();
             fragmentTransaction.add(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
         }
         fragmentTransaction.addToBackStack("About fragment");

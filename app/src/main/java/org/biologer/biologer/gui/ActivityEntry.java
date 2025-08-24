@@ -103,7 +103,7 @@ import java.util.Objects;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryActivity extends AppCompatActivity implements View.OnClickListener,
+public class ActivityEntry extends AppCompatActivity implements View.OnClickListener,
         SwipeRefreshLayout.OnRefreshListener,
         DatePickerFragment.OnDateSelectedListener,
         TimePickerFragment.OnTimeSelectedListener {
@@ -347,7 +347,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
                         // Add the Query to the drop down list (adapter)
                         TaxaListAdapter adapter1 =
-                                new TaxaListAdapter(EntryActivity.this, R.layout.taxa_dropdown_list, allTaxaLists);
+                                new TaxaListAdapter(ActivityEntry.this, R.layout.taxa_dropdown_list, allTaxaLists);
                         autoCompleteTextView_speciesName.setAdapter(adapter1);
                         adapter1.notifyDataSetChanged();
 
@@ -393,7 +393,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             public void onProviderDisabled(@NonNull String s) {
                 Log.i(TAG, "Location provider is disabled.");
                 if (!isFinishing()) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(EntryActivity.this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ActivityEntry.this);
                     builder.setMessage(getString(R.string.global_location_disabled))
                         .setCancelable(true)
                         .setPositiveButton(R.string.yes, (dialog, id) -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
@@ -543,11 +543,11 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                     Log.d(TAG, "Resize Images returned code: " + s);
 
                     if (s.equals("error")) {
-                        Toast.makeText(EntryActivity.this, getString(R.string.image_resize_error), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ActivityEntry.this, getString(R.string.image_resize_error), Toast.LENGTH_LONG).show();
                     } else {
                         if (image1 == null) {
                             image1 = s;
-                            Glide.with(EntryActivity.this)
+                            Glide.with(ActivityEntry.this)
                                     .load(image1)
                                     .override(100, 100)
                                     .into(imageViewPicture1);
@@ -555,7 +555,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             list_new_images.add(image1);
                         } else if (image2 == null) {
                             image2 = s;
-                            Glide.with(EntryActivity.this)
+                            Glide.with(ActivityEntry.this)
                                     .load(image2)
                                     .override(100, 100)
                                     .into(imageViewPicture2);
@@ -563,7 +563,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
                             list_new_images.add(image2);
                         } else if (image3 == null) {
                             image3 = s;
-                            Glide.with(EntryActivity.this)
+                            Glide.with(ActivityEntry.this)
                                     .load(image3)
                                     .override(100, 100)
                                     .into(imageViewPicture3);
@@ -810,7 +810,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
     // Customize Save item to enable if when needed
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem item = menu.findItem(R.id.action_save);
+        MenuItem item = menu.findItem(R.id.action_save_entry);
         if (save_enabled) {
             item.setEnabled(true);
             Objects.requireNonNull(item.getIcon()).setAlpha(255);
@@ -829,7 +829,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
         if (id == android.R.id.home) {
             backPressed();
         }
-        if (id == R.id.action_save) {
+        if (id == R.id.action_save_entry) {
             saveEntry1();
         }
         return true;
@@ -1176,7 +1176,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
-            EntryDb entryDb1 = new EntryDb(0, taxon_id, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
+            EntryDb entryDb1 = new EntryDb(0, taxon_id, null, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
                     String.valueOf(!checkBox_dead.isChecked()), deathComment,
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.latitude)),
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.longitude)),
@@ -1652,7 +1652,7 @@ public class EntryActivity extends AppCompatActivity implements View.OnClickList
 
     // Show the message if the taxon is not chosen from the taxonomic list
     protected void buildAlertMessageInvalidTaxon() {
-        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(EntryActivity.this);
+        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(ActivityEntry.this);
         builder_taxon.setMessage(getString(R.string.invalid_taxon_name))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.save_anyway), (dialog, id) -> {

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/fragment_background"
-    tools:context="org.biologer.biologer.gui.AboutFragment">
+    tools:context="org.biologer.biologer.gui.FragmentAbout">
 
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout

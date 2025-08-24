@@ -496,7 +496,7 @@
     <string name="duration">Duration:</string>
     <string name="channel_location">Location tracking</string>
     <string name="channel_location_description">Display notification while obtaining location for species counts.</string>
-    <string name="finished">Finished!</string>
+    <string name="timed_count_finished">Timed count completed! You can not check, edit and save your data.</string>
     <string name="error_fetching_user_data">Could not get user data: data is null.</string>
     <string name="error_fetching_user_data1">Could not get user data: response is null.</string>
     <string name="timed_count_title">Timed count</string>
@@ -517,5 +517,29 @@
     <string name="edit_location_name">Edit location name</string>
     <string name="butterflies">Butterflies</string>
     <string name="birds">Birds</string>
+    <string name="save_time_count">Save timed count</string>
+    <string name="cloud_icon">Cloud icon</string>
+    <string name="temperature_icon">Temperature icon</string>
+    <string name="temperature">Temperature</string>
+    <string name="cloudiness">Cloudiness</string>
+    <string name="c">°C</string>
+    <string name="percent">%</string>
+    <string name="wind_icon">Wind icon</string>
+    <string name="wind_speed">Wind speed</string>
+    <string name="wind_direction">Wind direction</string>
+    <string name="atmospheric_pressure_icon">Atmospheric pressure icon</string>
+    <string name="atmospheric_pressure">Atmospheric pressure</string>
+    <string name="hpa">hPa</string>
+    <string name="humidity_icon">Humidity icon</string>
+    <string name="air_humidity">Air humidity</string>
+    <string name="habitat_icon">Habitat icon</string>
+    <string name="comment_icon">Comment icon</string>
+    <string name="additional_comments">Additional comments</string>
+    <string name="other_data">Other data</string>
+    <string name="other_data_desc">Here you can enter the habitat type and additional comments about the count.</string>
+    <string name="weather_data">Weather data</string>
+    <string name="weather_data_desc">Weather data is taken from OpenWeather. You can review them here and make corrections if necesary.</string>
+    <string name="empty">empty</string>
+    <string name="fill_additional_data">Fill additional data</string>
 
 </resources>
