@@ -47,7 +47,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class NotificationActivity extends AppCompatActivity {
+public class ActivityNotification extends AppCompatActivity {
     private static final String TAG = "Biologer.NotyActivity";
     String downloaded;
     ImageView imageView1, imageView2, imageView3;
@@ -226,7 +226,7 @@ public class NotificationActivity extends AppCompatActivity {
         String date = notification.getDate();
         Date dateReal = DateHelper.getDate(date);
         String dateText = getString(R.string.observation_date) + " " +
-                DateHelper.getLocalizedDate(dateReal, NotificationActivity.this);
+                DateHelper.getLocalizedDate(dateReal, ActivityNotification.this);
         textViewDate.setText(dateText);
 
         // Add the place of observation
@@ -355,7 +355,7 @@ public class NotificationActivity extends AppCompatActivity {
                                 imageView1.setImageBitmap(bitmap);
                                 frameLayout1.setVisibility(View.VISIBLE);
                                 image1 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView1.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
@@ -368,7 +368,7 @@ public class NotificationActivity extends AppCompatActivity {
                                 imageView2.setImageBitmap(bitmap);
                                 frameLayout2.setVisibility(View.VISIBLE);
                                 image2 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView2.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
@@ -381,7 +381,7 @@ public class NotificationActivity extends AppCompatActivity {
                                 imageView3.setImageBitmap(bitmap);
                                 frameLayout3.setVisibility(View.VISIBLE);
                                 image3 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(NotificationActivity.this, bitmap);
+                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView3.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);

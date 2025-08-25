@@ -14,7 +14,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.User;
 import org.jetbrains.annotations.Nullable;
 
-public class IntroActivity extends AppIntro2 {
+public class ActivityIntro extends AppIntro2 {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,20 +48,20 @@ public class IntroActivity extends AppIntro2 {
             Bundle bundle = getIntent().getExtras();
             if (bundle != null) {
                 if (bundle.getBoolean("firstRun", false)) {
-                    Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
+                    Intent intent = new Intent(ActivityIntro.this, ActivityLanding.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("showHelpMessage", true);
                     startActivity(intent);
                 }
             } else {
-                Intent intent = new Intent(IntroActivity.this, LandingActivity.class);
+                Intent intent = new Intent(ActivityIntro.this, ActivityLanding.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("showHelpMessage", false);
                 startActivity(intent);
             }
 
         } else {
-            Intent intent = new Intent(IntroActivity.this, LoginActivity.class);
+            Intent intent = new Intent(ActivityIntro.this, ActivityLogin.class);
             startActivity(intent);
         }
         finish();

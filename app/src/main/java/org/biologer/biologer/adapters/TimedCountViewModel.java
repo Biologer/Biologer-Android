@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class WeatherDataViewModel extends ViewModel {
+public class TimedCountViewModel extends ViewModel {
 
     private final MutableLiveData<Double> temperatureData = new MutableLiveData<>();
     private final MutableLiveData<Integer> cloudinessData = new MutableLiveData<>();
@@ -15,6 +15,8 @@ public class WeatherDataViewModel extends ViewModel {
     private final MutableLiveData<Integer> humidityData = new MutableLiveData<>();
     private final MutableLiveData<String> habitatData = new MutableLiveData<>();
     private final MutableLiveData<String> commentData = new MutableLiveData<>();
+    private final MutableLiveData<Long> taxonId = new MutableLiveData<>();
+    private final MutableLiveData<Integer> timedCountId = new MutableLiveData<>();
 
     public void setTemperatureData(Double data) {
         temperatureData.setValue(data);
@@ -76,5 +78,21 @@ public class WeatherDataViewModel extends ViewModel {
 
     public void setCommentData(String data) {
         commentData.setValue(data);
+    }
+
+    public MutableLiveData<Long> getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId(Long data) {
+        taxonId.setValue(data);
+    }
+
+    public MutableLiveData<Integer> getTimedCountId() {
+        return timedCountId;
+    }
+
+    public void setTimedCountId(Integer data) {
+        timedCountId.setValue(data);
     }
 }

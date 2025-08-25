@@ -27,7 +27,7 @@ import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
 
-public class LogoutFragment extends Fragment {
+public class FragmentLogout extends Fragment {
 
     private static final String TAG = "Biologer.Logout";
 
@@ -140,7 +140,7 @@ public class LogoutFragment extends Fragment {
         editor.clear();
         editor.apply();
 
-        Intent intent = new Intent(activity, LoginActivity.class);
+        Intent intent = new Intent(activity, ActivityLogin.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }

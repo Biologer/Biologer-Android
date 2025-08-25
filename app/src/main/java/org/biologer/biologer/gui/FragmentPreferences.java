@@ -31,7 +31,7 @@ import org.biologer.biologer.network.UpdateTaxa;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class PreferencesFragment extends PreferenceFragmentCompat {
+public class FragmentPreferences extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
     private Preference preferenceButton;

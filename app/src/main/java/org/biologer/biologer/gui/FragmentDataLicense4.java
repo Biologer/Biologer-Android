@@ -14,22 +14,22 @@ import androidx.fragment.app.Fragment;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 
-public class DataLicenseFragment3 extends Fragment {
+public class FragmentDataLicense4 extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.license_data_3, container, false);
+        return inflater.inflate(R.layout.license_data_4, container, false);
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        TextView textView = requireActivity().findViewById(R.id.textView_data_license_description_3);
-        textView.setText(getString(R.string.partially_open_data_license_text, SettingsManager.getDatabaseName()));
+        TextView textView = requireActivity().findViewById(R.id.textView_data_license_description_4);
+        textView.setText(getString(R.string.temporary_closed_data_license_text, SettingsManager.getDatabaseName()));
 
-        Button button = requireActivity().findViewById(R.id.button_data_license3);
+        Button button = requireActivity().findViewById(R.id.button_data_license4);
         button.setOnClickListener(view1 -> requireActivity().getSupportFragmentManager().popBackStack());
     }
 

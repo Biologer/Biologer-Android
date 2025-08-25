@@ -8,6 +8,7 @@ import org.biologer.biologer.R;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -61,5 +62,27 @@ public class DateHelper {
         } else {
             return context.getString(R.string.unknown_date);
         }
+    }
+
+    public static String getCurrentTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        Date currentTime = new Date();
+        return sdf.format(currentTime);
+    }
+
+    public static String getCurrentYear() {
+        Calendar calendar = Calendar.getInstance();
+        return String.valueOf(calendar.get(Calendar.YEAR));
+    }
+
+    public static String getCurrentMonth() {
+        Calendar calendar = Calendar.getInstance();
+        int month = calendar.get(Calendar.MONTH) + 1;
+        return String.valueOf(month);
+    }
+
+    public static String getCurrentDay() {
+        Calendar calendar = Calendar.getInstance();
+        return String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
     }
 }

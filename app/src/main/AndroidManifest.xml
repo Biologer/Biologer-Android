@@ -69,7 +69,7 @@
         </provider>
 
         <activity
-            android:name=".gui.LandingActivity"
+            android:name=".gui.ActivityLanding"
             android:exported="true">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -78,7 +78,7 @@
         </activity>
 
         <activity
-            android:name=".gui.MapActivity"
+            android:name=".gui.ActivityMap"
             android:label="@string/title_activity_map">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -89,27 +89,27 @@
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.gui.LandingActivity" />
+                android:value="org.biologer.biologer.gui.ActivityLanding" />
         </activity>
         <activity
-            android:name=".gui.TimedCountActivity"
+            android:name=".gui.ActivityTimedCount"
             android:exported="false"
             android:windowSoftInputMode="adjustPan|stateVisible">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.gui.LandingActivity" />
+                android:value="org.biologer.biologer.gui.ActivityLanding" />
         </activity>
         <activity
-            android:name=".gui.LoginActivity" >
+            android:name=".gui.ActivityLogin" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.biologer.biologer.gui.LandingActivity" />
+                android:value="org.biologer.biologer.gui.ActivityLanding" />
         </activity>
-        <activity android:name=".gui.IntroActivity" />
-        <activity android:name=".gui.AnnouncementActivity" />
-        <activity android:name=".gui.NotificationActivity" />
-        <activity android:name=".gui.NotificationsActivity" />
-        <activity android:name=".gui.ViewImage" />
+        <activity android:name=".gui.ActivityIntro" />
+        <activity android:name=".gui.ActivityAnnouncement" />
+        <activity android:name=".gui.ActivityNotification" />
+        <activity android:name=".gui.ActivityNotifications" />
+        <activity android:name=".gui.ActivityViewImage" />
 
         <!-- Trigger Google Play services to install the backported photo picker module. -->
         <service android:name="com.google.android.gms.metadata.ModuleDependencies"

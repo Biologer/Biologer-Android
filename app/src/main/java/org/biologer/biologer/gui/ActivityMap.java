@@ -70,7 +70,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "Biologer.GoogleMaps";
     private final List<UTMName> utmNames = new ArrayList<>();
@@ -171,7 +171,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         imageViewSaveLocationName.setOnClickListener(view -> {
             if (SettingsManager.getDisplayLocationNameInfo()) {
                 SettingsManager.setDisplayLocationNameInfo(false);
-                new AlertDialog.Builder(MapActivity.this)
+                new AlertDialog.Builder(ActivityMap.this)
                         .setTitle(R.string.save_location_name)
                         .setMessage(R.string.save_location_name_desc)
                         .setPositiveButton(R.string.ok, (dialog, which) -> saveLocationName())
@@ -491,7 +491,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
                     for (UTMName utmName : utmNames) {
                         if (bounds.contains(utmName.getLatLng())) {
-                            IconGenerator iconFactory = new IconGenerator(MapActivity.this);
+                            IconGenerator iconFactory = new IconGenerator(ActivityMap.this);
                             iconFactory.setStyle(IconGenerator.STYLE_GREEN);
 
                             MarkerOptions markerOptions = new MarkerOptions()

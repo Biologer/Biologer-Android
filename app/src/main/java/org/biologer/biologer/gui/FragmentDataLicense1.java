@@ -12,18 +12,18 @@ import androidx.fragment.app.Fragment;
 
 import org.biologer.biologer.R;
 
-public class DataLicenseFragment2 extends Fragment {
+public class FragmentDataLicense1 extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.license_data_2, container, false);
+        return inflater.inflate(R.layout.license_data_1, container, false);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        Button button = requireActivity().findViewById(R.id.button_data_license2);
+        Button button = requireActivity().findViewById(R.id.button_data_license1);
         button.setOnClickListener(view1 -> requireActivity().getSupportFragmentManager().popBackStack());
     }
 

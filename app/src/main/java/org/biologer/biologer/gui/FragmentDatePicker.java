@@ -14,7 +14,7 @@ import org.biologer.biologer.R;
 
 import java.util.Calendar;
 
-public class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
+public class FragmentDatePicker extends DialogFragment implements DatePickerDialog.OnDateSetListener {
 
     public interface OnDateSelectedListener {
         void onDateSelected(int year, int month, int day);

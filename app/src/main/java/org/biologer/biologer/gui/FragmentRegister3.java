@@ -43,7 +43,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class RegisterFragment3 extends Fragment {
+public class FragmentRegister3 extends Fragment {
 
     private static final String TAG = "Biologer.Register";
 
@@ -94,7 +94,7 @@ public class RegisterFragment3 extends Fragment {
                 ClickableSpan clickableSpan = new ClickableSpan() {
                     @Override
                     public void onClick(@NonNull View textView) {
-                        Fragment fragment = new RegisterPrivacyPolicy();
+                        Fragment fragment = new FragmentRegisterPrivacyPolicy();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
                         fragmentTransaction.replace(R.id.login_layout, fragment);
                         fragmentTransaction.addToBackStack("Register fragment privacy");
@@ -123,7 +123,7 @@ public class RegisterFragment3 extends Fragment {
                 ClickableSpan clickableSpanLicense = new ClickableSpan() {
                     @Override
                     public void onClick(@NonNull View textView) {
-                        Fragment fragment = new LicenseFragment();
+                        Fragment fragment = new FragmentLicense();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
                         fragmentTransaction.replace(R.id.login_layout, fragment);
                         fragmentTransaction.addToBackStack("License Fragment");
@@ -206,19 +206,19 @@ public class RegisterFragment3 extends Fragment {
         buttonRegister.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
 
-        String database = ((LoginActivity) requireActivity()).database_name;
-        String clientKey = ((LoginActivity) requireActivity()).getClientKeyForDatabase(database);
-        String clientId = ((LoginActivity) requireActivity()).getClientIdForDatabase(database);
+        String database = ((ActivityLogin) requireActivity()).database_name;
+        String clientKey = ((ActivityLogin) requireActivity()).getClientKeyForDatabase(database);
+        String clientId = ((ActivityLogin) requireActivity()).getClientIdForDatabase(database);
 
         Call<RegisterResponse> registerResponseCall;
         registerResponseCall = RetrofitClient.getService(database).register(
                 Integer.parseInt(clientId), clientKey,
-                ((LoginActivity) requireActivity()).register_name,
-                ((LoginActivity) requireActivity()).register_surname,
+                ((ActivityLogin) requireActivity()).register_name,
+                ((ActivityLogin) requireActivity()).register_surname,
                 getDataLicense(), getImageLicense(),
-                ((LoginActivity) requireActivity()).register_institution,
-                ((LoginActivity) requireActivity()).et_username.getText().toString(),
-                ((LoginActivity) requireActivity()).et_password.getText().toString());
+                ((ActivityLogin) requireActivity()).register_institution,
+                ((ActivityLogin) requireActivity()).et_username.getText().toString(),
+                ((ActivityLogin) requireActivity()).et_password.getText().toString());
         registerResponseCall.enqueue(new Callback<>() {
 
             @Override
@@ -327,7 +327,7 @@ public class RegisterFragment3 extends Fragment {
                         }
 
                         // Go to the LandingActivity
-                        Intent intent = new Intent(requireContext(), LandingActivity.class);
+                        Intent intent = new Intent(requireContext(), ActivityLanding.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.putExtra("fromRegisterScreen", true);
                         startActivity(intent);

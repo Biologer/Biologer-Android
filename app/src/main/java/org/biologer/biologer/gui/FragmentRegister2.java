@@ -24,7 +24,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.R;
 
-public class RegisterFragment2 extends Fragment {
+public class FragmentRegister2 extends Fragment {
 
     private static final String TAG = "Biologer.Register";
 
@@ -55,8 +55,8 @@ public class RegisterFragment2 extends Fragment {
 
         Activity activity = getActivity();
         if (activity != null) {
-            editTextEmail.setText(((LoginActivity) activity).et_username.getText().toString());
-            editTextPassword.setText(((LoginActivity) activity).et_password.getText().toString());
+            editTextEmail.setText(((ActivityLogin) activity).et_username.getText().toString());
+            editTextPassword.setText(((ActivityLogin) activity).et_password.getText().toString());
 
             ImageView imageViewShowPassword = activity.findViewById(R.id.show_password_icon_type);
             imageViewShowPassword.setOnClickListener(view1 -> {
@@ -107,8 +107,8 @@ public class RegisterFragment2 extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
-                editTextEmail.setText(((LoginActivity) activity).et_username.getText().toString());
-                editTextPassword.setText(((LoginActivity) activity).et_password.getText().toString());
+                editTextEmail.setText(((ActivityLogin) activity).et_username.getText().toString());
+                editTextPassword.setText(((ActivityLogin) activity).et_password.getText().toString());
                 editTextPassword.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -120,8 +120,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
-                        ((LoginActivity) activity).runnable = () -> {
+                        ((ActivityLogin) activity).handler.removeCallbacks(((ActivityLogin) activity).runnable);
+                        ((ActivityLogin) activity).runnable = () -> {
                             if (!(editTextPassword.getText().length() > 8)) {
                                 passwordLayout.setError(getString(R.string.pass_short));
                             } else {
@@ -140,7 +140,7 @@ public class RegisterFragment2 extends Fragment {
 
                             enableButton();
                         };
-                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
+                        ((ActivityLogin) activity).handler.postDelayed(((ActivityLogin) activity).runnable, 2000);
                     }
                 });
 
@@ -155,8 +155,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
-                        ((LoginActivity) activity).runnable = () -> {
+                        ((ActivityLogin) activity).handler.removeCallbacks(((ActivityLogin) activity).runnable);
+                        ((ActivityLogin) activity).runnable = () -> {
                             if (editTextPassword.getText().toString().equals(editTextPasswordRepeat.getText().toString())) {
                                 passwordRepeatLayout.setError(null);
                             } else {
@@ -171,7 +171,7 @@ public class RegisterFragment2 extends Fragment {
 
                             enableButton();
                         };
-                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
+                        ((ActivityLogin) activity).handler.postDelayed(((ActivityLogin) activity).runnable, 2000);
                     }
                 });
 
@@ -186,8 +186,8 @@ public class RegisterFragment2 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity) activity).handler.removeCallbacks(((LoginActivity) activity).runnable);
-                        ((LoginActivity) activity).runnable = () -> {
+                        ((ActivityLogin) activity).handler.removeCallbacks(((ActivityLogin) activity).runnable);
+                        ((ActivityLogin) activity).runnable = () -> {
                             if (isValidEmail(editTextEmail.getText().toString())) {
                                 emailLayout.setError(null);
                             } else {
@@ -195,7 +195,7 @@ public class RegisterFragment2 extends Fragment {
                             }
                             enableButton();
                         };
-                        ((LoginActivity) activity).handler.postDelayed(((LoginActivity) activity).runnable, 2000);
+                        ((ActivityLogin) activity).handler.postDelayed(((ActivityLogin) activity).runnable, 2000);
                     }
                 });
             }
@@ -205,12 +205,12 @@ public class RegisterFragment2 extends Fragment {
 
 
     private void onNextClicked(View view) {
-        ((LoginActivity) requireActivity()).et_username.setText(editTextEmail.getText().toString());
-        ((LoginActivity) requireActivity()).et_password.setText(editTextPassword.getText().toString());
+        ((ActivityLogin) requireActivity()).et_username.setText(editTextEmail.getText().toString());
+        ((ActivityLogin) requireActivity()).et_password.setText(editTextPassword.getText().toString());
 
         Log.d(TAG, "Registering with email address: " + editTextEmail.getText().toString());
 
-        Fragment fragment = new RegisterFragment3();
+        Fragment fragment = new FragmentRegister3();
         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.login_container, fragment);
         fragmentTransaction.addToBackStack("Register fragment 3");

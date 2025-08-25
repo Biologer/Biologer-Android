@@ -105,8 +105,8 @@ import io.objectbox.query.Query;
 
 public class ActivityEntry extends AppCompatActivity implements View.OnClickListener,
         SwipeRefreshLayout.OnRefreshListener,
-        DatePickerFragment.OnDateSelectedListener,
-        TimePickerFragment.OnTimeSelectedListener {
+        FragmentDatePicker.OnDateSelectedListener,
+        FragmentTimePicker.OnTimeSelectedListener {
 
     private static final String TAG = "Biologer.Entry";
 
@@ -242,7 +242,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         dateSelect.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putSerializable("selected_date", calendar);
-            DialogFragment dateFragment = new DatePickerFragment();
+            DialogFragment dateFragment = new FragmentDatePicker();
             dateFragment.setArguments(args);
             dateFragment.show(getSupportFragmentManager(), "datePicker");
         });
@@ -251,7 +251,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         timeSelect.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putSerializable("selected_date", calendar);
-            DialogFragment timeFragment = new TimePickerFragment();
+            DialogFragment timeFragment = new FragmentTimePicker();
             timeFragment.setArguments(args);
             timeFragment.show(getSupportFragmentManager(), "timePicker");
         });
@@ -636,6 +636,28 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
             }
         }
 
+        // Get the date and time
+        onDateSelected(Integer.parseInt(currentItem.get(0).getYear()),
+                Integer.parseInt(currentItem.get(0).getMonth()),
+                Integer.parseInt(currentItem.get(0).getDay()));
+        String time = currentItem.get(0).getTime();
+        String[] timeParts = time.split(":");
+        Log.d(TAG, "Setting the time to: " + time);
+        if (timeParts.length == 2) {
+            Log.d(TAG, "Time format OK: " + time);
+            try {
+                int hours = Integer.parseInt(timeParts[0]);
+                int minutes = Integer.parseInt(timeParts[1]);
+                onTimeSelected(hours, minutes);
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Invalid time format: " + time);
+                System.err.println("Invalid time format: " + time);
+            }
+        } else {
+            Log.e(TAG, "Invalid time format: " + time);
+            System.err.println("Invalid time format: " + time);
+        }
+
         // Get the latitude, longitude, coordinate precision and elevation...
         currentLocation = new LatLng(currentItem.get(0).getLattitude(), currentItem.get(0).getLongitude());
         elev = currentItem.get(0).getElevation();
@@ -955,7 +977,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     }
 
     private void viewImage(String image) {
-        Intent intent = new Intent(this, ViewImage.class);
+        Intent intent = new Intent(this, ActivityViewImage.class);
         intent.putExtra("image", image);
         startActivity(intent);
     }
@@ -1395,7 +1417,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     }
 
     private void showMap() {
-        Intent intent = new Intent(this, MapActivity.class);
+        Intent intent = new Intent(this, ActivityMap.class);
         // If location is not loaded put some location on the map at the Balkan
         Bundle bundle = new Bundle();
         if (currentLocation.latitude == 0) {

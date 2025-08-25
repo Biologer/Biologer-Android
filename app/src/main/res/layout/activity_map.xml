@@ -194,7 +194,7 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        tools:context="org.biologer.biologer.gui.MapActivity"
+        tools:context="org.biologer.biologer.gui.ActivityMap"
         tools:ignore="FragmentTagUsage"
         app:layout_constraintTop_toBottomOf="@id/map_actionbar"
         app:layout_constraintBottom_toTopOf="@id/map_location_name"

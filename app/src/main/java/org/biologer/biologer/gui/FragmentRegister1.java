@@ -25,7 +25,7 @@ import org.biologer.biologer.R;
 import java.util.Arrays;
 import java.util.List;
 
-public class RegisterFragment1 extends Fragment {
+public class FragmentRegister1 extends Fragment {
 
     private static final String TAG = "Biologer.Register";
 
@@ -76,8 +76,8 @@ public class RegisterFragment1 extends Fragment {
 
 
                 rightArrow.setOnClickListener(view1 -> {
-                    String current_database = ((LoginActivity) requireActivity()).database_name;
-                    String[] databases = LoginActivity.allDatabases;
+                    String current_database = ((ActivityLogin) requireActivity()).database_name;
+                    String[] databases = ActivityLogin.allDatabases;
                     List<String> databasesList = Arrays.asList(databases);
                     int index = databasesList.indexOf(current_database);
                     index++;
@@ -87,14 +87,14 @@ public class RegisterFragment1 extends Fragment {
                     String new_database = databases[index];
                     Log.i(TAG, "User selected " + new_database + " as a database.");
 
-                    ((LoginActivity) requireActivity()).database_name = new_database;
-                    int spinnerID = LoginActivity.getSpinnerIdFromUrl(new_database);
-                    ((LoginActivity) requireActivity()).spinner.setSelection(spinnerID);
+                    ((ActivityLogin) requireActivity()).database_name = new_database;
+                    int spinnerID = ActivityLogin.getSpinnerIdFromUrl(new_database);
+                    ((ActivityLogin) requireActivity()).spinner.setSelection(spinnerID);
 
                     updateDatabaseView(activity, new_database);
                 });
 
-                updateDatabaseView(activity, ((LoginActivity)activity).database_name);
+                updateDatabaseView(activity, ((ActivityLogin)activity).database_name);
 
                 editTextName.addTextChangedListener(new TextWatcher() {
                     @Override
@@ -107,8 +107,8 @@ public class RegisterFragment1 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
-                        ((LoginActivity)activity).runnable = () -> {
+                        ((ActivityLogin)activity).handler.removeCallbacks(((ActivityLogin)activity).runnable);
+                        ((ActivityLogin)activity).runnable = () -> {
                             if (!(editTextName.getText().length() > 2)) {
                                 nameLayout.setError(getString(R.string.name_is_obligatory));
                             } else {
@@ -116,7 +116,7 @@ public class RegisterFragment1 extends Fragment {
                             }
                             enableButton();
                         };
-                        ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);
+                        ((ActivityLogin)activity).handler.postDelayed(((ActivityLogin)activity).runnable, 2000);
                     }
                 });
 
@@ -131,8 +131,8 @@ public class RegisterFragment1 extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        ((LoginActivity)activity).handler.removeCallbacks(((LoginActivity)activity).runnable);
-                        ((LoginActivity)activity).runnable = () -> {
+                        ((ActivityLogin)activity).handler.removeCallbacks(((ActivityLogin)activity).runnable);
+                        ((ActivityLogin)activity).runnable = () -> {
                             if (!(editTextSurname.getText().length() > 2)) {
                                 surnameLayout.setError("Surname is obligatory");
                             } else {
@@ -140,7 +140,7 @@ public class RegisterFragment1 extends Fragment {
                             }
                             enableButton();
                         };
-                        ((LoginActivity)activity).handler.postDelayed(((LoginActivity)activity).runnable, 2000);
+                        ((ActivityLogin)activity).handler.postDelayed(((ActivityLogin)activity).runnable, 2000);
                     }
                 });
 
@@ -184,16 +184,16 @@ public class RegisterFragment1 extends Fragment {
 
     private void onNextClicked(View view) {
 
-        ((LoginActivity) requireActivity()).register_name = editTextName.getText().toString();
-        ((LoginActivity) requireActivity()).register_surname = editTextSurname.getText().toString();
-        ((LoginActivity) requireActivity()).register_institution = editTextInstitution.getText().toString();
+        ((ActivityLogin) requireActivity()).register_name = editTextName.getText().toString();
+        ((ActivityLogin) requireActivity()).register_surname = editTextSurname.getText().toString();
+        ((ActivityLogin) requireActivity()).register_institution = editTextInstitution.getText().toString();
 
         Log.d(TAG, "Registering as " +
                 editTextName.getText().toString() + " " +
                 editTextSurname.getText().toString() + " (from " +
                 editTextInstitution.getText().toString() + ").");
 
-        Fragment fragment = new RegisterFragment2();
+        Fragment fragment = new FragmentRegister2();
         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.login_container, fragment);
         fragmentTransaction.addToBackStack("Register fragment 2");

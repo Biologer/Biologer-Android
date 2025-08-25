@@ -83,7 +83,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LandingActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class ActivityLanding extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Biologer.Landing";
 
@@ -132,7 +132,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             if (SettingsManager.isFirstRun()) {
                 Log.d(TAG, "This is first run of the program.");
                 SettingsManager.setFirstRun(false);
-                Intent intent = new Intent(LandingActivity.this, IntroActivity.class);
+                Intent intent = new Intent(ActivityLanding.this, ActivityIntro.class);
                 intent.putExtra("firstRun", true);
                 startActivity(intent);
             } else {
@@ -309,13 +309,13 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     Log.d(TAG, "There is no need to refresh token now.");
                 } else {
                     Log.d(TAG, "Trying to refresh login token.");
-                    if (InternetConnection.isConnected(LandingActivity.this)) {
+                    if (InternetConnection.isConnected(ActivityLanding.this)) {
                         RefreshToken(database_url, false);
                     }
                 }
             } else {
                 Log.d(TAG, "Token expired. Refreshing login token.");
-                if (InternetConnection.isConnected(LandingActivity.this)) {
+                if (InternetConnection.isConnected(ActivityLanding.this)) {
                     RefreshToken(database_url, true);
                 } else {
                     alertWarnAndExit(getString(R.string.refresh_token_no_internet));
@@ -329,7 +329,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         }
 
         // Get the user settings from preferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(LandingActivity.this);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityLanding.this);
         how_to_use_network = preferences.getString("auto_download", "wifi");
 
         // Check if there is network available and run the commands...
@@ -349,7 +349,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                     long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
                     if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
                         Log.d(TAG, "Announcements should be updated since 10 hours elapsed.");
-                        final Intent getAnnouncements = new Intent(LandingActivity.this, UpdateAnnouncements.class);
+                        final Intent getAnnouncements = new Intent(ActivityLanding.this, UpdateAnnouncements.class);
                         getAnnouncements.putExtra("show_notification", true);
                         startService(getAnnouncements);
                         SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
@@ -558,7 +558,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
             @Override
             public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
-                Toast.makeText(LandingActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
+                Toast.makeText(ActivityLanding.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
                 updateGuiOnMailConfirmed(false);
             }
         });
@@ -580,7 +580,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     // Setting tokenExpired to true will send user to login screen, but without option
     // to choose database. This is used only to refresh expired token.
     private void showUserLoginScreen(boolean tokenExpired) {
-        Intent intent = new Intent(LandingActivity.this, LoginActivity.class);
+        Intent intent = new Intent(ActivityLanding.this, ActivityLogin.class);
         if (tokenExpired) {
             SettingsManager.deleteAccessToken();
             intent.putExtra("refreshToken", "yes");
@@ -627,7 +627,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
                     if (response.code() == 401) {
                         Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
-                        Toast.makeText(LandingActivity.this, getString(R.string.both_login_and_refresh_tokens_expired), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ActivityLanding.this, getString(R.string.both_login_and_refresh_tokens_expired), Toast.LENGTH_LONG).show();
                         showUserLoginScreen(true);
                     }
                     if (response.isSuccessful()) {
@@ -757,7 +757,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 @Override
                 public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
                     // Inform the user on failure and write log message
-                    Toast.makeText(LandingActivity.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ActivityLanding.this, getString(R.string.database_connect_error), Toast.LENGTH_LONG).show();
                     // Log.e(TAG, "Application could not get taxa database version data from a server (test request)!" + t.getMessage());
                 }
             });
@@ -789,7 +789,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
     private void updateLicenses() {
         if (getLoggedUser() == null) {
-            Toast.makeText(LandingActivity.this, getString(R.string.missing_user_data), Toast.LENGTH_LONG).show();
+            Toast.makeText(ActivityLanding.this, getString(R.string.missing_user_data), Toast.LENGTH_LONG).show();
             fallbackToLoginScreen();
         } else {
             // Check if the licence has changed on the server and update if needed
@@ -822,7 +822,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             showLandingFragment();
         }
         if (id == R.id.nav_help) {
-            startActivity(new Intent(LandingActivity.this, IntroActivity.class));
+            startActivity(new Intent(ActivityLanding.this, ActivityIntro.class));
         }
         if (id == R.id.nav_setup) {
             showSetupFragment();
@@ -834,7 +834,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
             showAboutFragment();
         }
         if (id == R.id.nav_notifications) {
-            startActivity(new Intent(LandingActivity.this, NotificationsActivity.class));
+            startActivity(new Intent(ActivityLanding.this, ActivityNotifications.class));
         }
         if (id == R.id.nav_announcements) {
             showAnnouncementsFragment();
@@ -852,7 +852,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (landingFragment != null) {
             fragmentTransaction.replace(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
         } else {
-            landingFragment = new LandingFragment();
+            landingFragment = new FragmentLanding();
             fragmentTransaction.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
         }
         fragmentTransaction.addToBackStack("Landing fragment");
@@ -882,7 +882,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (announcementsFragment != null) {
             fragmentTransaction.replace(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
         } else {
-            announcementsFragment = new AnnouncementsFragment();
+            announcementsFragment = new FragmentAnnouncements();
             fragmentTransaction.add(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
         }
         fragmentTransaction.addToBackStack("Announcements fragment");
@@ -897,7 +897,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (logoutFragment != null) {
             fragmentTransaction.replace(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
         } else {
-            logoutFragment = new LogoutFragment();
+            logoutFragment = new FragmentLogout();
             fragmentTransaction.add(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
         }
         fragmentTransaction.addToBackStack("Logout fragment");
@@ -912,7 +912,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (preferencesFragment != null) {
             fragmentTransaction.replace(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
         } else {
-            preferencesFragment = new PreferencesFragment();
+            preferencesFragment = new FragmentPreferences();
             fragmentTransaction.add(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
         }
         fragmentTransaction.addToBackStack("Preferences fragment");
@@ -933,7 +933,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 Log.d(TAG, "URI is null!");
             }
         } catch (FileNotFoundException e) {
-            Toast.makeText(LandingActivity.this, getString(R.string.file_not_found) + e, Toast.LENGTH_LONG).show();
+            Toast.makeText(ActivityLanding.this, getString(R.string.file_not_found) + e, Toast.LENGTH_LONG).show();
             Log.e(TAG, "File not found: " + e);
         }
 
@@ -1014,9 +1014,9 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
 
         try {
             writer.close();
-            Toast.makeText(LandingActivity.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
+            Toast.makeText(ActivityLanding.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
         } catch (IOException e) {
-            Toast.makeText(LandingActivity.this, getString(R.string.io_error) + e, Toast.LENGTH_LONG).show();
+            Toast.makeText(ActivityLanding.this, getString(R.string.io_error) + e, Toast.LENGTH_LONG).show();
             Log.e(TAG, "IO Error: " + e);
         }
     }
@@ -1059,7 +1059,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     private void uploadRecords() {
         if (!App.get().getBoxStore().boxFor(EntryDb.class).getAll().isEmpty()) {
             Log.d(TAG, "Uploading entries to the online database.");
-            final Intent uploadRecords = new Intent(LandingActivity.this, UploadRecords.class);
+            final Intent uploadRecords = new Intent(ActivityLanding.this, UploadRecords.class);
             uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             uploadRecords.setAction(UploadRecords.ACTION_START);
             startService(uploadRecords);
@@ -1087,7 +1087,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
         if (UpdateTaxa.isInstanceCreated()) {
             Log.d(TAG, "UpdateTaxa is already running, skipping for now…");
         } else {
-            final Intent updateTaxa = new Intent(LandingActivity.this, UpdateTaxa.class);
+            final Intent updateTaxa = new Intent(ActivityLanding.this, UpdateTaxa.class);
             updateTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD);
             startService(updateTaxa);
         }
@@ -1117,7 +1117,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
     }
 
     protected void alertTokenExpired() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(LandingActivity.this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(ActivityLanding.this);
         builder.setMessage(getString(R.string.refresh_token_failed))
                 .setCancelable(false)
                 .setPositiveButton(getString(R.string.ignore), (dialog, id) -> {
@@ -1127,7 +1127,7 @@ public class LandingActivity extends AppCompatActivity implements NavigationView
                 })
                 .setNegativeButton(getString(R.string.exit), (dialog, id) -> {
                     dialog.cancel();
-                    LandingActivity.this.finishAffinity();
+                    ActivityLanding.this.finishAffinity();
                 });
         final AlertDialog alert = builder.create();
         alert.show();

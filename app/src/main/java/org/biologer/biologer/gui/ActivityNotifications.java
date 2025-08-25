@@ -48,7 +48,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class NotificationsActivity extends AppCompatActivity {
+public class ActivityNotifications extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
     RecyclerView recyclerView;
     BroadcastReceiver downloadNotifications;
@@ -81,7 +81,7 @@ public class NotificationsActivity extends AppCompatActivity {
         registerDownloadNotificationsReceiver();
 
         // If downloading is disables, we should ask user to download notifications
-        if (!LandingActivity.shouldDownload(this)) {
+        if (!ActivityLanding.shouldDownload(this)) {
             TextView textView = findViewById(R.id.recycled_view_notifications_text);
             recyclerView.setVisibility(View.GONE);
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -121,7 +121,7 @@ public class NotificationsActivity extends AppCompatActivity {
                 String received = intent.getStringExtra(UpdateUnreadNotifications.NOTIFICATIONS_DOWNLOADED);
                 if (received != null) {
                     if (received.equals("downloaded")) {
-                        Toast.makeText(NotificationsActivity.this, getString(R.string.notifications_downloaded), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ActivityNotifications.this, getString(R.string.notifications_downloaded), Toast.LENGTH_SHORT).show();
                         recyclerView.setVisibility(View.VISIBLE);
                     }
                 }
@@ -193,7 +193,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                 notificationsAdapter.notifyItemRemoved((int) index);
                                 NotificationsHelper.setOnlineNotificationAsRead(realId);
                                 if (notificationId != 0) {
-                                    NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notificationId);
+                                    NotificationsHelper.deleteNotificationPhotos(ActivityNotifications.this, notificationId);
                                     NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
                                 }
                             }
@@ -285,7 +285,7 @@ public class NotificationsActivity extends AppCompatActivity {
         long notificationId = notification.getId();
         Log.d(TAG, "Opening notification with index: " + index + "; ID: " + notificationId + "; Real ID: " + notification.getRealId());
 
-        Intent intent = new Intent(NotificationsActivity.this, NotificationActivity.class);
+        Intent intent = new Intent(ActivityNotifications.this, ActivityNotification.class);
         intent.putExtra("notification_id", notificationId);
         intent.putExtra("index_id", index);
         notificationLauncher.launch(intent);
@@ -340,7 +340,7 @@ public class NotificationsActivity extends AppCompatActivity {
             if (notifications.get(i).getMarked() == 1) {
                 Log.d(TAG, "Removing notification using item index " + i + ".");
                 NotificationsHelper.setOnlineNotificationAsRead(notifications.get(i).getRealId());
-                NotificationsHelper.deleteNotificationPhotos(NotificationsActivity.this, notifications.get(i).getId());
+                NotificationsHelper.deleteNotificationPhotos(ActivityNotifications.this, notifications.get(i).getId());
                 NotificationsHelper.deleteNotificationFromObjectBox(notifications.get(i).getId());
                 remove_indexes.add(i);
                 remove_list.add(notifications.get(i));

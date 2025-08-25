@@ -26,7 +26,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
-import androidx.preference.PreferenceScreen;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
@@ -451,7 +450,7 @@ public class PreferencesAccountSetup extends PreferenceFragmentCompat {
                             .setMessage(getString(R.string.password_changed_desc1) +
                                     " " + SettingsManager.getDatabaseName() + ".")
                             .setPositiveButton(R.string.ok, (dialog, which) -> {
-                                final Intent startLandingActivity = new Intent(getActivity(), LandingActivity.class);
+                                final Intent startLandingActivity = new Intent(getActivity(), ActivityLanding.class);
                                 startLandingActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                                         | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(startLandingActivity);
@@ -501,7 +500,7 @@ public class PreferencesAccountSetup extends PreferenceFragmentCompat {
                                     getString(R.string.email_changed_desc2) + " " +
                                     getString(R.string.email_changed_desc3))
                             .setPositiveButton(R.string.ok, (dialog, which) -> {
-                                final Intent startLandingActivity = new Intent(getActivity(), LandingActivity.class);
+                                final Intent startLandingActivity = new Intent(getActivity(), ActivityLanding.class);
                                 startLandingActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                                         | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(startLandingActivity);
@@ -572,7 +571,7 @@ public class PreferencesAccountSetup extends PreferenceFragmentCompat {
                                     + " " + SettingsManager.getDatabaseName() + ".")
                             .setPositiveButton(R.string.ok, (dialog, which) -> {
                                 // Go back to login activity and exit the dialog
-                                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                                Intent intent = new Intent(getActivity(), ActivityLogin.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                                         | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(intent);

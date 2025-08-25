@@ -26,7 +26,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.services.ArrayHelper;
-import org.biologer.biologer.gui.LandingActivity;
+import org.biologer.biologer.gui.ActivityLanding;
 import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
@@ -126,7 +126,7 @@ public class UploadRecords extends Service {
         Log.i(TAG, "Displaying notification for uploading service.");
 
         // Create initial notification to be set to Foreground
-        Intent intent = new Intent(this, LandingActivity.class);
+        Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
@@ -424,7 +424,7 @@ public class UploadRecords extends Service {
     @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateProgress(int maxValue, int currentValue, String descriptionText) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, LandingActivity.class);
+        Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
@@ -467,7 +467,7 @@ public class UploadRecords extends Service {
     @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateText(String title, String description) {
         // To do something if notification is taped, we must set up an intent
-        Intent intent = new Intent(this, LandingActivity.class);
+        Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;

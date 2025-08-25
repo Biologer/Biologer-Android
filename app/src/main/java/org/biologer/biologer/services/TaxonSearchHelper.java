@@ -194,7 +194,7 @@ public class TaxonSearchHelper {
             }
         }
 
-        // Get tne native names for taxa
+        // Get the native names for taxa
         Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
         List<TaxaTranslationDb> nativeList;
         // For Serbian language we should also search for Latin and Cyrillic names
@@ -269,5 +269,39 @@ public class TaxonSearchHelper {
         }
 
         return allTaxaLists;
+    }
+
+    public static String getLocalisedLatinName(long taxon_id) {
+
+        String localeScript = Localisation.getLocaleScript();
+        BoxStore boxStore = App.get().getBoxStore();
+
+        // Query taxon
+        Box<TaxonDb> taxonDataBox = boxStore.boxFor(TaxonDb.class);
+        Query<TaxonDb> queryId = taxonDataBox
+                .query(TaxonDb_.id.equal(taxon_id))
+                .build();
+        TaxonDb taxon = queryId.findFirst();
+        queryId.close();
+
+        // Query native name
+        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+        Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
+                .query(TaxaTranslationDb_.taxonId.equal(taxon_id)
+                        .and(TaxaTranslationDb_.locale.equal(localeScript)))
+                .build();
+        TaxaTranslationDb nativeName = query_taxon_translation.findFirst();
+        query_taxon_translation.close();
+
+        // Return the value
+        if (taxon != null) {
+            if (nativeName != null) {
+                return taxon.getLatinName() + " (" + nativeName.getNativeName() + ")";
+            } else {
+                return taxon.getLatinName();
+            }
+        } else {
+            return null;
+        }
     }
 }

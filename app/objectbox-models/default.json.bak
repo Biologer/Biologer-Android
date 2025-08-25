@@ -104,7 +104,7 @@
     },
     {
       "id": "11:1544941449612204904",
-      "lastPropertyId": "32:8984557838996230614",
+      "lastPropertyId": "33:236514361401407390",
       "name": "EntryDb",
       "properties": [
         {
@@ -247,6 +247,11 @@
           "id": "32:8984557838996230614",
           "name": "atlasCode",
           "type": 6
+        },
+        {
+          "id": "33:236514361401407390",
+          "name": "timedCoundId",
+          "type": 5
         }
       ],
       "relations": []

@@ -26,9 +26,19 @@ public class TimedCountAdapter
     private int position;
     private static final String TAG = "Biologer.TCEntryAdapter";
     View view;
-
     public TimedCountAdapter(ArrayList<SpeciesCount> entries) {
         observedSpecies = entries;
+    }
+
+    public interface OnItemClickListener {
+        void onPlusClick(SpeciesCount position);
+        void onSpeciesClick(SpeciesCount position);
+    }
+
+    private OnItemClickListener listener;
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
     }
 
     public static class ViewHolder
@@ -90,17 +100,37 @@ public class TimedCountAdapter
             species.setNumberOfIndividuals(individuals);
 
             notifyItemChanged(adapterPosition);
+
+            if (listener != null) {
+                listener.onPlusClick(species);
+            }
         });
 
         viewHolder.speciesCount.setOnClickListener(view -> {
             int adapterPosition = viewHolder.getAdapterPosition();
 
-            Log.d(TAG, "Number os species clicked for species " + species.getSpeciesName());
+            Log.d(TAG, "Number of species clicked for species " + species.getSpeciesName());
             int individuals = species.getNumberOfIndividuals();
             individuals++;
             species.setNumberOfIndividuals(individuals);
 
             notifyItemChanged(adapterPosition);
+
+            if (listener != null) {
+                listener.onPlusClick(species);
+            }
+        });
+
+        viewHolder.speciesName.setOnClickListener(v -> {
+            int adapterPosition = viewHolder.getAdapterPosition();
+
+            Log.d(TAG, "Species name clicked for species " + species.getSpeciesName() +
+                    "(position " + adapterPosition + ")");
+
+            if (listener != null) {
+                listener.onSpeciesClick(species);
+            }
+
         });
 
 //        viewHolder.itemView.setOnLongClickListener(v -> {
@@ -148,6 +178,26 @@ public class TimedCountAdapter
                 int individuals = species.getNumberOfIndividuals() + 1;
                 species.setNumberOfIndividuals(individuals);
                 notifyItemChanged(i);
+                return;
+            }
+        }
+    }
+
+    public void removeFromSpeciesCount(long speciesID) {
+        if (observedSpecies == null) {
+            return;
+        }
+        for (int i = 0; i < observedSpecies.size(); i++) {
+            SpeciesCount species = observedSpecies.get(i);
+            if (species.getSpeciesID() == speciesID) {
+                int individuals = species.getNumberOfIndividuals() - 1;
+                if (individuals == 0) {
+                    observedSpecies.remove(i);
+                    notifyItemRemoved(i);
+                } else {
+                    species.setNumberOfIndividuals(individuals);
+                    notifyItemChanged(i);
+                }
                 return;
             }
         }

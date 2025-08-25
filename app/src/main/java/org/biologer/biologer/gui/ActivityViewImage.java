@@ -1,7 +1,6 @@
 package org.biologer.biologer.gui;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -14,7 +13,7 @@ import com.ortiz.touchview.TouchImageView;
 
 import org.biologer.biologer.R;
 
-public class ViewImage extends AppCompatActivity {
+public class ActivityViewImage extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

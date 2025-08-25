@@ -62,7 +62,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class ActivityLogin extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Login";
     int retry_login = 1;
@@ -414,9 +414,9 @@ public class LoginActivity extends AppCompatActivity {
             String hint_text = getString(R.string.URL_address) + " " + database_name;
             tv_devDatabase.setText(hint_text);
             if (database_name.equals("https://dev.biologer.org")) {
-                tv_devDatabase.setTextColor(ContextCompat.getColor(LoginActivity.this, R.color.warningRed));
+                tv_devDatabase.setTextColor(ContextCompat.getColor(ActivityLogin.this, R.color.warningRed));
             } else {
-                tv_devDatabase.setTextColor(ContextCompat.getColor(LoginActivity.this, R.color.colorPrimary));
+                tv_devDatabase.setTextColor(ContextCompat.getColor(ActivityLogin.this, R.color.colorPrimary));
             }
         }
 
@@ -487,7 +487,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(@NonNull Call<LoginResponse> login, @NonNull Throwable t) {
-                    Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ActivityLogin.this, getString(R.string.cannot_connect_token), Toast.LENGTH_LONG).show();
                     displayProgressBar(false);
                     Log.e(TAG, "Cannot get response from the server (token)");
                 }
@@ -535,27 +535,27 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         Log.e(TAG, "User data (response.body().getData()) is null for successful response. Response code: " + response.code());
                         displayProgressBar(false);
-                        Toast.makeText(LoginActivity.this, getString(R.string.error_fetching_user_data), Toast.LENGTH_LONG).show();
+                        Toast.makeText(ActivityLogin.this, getString(R.string.error_fetching_user_data), Toast.LENGTH_LONG).show();
                     }
                 }
                 else {
                     Log.e(TAG, "Response body is null for successful login. Response code: " + response.code());
                     displayProgressBar(false);
                     // Optionally show an error message to the user
-                    Toast.makeText(LoginActivity.this, getString(R.string.error_fetching_user_data1), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ActivityLogin.this, getString(R.string.error_fetching_user_data1), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
-                Toast.makeText(LoginActivity.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
+                Toast.makeText(ActivityLogin.this, getString(R.string.cannot_connect_server), Toast.LENGTH_LONG).show();
                 Log.e(TAG, "User data could not be taken from server!");
             }
         });
     }
 
     private void startLandingActivity() {
-        Intent intent = new Intent(LoginActivity.this, LandingActivity.class);
+        Intent intent = new Intent(ActivityLogin.this, ActivityLanding.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("showHelpMessage", true);
         startActivity(intent);
@@ -579,7 +579,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void dialogConfirmMail(String message) {
         // Show the message if registration was successful
-        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(LoginActivity.this);
+        final AlertDialog.Builder builder_taxon = new AlertDialog.Builder(ActivityLogin.this);
         builder_taxon.setMessage(message)
                 .setCancelable(true)
                 .setPositiveButton(getString(R.string.OK), (dialog, id) -> {
@@ -593,7 +593,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onRegister(View view) {
         LinearLayout linearLayout = findViewById(R.id.login_layout);
         linearLayout.setVisibility(View.GONE);
-        Fragment fragment = new RegisterFragment1();
+        Fragment fragment = new FragmentRegister1();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.login_container, fragment);
         fragmentTransaction.addToBackStack("Register fragment 1");

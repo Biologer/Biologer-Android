@@ -14,7 +14,7 @@ import org.biologer.biologer.R;
 
 import java.util.Calendar;
 
-public class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
+public class FragmentTimePicker extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
 
     // Define an interface to communicate with the host Activity
     public interface OnTimeSelectedListener {

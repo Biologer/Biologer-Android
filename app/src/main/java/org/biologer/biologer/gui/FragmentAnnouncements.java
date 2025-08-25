@@ -27,7 +27,7 @@ import java.util.List;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class AnnouncementsFragment extends Fragment {
+public class FragmentAnnouncements extends Fragment {
 
     private static final String TAG = "Biologer.Announcements";
     RecyclerView recyclerView;
@@ -51,7 +51,7 @@ public class AnnouncementsFragment extends Fragment {
                     public void onItemClick(View view, int position) {
                         index = position;
                         Log.d(TAG, "Announcements item " + position + " clicked");
-                        Intent intent = new Intent(getActivity(), AnnouncementActivity.class);
+                        Intent intent = new Intent(getActivity(), ActivityAnnouncement.class);
                         intent.putExtra("index", index);
                         startActivity(intent);
                     }

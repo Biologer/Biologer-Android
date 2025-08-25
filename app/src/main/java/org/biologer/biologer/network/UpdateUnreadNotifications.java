@@ -18,7 +18,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.services.NotificationsHelper;
-import org.biologer.biologer.gui.NotificationsActivity;
+import org.biologer.biologer.gui.ActivityNotifications;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
@@ -203,7 +203,7 @@ public class UpdateUnreadNotifications extends Service {
         } else {
             text = size + " " + getString(R.string.new_notifications_text);
         }
-        Intent notificationIntent = new Intent(this, NotificationsActivity.class);
+        Intent notificationIntent = new Intent(this, ActivityNotifications.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_observations")

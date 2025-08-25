@@ -7,10 +7,10 @@ package org.biologer.biologer.adapters;
 
 public class SpeciesCount {
     private String speciesName;
-    private long speciesID;
+    private Long speciesID;
     private int numberOfIndividuals;
 
-    public SpeciesCount(String speciesName, long speciesID, int numberOfIndividuals) {
+    public SpeciesCount(String speciesName, Long speciesID, int numberOfIndividuals) {
         this.speciesName = speciesName;
         this.speciesID = speciesID;
         this.numberOfIndividuals = numberOfIndividuals;
@@ -33,11 +33,11 @@ public class SpeciesCount {
         this.numberOfIndividuals = numberOfIndividuals;
     }
 
-    public long getSpeciesID() {
+    public Long getSpeciesID() {
         return speciesID;
     }
 
-    public void setSpeciesID(int speciesID) {
+    public void setSpeciesID(Long speciesID) {
         this.speciesID = speciesID;
     }
 }

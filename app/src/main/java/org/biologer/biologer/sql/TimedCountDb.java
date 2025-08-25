@@ -11,20 +11,23 @@ public class TimedCountDb {
     private Integer timedCountId;
     private String startTime;
     private String endTime;
-    private int countDurationMinutes;
-    private int cloudCoverPercentage;
-    private int atmosphericPressureHPa;
-    private int humidityPercentage;
-    private double temperatureCelsius;
+    private Integer countDurationMinutes;
+    private Integer cloudCoverPercentage;
+    private Integer atmosphericPressureHPa;
+    private Integer humidityPercentage;
+    private Double temperatureCelsius;
     private String windDirection;
-    private int windSpeed;
+    private Integer windSpeed;
     private String habitat;
     private String taxonGroup;
+    private String comment;
 
-    public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, int countDurationMinutes,
-                        int cloudCoverPercentage, int atmosphericPressureHPa, int humidityPercentage,
-                        double temperatureCelsius, String windDirection, int windSpeed, String habitat,
-                        String taxonGroup) {
+    public TimedCountDb() {
+    }
+    public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, Integer countDurationMinutes,
+                        Integer cloudCoverPercentage, Integer atmosphericPressureHPa, Integer humidityPercentage,
+                        Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
+                        String comment, String taxonGroup) {
         this.id = id;
         this.timedCountId = timedCountId;
         this.startTime = startTime;
@@ -37,16 +40,8 @@ public class TimedCountDb {
         this.windDirection = windDirection;
         this.windSpeed = windSpeed;
         this.habitat = habitat;
+        this.comment = comment;
         this.taxonGroup = taxonGroup;
-    }
-
-    // Getters and setters
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public Integer getTimedCountId() {
@@ -73,43 +68,43 @@ public class TimedCountDb {
         this.endTime = endTime;
     }
 
-    public int getCountDurationMinutes() {
+    public Integer getCountDurationMinutes() {
         return countDurationMinutes;
     }
 
-    public void setCountDurationMinutes(int countDurationMinutes) {
+    public void setCountDurationMinutes(Integer countDurationMinutes) {
         this.countDurationMinutes = countDurationMinutes;
     }
 
-    public int getCloudCoverPercentage() {
+    public Integer getCloudCoverPercentage() {
         return cloudCoverPercentage;
     }
 
-    public void setCloudCoverPercentage(int cloudCoverPercentage) {
+    public void setCloudCoverPercentage(Integer cloudCoverPercentage) {
         this.cloudCoverPercentage = cloudCoverPercentage;
     }
 
-    public int getAtmosphericPressureHPa() {
+    public Integer getAtmosphericPressureHPa() {
         return atmosphericPressureHPa;
     }
 
-    public void setAtmosphericPressureHPa(int atmosphericPressureHPa) {
+    public void setAtmosphericPressureHPa(Integer atmosphericPressureHPa) {
         this.atmosphericPressureHPa = atmosphericPressureHPa;
     }
 
-    public int getHumidityPercentage() {
+    public Integer getHumidityPercentage() {
         return humidityPercentage;
     }
 
-    public void setHumidityPercentage(int humidityPercentage) {
+    public void setHumidityPercentage(Integer humidityPercentage) {
         this.humidityPercentage = humidityPercentage;
     }
 
-    public double getTemperatureCelsius() {
+    public Double getTemperatureCelsius() {
         return temperatureCelsius;
     }
 
-    public void setTemperatureCelsius(double temperatureCelsius) {
+    public void setTemperatureCelsius(Double temperatureCelsius) {
         this.temperatureCelsius = temperatureCelsius;
     }
 
@@ -121,11 +116,11 @@ public class TimedCountDb {
         this.windDirection = windDirection;
     }
 
-    public int getWindSpeed() {
+    public Integer getWindSpeed() {
         return windSpeed;
     }
 
-    public void setWindSpeed(int windSpeed) {
+    public void setWindSpeed(Integer windSpeed) {
         this.windSpeed = windSpeed;
     }
 
@@ -143,5 +138,13 @@ public class TimedCountDb {
 
     public void setTaxonGroup(String taxonGroup) {
         this.taxonGroup = taxonGroup;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

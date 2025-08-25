@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class LandingFragment extends Fragment {
+public class FragmentLanding extends Fragment {
 
     private ArrayList<EntryDb> entries;
     String TAG = "Biologer.LandingFragment";
@@ -135,17 +135,17 @@ public class LandingFragment extends Fragment {
                         if (s.equals("success")) {
                             textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconVisibility(false);
+                            ((ActivityLanding) getActivity()).setMenuIconVisibility(false);
                         }
                         if (s.equals("failed_photo")) {
                             textView.setText(R.string.failed_to_upload_photo);
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconVisibility(true);
+                            ((ActivityLanding) getActivity()).setMenuIconVisibility(true);
                         }
                         if (s.equals("failed_entry")) {
                             textView.setText(R.string.failed_to_upload_entry);
                             textView.setVisibility(View.VISIBLE);
-                            ((LandingActivity) getActivity()).setMenuIconVisibility(true);
+                            ((ActivityLanding) getActivity()).setMenuIconVisibility(true);
                         }
                         if (s.equals("id_uploaded")) {
                             Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
@@ -169,7 +169,7 @@ public class LandingFragment extends Fragment {
     }
 
     private void newTimedCount() {
-        Intent intent = new Intent(getActivity(), TimedCountActivity.class);
+        Intent intent = new Intent(getActivity(), ActivityTimedCount.class);
         intent.putExtra("IS_NEW_ENTRY", "YES");
         openEntry.launch(intent);
     }
@@ -250,7 +250,6 @@ public class LandingFragment extends Fragment {
             }
         });
 
-
         popupMenu.show();
     }
 
@@ -267,7 +266,10 @@ public class LandingFragment extends Fragment {
                         Log.d(TAG, "This is a new entry with id: " + new_entry_id);
                         addEntry(new_entry_id);
                     } else {
-                        long old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        long old_data_id = 0;
+                        if (result.getData() != null) {
+                            old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        }
                         Log.d(TAG, "This was an existing entry with id: " + old_data_id);
                         updateEntry(old_data_id);
                     }
@@ -276,7 +278,7 @@ public class LandingFragment extends Fragment {
                 // Change the visibility of the Upload Icon
                 Activity activity = getActivity();
                 if (activity != null) {
-                    ((LandingActivity) getActivity()).updateMenuIconVisibility();
+                    ((ActivityLanding) getActivity()).updateMenuIconVisibility();
                 }
 
             });
@@ -394,7 +396,7 @@ public class LandingFragment extends Fragment {
         Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
         Activity activity = getActivity();
         if (activity != null) {
-            ((LandingActivity)activity).updateMenuIconVisibility();
+            ((ActivityLanding)activity).updateMenuIconVisibility();
         }
     }
 
@@ -406,15 +408,15 @@ public class LandingFragment extends Fragment {
                     .setCancelable(true)
                     .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
 
-                        Toast.makeText(LandingFragment.this.getContext(), LandingFragment.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(FragmentLanding.this.getContext(), FragmentLanding.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
 
                         int last_index = entries.size() - 1;
                         entries.clear();
                         App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
-                        ((LandingActivity)getActivity()).updateMenuIconVisibility();
+                        ((ActivityLanding)getActivity()).updateMenuIconVisibility();
                         Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
 
-                        Fragment replacementFragment = new LandingFragment();
+                        Fragment replacementFragment = new FragmentLanding();
                         FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
                         fragmentTransaction.add(R.id.content_frame , replacementFragment);
                         fragmentTransaction.commit();
