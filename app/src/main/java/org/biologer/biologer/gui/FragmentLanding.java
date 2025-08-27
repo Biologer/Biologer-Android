@@ -33,25 +33,30 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.EntryAdapter;
+import org.biologer.biologer.adapters.LandingFragmentAdapter;
+import org.biologer.biologer.adapters.LandingFragmentItems;
+import org.biologer.biologer.services.DateHelper;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UploadRecords;
+import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 
 public class FragmentLanding extends Fragment {
 
-    private ArrayList<EntryDb> entries;
+    private ArrayList<LandingFragmentItems> items;
     String TAG = "Biologer.LandingFragment";
-    EntryAdapter entriesAdapter;
+    LandingFragmentAdapter entriesAdapter;
     RecyclerView recyclerView;
     BroadcastReceiver broadcastReceiver;
 
@@ -59,65 +64,15 @@ public class FragmentLanding extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
 
-        // Load the entries from the database
-        loadAllEntries();
+        items = (ArrayList<LandingFragmentItems>) loadAllEntries(); // Load the entries from the database
+        setupRecycleView(rootView);
+        setupFloatActionButton(rootView);
+        setupBroadcastReceiver();
 
-        // If there are entries display the list with taxa
-        recyclerView = rootView.findViewById(R.id.recycled_view_entries);
-        entriesAdapter = new EntryAdapter(entries);
-        recyclerView.setAdapter(entriesAdapter);
-        recyclerView.setClickable(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.addOnItemTouchListener(
-                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        recyclerView.setClickable(false);
-                        EntryDb entryDb = entries.get(position);
-                        long l = entryDb.getId();
-                        Activity activity = getActivity();
-                        if (activity != null) {
-                            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
-                            intent.putExtra("IS_NEW_ENTRY", "NO");
-                            intent.putExtra("ENTRY_ID", l);
-                            openEntry.launch(intent);
-                        }
-                    }
+        return rootView;
+    }
 
-                    @Override
-                    public void onLongItemClick(View view, int position) {
-                        Log.d(TAG, "Item " + position + " long pressed.");
-                        entriesAdapter.setPosition(position);
-                    }
-                }));
-        registerForContextMenu(recyclerView);
-
-        // Add the + button for making new records
-        FloatingActionButton floatingActionButton = rootView.findViewById(R.id.float_button_new_entry);
-        if (SettingsManager.isMailConfirmed()) {
-            floatingActionButton.setEnabled(true);
-            floatingActionButton.setAlpha(1f);
-        } else {
-            floatingActionButton.setEnabled(false);
-            floatingActionButton.setAlpha(0.25f);
-        }
-
-        floatingActionButton.setOnClickListener(v -> {
-            // When user opens the EntryActivity for the first time set this to true.
-            // This is used to display intro message for new users.
-            if (!SettingsManager.getEntryOpen()) {
-                SettingsManager.setEntryOpen(true);
-            }
-            // Start the new Entry Activity.
-            newObservation();
-        });
-
-        floatingActionButton.setOnLongClickListener(v -> {
-            // Show the context menu
-            showContextMenu(v);
-            return true;
-        });
-
+    private void setupBroadcastReceiver() {
         // Broadcast will watch if upload service is active
         // and run the command when the upload is complete
         broadcastReceiver = new BroadcastReceiver() {
@@ -150,7 +105,7 @@ public class FragmentLanding extends Fragment {
                         if (s.equals("id_uploaded")) {
                             Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
                             int index = getIndexFromID(entry_id);
-                            entries.remove(index);
+                            items.remove(index);
                             entriesAdapter.notifyItemRemoved(index);
                         }
                     }
@@ -158,30 +113,257 @@ public class FragmentLanding extends Fragment {
                 }
             }
         };
-
-        return rootView;
     }
 
+    private void setupFloatActionButton(View rootView) {
+        // Add the + button for making new records
+        FloatingActionButton floatingActionButton = rootView.findViewById(R.id.float_button_new_entry);
+        if (SettingsManager.isMailConfirmed()) {
+            floatingActionButton.setEnabled(true);
+            floatingActionButton.setAlpha(1f);
+        } else {
+            floatingActionButton.setEnabled(false);
+            floatingActionButton.setAlpha(0.25f);
+        }
+
+        floatingActionButton.setOnClickListener(v -> {
+            // When user opens the EntryActivity for the first time set this to true.
+            // This is used to display intro message for new users.
+            if (!SettingsManager.getEntryOpen()) {
+                SettingsManager.setEntryOpen(true);
+            }
+            // Start the new Entry Activity.
+            newObservation();
+        });
+
+        floatingActionButton.setOnLongClickListener(v -> {
+            // Show the context menu
+            showContextMenu(v);
+            return true;
+        });
+    }
+
+    private void setupRecycleView(View rootView) {
+        // If there are entries display the list with taxa
+        recyclerView = rootView.findViewById(R.id.recycled_view_entries);
+        entriesAdapter = new LandingFragmentAdapter(items);
+        recyclerView.setAdapter(entriesAdapter);
+        recyclerView.setClickable(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.addOnItemTouchListener(
+                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        recyclerView.setClickable(false);
+                        LandingFragmentItems item = items.get(position);
+                        if (item.getTimedCountId() != null) {
+                            openTimedCount(item.getTimedCountId());
+                        } else {
+                            openObservation(item.getObservationId());
+                        }
+                    }
+
+                    @Override
+                    public void onLongItemClick(View view, int position) {
+                        Log.d(TAG, "Item " + position + " long pressed.");
+                        entriesAdapter.setPosition(position);
+                    }
+                }));
+        registerForContextMenu(recyclerView);
+    }
+
+    // Opens ActivityEntry to add new species observation
     private void newObservation() {
         Intent intent = new Intent(getActivity(), ActivityEntry.class);
         intent.putExtra("IS_NEW_ENTRY", "YES");
-        openEntry.launch(intent);
+        entryLauncher.launch(intent);
     }
 
+    // Opens ActivityEntry to update existing species observation
+    private void openObservation(long entryId) {
+        Activity activity = getActivity();
+        if (activity != null) {
+            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
+            intent.putExtra("IS_NEW_ENTRY", "NO");
+            intent.putExtra("ENTRY_ID", entryId);
+            entryLauncher.launch(intent);
+        }
+    }
+
+    // Opens ActivityTimedCount to add new timed count
     private void newTimedCount() {
         Intent intent = new Intent(getActivity(), ActivityTimedCount.class);
         intent.putExtra("IS_NEW_ENTRY", "YES");
-        openEntry.launch(intent);
+        timedCountLauncher.launch(intent);
     }
 
-    private void loadAllEntries() {
-        entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
-        // If there are no entries create an empty list
-        if (entries == null) {
-            entries = new ArrayList<>();
-        } else {
-            Collections.reverse(entries);
+    // Opens ActivityTimedCount to update existing timed count
+    private void openTimedCount(long timedCountId) {
+        Activity activity = getActivity();
+        if (activity != null) {
+            Intent intent = new Intent(activity.getApplicationContext(), ActivityTimedCount.class);
+            intent.putExtra("IS_NEW_ENTRY", "NO");
+            intent.putExtra("TIMED_COUNT_ID", timedCountId);
+            timedCountLauncher.launch(intent);
         }
+    }
+
+    // Launch new Entry Activity
+    private final ActivityResultLauncher<Intent> entryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // If we need to do something with the result after EntryActivity...
+                Log.d(TAG, "We got a result from the Entry Activity!");
+
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
+
+                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
+                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
+                        addObservationItem(new_entry_id);
+                    } else {
+                        long old_data_id = 0;
+                        if (result.getData() != null) {
+                            old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        }
+                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
+                        updateEntry(old_data_id);
+                    }
+                }
+
+                updateUploadIconVisibility();
+
+            });
+
+    // Launch new Timed Count Activity
+    private final ActivityResultLauncher<Intent> timedCountLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        Log.d(TAG, "We got a result from the Timed Count Activity!");
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
+                                addTimedCountItem(result.getData());
+                            } else {
+                                Log.d(TAG, "This was an existing Timed Count. Should not change the UI.");
+                            }
+
+                            updateUploadIconVisibility();
+
+                        }
+                    });
+
+    // Loads all LandingFragmentItems inti the RecyclerView list of items
+    private List<LandingFragmentItems> loadAllEntries() {
+        // This list will hold all the items displayed
+        List<LandingFragmentItems> items = new ArrayList<>();
+
+        // Get the ObjectBox entries containing regular species observation data
+        ArrayList<EntryDb> observations = ObjectBoxHelper.getObservations();
+        Log.d(TAG, "There are " + observations.size() + " regular observations.");
+        for (EntryDb entry : observations) {
+            items.add(getItemFromEntry(entry));
+        }
+
+        // Get the ObjectBox entries containing timed count data
+        ArrayList<TimedCountDb> timedCounts = ObjectBoxHelper.getTimedCounts();
+        Log.d(TAG, "There are " + timedCounts.size() + " timed counts.");
+        for (TimedCountDb timedCountDb : timedCounts) {
+            items.add(getItemFromTimedCount(timedCountDb));
+        }
+
+        // Sort items in descending order
+        Collections.sort(items, (item1, item2) ->
+                item2.getDate().compareTo(item1.getDate()));
+
+        return items;
+    }
+
+    private void addObservationItem(long newEntryId) {
+        // Load the entry from ObjectBox
+        EntryDb entryDb = ObjectBoxHelper.getObservationById(newEntryId);
+
+        // Add the entry to the entry list (RecycleView)
+        if (entryDb != null) {
+            LandingFragmentItems item = getItemFromEntry(entryDb);
+            addItemToRecyclerView(item);
+        }
+    }
+
+    private void addTimedCountItem(Intent data) {
+        Integer new_timed_count_id = data.getIntExtra("TIMED_COUNT_ID", 0);
+        String time = data.getStringExtra("TIMED_COUNT_START_TIME");
+        String day = data.getStringExtra("TIMED_COUNT_DAY");
+        String month = data.getStringExtra("TIMED_COUNT_MONTH");
+        String year = data.getStringExtra("TIMED_COUNT_YEAR");
+        Log.d(TAG, "This was a new Timed Count with ID: " + new_timed_count_id);
+
+        String title = getString(R.string.timed_count);
+        String image = "timed_count";
+        String subtitle;
+        Calendar calendar = DateHelper.getCalendar(year,
+                month, day, Objects.requireNonNull(time));
+        subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
+                getString(R.string.at_time) + " " +
+                DateHelper.getLocalizedCalendarTime(calendar);
+        LandingFragmentItems item = new LandingFragmentItems(null,
+                new_timed_count_id,
+                title,
+                subtitle,
+                image,
+                calendar.getTime());
+        addItemToRecyclerView(item);
+    }
+
+    private void addItemToRecyclerView(LandingFragmentItems item) {
+        items.add(0, item);
+        entriesAdapter.notifyItemInserted(0);
+        recyclerView.smoothScrollToPosition(0);
+        removeInfoText();
+    }
+
+    private LandingFragmentItems getItemFromEntry(EntryDb entry) {
+        Long observationId = entry.getId();
+        String title = entry.getTaxonSuggestion();
+
+        String subtitle = "";
+        Long stage_id = entry.getStage();
+        if (stage_id != null) {
+            StageDb stage = ObjectBoxHelper.getStageById(stage_id);
+            if (stage != null) {
+                subtitle = StageAndSexLocalization.getStageLocale(getContext(), stage.getName());
+            }
+        }
+
+        String image = null;
+        if (entry.getSlika3() != null) {
+            image = entry.getSlika3();
+        }
+        if (entry.getSlika2() != null) {
+            image = entry.getSlika2();
+        }
+        if (entry.getSlika1() != null) {
+            image = entry.getSlika1();
+        }
+
+        Calendar calendar = DateHelper.getCalendar(entry.getYear(),
+                entry.getMonth(), entry.getDay(), entry.getTime());
+
+        return new LandingFragmentItems(observationId, null,
+                title, subtitle, image, calendar.getTime());
+    }
+
+    private LandingFragmentItems getItemFromTimedCount(TimedCountDb timed_count) {
+        String title = getString(R.string.timed_count);
+        String image = "timed_count";
+        String subtitle;
+        Calendar calendar = DateHelper.getCalendar(timed_count.getYear(),
+                timed_count.getMonth(), timed_count.getDay(), timed_count.getStartTime());
+        subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
+                getString(R.string.at_time) + " " +
+                DateHelper.getLocalizedCalendarTime(calendar);
+
+        return new LandingFragmentItems(null, timed_count.getTimedCountId(),
+                title, subtitle, image, calendar.getTime());
     }
 
     @Override
@@ -205,7 +387,7 @@ public class FragmentLanding extends Fragment {
 
         if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
             loadAllEntries();
-            entriesAdapter = new EntryAdapter(entries);
+            entriesAdapter = new LandingFragmentAdapter(items);
             recyclerView.setAdapter(entriesAdapter);
         }
     }
@@ -253,49 +435,16 @@ public class FragmentLanding extends Fragment {
         popupMenu.show();
     }
 
-    private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                // If we need to do something with the result after EntryActivity...
-                Log.d(TAG, "We got a result from the Entry Activity!");
+    // Change the visibility of the Upload Icon
+    private void updateUploadIconVisibility() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            ((ActivityLanding) getActivity()).updateMenuIconVisibility();
+        }
+    }
 
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
-
-                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
-                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
-                        addEntry(new_entry_id);
-                    } else {
-                        long old_data_id = 0;
-                        if (result.getData() != null) {
-                            old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        }
-                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
-                        updateEntry(old_data_id);
-                    }
-                }
-
-                // Change the visibility of the Upload Icon
-                Activity activity = getActivity();
-                if (activity != null) {
-                    ((ActivityLanding) getActivity()).updateMenuIconVisibility();
-                }
-
-            });
-
-    private void addEntry(long newEntryId) {
-        // Load the entry from ObjectBox
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.id.equal(newEntryId)).build();
-        EntryDb entryDb = query.findFirst();
-        query.close();
-
-        // Add the entry to the entry list (RecycleView)
-        entries.add(0, entryDb);
-        entriesAdapter.notifyItemInserted(0);
-        recyclerView.smoothScrollToPosition(0);
-
-        // Remove the info text that should be displayed if there are no entries
+    // Remove the info text that should be displayed if there are no entries
+    private void removeInfoText() {
         Activity activity = getActivity();
         if (activity != null) {
             TextView textView = activity.findViewById(R.id.list_entries_info_text);
@@ -305,24 +454,22 @@ public class FragmentLanding extends Fragment {
 
     private void updateEntry(long oldDataId) {
         // Load the entry from the ObjectBox
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.id.equal(oldDataId)).build();
-        EntryDb entryDb = query.findFirst();
-        query.close();
-
+        EntryDb entryDb = ObjectBoxHelper.getObservationById(oldDataId);
         int entry_id = getIndexFromID(oldDataId);
 
-        // Update the entry to in the entry list (RecycleView)
-        entries.set(entry_id, entryDb);
-        entriesAdapter.notifyItemChanged(entry_id);
+        // Update the item in the RecycleView
+        if (entryDb != null) {
+            items.set(entry_id, getItemFromEntry(entryDb));
+            entriesAdapter.notifyItemChanged(entry_id);
+        }
     }
 
     // Find the entry’s index ID
     private int getIndexFromID(long entry_id) {
 
         int index_id = 0;
-        for (int i = entries.size() - 1; i >= 0; i--) {
-            if (entries.get(i).getId() == entry_id) {
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).getObservationId() == entry_id) {
                 index_id = i;
             }
         }
@@ -331,65 +478,67 @@ public class FragmentLanding extends Fragment {
     }
 
     public void duplicateEntry(int position) {
+        // TODO handle timed counts
         Log.d(TAG, "You will now duplicate entry ID: " + position);
+        EntryDb entry_from = ObjectBoxHelper.getObservationById(items.get(position).getObservationId());
 
         // Create new entry based on current one
-        EntryDb entry = new EntryDb(
-                0,
-                entries.get(position).getTaxonId(),
-                entries.get(position).getTimedCoundId(),
-                entries.get(position).getTaxonSuggestion(),
-                entries.get(position).getYear(),
-                entries.get(position).getMonth(),
-                entries.get(position).getDay(),
-                entries.get(position).getComment(),
-                null,"", null, null, "true", "",
-                entries.get(position).getLattitude(),
-                entries.get(position).getLongitude(),
-                entries.get(position).getAccuracy(),
-                entries.get(position).getElevation(),
-                entries.get(position).getLocation(),
-                null, null, null,
-                entries.get(position).getProjectId(),
-                entries.get(position).getFoundOn(),
-                entries.get(position).getDataLicence(),
-                entries.get(position).getImageLicence(),
-                entries.get(position).getTime(),
-                entries.get(position).getHabitat(),
-                "");
-        entries.add(0, entry);
+        if (entry_from != null) {
+            EntryDb entry = new EntryDb(
+                    0,
+                    entry_from.getTaxonId(),
+                    entry_from.getTimedCoundId(),
+                    entry_from.getTaxonSuggestion(),
+                    entry_from.getYear(),
+                    entry_from.getMonth(),
+                    entry_from.getDay(),
+                    entry_from.getComment(),
+                    null, "", null, null, "true", "",
+                    entry_from.getLattitude(),
+                    entry_from.getLongitude(),
+                    entry_from.getAccuracy(),
+                    entry_from.getElevation(),
+                    entry_from.getLocation(),
+                    null, null, null,
+                    entry_from.getProjectId(),
+                    entry_from.getFoundOn(),
+                    entry_from.getDataLicence(),
+                    entry_from.getImageLicence(),
+                    entry_from.getTime(),
+                    entry_from.getHabitat(),
+                    "");
+            items.add(0, getItemFromEntry(entry));
 
-        // Update ObjectBox
-        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
-        entryBox.put(entry);
-        int index_last = (int) App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
-        long new_entry_id = App.get().getBoxStore().boxFor(EntryDb.class).getAll().get(index_last).getId();
-        Log.d(TAG, "Entry will be saved in ObjectBox under ID " + new_entry_id);
+            // Update ObjectBox
+            long new_entry_id = ObjectBoxHelper.setObservation(entry);
 
-        // Update the list in RecycleView
-        entriesAdapter.notifyItemInserted(0);
-        recyclerView.smoothScrollToPosition(0);
+            // Update the list in RecycleView
+            entriesAdapter.notifyItemInserted(0);
+            recyclerView.smoothScrollToPosition(0);
 
-        // Open EntryActivity to edit the new record
-        Activity activity = getActivity();
-        if (activity != null) {
-            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
-            intent.putExtra("IS_NEW_ENTRY", "NO");
-            intent.putExtra("ENTRY_ID", new_entry_id);
-            openEntry.launch(intent);
+            // Open EntryActivity to edit the new record
+            Activity activity = getActivity();
+            if (activity != null) {
+                Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
+                intent.putExtra("IS_NEW_ENTRY", "NO");
+                intent.putExtra("ENTRY_ID", new_entry_id);
+                entryLauncher.launch(intent);
+            }
         }
     }
 
     public void deleteEntryAtPosition(int position) {
         Log.d(TAG, "You will now delete entry index ID: " + position);
-        long number_in_database = entries.get(position).getId();
-        Log.d(TAG, "You will now delete entry ObjectBox ID: " + number_in_database);
-        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_database + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
-        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
-        entryBox.remove((int) number_in_database);
-        entries.remove(position);
+        if (items.get(position).getTimedCountId() != null) {
+            // This is Timed Count
+            ObjectBoxHelper.removeObservationsForTimedCountId(items.get(position).getTimedCountId());
+            ObjectBoxHelper.removeTimedCountById(items.get(position).getTimedCountId());
+        } else {
+            // This is species observation
+            ObjectBoxHelper.removeObservationById(items.get(position).getObservationId());
+        }
+        items.remove(position);
         entriesAdapter.notifyItemRemoved(position);
-        Log.i(TAG, "Position: " + position + "; ObjectBox ID: " + number_in_database + "; Items in list: " + entries.size() + ", in adapter: " + entriesAdapter.getItemCount());
 
         // Print user a message
         int entryNo = position + 1;
@@ -410,9 +559,9 @@ public class FragmentLanding extends Fragment {
 
                         Toast.makeText(FragmentLanding.this.getContext(), FragmentLanding.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
 
-                        int last_index = entries.size() - 1;
-                        entries.clear();
-                        App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
+                        int last_index = items.size() - 1;
+                        items.clear();
+                        ObjectBoxHelper.removeAllEntries();
                         ((ActivityLanding)getActivity()).updateMenuIconVisibility();
                         Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
 

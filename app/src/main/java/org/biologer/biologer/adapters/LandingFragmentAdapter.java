@@ -29,14 +29,14 @@ import java.util.List;
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
-public class EntryAdapter
-        extends RecyclerView.Adapter<EntryAdapter.ViewHolder> {
-    private final List<EntryDb> myEntries;
+public class LandingFragmentAdapter
+        extends RecyclerView.Adapter<LandingFragmentAdapter.ViewHolder> {
+    private final List<LandingFragmentItems> myEntries;
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
 
-    public EntryAdapter(ArrayList<EntryDb> entries) {
+    public LandingFragmentAdapter(ArrayList<LandingFragmentItems> entries) {
         myEntries = entries;
     }
 
@@ -44,17 +44,17 @@ public class EntryAdapter
             extends RecyclerView.ViewHolder
             implements View.OnCreateContextMenuListener {
 
-        public ImageView imageEntry;
-        public TextView textTaxonName;
-        public TextView textTaxonStage;
+        public ImageView imageView;
+        public TextView textTitle;
+        public TextView textSubtitle;
 
         public ViewHolder(View view) {
             super(view);
 
             // Define click listener for the ViewHolder's View
-            imageEntry = view.findViewById(R.id.entry_image);
-            textTaxonName = view.findViewById(R.id.entry_taxon_name);
-            textTaxonStage = view.findViewById(R.id.entry_stage);
+            imageView = view.findViewById(R.id.entry_image);
+            textTitle = view.findViewById(R.id.entry_taxon_name);
+            textSubtitle = view.findViewById(R.id.entry_stage);
 
             // Add the entry items menu
             view.setOnCreateContextMenuListener(this);
@@ -87,58 +87,35 @@ public class EntryAdapter
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
-        EntryDb entry = myEntries.get(position);
+        LandingFragmentItems entry = myEntries.get(position);
 
-        // Get the taxon name
-        TextView taxonName = viewHolder.textTaxonName;
-        String taxon_name = entry.getTaxonSuggestion();
-        if (taxon_name != null) {
-            taxonName.setText(taxon_name);
-        } else {
-            taxonName.setText("");
-        }
+        // Get the title
+        TextView titleText = viewHolder.textTitle;
+        String title = entry.getTitle();
+        titleText.setText(title);
 
-        // Get the taxon stage
-        TextView taxonStage = viewHolder.textTaxonStage;
-        Long stage_id = entry.getStage();
-        if (stage_id != null) {
-            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-            Query<StageDb> query = stageBox
-                    .query(StageDb_.id.equal(stage_id))
-                    .build();
-            StageDb stage = query.findFirst();
-            query.close();
-            if (stage != null) {
-                taxonStage.setText(StageAndSexLocalization.getStageLocale(taxonStage.getContext(), stage.getName()));
-            } else {
-                taxonStage.setText("");
-            }
-        } else {
-            taxonStage.setText("");
-        }
+        // Get the subtitle
+        TextView subtitleText = viewHolder.textSubtitle;
+        String subtitle = entry.getSubtitle();
+        subtitleText.setText(subtitle);
 
-        ImageView entryImage = viewHolder.imageEntry;
+        ImageView entryImage = viewHolder.imageView;
         entryImage.setImageDrawable(null); // Clear the previous image
-        // Get the image
-        String useImage = null;
-        if (entry.getSlika3() != null) {
-            useImage = entry.getSlika3();
-        }
-        if (entry.getSlika2() != null) {
-            useImage = entry.getSlika2();
-        }
-        if (entry.getSlika1() != null) {
-            useImage = entry.getSlika1();
-        }
+        String image = entry.getImage();
 
-        if (useImage == null) {
+        if (image == null) {
             Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.mipmap.ic_kornjaca_kocka);
+            Glide.with(view.getContext())
+                    .load(defaultImage)
+                    .into(entryImage);
+        } else if (image.equals("timed_count")) {
+            Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.drawable.ic_timer);
             Glide.with(view.getContext())
                     .load(defaultImage)
                     .into(entryImage);
         } else {
             Glide.with(view.getContext())
-                    .load(useImage)
+                    .load(image)
                     .override(40, 40)
                     .into(entryImage);
         }

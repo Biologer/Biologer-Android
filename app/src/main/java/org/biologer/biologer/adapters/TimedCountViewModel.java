@@ -1,9 +1,17 @@
 package org.biologer.biologer.adapters;
 
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+
+import org.biologer.biologer.sql.TimedCountDb;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TimedCountViewModel extends ViewModel {
 
@@ -17,6 +25,26 @@ public class TimedCountViewModel extends ViewModel {
     private final MutableLiveData<String> commentData = new MutableLiveData<>();
     private final MutableLiveData<Long> taxonId = new MutableLiveData<>();
     private final MutableLiveData<Integer> timedCountId = new MutableLiveData<>();
+    private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
+    private final MutableLiveData<Boolean> isRunning = new MutableLiveData<>(false);
+    private final MutableLiveData<String> startTimeString = new MutableLiveData<>();
+    private final MutableLiveData<String> endTimeString = new MutableLiveData<>();
+    private List<Long> newEntryIds = new ArrayList<>();
+    private long startTime = 0L;
+    private long pausedTime = 0L;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private final Runnable ticker = new Runnable() {
+        @Override
+        public void run() {
+            if (Boolean.TRUE.equals(isRunning.getValue())) {
+                long now = System.currentTimeMillis();
+                elapsedTime.setValue((now - startTime) + pausedTime);
+                handler.postDelayed(this, 1000); // update every second
+            }
+        }
+    };
+
 
     public void setTemperatureData(Double data) {
         temperatureData.setValue(data);
@@ -80,6 +108,22 @@ public class TimedCountViewModel extends ViewModel {
         commentData.setValue(data);
     }
 
+    public MutableLiveData<Integer> getTimedCountId() {
+        return timedCountId;
+    }
+
+    public void setTimedCountId(Integer data) {
+        timedCountId.setValue(data);
+    }
+
+    public LiveData<Long> getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public LiveData<Boolean> getIsRunning() {
+        return isRunning;
+    }
+
     public MutableLiveData<Long> getTaxonId() {
         return taxonId;
     }
@@ -88,11 +132,70 @@ public class TimedCountViewModel extends ViewModel {
         taxonId.setValue(data);
     }
 
-    public MutableLiveData<Integer> getTimedCountId() {
-        return timedCountId;
+    public void startTimer() {
+        if (Boolean.TRUE.equals(isRunning.getValue())) return;
+        startTime = System.currentTimeMillis();
+        isRunning.setValue(true);
+        handler.post(ticker);
     }
 
-    public void setTimedCountId(Integer data) {
-        timedCountId.setValue(data);
+    public void pauseTimer() {
+        if (!Boolean.TRUE.equals(isRunning.getValue())) return;
+        pausedTime = elapsedTime.getValue() != null ? elapsedTime.getValue() : 0L;
+        isRunning.setValue(false);
+        handler.removeCallbacks(ticker);
+    }
+
+    public void resetTimer() {
+        handler.removeCallbacks(ticker);
+        isRunning.setValue(false);
+        elapsedTime.setValue(0L);
+        startTime = 0L;
+        pausedTime = 0L;
+    }
+
+    public void getFromObjectBox(TimedCountDb timedCount) {
+        setTemperatureData(timedCount.getTemperatureCelsius());
+        setCloudinessData(timedCount.getCloudCoverPercentage());
+        setWindSpeedData(timedCount.getWindSpeed());
+        setWindDirectionData(timedCount.getWindDirection());
+        setPressureData(timedCount.getAtmosphericPressureHPa());
+        setHumidityData(timedCount.getHumidityPercentage());
+        setHabitatData(timedCount.getHabitat());
+        setCommentData(timedCount.getComment());
+        setTimedCountId(timedCount.getTimedCountId());
+        setStartTimeString(timedCount.getStartTime());
+        setEndTimeString(timedCount.getEndTime());
+        isRunning.setValue(false);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        handler.removeCallbacks(ticker);
+    }
+
+    public MutableLiveData<String> getStartTimeString() {
+        return startTimeString;
+    }
+
+    public void setStartTimeString(String data) {
+        startTimeString.setValue(data);
+    }
+
+    public MutableLiveData<String> getEndTimeString() {
+        return endTimeString;
+    }
+
+    public void setEndTimeString(String data) {
+        endTimeString.setValue(data);
+    }
+
+    public List<Long> getNewEntryIds() {
+        return newEntryIds;
+    }
+
+    public void addNewEntryId(long newId) {
+        newEntryIds.add(newId);
     }
 }

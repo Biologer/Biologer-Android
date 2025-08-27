@@ -69,7 +69,7 @@ public class LocationTrackingService extends Service {
                 if (!isTracking) return;
 
                 for (Location location : locationResult.getLocations()) {
-                    Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
+                    //Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
 
                     // Save location to route list
                     UTMPoint utmPoint = convertToUtm(location);
@@ -190,7 +190,7 @@ public class LocationTrackingService extends Service {
             ProjCoordinate utmCoordinates = new ProjCoordinate();
             lonLatToUtmTransform.transform(lonLatCoordinates, utmCoordinates);
 
-            Log.d(TAG, "UTM coordinates: " + utmCoordinates.x + ", " + utmCoordinates.y + " (zone " + utmZone + ").");
+            //Log.d(TAG, "UTM coordinates: " + utmCoordinates.x + ", " + utmCoordinates.y + " (zone " + utmZone + ").");
             return new UTMPoint(utmCoordinates.x, utmCoordinates.y, utmZone);
         }
 

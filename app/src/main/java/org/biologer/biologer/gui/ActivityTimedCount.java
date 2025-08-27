@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -71,14 +71,10 @@ import org.biologer.biologer.network.json.WeatherResponse;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.LocationResultCallback;
 import org.biologer.biologer.services.LocationTrackingService;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.services.WeatherUtils;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
-import org.biologer.biologer.sql.ObservationTypesDb;
-import org.biologer.biologer.sql.ObservationTypesDb_;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.StageDb_;
 import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TaxonGroupsDb;
@@ -87,7 +83,6 @@ import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -105,9 +100,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private static final int REQUEST_LOCATION_PERMISSION = 1001;
     TextView elapsed_time;
     LinearLayout timerLayout, additionalDataLayout;
-    private CountDownTimer countDownTimer;
-    private long timeRemaining;
-    private boolean isTimerRunning = false;
     ImageView pauseTimerImage;
     AutoCompleteTextView autoCompleteTextView_speciesName;
     private TaxonSearchHelper taxonSearchHelper;
@@ -117,7 +109,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private FusedLocationProviderClient fusedLocationClient;
     private TimedCountAdapter timedCountAdapter;
     private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
-    String start_time, end_time;
     int count_duration_minutes = 0;
     Spinner spinnerTaxaGroup;
     long selectedTaxaGroupID = 0;
@@ -130,106 +121,46 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timed_count);
 
-        // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle(R.string.timed_count_title);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-        }
-
-        // onBackPressed we should warn user not to quit the count
-        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                int no_fragments = getSupportFragmentManager().getBackStackEntryCount();
-                Log.d(TAG, "There are " + no_fragments + " active Fragments.");
-                if (no_fragments == 0) {
-                    showExitConfirmationDialog();
-                } else if (no_fragments == 1) {
-                    // Fragment is visible. Hide it and show the main layout.
-                    getSupportFragmentManager().popBackStack();
-                    findViewById(R.id.timed_count_fragment).setVisibility(View.GONE);
-                    findViewById(R.id.timed_count_main_layout).setVisibility(View.VISIBLE);
-                    // Enable save button
-                    is_fragment_visible = false;
-                    invalidateOptionsMenu();
-                } else {
-                    getSupportFragmentManager().popBackStack();
-                }
-            }
-        };
-        getOnBackPressedDispatcher().addCallback(this, callback);
-
-        timedCountViewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        timedCountViewModel.setTimedCountId(getUniqueTimedCountID());
-        timedCountViewModel.getTemperatureData().observe(this, newTemperature -> {
-            Log.d(TAG, "Temperature updated: " + newTemperature);
-            TextView textViewTemperature = findViewById(R.id.timed_count_text_temperature);
-            textViewTemperature.setText(String.valueOf(newTemperature));
-        });
-        timedCountViewModel.getCloudinessData().observe(this, newCloudiness -> {
-            Log.d(TAG, "Cloudiness updated: " + newCloudiness);
-            TextView textViewCloudiness = findViewById(R.id.timed_count_text_cloudiness);
-            textViewCloudiness.setText(String.valueOf(newCloudiness));
-        });
-
         elapsed_time = findViewById(R.id.time_elapsed);
         timerLayout = findViewById(R.id.timed_count_timer);
         additionalDataLayout = findViewById(R.id.timed_count_additional_data);
         additionalDataLayout.setOnClickListener(v -> displayAdditionalDetailsFragment());
         pauseTimerImage = findViewById(R.id.pause_timer_image);
 
-        recyclerView = findViewById(R.id.recycled_view_timed_counts);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        timedCountAdapter = new TimedCountAdapter(speciesCounts);
-        timedCountAdapter.setOnItemClickListener(new TimedCountAdapter.OnItemClickListener() {
-            @Override
-            public void onPlusClick(SpeciesCount species) {
-                if (species.getSpeciesID() != null) {
-                    Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-                    Query<TaxonDb> query = taxonDataBox
-                            .query(TaxonDb_.id.equal(species.getSpeciesID()))
-                            .build();
-                    TaxonDb taxon = query.find(0, 1).get(0);
-                    query.close();
-
-                    taxon.setLatinName(TaxonSearchHelper.getLocalisedLatinName(taxon.getId()));
-                    addNewObjectBoxEntry(taxon);
-                } else {
-                    TaxonDb taxon = new TaxonDb(0, 0, species.getSpeciesName(),
-                            "", 0, "", false, false, "", "", "");
-                    addNewObjectBoxEntry(taxon);
-                }
-
-            }
-
-            @Override
-            public void onSpeciesClick(SpeciesCount species) {
-                Long species_id = species.getSpeciesID();
-                if (species_id != null) {
-                    Log.d(TAG, "Species with ID " + species_id + " is clicked.");
-                    timedCountViewModel.setTaxonId(species_id);
-                    displayCountEntriesFragment();
-                } else {
-                    Log.d(TAG, "Species without ID is clicked!");
-                    Toast.makeText(ActivityTimedCount.this,
-                            R.string.can_not_edit_species_with_custom_names,
-                            Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
-
-        recyclerView.setAdapter(timedCountAdapter);
+        setupToolbar();
+        setupBackPressedHandler();
+        setupRecyclerView();
+        if (Boolean.TRUE.equals(isNewEntry())) {
+            addNewViewModel();
+            checkLocationPermission(); // This also starts setupNewTimedCount()
+        } else {
+            loadExistingViewModel();
+            loadSpeciesData();
+        }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Check the location permission and start all other stuff...
-        checkLocationPermission();
+        setupSpeciesAutocompleteEntry();
+    }
 
+    private void loadSpeciesData() {
+        Integer id = getTimedCountIdFromBundle();
+        if (id != null) {
+            ArrayList<EntryDb> timedCounts = ObjectBoxHelper.getTimedCountObservations(id);
+            for (EntryDb entry : timedCounts) {
+                if (timedCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
+                    timedCountAdapter.addToSpeciesCount(entry.getTaxonId());
+                } else {
+                    SpeciesCount new_species = new SpeciesCount(entry.getTaxonSuggestion(),
+                            entry.getTaxonId(), 1);
+                    speciesCounts.add(new_species);
+                    timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+                }
+            }
+        }
+    }
+
+    private void setupSpeciesAutocompleteEntry() {
         // Fill in the drop down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this,
                 R.layout.taxa_dropdown_list,
@@ -314,7 +245,141 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         // Activate the field for species name and show the keyboard.
         autoCompleteTextView_speciesName.requestFocus();
-        //getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+    }
+
+    private void setupRecyclerView() {
+        recyclerView = findViewById(R.id.recycled_view_timed_counts);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        timedCountAdapter = new TimedCountAdapter(speciesCounts);
+        timedCountAdapter.setOnItemClickListener(new TimedCountAdapter.OnItemClickListener() {
+            @Override
+            public void onPlusClick(SpeciesCount species) {
+                TaxonDb taxon;
+                if (species.getSpeciesID() != null) {
+                    taxon = ObjectBoxHelper.getTaxonById(species.getSpeciesID());
+                    taxon.setLatinName(TaxonSearchHelper.getLocalisedLatinName(taxon.getId()));
+                } else {
+                    taxon = new TaxonDb(0, 0, species.getSpeciesName(),
+                            "", 0, "", false, false, "", "", "");
+                }
+                addNewObjectBoxEntry(taxon);
+
+            }
+
+            @Override
+            public void onSpeciesClick(SpeciesCount species) {
+                Long species_id = species.getSpeciesID();
+                if (species_id != null) {
+                    Log.d(TAG, "Species with ID " + species_id + " is clicked.");
+                    timedCountViewModel.setTaxonId(species_id);
+                    displayCountEntriesFragment();
+                } else {
+                    Log.d(TAG, "Species without ID is clicked!");
+                    Toast.makeText(ActivityTimedCount.this,
+                            R.string.can_not_edit_species_with_custom_names,
+                            Toast.LENGTH_LONG).show();
+                }
+
+            }
+        });
+
+        recyclerView.setAdapter(timedCountAdapter);
+    }
+
+    private void addNewViewModel() {
+        timedCountViewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        timedCountViewModel.setTimedCountId(ObjectBoxHelper.getUniqueTimedCountID());
+        addWeatherObserverToViewModel();
+
+        timedCountViewModel.getElapsedTime().observe(this, elapsed -> {
+            elapsed_time.setText(formatTime(elapsed));
+
+            if (count_duration_minutes > 0 && elapsed >= count_duration_minutes * 60_000L) {
+                timedCountViewModel.pauseTimer();
+                Log.d(TAG, "Countdown finished!");
+
+                Intent stopIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
+                stopIntent.setAction(LocationTrackingService.ACTION_STOP);
+                startService(stopIntent);
+
+                timedCountViewModel.setEndTimeString(DateHelper.getCurrentTime());
+
+                timerLayout.setEnabled(false);
+                timerLayout.setVisibility(View.GONE);
+                TextView complete_message = findViewById(R.id.timed_count_on_complete_text);
+                complete_message.setVisibility(View.VISIBLE);
+
+                save_enabled = true;
+                invalidateOptionsMenu();
+            }
+        });
+    }
+
+    private void loadExistingViewModel() {
+        timedCountViewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        Integer id = getTimedCountIdFromBundle();
+        if (id != null) {
+            timedCountViewModel.setTimedCountId(id);
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
+            timedCountViewModel.getFromObjectBox(timedCount);
+
+            addWeatherObserverToViewModel();
+
+            timerLayout.setEnabled(false);
+            timerLayout.setVisibility(View.GONE);
+            save_enabled = true;
+            invalidateOptionsMenu();
+        }
+    }
+
+    private void addWeatherObserverToViewModel() {
+        timedCountViewModel.getTemperatureData().observe(this, newTemperature -> {
+            Log.d(TAG, "Temperature updated: " + newTemperature);
+            TextView textViewTemperature = findViewById(R.id.timed_count_text_temperature);
+            textViewTemperature.setText(String.valueOf(newTemperature));
+        });
+        timedCountViewModel.getCloudinessData().observe(this, newCloudiness -> {
+            Log.d(TAG, "Cloudiness updated: " + newCloudiness);
+            TextView textViewCloudiness = findViewById(R.id.timed_count_text_cloudiness);
+            textViewCloudiness.setText(String.valueOf(newCloudiness));
+        });
+    }
+
+    private void setupBackPressedHandler() {
+        // onBackPressed we should warn user not to quit the count
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                int no_fragments = getSupportFragmentManager().getBackStackEntryCount();
+                Log.d(TAG, "There are " + no_fragments + " active Fragments.");
+                if (no_fragments == 0) {
+                    showExitConfirmationDialog();
+                } else if (no_fragments == 1) {
+                    // Fragment is visible. Hide it and show the main layout.
+                    getSupportFragmentManager().popBackStack();
+                    findViewById(R.id.timed_count_fragment).setVisibility(View.GONE);
+                    findViewById(R.id.timed_count_main_layout).setVisibility(View.VISIBLE);
+                    // Enable save button
+                    is_fragment_visible = false;
+                    invalidateOptionsMenu();
+                } else {
+                    getSupportFragmentManager().popBackStack();
+                }
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, callback);
+    }
+
+    // Add a toolbar to the Activity
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.timed_count_title);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
     }
 
     private void addNewObjectBoxEntry(TaxonDb taxon) {
@@ -325,41 +390,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityTimedCount.this);
 
                 // Always add Observation Type for observed specimen
-                Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-                Query<ObservationTypesDb> query = observationTypesDataBox
-                        .query(ObservationTypesDb_.slug.equal("observed"))
-                        .build();
-                ObservationTypesDb observationTypesData = query.findFirst();
-                query.close();
-
-                String observed_id = null;
-                if (observationTypesData != null) {
-                    observed_id = "[" + observationTypesData.getObservationId() + "]";
-                }
-
-                String stages = taxon.getStages();
-                Long stageId = null;
-                if (stages != null) {
-                    if (!stages.isEmpty()) {
-                        Log.d(TAG, "Taxon contains stages.");
-                        String[] all_stages = stages.split(";");
-
-                        Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                        Query<StageDb> queryStage = stageBox
-                                .query(StageDb_.name.equal("adult"))
-                                .build();
-                        StageDb stage = queryStage.findFirst();
-                        queryStage.close();
-
-                        if (stage != null) {
-                            String s = String.valueOf(stage.getId());
-                            if (Arrays.asList(all_stages).contains(s)) {
-                                Log.d(TAG, "Taxon contains adult stage.");
-                                stageId = stage.getId();
-                            }
-                        }
-                    }
-                }
+                String observed_id = ObjectBoxHelper.getIdForObservedTag();
+                // Always set the stage to adult
+                Long stageId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
 
                 List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 String data_license = "0";
@@ -400,8 +433,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                         DateHelper.getCurrentTime(),
                         "",
                         observed_id);
-                Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
-                entry.put(entryDb);
+                long newEntryId = ObjectBoxHelper.setObservation(entryDb);
+                timedCountViewModel.addNewEntryId(newEntryId);
             }
 
             @Override
@@ -409,31 +442,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 Toast.makeText(ActivityTimedCount.this, "Location not available. " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private int getUniqueTimedCountID() {
-        Box<EntryDb> entries = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = entries
-                .query(EntryDb_.timedCoundId.notNull())
-                .build();
-        List<EntryDb> entriesData = query.find();
-        query.close();
-
-        Integer maxTimedCountId = null;
-        for (EntryDb entry : entriesData) {
-            Integer currentId = entry.getTimedCoundId();
-            if (currentId != null) {
-                if (maxTimedCountId == null || currentId > maxTimedCountId) {
-                    maxTimedCountId = currentId;
-                }
-            }
-        }
-
-        if (maxTimedCountId != null) {
-            return ++maxTimedCountId;
-        } else {
-            return 0;
-        }
     }
 
     private void displayAdditionalDetailsFragment() {
@@ -479,6 +487,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 .setTitle(R.string.exit_time_count)
                 .setMessage(R.string.confirmation_exit_time_count)
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
+                    // Get the list of new observations and delete them
+                    List<Long> new_entries = timedCountViewModel.getNewEntryIds();
+                    for (Long entryId : new_entries) {
+                        ObjectBoxHelper.removeObservationById(entryId);
+                    }
+                    // Finish the activity
                     Intent serviceIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
                     stopService(serviceIntent);
                     finish();
@@ -545,10 +559,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void saveTimedCount() {
-        TimedCountDb timedCountDb = new TimedCountDb(0,
-                null,
-                start_time,
-                end_time,
+        TimedCountDb timedCountDb = new TimedCountDb(getObjectBoxID(),
+                timedCountViewModel.getTimedCountId().getValue(),
+                timedCountViewModel.getStartTimeString().getValue(),
+                timedCountViewModel.getEndTimeString().getValue(),
                 count_duration_minutes,
                 timedCountViewModel.getCloudinessData().getValue(),
                 timedCountViewModel.getPressureData().getValue(),
@@ -558,11 +572,42 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 timedCountViewModel.getWindSpeedData().getValue(),
                 timedCountViewModel.getHabitatData().getValue(),
                 timedCountViewModel.getCommentData().getValue(),
-                String.valueOf(selectedTaxaGroupID));
+                String.valueOf(selectedTaxaGroupID),
+                DateHelper.getCurrentDay(),
+                DateHelper.getCurrentMonth(),
+                DateHelper.getCurrentYear());
+
+        Box<TimedCountDb> timedCountDbBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        timedCountDbBox.put(timedCountDb);
+
+        Intent intent = new Intent();
+        intent.putExtra("IS_NEW_ENTRY", isNewEntry());
+        intent.putExtra("TIMED_COUNT_ID", timedCountViewModel.getTimedCountId().getValue());
+        intent.putExtra("TIMED_COUNT_START_TIME", timedCountViewModel.getStartTimeString().getValue());
+        intent.putExtra("TIMED_COUNT_DAY", DateHelper.getCurrentDay());
+        intent.putExtra("TIMED_COUNT_MONTH", DateHelper.getCurrentMonth());
+        intent.putExtra("TIMED_COUNT_YEAR", DateHelper.getCurrentYear());
+
+        setResult(Activity.RESULT_OK, intent);
+
+        finish();
+    }
+
+    private long getObjectBoxID() {
+        if (Boolean.TRUE.equals(isNewEntry())) {
+            return 0;
+        } else {
+            Integer id = timedCountViewModel.getTimedCountId().getValue();
+            if (id != null) {
+                return ObjectBoxHelper.getIdFromTimeCountId(id);
+            } else {
+                return 0;
+            }
+        }
     }
 
     // Create AlertDialog to setup before starting the timed count.
-    private void setupCount() {
+    private void setupNewTimedCount() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.setup_your_timed_count);
 
@@ -633,7 +678,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
             // Get the taxa group ID for selected taxa
             String selectedTaxa = (String) spinnerTaxaGroup.getSelectedItem();
-            Log.d("Dialog", "Minutes: " + count_duration_minutes + ", Selected Option: " + selectedTaxa);
+            Log.d(TAG, "Minutes: " + count_duration_minutes + ", Selected Option: " + selectedTaxa);
             Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
             if (selectedTaxa.equals(getString(R.string.butterflies))) {
                 Query<TaxonGroupsDb> query = taxonGroupsDataBox
@@ -785,36 +830,35 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void startCount() {
         Log.d(TAG, "Starting the timed count and location service.");
-        // Record location
         Intent serviceIntent = new Intent(this, LocationTrackingService.class);
         ContextCompat.startForegroundService(this, serviceIntent);
 
-        // Setup timer
-        long millisInFuture = count_duration_minutes * 60 * 1000L; // minutes to milliseconds
-        long countDownInterval = 1000L; // 1 second
-        timeRemaining = millisInFuture;
-        startOrResumeTimer(timeRemaining, countDownInterval);
+        // Start the timer in ViewModel
+        timedCountViewModel.resetTimer();
+        timedCountViewModel.startTimer();
 
         timerLayout.setOnClickListener(view -> {
-            if (isTimerRunning) {
-                pauseTimer();
+            if (Boolean.TRUE.equals(timedCountViewModel.getIsRunning().getValue())) {
+                timedCountViewModel.pauseTimer();
                 pauseTimerImage.setImageResource(R.drawable.ic_play);
                 elapsed_time.setText(R.string.paused);
+
                 Intent pauseIntent = new Intent(this, LocationTrackingService.class);
                 pauseIntent.setAction(LocationTrackingService.ACTION_PAUSE);
                 startService(pauseIntent);
             } else {
-                resumeTimer(countDownInterval);
+                timedCountViewModel.startTimer(); // resumes from pausedTime
                 pauseTimerImage.setImageResource(R.drawable.ic_pause);
+
                 Intent resumeIntent = new Intent(this, LocationTrackingService.class);
                 resumeIntent.setAction(LocationTrackingService.ACTION_RESUME);
                 startService(resumeIntent);
             }
         });
 
-        start_time = DateHelper.getCurrentTime();
-
+        timedCountViewModel.setStartTimeString(DateHelper.getCurrentTime());
     }
+
 
     private void fetchLatestLocation(LocationResultCallback callback) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -855,56 +899,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
-    private void startOrResumeTimer(long millisInFuture, long interval) {
-        countDownTimer = new CountDownTimer(millisInFuture, interval) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                timeRemaining = millisUntilFinished; // Update remaining time
-
-                String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d",
-                        (millisUntilFinished / 1000) / 60, (millisUntilFinished / 1000) % 60);
-
-                elapsed_time.setText(timeFormatted);
-            }
-
-            @Override
-            public void onFinish() {
-                isTimerRunning = false;
-                Log.d(TAG, "Countdown finished!");
-
-                // Create an Intent to stop the service with the custom action
-                Intent stopIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
-                stopIntent.setAction(LocationTrackingService.ACTION_STOP);
-                startService(stopIntent);
-
-                end_time = DateHelper.getCurrentTime();
-
-                // Update message
-                timerLayout.setEnabled(false);
-                timerLayout.setVisibility(View.GONE);
-                TextView complete_message = findViewById(R.id.timed_count_on_complete_text);
-                complete_message.setVisibility(View.VISIBLE);
-
-                // Enable save button
-                save_enabled = true;
-                invalidateOptionsMenu();
-            }
-        }.start();
-
-        isTimerRunning = true;
-    }
-
-    private void pauseTimer() {
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-            isTimerRunning = false;
-        }
-    }
-
-    private void resumeTimer(long interval) {
-        if (!isTimerRunning && timeRemaining > 0) {
-            startOrResumeTimer(timeRemaining, interval);
-        }
+    private String formatTime(long millis) {
+        long seconds = millis / 1000;
+        long minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 
     private void checkLocationPermission() {
@@ -915,7 +914,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION_PERMISSION);
         } else {
-            setupCount();
+            setupNewTimedCount();
         }
     }
 
@@ -927,7 +926,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                setupCount();
+                setupNewTimedCount();
             } else {
                 Toast.makeText(this, "Location permission is required to track your route.", Toast.LENGTH_LONG).show();
                 Intent fallBack = new Intent(this, ActivityLanding.class);
@@ -981,6 +980,25 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 speciesCounts.add(new_species);
                 timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
             }
+        }
+    }
+
+    private Boolean isNewEntry() {
+        String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
+        if (is_new_entry != null) {
+            return is_new_entry.equals("YES");
+        } else {
+            return null;
+        }
+    }
+
+    private Integer getTimedCountIdFromBundle() {
+        long id = getIntent().getLongExtra("TIMED_COUNT_ID", 0);
+        if (id != 0) {
+            return (Integer) (int) id;
+        } else {
+            Log.e(TAG, "Timed cound ID from Bundle is null!");
+            return null;
         }
     }
 }

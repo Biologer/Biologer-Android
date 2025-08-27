@@ -21,13 +21,16 @@ public class TimedCountDb {
     private String habitat;
     private String taxonGroup;
     private String comment;
+    private String day;
+    private String month;
+    private String year;
 
     public TimedCountDb() {
     }
     public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, Integer countDurationMinutes,
                         Integer cloudCoverPercentage, Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
-                        String comment, String taxonGroup) {
+                        String comment, String taxonGroup, String day, String month, String year) {
         this.id = id;
         this.timedCountId = timedCountId;
         this.startTime = startTime;
@@ -42,8 +45,14 @@ public class TimedCountDb {
         this.habitat = habitat;
         this.comment = comment;
         this.taxonGroup = taxonGroup;
+        this.day = day;
+        this.month = month;
+        this.year = year;
     }
 
+    public long getId() {
+        return id;
+    }
     public Integer getTimedCountId() {
         return timedCountId;
     }
@@ -146,5 +155,29 @@ public class TimedCountDb {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getDay() {
+        return day;
+    }
+
+    public void setDay(String day) {
+        this.day = day;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 }

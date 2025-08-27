@@ -81,6 +81,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/timed_count_on_complete_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"
             android:textSize="16sp"
             android:text="@string/timed_count_finished"
             android:visibility="gone">

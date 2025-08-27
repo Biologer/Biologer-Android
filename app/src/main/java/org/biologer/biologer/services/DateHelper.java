@@ -3,6 +3,7 @@ package org.biologer.biologer.services;
 import android.content.Context;
 import android.util.Log;
 
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 
 import java.text.DateFormat;
@@ -44,6 +45,59 @@ public class DateHelper {
             Log.e(TAG, "Failed to parse date string: " + date_string, e);
             return null;
         }
+    }
+
+    public static Calendar getCalendar(String year, String month, String day, String time) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Integer.parseInt(year),
+                Integer.parseInt(month),
+                Integer.parseInt(day));
+
+        String[] timeParts = time.split(":");
+        int hours = Integer.parseInt(timeParts[0]);
+        int minutes = Integer.parseInt(timeParts[1]);
+
+        calendar.set(Calendar.HOUR_OF_DAY, hours);
+        calendar.set(Calendar.MINUTE, minutes);
+
+        return calendar;
+    }
+
+    public static String getLocalizedCalendarDate(Calendar calendar) {
+        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG,
+                Locale.forLanguageTag(Localisation.getLocaleScript()));
+        return dateFormat.format(calendar.getTime());
+    }
+
+    public static String getLocalizedCalendarTime(Calendar calendar) {
+        DateFormat dateFormat = DateFormat.getTimeInstance(DateFormat.SHORT,
+                Locale.forLanguageTag(Localisation.getLocaleScript()));
+        return dateFormat.format(calendar.getTime());
+    }
+
+    public static String getYearFromCalendar(Calendar calendar) {
+        int year = calendar.get(Calendar.YEAR);
+        return String.valueOf(year);
+    }
+
+    public static String getMonthFromCalendar(Calendar calendar) {
+        int month = calendar.get(Calendar.MONTH) + 1;
+        return String.valueOf(month);
+    }
+
+    public static String getDayFromCalendar(Calendar calendar) {
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        return String.valueOf(day);
+    }
+
+    public static String getHourFromCalendar(Calendar calendar) {
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        return String.valueOf(hour);
+    }
+
+    public static String getMinutesFromCalendar(Calendar calendar) {
+        int minutes = calendar.get(Calendar.MINUTE);
+        return String.valueOf(minutes);
     }
 
     public static String getLocalizedDate(Date date, Context context) {

@@ -69,6 +69,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.services.ArrayHelper;
+import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.PreparePhotos;
 import org.biologer.biologer.services.StageAndSexLocalization;
@@ -88,10 +89,8 @@ import org.biologer.biologer.sql.UserDb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -134,10 +133,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     private Uri current_image;
     private SwipeRefreshLayout swipeRefreshLayout;
     private List<EntryDb> currentItem;
-    private String locale_script = "en";
     Calendar calendar;
-    SimpleDateFormat simpleDateFormat;
-    // Get the data from the GreenDao database
     List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
     String observation_type_ids_string;
     int[] observation_type_ids = null;
@@ -157,18 +153,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_entry);
 
-        // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle(R.string.entry_title);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-        }
-
-        // Get the system locale to translate names of the taxa
-        locale_script = Localisation.getLocaleScript();
+        setupToolbar();
 
         /*
          * Get the view...
@@ -238,7 +223,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         }
         calendar = Calendar.getInstance();
         dateSelect = findViewById(R.id.date_input);
-        updateDateUI();
+        dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
         dateSelect.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putSerializable("selected_date", calendar);
@@ -247,7 +232,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
             dateFragment.show(getSupportFragmentManager(), "datePicker");
         });
         timeSelect = findViewById(R.id.time_input);
-        updateTimeUI();
+        timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
         timeSelect.setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putSerializable("selected_date", calendar);
@@ -423,32 +408,30 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
 
     }
 
-    private void updateDateUI() {
-        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG,
-                Locale.forLanguageTag(Localisation.getLocaleScript()));
-        String formattedDate = dateFormat.format(calendar.getTime());
-        dateSelect.setText(formattedDate);
-    }
-
-    private void updateTimeUI() {
-        DateFormat dateFormat = DateFormat.getTimeInstance(DateFormat.SHORT,
-                Locale.forLanguageTag(Localisation.getLocaleScript()));
-        String formattedDate = dateFormat.format(calendar.getTime());
-        timeSelect.setText(formattedDate);
+    private void setupToolbar() {
+        // Add a toolbar to the Activity
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.entry_title);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
     }
 
     @Override
     public void onDateSelected(int year, int month, int day) {
         calendar = Calendar.getInstance();
         calendar.set(year, month, day);
-        updateDateUI();
+        dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
     }
 
     @Override
     public void onTimeSelected(int hourOfDay, int minute) {
         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
         calendar.set(Calendar.MINUTE, minute);
-        updateTimeUI();
+        timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
     }
 
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
@@ -694,7 +677,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
                 Box<TaxaTranslationDb> taxaTranslationDbBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
                 Query<TaxaTranslationDb> query2 = taxaTranslationDbBox
                         .query(TaxaTranslationDb_.taxonId.equal(currentItem.get(0).getTaxonId())
-                                .and(TaxaTranslationDb_.locale.equal(locale_script)))
+                                .and(TaxaTranslationDb_.locale.equal(Localisation.getLocaleScript())))
                         .build();
                 TaxaTranslationDb translationDb = query2.findFirst();
                 query2.close();
@@ -1176,14 +1159,10 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
 
         if (entry_id != 1 || isNewEntry()) {
             calendar = Calendar.getInstance();
-            simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ENGLISH);
-            String fullDate = simpleDateFormat.format(calendar.getTime());
-            String day = fullDate.substring(0, 2);
-            String month = fullDate.substring(3, 5);
-            String year = fullDate.substring(6, 10);
-            String time = fullDate.substring(11, 16);
             long taxon_id = taxon.getId();
             String taxon_name = taxon.getLatinName();
+            String time = DateHelper.getHourFromCalendar(calendar) + ":" +
+                    DateHelper.getMinutesFromCalendar(calendar);
             String project_name = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString("project_name", "0");
             String location;
@@ -1198,7 +1177,11 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
             Log.d(TAG, "Converting array of observation type IDs into string: " + observation_type_ids_string);
 
             // Get the data structure and save it into a database Entry
-            EntryDb entryDb1 = new EntryDb(0, taxon_id, null, taxon_name, year, month, day, comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
+            EntryDb entryDb1 = new EntryDb(0, taxon_id, null, taxon_name,
+                    DateHelper.getYearFromCalendar(calendar),
+                    DateHelper.getMonthFromCalendar(calendar),
+                    DateHelper.getDayFromCalendar(calendar),
+                    comment, numberOfSpecimens, sex, selectedStage, getAtlasCode(),
                     String.valueOf(!checkBox_dead.isChecked()), deathComment,
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.latitude)),
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.6f", currentLocation.longitude)),
@@ -1817,14 +1800,14 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
 
         Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         Query<ObservationTypesDb> query = observationTypesDataBox
-                .query(ObservationTypesDb_.locale.equal(locale_script))
+                .query(ObservationTypesDb_.locale.equal(Localisation.getLocaleScript()))
                 .build();
         List<ObservationTypesDb> list = query.find();
         query.close();
 
         long number_of_observation_types = list.size();
 
-        Log.d(TAG, "Filling types of observations with " + locale_script + " script names. Total of " + number_of_observation_types + " entries.");
+        Log.d(TAG, "Filling types of observations with " + Localisation.getLocaleScript() + " script names. Total of " + number_of_observation_types + " entries.");
 
         for (int i = 0; i < number_of_observation_types; i++) {
             ObservationTypesDb observation_type =  list.get(i);

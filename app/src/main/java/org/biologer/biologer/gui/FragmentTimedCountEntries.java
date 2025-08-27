@@ -19,23 +19,30 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.EntryAdapter;
+import org.biologer.biologer.adapters.LandingFragmentAdapter;
+import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
+import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.StageDb_;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
 
 public class FragmentTimedCountEntries extends Fragment {
     String TAG = "Biologer.TCEntries";
-    private ArrayList<EntryDb> entries;
+    private ArrayList<LandingFragmentItems> items;
     RecyclerView recyclerView;
-    EntryAdapter entriesAdapter;
+    LandingFragmentAdapter entriesAdapter;
     TimedCountViewModel timedCountViewModel;
     long taxonId;
 
@@ -62,11 +69,13 @@ public class FragmentTimedCountEntries extends Fragment {
         timedCountViewModel = new ViewModelProvider(requireActivity()).get(TimedCountViewModel.class);
 
         // Load the entries from the database
+        items = (ArrayList<LandingFragmentItems>) loadEntries(); // Load the entries from the database
+
         loadEntries();
 
         // If there are entries display the list with taxa
         recyclerView = rootView.findViewById(R.id.recycled_view_timed_count_entries);
-        entriesAdapter = new EntryAdapter(entries);
+        entriesAdapter = new LandingFragmentAdapter(items);
         recyclerView.setAdapter(entriesAdapter);
         recyclerView.setClickable(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -75,15 +84,23 @@ public class FragmentTimedCountEntries extends Fragment {
                     @Override
                     public void onItemClick(View view, int position) {
                         recyclerView.setClickable(false);
-                        EntryDb entryDb = entries.get(position);
-                        long l = entryDb.getId();
-                        taxonId = entryDb.getTaxonId();
+                        LandingFragmentItems item = items.get(position);
+                        long entry_id = item.getObservationId();
+                        Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
+                        Query<EntryDb> query = entriesBox
+                                .query(EntryDb_.id.equal(entry_id))
+                                .build();
+                        EntryDb taxon = query.findFirst();
+                        query.close();
+                        if (taxon != null) {
+                            taxonId = taxon.getTaxonId();
+                        }
                         Activity activity = getActivity();
                         if (activity != null) {
                             Log.d(TAG, "Species entry at position " + position + " clicked.");
                             Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
                             intent.putExtra("IS_NEW_ENTRY", "NO");
-                            intent.putExtra("ENTRY_ID", l);
+                            intent.putExtra("ENTRY_ID", entry_id);
                             openEntry.launch(intent);
                         }
                     }
@@ -99,24 +116,32 @@ public class FragmentTimedCountEntries extends Fragment {
         return rootView;
     }
 
-    private void loadEntries() {
+    private List<LandingFragmentItems> loadEntries() {
+        // This list will hold all the items displayed
+        List<LandingFragmentItems> items = new ArrayList<>();
+
+        // Get the observation data for selected species
         if (timedCountViewModel.getTaxonId().getValue() != null &&
                 timedCountViewModel.getTimedCountId().getValue() != null) {
             long taxon_id = timedCountViewModel.getTaxonId().getValue();
             int timed_count_id = timedCountViewModel.getTimedCountId().getValue();
-            Box<EntryDb> entriesDb = App.get().getBoxStore().boxFor(EntryDb.class);
-            Query<EntryDb> query = entriesDb
+            Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
+            Query<EntryDb> query = entriesBox
                     .query(EntryDb_.timedCoundId.equal(timed_count_id)
                             .and(EntryDb_.taxonId.equal(taxon_id)))
                     .build();
-            entries = (ArrayList<EntryDb>) query.find();
+            ArrayList<EntryDb> entriesDb = (ArrayList<EntryDb>) query.find();
             query.close();
+            for (EntryDb entry : entriesDb) {
+                items.add(getItemFromEntry(entry));
+            }
         }
-        if (entries == null) {
-            entries = new ArrayList<>();
-        } else {
-            Collections.reverse(entries);
-        }
+
+        // Sort in descending order
+        Collections.sort(items, (item1, item2) ->
+                Long.compare(item2.getObservationId(), item1.getObservationId()));
+
+        return items;
     }
 
     private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(
@@ -148,11 +173,11 @@ public class FragmentTimedCountEntries extends Fragment {
         if (entryDb != null && entryDb.getTaxonId() == taxonId) {
             Log.d(TAG, "Taxon is the same. Updating just the current entry.");
             // Update the entry to in the entry list (RecycleView)
-            entries.set(index_id, entryDb);
+            items.set(index_id, getItemFromEntry(entryDb));
             entriesAdapter.notifyItemChanged(index_id);
         } else {
             Log.d(TAG, "Taxon is changed, removing it from this species entries.");
-            entries.remove(index_id);
+            items.remove(index_id);
             entriesAdapter.notifyItemRemoved(index_id);
             // Update the SpeciesCount in the main Activity
             if (listener != null) {
@@ -167,12 +192,47 @@ public class FragmentTimedCountEntries extends Fragment {
     private int getIndexFromID(long entry_id) {
 
         int index_id = 0;
-        for (int i = entries.size() - 1; i >= 0; i--) {
-            if (entries.get(i).getId() == entry_id) {
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).getObservationId() == entry_id) {
                 index_id = i;
             }
         }
         Log.d(TAG, "Entry " + entry_id + " index ID is " + index_id);
         return index_id;
+    }
+
+    private LandingFragmentItems getItemFromEntry(EntryDb entry) {
+        Long observationId = entry.getId();
+        String title = entry.getTaxonSuggestion();
+
+        String subtitle = "";
+        Long stage_id = entry.getStage();
+        if (stage_id != null) {
+            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+            Query<StageDb> queryStage = stageBox
+                    .query(StageDb_.id.equal(stage_id))
+                    .build();
+            StageDb stage = queryStage.findFirst();
+            queryStage.close();
+            if (stage != null) {
+                subtitle = StageAndSexLocalization.getStageLocale(getContext(), stage.getName());
+            }
+        }
+
+        String image = null;
+        if (entry.getSlika3() != null) {
+            image = entry.getSlika3();
+        }
+        if (entry.getSlika2() != null) {
+            image = entry.getSlika2();
+        }
+        if (entry.getSlika1() != null) {
+            image = entry.getSlika1();
+        }
+
+        Calendar calendar = DateHelper.getCalendar(entry.getYear(),
+                entry.getMonth(), entry.getDay(), entry.getTime());
+
+        return new LandingFragmentItems(observationId, null, title, subtitle, image, calendar.getTime());
     }
 }
