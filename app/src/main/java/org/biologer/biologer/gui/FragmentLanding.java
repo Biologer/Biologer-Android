@@ -469,8 +469,11 @@ public class FragmentLanding extends Fragment {
 
         int index_id = 0;
         for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).getObservationId() == entry_id) {
-                index_id = i;
+            Long entryId = items.get(i).getObservationId();
+            if (entryId != null) {
+                if (entryId == entry_id) {
+                    index_id = i;
+                }
             }
         }
         Log.d(TAG, "Entry " + entry_id + " index ID is " + index_id);

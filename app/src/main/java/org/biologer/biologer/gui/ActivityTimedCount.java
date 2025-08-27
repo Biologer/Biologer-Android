@@ -76,7 +76,6 @@ import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.services.WeatherUtils;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TaxonDb;
-import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsDb_;
 import org.biologer.biologer.sql.TimedCountDb;
@@ -390,7 +389,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityTimedCount.this);
 
                 // Always add Observation Type for observed specimen
-                String observed_id = ObjectBoxHelper.getIdForObservedTag();
+                String observed_id = "[" + ObjectBoxHelper.getIdForObservedTag() + "]";
                 // Always set the stage to adult
                 Long stageId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
 

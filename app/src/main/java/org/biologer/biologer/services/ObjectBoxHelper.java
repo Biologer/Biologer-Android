@@ -3,12 +3,15 @@ package org.biologer.biologer.services;
 import android.util.Log;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationTypesDb;
 import org.biologer.biologer.sql.ObservationTypesDb_;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
+import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TimedCountDb;
@@ -16,6 +19,7 @@ import org.biologer.biologer.sql.TimedCountDb_;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -38,10 +42,11 @@ public class ObjectBoxHelper {
         query.close();
         if (entry != null) {
             Log.i("Biologer.ObjectBox", "Observation with ID " + entryId + " found in the database");
+            return entry;
         } else {
             Log.i("Biologer.ObjectBox", "There is no observation with ID " + entryId + " in the database");
+            return null;
         }
-        return entry;
     }
 
     public static long setObservation(EntryDb entry) {
@@ -84,6 +89,22 @@ public class ObjectBoxHelper {
             Log.i("Biologer.ObjectBox", "There is no taxon with ID " + taxonId + " in the database");
         }
         return taxon;
+    }
+
+    public static TaxaTranslationDb getTaxonTranslationByTaxonId(long taxonId) {
+        Box<TaxaTranslationDb> box = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+        Query<TaxaTranslationDb> query = box.query(TaxaTranslationDb_.taxonId.equal(taxonId)
+                        .and(TaxaTranslationDb_.locale.equal(Localisation.getLocaleScript())))
+                .build();
+        TaxaTranslationDb translation = query.findFirst();
+        query.close();
+        if (translation != null) {
+            Log.i("Biologer.ObjectBox", "There is translation of the selected taxon.");
+            return translation;
+        } else {
+            Log.i("Biologer.ObjectBox", "There is no translation of the selected taxon.");
+            return null;
+        }
     }
 
     public static long getIdFromTimeCountId(int timeCountId) {
@@ -139,6 +160,20 @@ public class ObjectBoxHelper {
         return stage;
     }
 
+    public static ArrayList<StageDb> getStagesForTaxonId(long taxonId) {
+        Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
+        Query<StageDb> query = box.query(StageDb_.id.equal(taxonId)).build();
+        ArrayList<StageDb> stages = (ArrayList<StageDb>) query.find();
+        query.close();
+        Log.i("Biologer.ObjectBox", "There are " + stages.size() + " stages for taxon ID " + taxonId + ".");
+        return stages;
+    }
+
+    public static int getStagesForTaxonIdCount(long taxonId) {
+        ArrayList<StageDb> stages = getStagesForTaxonId(taxonId);
+        return stages.size();
+    }
+
     public static Long getAdultStageIdForTaxon(TaxonDb taxon) {
         String stages = taxon.getStages();
         Long stageId = null;
@@ -163,15 +198,38 @@ public class ObjectBoxHelper {
         return stageId;
     }
 
-    public static String getIdForObservedTag() {
+    public static List<ObservationTypesDb> getObservationTypes() {
+        Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
+        Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.locale.equal(Localisation.getLocaleScript())).build();
+        List<ObservationTypesDb> list = query.find();
+        Log.i("Biologer.ObjectBox", "There are " + list.size() + " observation types for locale " + Localisation.getLocaleScript() + ".");
+        query.close();
+        return list;
+    }
+
+    public static Long getIdForObservedTag() {
         Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("observed")).build();
-        ObservationTypesDb observationTypesData = query.findFirst();
+        ObservationTypesDb observationTypes = query.findFirst();
         query.close();
 
-        String observed_id = null;
-        if (observationTypesData != null) {
-            observed_id = "[" + observationTypesData.getObservationId() + "]";
+        Long observed_id = null;
+        if (observationTypes != null) {
+            observed_id = observationTypes.getObservationId();
+            Log.i("Biologer.ObjectBox", "Observed tag has ID " + observed_id + ".");
+        }
+        return observed_id;
+    }
+
+    public static Long getIdForPhotographedTag() {
+        Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
+        Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("photographed")).build();
+        ObservationTypesDb observationTypes = query.findFirst();
+        query.close();
+
+        Long observed_id = null;
+        if (observationTypes != null) {
+            observed_id = observationTypes.getObservationId();
         }
         return observed_id;
     }

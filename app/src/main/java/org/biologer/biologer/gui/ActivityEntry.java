@@ -71,19 +71,15 @@ import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.services.ArrayHelper;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.services.PreparePhotos;
 import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationTypesDb;
-import org.biologer.biologer.sql.ObservationTypesDb_;
 import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.StageDb_;
 import org.biologer.biologer.sql.TaxaTranslationDb;
-import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
-import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.UserDb;
 
 import java.io.File;
@@ -98,9 +94,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 
 public class ActivityEntry extends AppCompatActivity implements View.OnClickListener,
         SwipeRefreshLayout.OnRefreshListener,
@@ -132,7 +125,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     private String image1, image2, image3;
     private Uri current_image;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private List<EntryDb> currentItem;
+    private EntryDb currentItem;
     Calendar calendar;
     List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
     String observation_type_ids_string;
@@ -450,12 +443,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
                 // If the user changed the taxon in the mean time, we'll try to get the previous stage
                 if (selected_stage != null) {
                     Log.d(TAG, "There is a stage already selected. ID: " + selected_stage + "; ");
-                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                    Query<StageDb> query = stageBox
-                            .query(StageDb_.id.equal(Long.parseLong(selected_stage)))
-                            .build();
-                    StageDb stage = query.findFirst();
-                    query.close();
+                    StageDb stage = ObjectBoxHelper.getStageById(Long.parseLong(selected_stage));
                     if (stage != null) {
                         if (Arrays.asList(all_stages).contains(selected_stage)) {
                             String stageName = StageAndSexLocalization
@@ -469,23 +457,14 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
                 // If user preferences are selected, the stage for taxa will be set to adult by default.
                 // Step 1: Get the preferences
                 if (preferences.getBoolean("adult_by_default", false)) {
+                    Log.d(TAG, "Should set adult by default.");
                     // If stage is already selected ignore this...
                     if (textViewStage.getText().toString().isEmpty()) {
-                        Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                        Query<StageDb> query = stageBox
-                                .query(StageDb_.name.equal("adult"))
-                                .build();
-                        StageDb stage = query.findFirst();
-                        query.close();
-                        if (stage != null) {
-                            String s = String.valueOf(stage.getId());
-                            if (Arrays.asList(all_stages).contains(s)) {
-                                String stageName = StageAndSexLocalization
-                                        .getStageLocaleFromID(this, Long.parseLong(s));
-                                textViewStage.setText(stageName);
-                                textViewStage.setTag(stage.getId());
-                            }
-                        }
+                        Log.d(TAG, "Should fill in the textViewStage.");
+                        Long adultId = ObjectBoxHelper.getAdultStageIdForTaxon(selectedTaxon);
+                        String stageName = StageAndSexLocalization.getStageLocaleFromID(this, adultId);
+                        textViewStage.setTag(adultId);
+                        textViewStage.setText(stageName);
                     }
                 }
             }
@@ -569,29 +548,18 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     */
     private void startEntryActivity() {
         if (isNewEntry()) {
-
             Log.i(TAG, "Starting new entry.");
             getLocation(100, 2);
 
             // Always add Observation Type for observed specimen
-            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-            Query<ObservationTypesDb> query = observationTypesDataBox
-                    .query(ObservationTypesDb_.slug.equal("observed"))
-                    .build();
-            List<ObservationTypesDb> observationTypesData = query.find();
-            query.close();
-
-            if (!observationTypesData.isEmpty()) {
-                int id_for_observed_tag = (int)observationTypesData.get(0).getObservationId();
-                Log.d(TAG, "Observed tag has ID: " + id_for_observed_tag);
+            Long id = ObjectBoxHelper.getIdForObservedTag();
+            if (id != null) {
+                int id_for_observed_tag = id.intValue();
                 observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, id_for_observed_tag);
             }
-
         } else {
-
             Log.d(TAG, "Opening existing entry.");
             fillExistingEntry();
-
         }
     }
 
@@ -602,205 +570,177 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     }
 
     private void fillExistingEntry() {
-
         long existing_entry_id = getIntent().getLongExtra("ENTRY_ID", 0);
-        Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = entry
-                .query(EntryDb_.id.equal(existing_entry_id))
-                .build();
-        currentItem = query.find();
-        query.close();
+        currentItem = ObjectBoxHelper.getObservationById(existing_entry_id);
         Log.i(TAG, "Opening existing entry with ID: " + existing_entry_id + ".");
 
         // Check if the taxa is selected from the list = it has an ID.
-        if (currentItem.get(0) != null) {
-            if (currentItem.get(0).getTaxonId() != 0) {
+        if (currentItem != null) {
+            if (currentItem.getTaxonId() != 0) {
                 taxonSelectedFromTheList = true;
             }
-        }
 
-        // Get the date and time
-        onDateSelected(Integer.parseInt(currentItem.get(0).getYear()),
-                Integer.parseInt(currentItem.get(0).getMonth()),
-                Integer.parseInt(currentItem.get(0).getDay()));
-        String time = currentItem.get(0).getTime();
-        String[] timeParts = time.split(":");
-        Log.d(TAG, "Setting the time to: " + time);
-        if (timeParts.length == 2) {
-            Log.d(TAG, "Time format OK: " + time);
-            try {
-                int hours = Integer.parseInt(timeParts[0]);
-                int minutes = Integer.parseInt(timeParts[1]);
-                onTimeSelected(hours, minutes);
-            } catch (NumberFormatException e) {
+            // Get the date and time
+            onDateSelected(Integer.parseInt(currentItem.getYear()),
+                    Integer.parseInt(currentItem.getMonth()),
+                    Integer.parseInt(currentItem.getDay()));
+            String time = currentItem.getTime();
+            String[] timeParts = time.split(":");
+            Log.d(TAG, "Setting the time to: " + time);
+            if (timeParts.length == 2) {
+                Log.d(TAG, "Time format OK: " + time);
+                try {
+                    int hours = Integer.parseInt(timeParts[0]);
+                    int minutes = Integer.parseInt(timeParts[1]);
+                    onTimeSelected(hours, minutes);
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "Invalid time format: " + time);
+                    System.err.println("Invalid time format: " + time);
+                }
+            } else {
                 Log.e(TAG, "Invalid time format: " + time);
                 System.err.println("Invalid time format: " + time);
             }
-        } else {
-            Log.e(TAG, "Invalid time format: " + time);
-            System.err.println("Invalid time format: " + time);
-        }
 
-        // Get the latitude, longitude, coordinate precision and elevation...
-        currentLocation = new LatLng(currentItem.get(0).getLattitude(), currentItem.get(0).getLongitude());
-        elev = currentItem.get(0).getElevation();
-        acc = currentItem.get(0).getAccuracy();
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
-        DecimalFormat formatCoordinates = new DecimalFormat("#,##0.0000", symbols);
-        textViewLatitude.setText(formatCoordinates.format(currentItem.get(0).getLattitude()));
-        textViewLongitude.setText(formatCoordinates.format(currentItem.get(0).getLongitude()));
-        layoutUnknownCoordinates.setVisibility(View.GONE);
-        layoutCoordinates.setVisibility(View.VISIBLE);
-        textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.get(0).getAccuracy()));
-        textViewMeters.setVisibility(View.VISIBLE);
-        setAccuracyColor();
-        location_name = currentItem.get(0).getLocation();
+            // Get the latitude, longitude, coordinate precision and elevation...
+            currentLocation = new LatLng(currentItem.getLattitude(), currentItem.getLongitude());
+            elev = currentItem.getElevation();
+            acc = currentItem.getAccuracy();
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
+            DecimalFormat formatCoordinates = new DecimalFormat("#,##0.0000", symbols);
+            textViewLatitude.setText(formatCoordinates.format(currentItem.getLattitude()));
+            textViewLongitude.setText(formatCoordinates.format(currentItem.getLongitude()));
+            layoutUnknownCoordinates.setVisibility(View.GONE);
+            layoutCoordinates.setVisibility(View.VISIBLE);
+            textViewGPSAccuracy.setText(String.format(Locale.ENGLISH, "%.0f", currentItem.getAccuracy()));
+            textViewMeters.setVisibility(View.VISIBLE);
+            setAccuracyColor();
+            location_name = currentItem.getLocation();
 
-        if (currentItem.get(0).getTaxonId() != 0) {
-            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-            Query<TaxonDb> query1 = taxonDataBox
-                    .query(TaxonDb_.id.equal(currentItem.get(0).getTaxonId()))
-                    .build();
-            TaxonDb taxon = query1.findFirst();
-            query1.close();
+            if (currentItem.getTaxonId() != 0) {
+                TaxonDb taxon = ObjectBoxHelper.getTaxonById(currentItem.getTaxonId());
 
-            // Get the atlas code
-            boolean use_atlas_code;
-            if (taxon != null) {
-                use_atlas_code = taxon.isUseAtlasCode();
-                if (use_atlas_code) {
-                    Log.d(TAG, "There is an atlas code ID: " + currentItem.get(0).getAtlasCode());
-                    textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                // Get the atlas code
+                boolean use_atlas_code;
+                if (taxon != null) {
+                    use_atlas_code = taxon.isUseAtlasCode();
+                    if (use_atlas_code) {
+                        Log.d(TAG, "There is an atlas code ID: " + currentItem.getAtlasCode());
+                        textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                    }
+
+                    // Get the taxa translation
+                    TaxaTranslationDb translation = ObjectBoxHelper.getTaxonTranslationByTaxonId(currentItem.getTaxonId());
+                    if (translation != null) {
+                        taxon.setLatinName(taxon.getLatinName() + "(" + translation.getNativeName() + ")");
+                    }
+                    selectedTaxon = taxon;
                 }
-
-                // Get the taxa translation
-                Box<TaxaTranslationDb> taxaTranslationDbBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-                Query<TaxaTranslationDb> query2 = taxaTranslationDbBox
-                        .query(TaxaTranslationDb_.taxonId.equal(currentItem.get(0).getTaxonId())
-                                .and(TaxaTranslationDb_.locale.equal(Localisation.getLocaleScript())))
-                        .build();
-                TaxaTranslationDb translationDb = query2.findFirst();
-                query2.close();
-                if (translationDb != null) {
-                    taxon.setLatinName(taxon.getLatinName() + "(" + translationDb.getNativeName() + ")");
-                }
-                selectedTaxon = taxon;
             }
-        }
 
-        // Get the name of the taxon for this entry
-        autoCompleteTextView_speciesName.setText(currentItem.get(0).getTaxonSuggestion());
-        autoCompleteTextView_speciesName.dismissDropDown();
+            // Get the name of the taxon for this entry
+            autoCompleteTextView_speciesName.setText(currentItem.getTaxonSuggestion());
+            autoCompleteTextView_speciesName.dismissDropDown();
 
-        // Get the name of the stage for the entry from the database
-        if (currentItem.get(0).getStage() != null) {
-            Log.d(TAG, "There is a stage already selected for this entry!");
-            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-            Query<StageDb> query2 = stageBox
-                    .query(StageDb_.id.equal(currentItem.get(0).getStage()))
-                    .build();
-            long stage_id = query2.find().get(0).getId();
-            query2.close();
-
-            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
-            StageDb stage = new StageDb(stage_id, stageName);
-            textViewStage.setTag(stage.getId());
-            textViewStage.setText(stageName);
-            textInputStages.setVisibility(View.VISIBLE);
-        } else {
-            if (isStageAvailable(currentItem.get(0).getTaxonId())) {
+            // Get the name of the stage for the entry from the database
+            if (currentItem.getStage() != null) {
+                Log.d(TAG, "There is a stage already selected for this entry!");
+                long stage_id = ObjectBoxHelper.getStageById(currentItem.getStage()).getId();
+                String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
+                textViewStage.setTag(stage_id);
+                textViewStage.setText(stageName);
                 textInputStages.setVisibility(View.VISIBLE);
             } else {
-                textInputStages.setVisibility(View.GONE);
+                if (isStageAvailable(currentItem.getTaxonId())) {
+                    textInputStages.setVisibility(View.VISIBLE);
+                } else {
+                    textInputStages.setVisibility(View.GONE);
+                }
             }
-        }
 
-        // Get the selected sex. If not selected set spinner to default...
-        Log.d(TAG, "Sex of individual from previous entry is " + currentItem.get(0).getSex());
-        if (currentItem.get(0).getSex().equals("male")) {
-            Log.d(TAG, "Setting spinner selected item to male.");
-            checkBox_males.setChecked(true);
-        }
-        if (currentItem.get(0).getSex().equals("female")) {
-            Log.d(TAG, "Setting spinner selected item to female.");
-            checkBox_females.setChecked(true);
-        }
+            // Get the selected sex. If not selected set spinner to default...
+            Log.d(TAG, "Sex of individual from previous entry is " + currentItem.getSex());
+            if (currentItem.getSex().equals("male")) {
+                Log.d(TAG, "Setting spinner selected item to male.");
+                checkBox_males.setChecked(true);
+            }
+            if (currentItem.getSex().equals("female")) {
+                Log.d(TAG, "Setting spinner selected item to female.");
+                checkBox_females.setChecked(true);
+            }
 
-        // Get the atlas code.
-        if (currentItem.get(0).getAtlasCode() != null) {
-            Long code = currentItem.get(0).getAtlasCode();
-            Log.d(TAG, "Setting the spinner to atlas code: " + code);
-            textViewAtlasCode.setText(setAtlasCode(code.intValue()));
-        }
+            // Get the atlas code.
+            if (currentItem.getAtlasCode() != null) {
+                Long code = currentItem.getAtlasCode();
+                Log.d(TAG, "Setting the spinner to atlas code: " + code);
+                textViewAtlasCode.setText(setAtlasCode(code.intValue()));
+            }
 
-        if (currentItem.get(0).getDeadOrAlive().equals("true")) {
-            // Specimen is a live
-            checkBox_dead.setChecked(false);
-        } else {
-            // Specimen is dead, Checkbox should be activated and Dead Comment shown
-            checkBox_dead.setChecked(true);
-            showDeadComment();
-        }
+            if (currentItem.getDeadOrAlive().equals("true")) {
+                // Specimen is a live
+                checkBox_dead.setChecked(false);
+            } else {
+                // Specimen is dead, Checkbox should be activated and Dead Comment shown
+                checkBox_dead.setChecked(true);
+                showDeadComment();
+            }
 
-        // Get the images
-        image1 = currentItem.get(0).getSlika1();
-        if (image1 != null) {
-            Glide.with(this)
-                    .load(image1)
-                    .override(100, 100)
-                    .into(imageViewPicture1);
-            frameLayoutPicture1.setVisibility(View.VISIBLE);
-        }
-        image2 = currentItem.get(0).getSlika2();
-        if (image2 != null) {
-            Glide.with(this)
-                    .load(image2)
-                    .override(100, 100)
-                    .into(imageViewPicture2);
-            frameLayoutPicture2.setVisibility(View.VISIBLE);
-        }
-        image3 = currentItem.get(0).getSlika3();
-        if (image3 != null) {
-            Glide.with(this)
-                    .load(image3)
-                    .override(100, 100)
-                    .into(imageViewPicture3);
-            frameLayoutPicture3.setVisibility(View.VISIBLE);
-        }
+            // Get the images
+            image1 = currentItem.getSlika1();
+            if (image1 != null) {
+                Glide.with(this)
+                        .load(image1)
+                        .override(100, 100)
+                        .into(imageViewPicture1);
+                frameLayoutPicture1.setVisibility(View.VISIBLE);
+            }
+            image2 = currentItem.getSlika2();
+            if (image2 != null) {
+                Glide.with(this)
+                        .load(image2)
+                        .override(100, 100)
+                        .into(imageViewPicture2);
+                frameLayoutPicture2.setVisibility(View.VISIBLE);
+            }
+            image3 = currentItem.getSlika3();
+            if (image3 != null) {
+                Glide.with(this)
+                        .load(image3)
+                        .override(100, 100)
+                        .into(imageViewPicture3);
+                frameLayoutPicture3.setVisibility(View.VISIBLE);
+            }
 
-        disablePhotoButtons(image1 != null && image2 != null && image3 != null);
-        if (currentItem.get(0).getHabitat() != null) {
-            editTextHabitat.setText(currentItem.get(0).getHabitat());
-        }
-        if (currentItem.get(0).getFoundOn() != null) {
-            editTextFoundOn.setText(currentItem.get(0).getFoundOn());
-        }
+            disablePhotoButtons(image1 != null && image2 != null && image3 != null);
+            if (currentItem.getHabitat() != null) {
+                editTextHabitat.setText(currentItem.getHabitat());
+            }
+            if (currentItem.getFoundOn() != null) {
+                editTextFoundOn.setText(currentItem.getFoundOn());
+            }
 
-        // Get other values
-        if (!currentItem.get(0).getCauseOfDeath().isEmpty()) {
-            editTextDeathComment.setText(currentItem.get(0).getCauseOfDeath());
-        }
-        if (!currentItem.get(0).getComment().isEmpty()) {
-            editTextComment.setText(currentItem.get(0).getComment());
-        }
-        if (currentItem.get(0).getNoSpecimens() != null) {
-            editTextSpecimensNo1.setText(String.valueOf(currentItem.get(0).getNoSpecimens()));
-        }
+            // Get other values
+            if (!currentItem.getCauseOfDeath().isEmpty()) {
+                editTextDeathComment.setText(currentItem.getCauseOfDeath());
+            }
+            if (!currentItem.getComment().isEmpty()) {
+                editTextComment.setText(currentItem.getComment());
+            }
+            if (currentItem.getNoSpecimens() != null) {
+                editTextSpecimensNo1.setText(String.valueOf(currentItem.getNoSpecimens()));
+            }
 
-        // Load observation types and delete tag for photographed.
-        observation_type_ids_string = currentItem.get(0).getObservationTypeIds();
-        Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
-        observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
-        if (image1 != null || image2 != null || image3 != null) {
-            Log.d(TAG, "Removing image tag just in case images got deleted.");
-            Box<ObservationTypesDb> observationTypesDataBox = App.
-                    get().getBoxStore().boxFor(ObservationTypesDb.class);
-            Query<ObservationTypesDb> query1 = observationTypesDataBox
-                    .query(ObservationTypesDb_.slug.equal("photographed"))
-                    .build();
-            int id_photo_tag = (int)query1.find().get(0).getObservationId();
-            query1.close();
-            observation_type_ids = ArrayHelper.removeFromArray(observation_type_ids, id_photo_tag);
+            // Load observation types and delete tag for photographed.
+            observation_type_ids_string = currentItem.getObservationTypeIds();
+            Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
+            observation_type_ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
+            if (image1 != null || image2 != null || image3 != null) {
+                Log.d(TAG, "Removing image tag just in case images got deleted.");
+                Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
+                if (id_photo_tag != null) {
+                    observation_type_ids = ArrayHelper.removeFromArray(observation_type_ids, id_photo_tag.intValue());
+                }
+            }
         }
     }
 
@@ -1189,8 +1129,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
                     Double.parseDouble(String.format(Locale.ENGLISH, "%.0f", elev)),
                     location, image1, image2, image3, project_name, foundOn, String.valueOf(getGreenDaoDataLicense()),
                     getGreenDaoImageLicense(), time, habitat, observation_type_ids_string);
-            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
-            entry.put(entryDb1);
+            ObjectBoxHelper.setObservation(entryDb1);
 
             Intent intent = new Intent();
             long index_last = App.get().getBoxStore().boxFor(EntryDb.class).count() - 1;
@@ -1204,37 +1143,36 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
 
         // If the entry already exist
         else {
-            currentItem.get(0).setTaxonId(taxon.getId());
-            currentItem.get(0).setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
-            currentItem.get(0).setComment(comment);
-            currentItem.get(0).setNoSpecimens(numberOfSpecimens);
-            currentItem.get(0).setSex(sex);
-            currentItem.get(0).setStage(selectedStage);
-            currentItem.get(0).setAtlasCode(getAtlasCode());
-            currentItem.get(0).setDeadOrAlive(String.valueOf(!checkBox_dead.isChecked()));
-            currentItem.get(0).setCauseOfDeath(deathComment);
-            currentItem.get(0).setLattitude(currentLocation.latitude);
-            currentItem.get(0).setLongitude(currentLocation.longitude);
-            currentItem.get(0).setElevation(elev);
-            currentItem.get(0).setAccuracy(acc);
-            currentItem.get(0).setSlika1(image1);
-            currentItem.get(0).setSlika2(image2);
-            currentItem.get(0).setSlika3(image3);
-            currentItem.get(0).setHabitat(habitat);
-            currentItem.get(0).setFoundOn(foundOn);
+            currentItem.setTaxonId(taxon.getId());
+            currentItem.setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
+            currentItem.setComment(comment);
+            currentItem.setNoSpecimens(numberOfSpecimens);
+            currentItem.setSex(sex);
+            currentItem.setStage(selectedStage);
+            currentItem.setAtlasCode(getAtlasCode());
+            currentItem.setDeadOrAlive(String.valueOf(!checkBox_dead.isChecked()));
+            currentItem.setCauseOfDeath(deathComment);
+            currentItem.setLattitude(currentLocation.latitude);
+            currentItem.setLongitude(currentLocation.longitude);
+            currentItem.setElevation(elev);
+            currentItem.setAccuracy(acc);
+            currentItem.setSlika1(image1);
+            currentItem.setSlika2(image2);
+            currentItem.setSlika3(image3);
+            currentItem.setHabitat(habitat);
+            currentItem.setFoundOn(foundOn);
             getPhotoTag();
-            currentItem.get(0).setObservationTypeIds(Arrays.toString(observation_type_ids));
+            currentItem.setObservationTypeIds(Arrays.toString(observation_type_ids));
 
             if (location_name != null) {
-                currentItem.get(0).setLocation(location_name);
+                currentItem.setLocation(location_name);
             }
 
             // Now just update the database with new data...
-            Box<EntryDb> entry = App.get().getBoxStore().boxFor(EntryDb.class);
-            entry.put(currentItem);
+            ObjectBoxHelper.setObservation(currentItem);
 
             Intent intent = new Intent();
-            long current_entry_id = currentItem.get(0).getId();
+            long current_entry_id = currentItem.getId();
             Log.d(TAG, "Entry will be saved under existing ID " + current_entry_id);
             intent.putExtra("IS_NEW_ENTRY", isNewEntry());
             intent.putExtra("ENTRY_LIST_ID", current_entry_id);
@@ -1248,20 +1186,10 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
 
     private void getPhotoTag() {
         if (image1 != null || image2 != null || image3 != null) {
-            int photo_tag_id;
-            Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-            Query<ObservationTypesDb> observationTypesDataQuery = observationTypesDataBox
-                    .query(ObservationTypesDb_.slug.equal("photographed"))
-                    .build();
-            List<ObservationTypesDb> observationTypesDbs = observationTypesDataQuery.find();
-            if (!observationTypesDbs.isEmpty()) {
-                photo_tag_id = (int) observationTypesDbs.get(0).getObservationId();
-                Log.d(TAG, "Photographed tag has ID: " + photo_tag_id);
-                observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, photo_tag_id);
-            } else {
-                Toast.makeText(this, getString(R.string.observation_types_not_downloaded), Toast.LENGTH_LONG).show();
+            Long photo_tag_id = ObjectBoxHelper.getIdForPhotographedTag();
+            if (photo_tag_id != null) {
+                observation_type_ids = ArrayHelper.insertIntoArray(observation_type_ids, (int) photo_tag_id.longValue());
             }
-            observationTypesDataQuery.close();
         }
     }
 
@@ -1290,12 +1218,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         }
         // When the taxon is selected from the list we should query SQL to see if there is a stage.
         else {
-            Box<StageDb> stage = App.get().getBoxStore().boxFor(StageDb.class);
-            Query<StageDb> query = stage
-                    .query(StageDb_.id.equal(taxonID))
-                    .build();
-            int size = query.find().size();
-            query.close();
+            int size = ObjectBoxHelper.getStagesForTaxonIdCount(taxonID);
             return size != 0;
         }
     }
@@ -1311,12 +1234,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
                 final String[] all_stages_names = new String[all_stages_ids.length + 1];
                 all_stages_names[0] = getString(R.string.not_selected);
                 for (int i = 0; i < all_stages_ids.length; i++) {
-                    Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-                    Query<StageDb> query = stageBox
-                            .query(StageDb_.id.equal(Long.parseLong(all_stages_ids[i])))
-                            .build();
-                    StageDb stage = query.findFirst();
-                    query.close();
+                    StageDb stage = ObjectBoxHelper.getStageById(Long.parseLong(all_stages_ids[i]));
                     if (stage != null) {
                         all_stages_names[i + 1] = StageAndSexLocalization.getStageLocale(this, stage.getName());
                     }
@@ -1764,12 +1682,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
         if (taxonID == null) {
             return null;
         } else {
-            Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-            Query<TaxonDb> query = taxonDataBox
-                    .query(TaxonDb_.id.equal(taxonID))
-                    .build();
-            TaxonDb taxon = query.find(0, 1).get(0);
-            query.close();
+            TaxonDb taxon = ObjectBoxHelper.getTaxonById(taxonID);
             Log.d(TAG, "Selected taxon latin name is: " + taxon.getLatinName() + ". Taxon ID: " + taxon.getId());
             return taxon;
         }
@@ -1797,14 +1710,7 @@ public class ActivityEntry extends AppCompatActivity implements View.OnClickList
     }
 
     private void fillObservationTypes() {
-
-        Box<ObservationTypesDb> observationTypesDataBox = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-        Query<ObservationTypesDb> query = observationTypesDataBox
-                .query(ObservationTypesDb_.locale.equal(Localisation.getLocaleScript()))
-                .build();
-        List<ObservationTypesDb> list = query.find();
-        query.close();
-
+        List<ObservationTypesDb> list = ObjectBoxHelper.getObservationTypes();
         long number_of_observation_types = list.size();
 
         Log.d(TAG, "Filling types of observations with " + Localisation.getLocaleScript() + " script names. Total of " + number_of_observation_types + " entries.");

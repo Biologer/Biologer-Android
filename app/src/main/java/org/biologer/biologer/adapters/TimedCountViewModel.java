@@ -29,7 +29,7 @@ public class TimedCountViewModel extends ViewModel {
     private final MutableLiveData<Boolean> isRunning = new MutableLiveData<>(false);
     private final MutableLiveData<String> startTimeString = new MutableLiveData<>();
     private final MutableLiveData<String> endTimeString = new MutableLiveData<>();
-    private List<Long> newEntryIds = new ArrayList<>();
+    private final List<Long> newEntryIds = new ArrayList<>();
     private long startTime = 0L;
     private long pausedTime = 0L;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -45,10 +45,10 @@ public class TimedCountViewModel extends ViewModel {
         }
     };
 
-
     public void setTemperatureData(Double data) {
         temperatureData.setValue(data);
     }
+
     public LiveData<Double> getTemperatureData() {
         return temperatureData;
     }

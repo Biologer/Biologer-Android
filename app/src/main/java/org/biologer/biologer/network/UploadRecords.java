@@ -218,7 +218,7 @@ public class UploadRecords extends Service {
         }
     }
 
-    // Checks weather to upload data on Birdloger or standard Biologer
+    // Checks weather to upload data on Biologer
     private void uploadStep2() {
         Log.d(TAG, "Upload data step 2 started...");
         APIEntry apiEntry = new APIEntry();
