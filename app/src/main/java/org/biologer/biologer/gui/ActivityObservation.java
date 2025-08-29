@@ -134,10 +134,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Long id = ObjectBoxHelper.getIdForObservedTag();
             if (id != null) {
                 int id_for_observed_tag = id.intValue();
-                int[] ids = observationViewModel.getObservationTypeIdList();
-                ArrayHelper.insertIntoArray(ids, id_for_observed_tag);
-                observationViewModel.setObservationTypeIdList(ids);
-                observationViewModel.setObservationTypeIds(Arrays.toString(ids));
+                observationViewModel.addObservationType(id_for_observed_tag);
             }
         } else {
             Log.d(TAG, "Opening existing entry.");
@@ -411,6 +408,18 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         observationViewModel.getNumberOfSpecimens2().observe(this, specimens -> {
             editTextSpecimensNo2.setText(specimens != null ? String.valueOf(specimens) : "");
         });
+
+        observationViewModel.getDead().observe(this, dead -> {
+            Log.d(TAG, "Specimen is dead? " + dead);
+            if (dead) {
+                checkBox_dead.setChecked(true);
+                textViewDeathComment.setVisibility(View.VISIBLE);
+            } else {
+                checkBox_dead.setChecked(false);
+                textViewDeathComment.setVisibility(View.GONE);
+                editTextDeathComment.setText("");
+            }
+        });
     }
 
     private void loadImageThumbnail(String image, ImageView imageView, FrameLayout frame) {
@@ -610,15 +619,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             textViewAtlasCode.setText(setAtlasCode(observationViewModel.getAtlasCode().getValue().intValue()));
         }
 
-        if (observationViewModel.isDead()) {
-            // Specimen is a live
-            checkBox_dead.setChecked(false);
-        } else {
-            // Specimen is dead, Checkbox should be activated and Dead Comment shown
-            checkBox_dead.setChecked(true);
-            showDeadComment();
-        }
-
         disablePhotoButtons(observationViewModel.getImage1().getValue() != null &&
                 observationViewModel.getImage2().getValue() != null &&
                 observationViewModel.getImage3().getValue() != null);
@@ -638,22 +638,18 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         }
 
         // Load observation types and delete tag for photographed.
-        String observation_type_ids_string = observationViewModel.getObservationTypeIds().getValue();
-        Log.d(TAG, "Loading observation types with IDs " + observation_type_ids_string);
-        int[] ids = null;
-        if (observation_type_ids_string != null) {
-            ids = ArrayHelper.getArrayFromText(observation_type_ids_string);
-        }
+        //TODO Removing image tag just in case images got deleted.");
         if (observationViewModel.getImage1().getValue() != null ||
                 observationViewModel.getImage2().getValue() != null ||
                 observationViewModel.getImage3().getValue() != null) {
-            Log.d(TAG, "Removing image tag just in case images got deleted.");
             Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
-            if (id_photo_tag != null && ids != null) {
-                ids = ArrayHelper.removeFromArray(ids, id_photo_tag.intValue());
+            if (id_photo_tag != null) {
+                observationViewModel.removeObservationType((int) id_photo_tag.intValue());
             }
         }
     }
+
+
 
     // Add Save button in the right part of the toolbar
     @Override
@@ -760,7 +756,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 viewImage(observationViewModel.getImage3().getValue());
                 break;
             case R.id.dead_specimen:
-                showDeadComment();
+                observationViewModel.checkDead();
                 break;
             case R.id.iv_map:
                 showMap();
@@ -1055,10 +1051,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 observationViewModel.getImage3().getValue() != null) {
             Long photo_tag_id = ObjectBoxHelper.getIdForPhotographedTag();
             if (photo_tag_id != null) {
-                int[] ids = observationViewModel.getObservationTypeIdList();
-                ids = ArrayHelper.insertIntoArray(ids, (int) photo_tag_id.longValue());
-                observationViewModel.setObservationTypeIdList(ids);
-                observationViewModel.setObservationTypeIds(Arrays.toString(ids));
+                observationViewModel.addObservationType(photo_tag_id.intValue());
             }
         }
     }
@@ -1234,15 +1227,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             imageViewGallery.setImageAlpha(255);
             imageViewCamera.setEnabled(true);
             imageViewCamera.setImageAlpha(255);
-        }
-    }
-
-    public void showDeadComment() {
-        if (checkBox_dead.isChecked()) {
-            textViewDeathComment.setVisibility(View.VISIBLE);
-        } else {
-            textViewDeathComment.setVisibility(View.GONE);
-            editTextDeathComment.setText("");
         }
     }
 
@@ -1556,23 +1540,17 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 chip.setId(observation_id);
                 chip.setTag(slug);
                 chip.setText(observation_type.getName());
-                int[] ids = observationViewModel.getObservationTypeIdList();
+                int[] ids = observationViewModel.getObservationTypes();
                 chip.setChecked(ArrayHelper.arrayContainsNumber(ids, observation_id));
                 chip.setOnCheckedChangeListener((compoundButton, b) -> {
                     String text = (String) compoundButton.getTag();
                     int id = compoundButton.getId();
                     if (compoundButton.isChecked()) {
                         Log.d(TAG, "Chip button \"" + text + "\" selected, ID: " + id);
-                        int[] new_ids = observationViewModel.getObservationTypeIdList();
-                        new_ids = ArrayHelper.insertIntoArray(new_ids, id);
-                        observationViewModel.setObservationTypeIdList(new_ids);
-                        observationViewModel.setObservationTypeIds(Arrays.toString(new_ids));
+                        observationViewModel.addObservationType(id);
                     } else {
                         Log.d(TAG, "Chip button \"" + text + "\" deselected, ID: " + id);
-                        int[] new_ids = observationViewModel.getObservationTypeIdList();
-                        new_ids = ArrayHelper.removeFromArray(new_ids, id);
-                        observationViewModel.setObservationTypeIdList(new_ids);
-                        observationViewModel.setObservationTypeIds(Arrays.toString(new_ids));
+                        observationViewModel.removeObservationType(id);
                     }
                 });
                 observation_types.addView(chip);

@@ -9,12 +9,14 @@ import androidx.lifecycle.ViewModel;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.biologer.biologer.Localisation;
+import org.biologer.biologer.services.ArrayHelper;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -44,12 +46,11 @@ public class ObservationViewModel extends ViewModel {
     private final MutableLiveData<String> dataLicence = new MutableLiveData<>();
     private final MutableLiveData<Integer> imageLicence = new MutableLiveData<>();
     private final MutableLiveData<String> habitat = new MutableLiveData<>();
-    private final MutableLiveData<String> observationTypeIds = new MutableLiveData<>();
     private final MutableLiveData<Boolean> saveEnabled = new MutableLiveData<>();
     private final MutableLiveData<Uri> currentImage = new MutableLiveData<>();
     private final ArrayList<String> listNewImages = new ArrayList<>();
     private Boolean taxonFromTheList = false;
-    private int[] observationTypeIdList = null;
+    private int[] observationTypeIds = null;
 
     public void getFromObjectBox(EntryDb entry) {
         setEntryId(entry.getId());
@@ -76,7 +77,7 @@ public class ObservationViewModel extends ViewModel {
         setDataLicence(entry.getDataLicence());
         setImageLicence(entry.getImageLicence());
         setHabitat(entry.getHabitat());
-        setObservationTypeIds(entry.getObservationTypeIds());
+        setObservationTypes(ArrayHelper.getArrayFromText(entry.getObservationTypeIds()));
     }
 
     public EntryDb getObservation() {
@@ -84,6 +85,7 @@ public class ObservationViewModel extends ViewModel {
         long taxonId = getTaxonId().getValue() != null ? getTaxonId().getValue() : 0;
         int imageLicense = getImageLicence().getValue() != null ? getImageLicence().getValue() : 0;
         long entryId = getEntryId().getValue() != null ? getEntryId().getValue() : 0;
+        String isAlive = isDead() ? "false" : "true";
 
         if (calendar1 != null) {
             return new EntryDb(entryId,
@@ -98,7 +100,7 @@ public class ObservationViewModel extends ViewModel {
                     getSex().getValue(),
                     getStage().getValue(),
                     getAtlasCode().getValue(),
-                    String.valueOf(isDead()),
+                    isAlive,
                     getCauseOfDeath().getValue(),
                     getLatitude(),
                     getLongitude(),
@@ -114,7 +116,7 @@ public class ObservationViewModel extends ViewModel {
                     imageLicense,
                     DateHelper.getPlainTime(calendar1),
                     getHabitat().getValue(),
-                    getObservationTypeIds().getValue());
+                    Arrays.toString(getObservationTypes()));
         }
         return null;
     }
@@ -282,6 +284,10 @@ public class ObservationViewModel extends ViewModel {
         dead.setValue(data);
     }
 
+    public void checkDead() {
+        dead.setValue(!isDead());
+    }
+
     public Boolean isDead() {
         if (getDead().getValue() != null) {
             return getDead().getValue();
@@ -289,7 +295,6 @@ public class ObservationViewModel extends ViewModel {
             return false;
         }
     }
-
 
     public MutableLiveData<String> getCauseOfDeath() {
         return causeOfDeath;
@@ -408,14 +413,6 @@ public class ObservationViewModel extends ViewModel {
         habitat.setValue(data);
     }
 
-    public MutableLiveData<String> getObservationTypeIds() {
-        return observationTypeIds;
-    }
-
-    public void setObservationTypeIds(String data) {
-        observationTypeIds.setValue(data);
-    }
-
     public MutableLiveData<Boolean> getSaveEnabled() {
         return saveEnabled;
     }
@@ -457,11 +454,20 @@ public class ObservationViewModel extends ViewModel {
         this.taxonFromTheList = taxonFromTheList;
     }
 
-    public int[] getObservationTypeIdList() {
-        return observationTypeIdList;
+    public int[] getObservationTypes() {
+        return observationTypeIds;
     }
 
-    public void setObservationTypeIdList(int[] observationTypeIdList) {
-        this.observationTypeIdList = observationTypeIdList;
+    public void setObservationTypes(int[] observationTypeIds) {
+        this.observationTypeIds = observationTypeIds;
     }
+
+    public void addObservationType(int id) {
+        this.observationTypeIds = ArrayHelper.insertIntoArray(observationTypeIds, id);
+    }
+
+    public void removeObservationType(int id) {
+        this.observationTypeIds = ArrayHelper.removeFromArray(observationTypeIds, id);
+    }
+
 }

@@ -1,5 +1,6 @@
 package org.biologer.biologer.services;
 
+import android.os.Build;
 import android.util.Log;
 
 import com.google.android.gms.common.util.ArrayUtils;
@@ -13,51 +14,75 @@ public class ArrayHelper {
     private static final String TAG = "Biologer.ArrayHelper";
 
     public static int[] getArrayFromText(String string) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (string == null || string.trim().isEmpty()) {
+                return new int[0];
+            }
 
-        String[] strings = string.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\\s", "").split(",");
-
-        int [] ints = new int[strings.length];
-
-        for (int i = 0; i < strings.length; i++) {
+            // Split the string and map each part to an integer
             try {
-                ints[i] = Integer.parseInt(strings[i]);
-            } catch (NumberFormatException nfe) {
-                Log.e(TAG, "Wrong ID number in Observation Types: " + strings[i]);
+                return Arrays.stream(string.replaceAll("[\\[\\]\\s]", "").split(","))
+                        .mapToInt(Integer::parseInt)
+                        .toArray();
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Failed to parse array from string: " + string, e);
                 return null;
             }
-        }
+        } else {
+            String[] strings = string
+                    .replaceAll("\\[", "")
+                    .replaceAll("\\]", "")
+                    .replaceAll("\\s", "")
+                    .split(",");
 
-        return ints;
+            int[] ints = new int[strings.length];
+
+            for (int i = 0; i < strings.length; i++) {
+                try {
+                    ints[i] = Integer.parseInt(strings[i]);
+                } catch (NumberFormatException nfe) {
+                    Log.e(TAG, "Wrong ID number in Observation Types: " + strings[i]);
+                    return null;
+                }
+            }
+
+            return ints;
+        }
     }
 
     public static int[] removeFromArray(int[] observation_type_ids, int id) {
-        List<Integer> new_list = new ArrayList<>();
-        for (int observation_type_id : observation_type_ids) {
-            if (observation_type_id != id) {
-                new_list.add(observation_type_id);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (observation_type_ids == null) {
+                return null;
             }
+            return Arrays.stream(observation_type_ids)
+                    .filter(val -> val != id)
+                    .toArray();
+        } else {
+            List<Integer> new_list = new ArrayList<>();
+            for (int observation_type_id : observation_type_ids) {
+                if (observation_type_id != id) {
+                    new_list.add(observation_type_id);
+                }
+            }
+            int length = new_list.size();
+            int[] new_array = new int[length];
+            for (int i = 0; i < length; i++) {
+                new_array[i] = new_list.get(i);
+            }
+            return new_array;
         }
-        int length = new_list.size();
-        int[] new_array = new int[length];
-        for (int i = 0; i < length; i++) {
-            new_array[i] = new_list.get(i);
-        }
-        return new_array;
     }
 
     public static int[] insertIntoArray(int[] observation_type_ids, int new_id) {
         if (observation_type_ids == null) {
-            int[] new_array = {new_id};
-            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
-            return new_array;
-        } else {
-            int len = observation_type_ids.length;
-            int[] new_array = new int[len + 1];
-            System.arraycopy(observation_type_ids, 0, new_array, 0, len);
-            new_array[len] = new_id;
-            Log.d(TAG, "The complete array of tag IDs looks like this: " + Arrays.toString(new_array));
-            return new_array;
+            return new int[]{new_id};
         }
+
+        int len = observation_type_ids.length;
+        int[] new_array = Arrays.copyOf(observation_type_ids, len + 1);
+        new_array[len] = new_id;
+        return new_array;
     }
 
     public static boolean arrayContainsNumber(final int[] array, final int key) {
