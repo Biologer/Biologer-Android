@@ -19,21 +19,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Objects;
 
 public class ObservationViewModel extends ViewModel {
-    private final MutableLiveData<Long> entryId = new MutableLiveData<>();
-    private final MutableLiveData<Long> taxonId = new MutableLiveData<>();
+    private Long entryId = null;
+    private Long taxonId = null;
     private final MutableLiveData<Integer> timedCountId = new MutableLiveData<>();
-    private final MutableLiveData<String> taxonSuggestion = new MutableLiveData<>();
+    private String taxonSuggestion = null;
     private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
-    private final MutableLiveData<String> comment = new MutableLiveData<>();
+    private String comment = null;
     private final MutableLiveData<Integer> numberOfSpecimens = new MutableLiveData<>();
     private final MutableLiveData<Integer> numberOfSpecimens2 = new MutableLiveData<>();
     private final MutableLiveData<String> sex = new MutableLiveData<>();
     private final MutableLiveData<Long> stage = new MutableLiveData<>();
     private final MutableLiveData<Long> atlasCode = new MutableLiveData<>();
     private final MutableLiveData<Boolean> dead = new MutableLiveData<>();
-    private final MutableLiveData<String> causeOfDeath = new MutableLiveData<>();
+    private String causeOfDeath = null;
     private final MutableLiveData<LatLng> coordinates = new MutableLiveData<>();
     private final MutableLiveData<Double> accuracy = new MutableLiveData<>();
     private final MutableLiveData<Double> elevation = new MutableLiveData<>();
@@ -41,13 +42,13 @@ public class ObservationViewModel extends ViewModel {
     private final MutableLiveData<String> image1 = new MutableLiveData<>();
     private final MutableLiveData<String> image2 = new MutableLiveData<>();
     private final MutableLiveData<String> image3 = new MutableLiveData<>();
-    private final MutableLiveData<String> project = new MutableLiveData<>();
-    private final MutableLiveData<String> foundOn = new MutableLiveData<>();
-    private final MutableLiveData<String> dataLicence = new MutableLiveData<>();
-    private final MutableLiveData<Integer> imageLicence = new MutableLiveData<>();
-    private final MutableLiveData<String> habitat = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> saveEnabled = new MutableLiveData<>();
-    private final MutableLiveData<Uri> currentImage = new MutableLiveData<>();
+    private String project = null;
+    private String foundOn = null;
+    private String dataLicence = null;
+    private Integer imageLicence = null;
+    private String habitat = null;
+    private Boolean saveEnabled = null;
+    private Uri currentImage = null;
     private final ArrayList<String> listNewImages = new ArrayList<>();
     private Boolean taxonFromTheList = false;
     private int[] observationTypeIds = null;
@@ -82,26 +83,26 @@ public class ObservationViewModel extends ViewModel {
 
     public EntryDb getObservation() {
         Calendar calendar1 = getCalendar().getValue();
-        long taxonId = getTaxonId().getValue() != null ? getTaxonId().getValue() : 0;
-        int imageLicense = getImageLicence().getValue() != null ? getImageLicence().getValue() : 0;
-        long entryId = getEntryId().getValue() != null ? getEntryId().getValue() : 0;
+        long taxonId = getTaxonId() != null ? getTaxonId() : 0;
+        int imageLicense = getImageLicence() != null ? getImageLicence() : 0;
+        long entryId = getEntryId() != null ? getEntryId() : 0;
         String isAlive = isDead() ? "false" : "true";
 
         if (calendar1 != null) {
             return new EntryDb(entryId,
                     taxonId,
                     null,
-                    getTaxonSuggestion().getValue(),
+                    getTaxonSuggestion(),
                     DateHelper.getYearFromCalendar(calendar1),
                     DateHelper.getMonthFromCalendar(calendar1),
                     DateHelper.getDayFromCalendar(calendar1),
-                    getComment().getValue(),
+                    getComment(),
                     getNumberOfSpecimens().getValue(),
                     getSex().getValue(),
                     getStage().getValue(),
                     getAtlasCode().getValue(),
                     isAlive,
-                    getCauseOfDeath().getValue(),
+                    getCauseOfDeath(),
                     getLatitude(),
                     getLongitude(),
                     getRoundedAccuracy(),
@@ -110,12 +111,12 @@ public class ObservationViewModel extends ViewModel {
                     getImage1().getValue(),
                     getImage2().getValue(),
                     getImage3().getValue(),
-                    getProject().getValue(),
-                    getFoundOn().getValue(),
-                    getDataLicence().getValue(),
+                    getProject(),
+                    getFoundOn(),
+                    getDataLicence(),
                     imageLicense,
                     DateHelper.getPlainTime(calendar1),
-                    getHabitat().getValue(),
+                    getHabitat(),
                     Arrays.toString(getObservationTypes()));
         }
         return null;
@@ -187,22 +188,6 @@ public class ObservationViewModel extends ViewModel {
         coordinates.setValue(data);
     }
 
-    public MutableLiveData<Long> getEntryId() {
-        return entryId;
-    }
-
-    public void setEntryId(Long data) {
-        entryId.setValue(data);
-    }
-
-    public MutableLiveData<Long> getTaxonId() {
-        return taxonId;
-    }
-
-    public void setTaxonId(Long data) {
-        taxonId.setValue(data);
-    }
-
     public MutableLiveData<Integer> getTimedCountId() {
         return timedCountId;
     }
@@ -211,28 +196,12 @@ public class ObservationViewModel extends ViewModel {
         timedCountId.setValue(data);
     }
 
-    public MutableLiveData<String> getTaxonSuggestion() {
-        return taxonSuggestion;
-    }
-
-    public void setTaxonSuggestion(String data) {
-        taxonSuggestion.setValue(data);
-    }
-
     public MutableLiveData<Calendar> getCalendar() {
         return calendar;
     }
 
     public void setCalendar(Calendar data) {
         calendar.setValue(data);
-    }
-
-    public MutableLiveData<String> getComment() {
-        return comment;
-    }
-
-    public void setComment(String data) {
-        comment.setValue(data);
     }
 
     public MutableLiveData<Integer> getNumberOfSpecimens() {
@@ -295,15 +264,6 @@ public class ObservationViewModel extends ViewModel {
             return false;
         }
     }
-
-    public MutableLiveData<String> getCauseOfDeath() {
-        return causeOfDeath;
-    }
-
-    public void setCauseOfDeath(String data) {
-        causeOfDeath.setValue(data);
-    }
-
 
     public MutableLiveData<Double> getAccuracy() {
         return accuracy;
@@ -373,70 +333,6 @@ public class ObservationViewModel extends ViewModel {
         image3.setValue(data);
     }
 
-    public MutableLiveData<String> getProject() {
-        return project;
-    }
-
-    public void setProject(String data) {
-        project.setValue(data);
-    }
-
-    public MutableLiveData<String> getFoundOn() {
-        return foundOn;
-    }
-
-    public void setFoundOn(String data) {
-        foundOn.setValue(data);
-    }
-
-    public MutableLiveData<String> getDataLicence() {
-        return dataLicence;
-    }
-
-    public void setDataLicence(String data) {
-        dataLicence.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getImageLicence() {
-        return imageLicence;
-    }
-
-    public void setImageLicence(Integer data) {
-        imageLicence.setValue(data);
-    }
-
-    public MutableLiveData<String> getHabitat() {
-        return habitat;
-    }
-
-    public void setHabitat(String data) {
-        habitat.setValue(data);
-    }
-
-    public MutableLiveData<Boolean> getSaveEnabled() {
-        return saveEnabled;
-    }
-
-    public void setSaveEnabled(Boolean data) {
-        saveEnabled.setValue(data);
-    }
-
-    public boolean isSaveEnabled() {
-        if (getSaveEnabled().getValue() != null) {
-            return getSaveEnabled().getValue();
-        } else {
-            return false;
-        }
-    }
-
-    public MutableLiveData<Uri> getCurrentImage() {
-        return currentImage;
-    }
-
-    public void setCurrentImage(Uri data) {
-        currentImage.setValue(data);
-    }
-
     public ArrayList<String> getListNewImages() {
         return listNewImages;
     }
@@ -470,4 +366,103 @@ public class ObservationViewModel extends ViewModel {
         this.observationTypeIds = ArrayHelper.removeFromArray(observationTypeIds, id);
     }
 
+    public Long getEntryId() {
+        return entryId;
+    }
+
+    public void setEntryId(Long entryId) {
+        this.entryId = entryId;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId(Long taxonId) {
+        this.taxonId = taxonId;
+    }
+
+    public String getTaxonSuggestion() {
+        return taxonSuggestion;
+    }
+
+    public void setTaxonSuggestion(String taxonSuggestion) {
+        this.taxonSuggestion = taxonSuggestion;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getCauseOfDeath() {
+        return causeOfDeath;
+    }
+
+    public void setCauseOfDeath(String causeOfDeath) {
+        this.causeOfDeath = causeOfDeath;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public String getFoundOn() {
+        return foundOn;
+    }
+
+    public void setFoundOn(String foundOn) {
+        this.foundOn = foundOn;
+    }
+
+    public String getDataLicence() {
+        return dataLicence;
+    }
+
+    public void setDataLicence(String dataLicence) {
+        this.dataLicence = dataLicence;
+    }
+
+    public Integer getImageLicence() {
+        return imageLicence;
+    }
+
+    public void setImageLicence(Integer imageLicence) {
+        this.imageLicence = imageLicence;
+    }
+
+    public String getHabitat() {
+        return habitat;
+    }
+
+    public void setHabitat(String habitat) {
+        this.habitat = habitat;
+    }
+
+    public Boolean getSaveEnabled() {
+        return saveEnabled;
+    }
+
+    public void setSaveEnabled(Boolean saveEnabled) {
+        this.saveEnabled = saveEnabled;
+    }
+
+    public Boolean isSaveEnabled() {
+        return Objects.requireNonNullElse(saveEnabled, false);
+    }
+
+    public Uri getCurrentImage() {
+        return currentImage;
+    }
+
+    public void setCurrentImage(Uri currentImage) {
+        this.currentImage = currentImage;
+    }
 }

@@ -114,7 +114,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     Integer callTagIndexNumber = null;
     private TaxonSearchHelper taxonSearchHelper;
     BroadcastReceiver receiver;
-    private ObservationViewModel observationViewModel;
+    private ObservationViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,7 +134,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Long id = ObjectBoxHelper.getIdForObservedTag();
             if (id != null) {
                 int id_for_observed_tag = id.intValue();
-                observationViewModel.addObservationType(id_for_observed_tag);
+                viewModel.addObservationType(id_for_observed_tag);
             }
         } else {
             Log.d(TAG, "Opening existing entry.");
@@ -146,7 +146,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         setViewModelObservers();
 
         dateSelect.setOnClickListener(v -> {
-            Calendar calendar = observationViewModel.getCalendar().getValue();
+            Calendar calendar = viewModel.getCalendar().getValue();
             if (calendar != null) {
                 DialogFragment dateFragment = new FragmentDatePicker();
                 dateFragment.show(getSupportFragmentManager(), "datePicker");
@@ -154,7 +154,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         });
 
         timeSelect.setOnClickListener(v -> {
-            Calendar calendar = observationViewModel.getCalendar().getValue();
+            Calendar calendar = viewModel.getCalendar().getValue();
             if (calendar != null) {
                 DialogFragment timeFragment = new FragmentTimePicker();
                 timeFragment.show(getSupportFragmentManager(), "timePicker");
@@ -251,9 +251,9 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         autoCompleteTextView_speciesName.setOnItemClickListener((parent, view, position, id) -> {
             TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
             autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
-            observationViewModel.setTaxonId(taxonDb.getId());
-            observationViewModel.setTaxonSuggestion(taxonDb.getLatinName());
-            observationViewModel.setTaxonSelectedFromTheList(true);
+            viewModel.setTaxonId(taxonDb.getId());
+            viewModel.setTaxonSuggestion(taxonDb.getLatinName());
+            viewModel.setTaxonSelectedFromTheList(true);
             showStagesAndAtlasCode(preferences);
         });
         autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
@@ -281,11 +281,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     runnable = () -> {
 
                         // Remove atlas code and stage for taxa not selected from the list
-                        if (!observationViewModel.isTaxonSelectedFromTheList()) {
+                        if (!viewModel.isTaxonSelectedFromTheList()) {
                             hideStagesAndAtlasCode();
-                            observationViewModel.setTaxonId(null);
+                            viewModel.setTaxonId(null);
                         }
-                        observationViewModel.setTaxonSelectedFromTheList(false);
+                        viewModel.setTaxonSelectedFromTheList(false);
 
                         List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
 
@@ -297,10 +297,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
                         // Enable/disable Save button in the Toolbar
                         if (autoCompleteTextView_speciesName.getText().toString().length() > 1) {
-                            observationViewModel.setSaveEnabled(true);
+                            viewModel.setSaveEnabled(true);
                             Log.d(TAG, "Taxon is set to: " + autoCompleteTextView_speciesName.getText());
                         } else {
-                            observationViewModel.setSaveEnabled(false);
+                            viewModel.setSaveEnabled(false);
                             Log.d(TAG, "Taxon entry field is empty.");
                         }
                         invalidateOptionsMenu();
@@ -321,9 +321,9 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         locationListener = new LocationListenerCompat() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
-                observationViewModel.setCoordinates(new LatLng(location.getLatitude(), location.getLongitude()));
-                observationViewModel.setElevation(location.getAltitude());
-                observationViewModel.setAccuracy((double) location.getAccuracy());
+                viewModel.setCoordinates(new LatLng(location.getLatitude(), location.getLongitude()));
+                viewModel.setElevation(location.getAltitude());
+                viewModel.setAccuracy((double) location.getAccuracy());
             }
 
             @Override
@@ -350,40 +350,40 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void setViewModelObservers() {
-        observationViewModel.getImage1().observe(this, imageUri -> {
+        viewModel.getImage1().observe(this, imageUri -> {
             Log.d(TAG, "Image 1 loaded: " + imageUri);
             loadImageThumbnail(imageUri, imageViewPicture1, frameLayoutPicture1);
         });
-        observationViewModel.getImage2().observe(this, imageUri -> {
+        viewModel.getImage2().observe(this, imageUri -> {
             Log.d(TAG, "Image 2 loaded: " + imageUri);
             loadImageThumbnail(imageUri, imageViewPicture2, frameLayoutPicture2);
         });
-        observationViewModel.getImage3().observe(this, imageUri -> {
+        viewModel.getImage3().observe(this, imageUri -> {
             Log.d(TAG, "Image 3 loaded: " + imageUri);
             loadImageThumbnail(imageUri, imageViewPicture3, frameLayoutPicture3);
         });
 
-        observationViewModel.getCalendar().observe(this, calendar -> {
+        viewModel.getCalendar().observe(this, calendar -> {
             Log.d(TAG, "Calendar changed.");
             dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
             timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
         });
 
-        observationViewModel.getCoordinates().observe(this, coordinates -> {
+        viewModel.getCoordinates().observe(this, coordinates -> {
             Log.d(TAG, "Coordinates changed.");
-            textViewLatitude.setText(observationViewModel.getLocalizedLatitiudeString());
-            textViewLongitude.setText(observationViewModel.getLocalizedLongitudeString());
+            textViewLatitude.setText(viewModel.getLocalizedLatitiudeString());
+            textViewLongitude.setText(viewModel.getLocalizedLongitudeString());
             layoutUnknownCoordinates.setVisibility(View.GONE);
             layoutCoordinates.setVisibility(View.VISIBLE);
         });
 
-        observationViewModel.getAccuracy().observe(this, accuracy -> {
+        viewModel.getAccuracy().observe(this, accuracy -> {
             // Update the coordinate accuracy labels
             if (accuracy == null || accuracy == 0.0) {
                 textViewGPSAccuracy.setText(R.string.unknown);
                 textViewMeters.setVisibility(View.GONE);
             } else {
-                textViewGPSAccuracy.setText(String.valueOf(observationViewModel.getRoundedAccuracy().intValue()));
+                textViewGPSAccuracy.setText(String.valueOf(viewModel.getRoundedAccuracy().intValue()));
                 textViewMeters.setVisibility(View.VISIBLE);
                 // Set the colors to red if the accuracy is low
                 if (accuracy <= 25) {
@@ -396,20 +396,20 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             }
         });
 
-        observationViewModel.getCalendar().observe(this, calendar -> {
+        viewModel.getCalendar().observe(this, calendar -> {
             dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
             timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
         });
 
-        observationViewModel.getNumberOfSpecimens().observe(this, specimens -> {
+        viewModel.getNumberOfSpecimens().observe(this, specimens -> {
             editTextSpecimensNo1.setText(specimens != null ? String.valueOf(specimens) : "");
         });
 
-        observationViewModel.getNumberOfSpecimens2().observe(this, specimens -> {
+        viewModel.getNumberOfSpecimens2().observe(this, specimens -> {
             editTextSpecimensNo2.setText(specimens != null ? String.valueOf(specimens) : "");
         });
 
-        observationViewModel.getDead().observe(this, dead -> {
+        viewModel.getDead().observe(this, dead -> {
             Log.d(TAG, "Specimen is dead? " + dead);
             if (dead) {
                 checkBox_dead.setChecked(true);
@@ -433,25 +433,25 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void loadExistingViewModel() {
-        observationViewModel = new ViewModelProvider(this).get(ObservationViewModel.class);
+        viewModel = new ViewModelProvider(this).get(ObservationViewModel.class);
         // Get observation entry ID from the Bundle
         EntryDb observation = ObjectBoxHelper.getObservationById(
                 getIntent().getLongExtra("ENTRY_ID", 0));
         if (observation != null) {
-            observationViewModel.getFromObjectBox(observation);
+            viewModel.getFromObjectBox(observation);
         }
     }
 
     private void addNewViewModel() {
-        observationViewModel = new ViewModelProvider(this).get(ObservationViewModel.class);
-        observationViewModel.setCoordinates(new LatLng(0, 0));
+        viewModel = new ViewModelProvider(this).get(ObservationViewModel.class);
+        viewModel.setCoordinates(new LatLng(0, 0));
         Calendar calendar = Calendar.getInstance();
-        observationViewModel.setCalendar(calendar);
-        observationViewModel.setProject(PreferenceManager.getDefaultSharedPreferences(this)
+        viewModel.setCalendar(calendar);
+        viewModel.setProject(PreferenceManager.getDefaultSharedPreferences(this)
                 .getString("project_name", "0"));
         getPhotoTag();
-        observationViewModel.setDataLicence(String.valueOf(ObjectBoxHelper.getDataLicense()));
-        observationViewModel.setImageLicence(ObjectBoxHelper.getImageLicense());
+        viewModel.setDataLicence(String.valueOf(ObjectBoxHelper.getDataLicense()));
+        viewModel.setImageLicence(ObjectBoxHelper.getImageLicense());
     }
 
     private void setupToolbar() {
@@ -469,8 +469,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
         // Enable stage entry
         // Check if the taxon has stages. If not hide the stages dialog.
-        if (observationViewModel.getTaxonId().getValue() != null) {
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(observationViewModel.getTaxonId().getValue());
+        if (viewModel.getTaxonId() != null) {
+            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
             String stages = taxon.getStages();
             Log.i(TAG, "This are the stages for " + taxon.getLatinName() + ": " + stages);
             if (stages != null) {
@@ -481,15 +481,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     String[] all_stages = stages.split(";");
 
                     // If the user changed the taxon in the mean time, we'll try to get the previous stage
-                    if (observationViewModel.getStage().getValue() != null) {
-                        Log.d(TAG, "There is a stage already selected. ID: " + observationViewModel.getStage().getValue() + "; ");
-                        StageDb stage = ObjectBoxHelper.getStageById(observationViewModel.getStage().getValue());
+                    if (viewModel.getStage().getValue() != null) {
+                        Log.d(TAG, "There is a stage already selected. ID: " + viewModel.getStage().getValue() + "; ");
+                        StageDb stage = ObjectBoxHelper.getStageById(viewModel.getStage().getValue());
                         if (stage != null) {
-                            if (Arrays.asList(all_stages).contains(String.valueOf(observationViewModel.getStage().getValue()))) {
+                            if (Arrays.asList(all_stages).contains(String.valueOf(viewModel.getStage().getValue()))) {
                                 String stageName = StageAndSexLocalization
-                                        .getStageLocaleFromID(this, observationViewModel.getStage().getValue());
+                                        .getStageLocaleFromID(this, viewModel.getStage().getValue());
                                 textViewStage.setText(stageName);
-                                textViewStage.setTag(observationViewModel.getStage().getValue());
+                                textViewStage.setTag(viewModel.getStage().getValue());
                             }
                         }
                     }
@@ -536,15 +536,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     if (s.equals("error")) {
                         Toast.makeText(ActivityObservation.this, getString(R.string.image_resize_error), Toast.LENGTH_LONG).show();
                     } else {
-                        if (observationViewModel.getImage1().getValue() == null) {
-                            observationViewModel.setImage1(s);
-                            observationViewModel.addItemToListNewImage(s);
-                        } else if (observationViewModel.getImage2().getValue() == null) {
-                            observationViewModel.setImage2(s);
-                            observationViewModel.addItemToListNewImage(s);
-                        } else if (observationViewModel.getImage3().getValue() == null) {
-                            observationViewModel.setImage3(s);
-                            observationViewModel.addItemToListNewImage(s);
+                        if (viewModel.getImage1().getValue() == null) {
+                            viewModel.setImage1(s);
+                            viewModel.addItemToListNewImage(s);
+                        } else if (viewModel.getImage2().getValue() == null) {
+                            viewModel.setImage2(s);
+                            viewModel.addItemToListNewImage(s);
+                        } else if (viewModel.getImage3().getValue() == null) {
+                            viewModel.setImage3(s);
+                            viewModel.addItemToListNewImage(s);
                             // Form is full, disable adding more images
                             imageViewGallery.setEnabled(false);
                             imageViewGallery.setImageAlpha(20);
@@ -565,14 +565,14 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private void fillExistingEntry() {
         // Get the name of the taxon if there is one (i.e. when opening existing entry)
-        if (observationViewModel.getTaxonSuggestion().getValue() != null) {
-            autoCompleteTextView_speciesName.setText(observationViewModel.getTaxonSuggestion().getValue());
+        if (viewModel.getTaxonSuggestion() != null) {
+            autoCompleteTextView_speciesName.setText(viewModel.getTaxonSuggestion());
             autoCompleteTextView_speciesName.dismissDropDown();
         }
 
-        if (observationViewModel.getTaxonId().getValue() != null) {
-            observationViewModel.setTaxonSelectedFromTheList(true);
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(observationViewModel.getTaxonId().getValue());
+        if (viewModel.getTaxonId() != null) {
+            viewModel.setTaxonSelectedFromTheList(true);
+            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
 
             // Get the atlas code
             boolean use_atlas_code;
@@ -580,22 +580,22 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 use_atlas_code = taxon.isUseAtlasCode();
                 if (use_atlas_code) {
                     Log.d(TAG, "There is an atlas code ID: "
-                            + observationViewModel.getAtlasCode().getValue());
+                            + viewModel.getAtlasCode().getValue());
                     textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
                 }
             }
         }
 
         // Get the name of the stage for the entry from the database
-        if (observationViewModel.getStage().getValue() != null) {
+        if (viewModel.getStage().getValue() != null) {
             Log.d(TAG, "There is a stage already selected for this entry!");
-            long stage_id = ObjectBoxHelper.getStageById(observationViewModel.getStage().getValue()).getId();
+            long stage_id = ObjectBoxHelper.getStageById(viewModel.getStage().getValue()).getId();
             String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
             textViewStage.setTag(stage_id);
             textViewStage.setText(stageName);
             textInputStages.setVisibility(View.VISIBLE);
         } else {
-            if (isStageAvailable(observationViewModel.getTaxonId().getValue())) {
+            if (isStageAvailable(viewModel.getTaxonId())) {
                 textInputStages.setVisibility(View.VISIBLE);
             } else {
                 textInputStages.setVisibility(View.GONE);
@@ -603,48 +603,48 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         }
 
         // Get the selected sex. If not selected set spinner to default...
-        Log.d(TAG, "Sex of individual from previous entry is " + observationViewModel.getSex().getValue());
-        if (observationViewModel.getSex().getValue().equals("male")) {
+        Log.d(TAG, "Sex of individual from previous entry is " + viewModel.getSex().getValue());
+        if (viewModel.getSex().getValue().equals("male")) {
             Log.d(TAG, "Setting spinner selected item to male.");
             checkBox_males.setChecked(true);
         }
-        if (observationViewModel.getSex().getValue().equals("female")) {
+        if (viewModel.getSex().getValue().equals("female")) {
             Log.d(TAG, "Setting spinner selected item to female.");
             checkBox_females.setChecked(true);
         }
 
         // Get the atlas code.
-        if (observationViewModel.getAtlasCode().getValue() != null) {
-            Log.d(TAG, "Setting the spinner to atlas code: " + observationViewModel.getAtlasCode().getValue());
-            textViewAtlasCode.setText(setAtlasCode(observationViewModel.getAtlasCode().getValue().intValue()));
+        if (viewModel.getAtlasCode().getValue() != null) {
+            Log.d(TAG, "Setting the spinner to atlas code: " + viewModel.getAtlasCode().getValue());
+            textViewAtlasCode.setText(setAtlasCode(viewModel.getAtlasCode().getValue().intValue()));
         }
 
-        disablePhotoButtons(observationViewModel.getImage1().getValue() != null &&
-                observationViewModel.getImage2().getValue() != null &&
-                observationViewModel.getImage3().getValue() != null);
-        if (observationViewModel.getHabitat().getValue() != null) {
-            editTextHabitat.setText(observationViewModel.getHabitat().getValue());
+        disablePhotoButtons(viewModel.getImage1().getValue() != null &&
+                viewModel.getImage2().getValue() != null &&
+                viewModel.getImage3().getValue() != null);
+        if (viewModel.getHabitat() != null) {
+            editTextHabitat.setText(viewModel.getHabitat());
         }
-        if (observationViewModel.getFoundOn().getValue() != null) {
-            editTextFoundOn.setText(observationViewModel.getFoundOn().getValue());
+        if (viewModel.getFoundOn() != null) {
+            editTextFoundOn.setText(viewModel.getFoundOn());
         }
 
         // Get other values
-        if (!observationViewModel.getCauseOfDeath().getValue().isEmpty()) {
-            editTextDeathComment.setText(observationViewModel.getCauseOfDeath().getValue());
+        if (!viewModel.getCauseOfDeath().isEmpty()) {
+            editTextDeathComment.setText(viewModel.getCauseOfDeath());
         }
-        if (!observationViewModel.getComment().getValue().isEmpty()) {
-            editTextComment.setText(observationViewModel.getComment().getValue());
+        if (!viewModel.getComment().isEmpty()) {
+            editTextComment.setText(viewModel.getComment());
         }
 
         // Load observation types and delete tag for photographed.
         //TODO Removing image tag just in case images got deleted.");
-        if (observationViewModel.getImage1().getValue() != null ||
-                observationViewModel.getImage2().getValue() != null ||
-                observationViewModel.getImage3().getValue() != null) {
+        if (viewModel.getImage1().getValue() != null ||
+                viewModel.getImage2().getValue() != null ||
+                viewModel.getImage3().getValue() != null) {
             Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
             if (id_photo_tag != null) {
-                observationViewModel.removeObservationType((int) id_photo_tag.intValue());
+                viewModel.removeObservationType((int) id_photo_tag.intValue());
             }
         }
     }
@@ -663,7 +663,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         MenuItem item = menu.findItem(R.id.action_save_entry);
-        if (observationViewModel.isSaveEnabled()) {
+        if (viewModel.isSaveEnabled()) {
             item.setEnabled(true);
             Objects.requireNonNull(item.getIcon()).setAlpha(255);
         } else {
@@ -728,35 +728,35 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 Log.i(TAG, "Deleting image 1.");
                 frameLayoutPicture1.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                deleteImageFile(observationViewModel.getImage1().getValue());
-                observationViewModel.setImage1(null);
+                deleteImageFile(viewModel.getImage1().getValue());
+                viewModel.setImage1(null);
                 break;
             case R.id.ib_pic1:
-                Log.i(TAG, "Image 1 clicked. URL: " + observationViewModel.getImage1().getValue());
-                viewImage(observationViewModel.getImage1().getValue());
+                Log.i(TAG, "Image 1 clicked. URL: " + viewModel.getImage1().getValue());
+                viewImage(viewModel.getImage1().getValue());
                 break;
             case R.id.ib_pic2_del:
                 frameLayoutPicture2.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                deleteImageFile(observationViewModel.getImage2().getValue());
-                observationViewModel.setImage2(null);
+                deleteImageFile(viewModel.getImage2().getValue());
+                viewModel.setImage2(null);
                 break;
             case R.id.ib_pic2:
-                Log.i(TAG, "Image 2 clicked. URL: " + observationViewModel.getImage2().getValue());
-                viewImage(observationViewModel.getImage2().getValue());
+                Log.i(TAG, "Image 2 clicked. URL: " + viewModel.getImage2().getValue());
+                viewImage(viewModel.getImage2().getValue());
                 break;
             case R.id.ib_pic3_del:
                 frameLayoutPicture3.setVisibility(View.GONE);
                 disablePhotoButtons(false);
-                deleteImageFile(observationViewModel.getImage3().getValue());
-                observationViewModel.setImage3(null);
+                deleteImageFile(viewModel.getImage3().getValue());
+                viewModel.setImage3(null);
                 break;
             case R.id.ib_pic3:
-                Log.i(TAG, "Image 3 clicked. URL: " + observationViewModel.getImage3().getValue());
-                viewImage(observationViewModel.getImage3().getValue());
+                Log.i(TAG, "Image 3 clicked. URL: " + viewModel.getImage3().getValue());
+                viewImage(viewModel.getImage3().getValue());
                 break;
             case R.id.dead_specimen:
-                observationViewModel.checkDead();
+                viewModel.checkDead();
                 break;
             case R.id.iv_map:
                 showMap();
@@ -788,20 +788,20 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             textViewSpecimensNo1.setVisibility(View.VISIBLE);
             textViewSpecimensNo1.setHint(getString(R.string.number_of_males));
             textViewSpecimensNo2.setVisibility(View.GONE);
-            observationViewModel.setNumberOfSpecimens2(null);
+            viewModel.setNumberOfSpecimens2(null);
         }
         if (!males && females) {
             textViewSpecimensNo1.setVisibility(View.GONE);
-            observationViewModel.setNumberOfSpecimens(null);
+            viewModel.setNumberOfSpecimens(null);
             textViewSpecimensNo2.setVisibility(View.VISIBLE);
             textViewSpecimensNo2.setHint(getString(R.string.number_of_females));
         }
         if (!males && !females) {
             textViewSpecimensNo1.setVisibility(View.VISIBLE);
             textViewSpecimensNo1.setHint(getString(R.string.broj_jedinki));
-            observationViewModel.setNumberOfSpecimens(null);
+            viewModel.setNumberOfSpecimens(null);
             textViewSpecimensNo2.setVisibility(View.GONE);
-            observationViewModel.setNumberOfSpecimens2(null);
+            viewModel.setNumberOfSpecimens2(null);
         }
     }
 
@@ -825,14 +825,14 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     */
     private void saveEntry1() {
         // Ensure that the taxon is entered correctly
-        if (observationViewModel.getTaxonId().getValue() == null) {
+        if (viewModel.getTaxonId() == null) {
             Log.d(TAG, "The taxon does not exist in GreenDao database. Asking user to save it as is.");
             buildAlertMessageInvalidTaxon();
         } else {
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(observationViewModel.getTaxonId().getValue());
-            Log.d(TAG, "The taxon with ID " + observationViewModel.getTaxonId().getValue()
+            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
+            Log.d(TAG, "The taxon with ID " + viewModel.getTaxonId()
                     + " selected. Checking coordinates and saving the entry!");
-            observationViewModel.setTaxonId(taxon.getId());
+            viewModel.setTaxonId(taxon.getId());
             saveEntry2();
         }
     }
@@ -843,7 +843,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private void saveEntry2() {
         // If the location is not loaded, warn the user and
         // don’t send crappy data into the online database!
-        LatLng latLng = observationViewModel.getCoordinates().getValue();
+        LatLng latLng = viewModel.getCoordinates().getValue();
         if (latLng != null) {
             if (latLng.latitude == 0) {
                 buildAlertMessageNoCoordinates();
@@ -851,8 +851,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 // If the location is not precise ask the user to
                 // wait. But, not if the location is taken from the map
                 // or if the user opened existing entry.
-                if (observationViewModel.getAccuracy().getValue() == null ||
-                        observationViewModel.getAccuracy().getValue() <= 25 ||
+                if (viewModel.getAccuracy().getValue() == null ||
+                        viewModel.getAccuracy().getValue() <= 25 ||
                         locationFromTheMap ||
                         !isNewEntry()) {
                     saveEntry3();
@@ -877,34 +877,34 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         } else {
             // If the user selected the location name we should check if he left the location.
             // or if he is still there
-            observationViewModel.setLocation(location_name_from_preferences);
+            viewModel.setLocation(location_name_from_preferences);
             Location old_location = new Location("");
 
             if (SettingsManager.getPreviousLocationLong() == null) {
                 // For the first time, just write the coordinates in the SettingsManager.
-                SettingsManager.setPreviousLocationLong(observationViewModel.getLongitudeString());
-                SettingsManager.setPreviousLocationLat(observationViewModel.getLatitudeString());
+                SettingsManager.setPreviousLocationLong(viewModel.getLongitudeString());
+                SettingsManager.setPreviousLocationLat(viewModel.getLatitudeString());
                 saveEntry4();
             } else {
                 // It there are coordinates already saved, read them and compare to the current location.
                 old_location.setLongitude(Double.parseDouble(SettingsManager.getPreviousLocationLong()));
                 old_location.setLatitude(Double.parseDouble(SettingsManager.getPreviousLocationLat()));
                 Location current_location = new Location("");
-                current_location.setLongitude(Double.parseDouble(observationViewModel.getLongitudeString()));
-                current_location.setLatitude(Double.parseDouble(observationViewModel.getLatitudeString()));
+                current_location.setLongitude(Double.parseDouble(viewModel.getLongitudeString()));
+                current_location.setLatitude(Double.parseDouble(viewModel.getLatitudeString()));
                 double distance = old_location.distanceTo(current_location);
 
                 if (distance > 3000) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setMessage(getString(R.string.location_changed,
-                                    observationViewModel.getLocation().getValue()))
+                                    viewModel.getLocation().getValue()))
                             .setCancelable(false)
                             .setTitle(R.string.location_changed_title)
 
                             // If a user choose to update location name
                             .setPositiveButton(getString(R.string.update_location_name), (dialog, id) -> {
-                                SettingsManager.setPreviousLocationLong(observationViewModel.getLongitudeString());
-                                SettingsManager.setPreviousLocationLat(observationViewModel.getLatitudeString());
+                                SettingsManager.setPreviousLocationLong(viewModel.getLongitudeString());
+                                SettingsManager.setPreviousLocationLat(viewModel.getLatitudeString());
                                 dialog.dismiss();
 
                                 AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
@@ -925,14 +925,14 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                                         if (new_location_name.isEmpty()) {
                                             SettingsManager.setPreviousLocationLong(null);
                                             SettingsManager.setPreviousLocationLat(null);
-                                            observationViewModel.setLocation(new_location_name);
+                                            viewModel.setLocation(new_location_name);
                                         }
                                         editor.putString("location_name", new_location_name);
                                     } else {
                                         SettingsManager.setPreviousLocationLong(null);
                                         SettingsManager.setPreviousLocationLat(null);
                                         editor.putString("location_name", "");
-                                        observationViewModel.setLocation(null);
+                                        viewModel.setLocation(null);
                                     }
                                     editor.apply();
                                     dialog1.dismiss();
@@ -944,8 +944,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             // If a user chooses to keep the current location name
                             .setNeutralButton(getString(R.string.keep_location_name), (dialog, id) -> {
                                 // Update location within the settings to the current one
-                                SettingsManager.setPreviousLocationLong(observationViewModel.getLongitudeString());
-                                SettingsManager.setPreviousLocationLat(observationViewModel.getLatitudeString());
+                                SettingsManager.setPreviousLocationLong(viewModel.getLongitudeString());
+                                SettingsManager.setPreviousLocationLat(viewModel.getLatitudeString());
                                 dialog.dismiss();
                                 saveEntry4();
                             })
@@ -957,7 +957,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                                 editor.apply();
                                 SettingsManager.setPreviousLocationLong(null);
                                 SettingsManager.setPreviousLocationLat(null);
-                                observationViewModel.setLocation(null);
+                                viewModel.setLocation(null);
                                 dialog.dismiss();
                                 saveEntry4();
                             });
@@ -981,45 +981,45 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         Integer specimensNumber2 = (!specimens_2.isEmpty()) ? Integer.valueOf(specimens_2) : null;
         Log.d(TAG, "Number of specimens 2: " + specimensNumber2);
 
-        observationViewModel.setComment(editTextComment.getText().toString());
-        observationViewModel.setStage((textViewStage.getTag() != null)
+        viewModel.setComment(editTextComment.getText().toString());
+        viewModel.setStage((textViewStage.getTag() != null)
                 ? Long.parseLong(textViewStage.getTag().toString()) : null);
-        observationViewModel.setCauseOfDeath((editTextDeathComment.getText() != null)
+        viewModel.setCauseOfDeath((editTextDeathComment.getText() != null)
                 ? editTextDeathComment.getText().toString() : "");
-        observationViewModel.setHabitat(editTextHabitat.getText() != null
+        viewModel.setHabitat(editTextHabitat.getText() != null
                 ? editTextHabitat.getText().toString() : "");
-        observationViewModel.setFoundOn(editTextFoundOn.getText() != null
+        viewModel.setFoundOn(editTextFoundOn.getText() != null
                 ? editTextFoundOn.getText().toString() : "");
-        observationViewModel.setNumberOfSpecimens(specimensNumber1);
-        if (observationViewModel.getTaxonSuggestion().getValue() == null) {
-            observationViewModel.setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
+        viewModel.setNumberOfSpecimens(specimensNumber1);
+        if (viewModel.getTaxonSuggestion() == null) {
+            viewModel.setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
         }
 
         Long second_entry_id = null;
         if (checkBox_males.isChecked() && !checkBox_females.isChecked()) {
             Log.d(TAG, "Only male individuals selected.");
-            observationViewModel.setSex("male");
+            viewModel.setSex("male");
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
         if (!checkBox_males.isChecked() && checkBox_females.isChecked()) {
             Log.d(TAG, "Only female individuals selected.");
-            observationViewModel.setNumberOfSpecimens(specimensNumber2);
+            viewModel.setNumberOfSpecimens(specimensNumber2);
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
         if (!checkBox_males.isChecked() && !checkBox_females.isChecked()) {
             Log.d(TAG, "No sex of individuals selected.");
-            observationViewModel.setSex("");
+            viewModel.setSex("");
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
         if (checkBox_males.isChecked() && checkBox_females.isChecked()) {
             Log.d(TAG, "Both male and female individuals selected.");
-            observationViewModel.setSex("male");
+            viewModel.setSex("male");
             second_entry_id = saveEntryToObjectBox();
-            observationViewModel.setSex("female");
-            observationViewModel.setNumberOfSpecimens(specimensNumber2);
+            viewModel.setSex("female");
+            viewModel.setNumberOfSpecimens(specimensNumber2);
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
@@ -1027,7 +1027,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private long saveEntryToObjectBox() {
         // Write observation into the ObjectBox database
-        EntryDb entry = observationViewModel.getObservation();
+        EntryDb entry = viewModel.getObservation();
         long entryId = ObjectBoxHelper.setObservation(entry);
         Log.d(TAG, "Entry will be saved under ID " + entryId);
         return entryId;
@@ -1046,12 +1046,12 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void getPhotoTag() {
-        if (observationViewModel.getImage1().getValue() != null ||
-                observationViewModel.getImage2().getValue() != null ||
-                observationViewModel.getImage3().getValue() != null) {
+        if (viewModel.getImage1().getValue() != null ||
+                viewModel.getImage2().getValue() != null ||
+                viewModel.getImage3().getValue() != null) {
             Long photo_tag_id = ObjectBoxHelper.getIdForPhotographedTag();
             if (photo_tag_id != null) {
-                observationViewModel.addObservationType(photo_tag_id.intValue());
+                viewModel.addObservationType(photo_tag_id.intValue());
             }
         }
     }
@@ -1087,8 +1087,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void getStageForTaxon() {
-        if (observationViewModel.getTaxonId().getValue() != null) {
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(observationViewModel.getTaxonId().getValue());
+        if (viewModel.getTaxonId() != null) {
+            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
             String stages = taxon.getStages();
             if (stages == null || stages.trim().isEmpty()) {
                 textViewStage.setEnabled(false);
@@ -1110,10 +1110,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         textViewStage.setText(all_stages_names[i]);
                         if (i == 0) {
                             textViewStage.setTag(null); // If no stage selected
-                            observationViewModel.setStage(null);
+                            viewModel.setStage(null);
                         } else {
                             textViewStage.setTag(all_stages_ids[i - 1]);
-                            observationViewModel.setStage(Long.parseLong(all_stages_ids[i - 1]));
+                            viewModel.setStage(Long.parseLong(all_stages_ids[i - 1]));
                             Log.d(TAG, "Setting stage to: " + all_stages_ids[i - 1]);
                         }
                     });
@@ -1154,7 +1154,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Long atlas_code_id = getAtlasCode();
-                observationViewModel.setAtlasCode(atlas_code_id);
+                viewModel.setAtlasCode(atlas_code_id);
                 if (callTagIndexNumber != null) {
                     Chip chip = (Chip) observation_types.getChildAt(callTagIndexNumber);
                     if (atlas_code_id != null && atlas_code_id == 2) {
@@ -1192,26 +1192,26 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         Intent intent = new Intent(this, ActivityMap.class);
         // If location is not loaded put some location on the map at the Balkan
         Bundle bundle = new Bundle();
-        if (observationViewModel.getLatitude() == null || observationViewModel.getLatitude() == 0) {
+        if (viewModel.getLatitude() == null || viewModel.getLatitude() == 0) {
             String database = SettingsManager.getDatabaseName();
             if (database.equals("https://biologer.org")) {
-                observationViewModel.setCoordinates(new LatLng(44.0, 20.8));
+                viewModel.setCoordinates(new LatLng(44.0, 20.8));
             }
             if (database.equals("https://dev.biologer.org")) {
-                observationViewModel.setCoordinates(new LatLng(44.0, 20.8));
+                viewModel.setCoordinates(new LatLng(44.0, 20.8));
             }
             if (database.equals("https://biologer.hr")) {
-                observationViewModel.setCoordinates(new LatLng(45.5, 16.3));
+                viewModel.setCoordinates(new LatLng(45.5, 16.3));
             }
             if (database.equals("https://biologer.ba")) {
-                observationViewModel.setCoordinates(new LatLng(44.3, 17.9));
+                viewModel.setCoordinates(new LatLng(44.3, 17.9));
             }
         }
-        bundle.putDouble("LATITUDE", observationViewModel.getLatitude());
-        bundle.putDouble("LONGITUDE", observationViewModel.getLongitude());
-        bundle.putDouble("ACCURACY", observationViewModel.getRoundedAccuracy());
-        bundle.putDouble("ELEVATION", observationViewModel.getRoundedElevation());
-        bundle.putString("LOCATION", observationViewModel.getLocation().getValue());
+        bundle.putDouble("LATITUDE", viewModel.getLatitude());
+        bundle.putDouble("LONGITUDE", viewModel.getLongitude());
+        bundle.putDouble("ACCURACY", viewModel.getRoundedAccuracy());
+        bundle.putDouble("ELEVATION", viewModel.getRoundedElevation());
+        bundle.putString("LOCATION", viewModel.getLocation().getValue());
         intent.putExtras(bundle);
         openMap.launch(intent);
     }
@@ -1287,7 +1287,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 public void onActivityResult(Boolean result) {
                     if (result) {
                         Log.i(TAG, "Camera returned picture.");
-                        resizeAndDisplayImage(observationViewModel.getCurrentImage().getValue());
+                        resizeAndDisplayImage(viewModel.getCurrentImage());
                     }
                 }
             }
@@ -1295,7 +1295,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private void takePhotoFromCamera() {
         Uri current_image = FileManipulation.newExternalDocumentFile(this, null, ".jpg");
-        observationViewModel.setCurrentImage(current_image);
+        viewModel.setCurrentImage(current_image);
         takePictureFromCamera.launch(current_image);
     }
 
@@ -1350,10 +1350,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 public void onActivityResult(ActivityResult result) {
                     locationManager.removeUpdates(locationListener);
                     if (result.getData() != null) {
-                        observationViewModel.setCoordinates(getLatLongFromMap(result));
-                        observationViewModel.setAccuracy(getAccuracyFromMap(result));
-                        observationViewModel.setElevation(getElevationFromMap(result));
-                        observationViewModel.setLocation(getLocationNameFromMap(result));
+                        viewModel.setCoordinates(getLatLongFromMap(result));
+                        viewModel.setAccuracy(getAccuracyFromMap(result));
+                        viewModel.setElevation(getElevationFromMap(result));
+                        viewModel.setLocation(getLocationNameFromMap(result));
                         Log.d(TAG, "Map returned this result: " + getLatLongFromMap(result));
                         locationFromTheMap = true;
                     }
@@ -1362,11 +1362,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private int getEmptyImageSlots() {
         int emptySlots = 0;
-        if (observationViewModel.getImage1().getValue() == null) {
+        if (viewModel.getImage1().getValue() == null) {
             emptySlots = emptySlots + 1;
-        } if (observationViewModel.getImage2().getValue() == null) {
+        } if (viewModel.getImage2().getValue() == null) {
             emptySlots = emptySlots + 1;
-        } if (observationViewModel.getImage3().getValue() == null) {
+        } if (viewModel.getImage3().getValue() == null) {
             emptySlots = emptySlots + 1;
         }
         return emptySlots;
@@ -1485,7 +1485,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void deleteUnsavedImages() {
-        for (String image: observationViewModel.getListNewImages()) {
+        for (String image: viewModel.getListNewImages()) {
             if (image != null) {
                 String filename = new File(image).getName();
                 final File file = new File(getFilesDir(), filename);
@@ -1540,17 +1540,17 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 chip.setId(observation_id);
                 chip.setTag(slug);
                 chip.setText(observation_type.getName());
-                int[] ids = observationViewModel.getObservationTypes();
+                int[] ids = viewModel.getObservationTypes();
                 chip.setChecked(ArrayHelper.arrayContainsNumber(ids, observation_id));
                 chip.setOnCheckedChangeListener((compoundButton, b) -> {
                     String text = (String) compoundButton.getTag();
                     int id = compoundButton.getId();
                     if (compoundButton.isChecked()) {
                         Log.d(TAG, "Chip button \"" + text + "\" selected, ID: " + id);
-                        observationViewModel.addObservationType(id);
+                        viewModel.addObservationType(id);
                     } else {
                         Log.d(TAG, "Chip button \"" + text + "\" deselected, ID: " + id);
-                        observationViewModel.removeObservationType(id);
+                        viewModel.removeObservationType(id);
                     }
                 });
                 observation_types.addView(chip);
