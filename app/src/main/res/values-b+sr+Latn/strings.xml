@@ -496,7 +496,6 @@
     <string name="duration">Trajanje:</string>
     <string name="channel_location">Praćenje lokacije</string>
     <string name="channel_location_description">Prikazuje obaveštenje dok prikuplja lokaciju tokom brojanja vrsta.</string>
-    <string name="finished">Završeno!</string>
     <string name="error_fetching_user_data">Ne mogu da dobijem podatke o korisniku: podaci su prazni.</string>
     <string name="error_fetching_user_data1">Ne mogu da dobijem podatke o korisniku: odgovor je prazan.</string>
     <string name="timed_count_title">Vremensko brojanje</string>

@@ -47,13 +47,10 @@ import retrofit2.Response;
 public class UploadRecords extends Service {
 
     private static final String TAG = "Biologer.UploadRecords";
-
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_CANCEL = "ACTION_CANCEL";
     static final public String TASK_COMPLETED = "org.biologer.biologer.UploadRecordsService.TASK_COMPLETED";
-
     boolean keep_going = true;
-
     ArrayList<EntryDb> entryList;
     int totalEntries = 0;
     int remainingEntries = 0;
@@ -61,7 +58,6 @@ public class UploadRecords extends Service {
     List<APIEntryPhotos> photos = null;
     LocalBroadcastManager broadcaster;
     String[] filenames = new String[3]; // save image names to be deleted on success
-
     int n = 0;
     int m = 0;
 
@@ -110,6 +106,7 @@ public class UploadRecords extends Service {
     }
 
     // Stop the foreground service and update the notification
+    @SuppressLint("deprecation")
     private void stopForegroundAndNotify(String title, String description) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             notificationUpdateText(title, description);

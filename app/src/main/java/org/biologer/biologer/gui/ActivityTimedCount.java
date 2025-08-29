@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -941,7 +942,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction() != null) {
                 if (intent.getAction().equals(LocationTrackingService.ACTION_LOCATION_UPDATE)) {
-                    Location location = intent.getParcelableExtra(LocationTrackingService.CURRENT_LOCATION);
+                    Location location;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                         location = intent.getParcelableExtra(LocationTrackingService.CURRENT_LOCATION, Location.class);
+                    } else {
+                        location = intent.getParcelableExtra(LocationTrackingService.CURRENT_LOCATION);
+                    }
                     if (location != null) {
                         double latitude = location.getLatitude();
                         double longitude = location.getLongitude();

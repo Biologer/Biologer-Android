@@ -2,55 +2,30 @@ package org.biologer.biologer.gui;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.widget.DatePicker;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.biologer.biologer.R;
+import org.biologer.biologer.adapters.ObservationViewModel;
 
 import java.util.Calendar;
 
 public class FragmentDatePicker extends DialogFragment implements DatePickerDialog.OnDateSetListener {
 
-    public interface OnDateSelectedListener {
-        void onDateSelected(int year, int month, int day);
-    }
-
-    private OnDateSelectedListener listener;
-    private Calendar selectedDateFromBundle;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        try {
-            // Instantiate the OnDateSelectedListener so we can send events to the host
-            listener = (OnDateSelectedListener) context;
-        } catch (ClassCastException e) {
-            // The activity doesn't implement the interface, throw an exception
-            throw new ClassCastException(context + " must implement OnDateSelectedListener");
-        }
-    }
-
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // Retrieve the Calendar object from the bundle
-        if (getArguments() != null) {
-            selectedDateFromBundle = (Calendar) getArguments().getSerializable("selected_date");
-        }
+        // Retrieve the Calendar object from ViewModel
+        Calendar calendarFromActivity = getCalendar();
 
-        // If the date wasn't passed, default to the current time
-        if (selectedDateFromBundle == null) {
-            selectedDateFromBundle = Calendar.getInstance();
-        }
-
-        int year = selectedDateFromBundle.get(Calendar.YEAR);
-        int month = selectedDateFromBundle.get(Calendar.MONTH);
-        int day = selectedDateFromBundle.get(Calendar.DAY_OF_MONTH);
+        int year = calendarFromActivity.get(Calendar.YEAR);
+        int month = calendarFromActivity.get(Calendar.MONTH);
+        int day = calendarFromActivity.get(Calendar.DAY_OF_MONTH);
 
         return new DatePickerDialog(requireActivity(), this, year, month, day);
     }
@@ -61,8 +36,10 @@ public class FragmentDatePicker extends DialogFragment implements DatePickerDial
         Calendar now = Calendar.getInstance();
 
         // Create a new Calendar object for the date the user selected.
-        Calendar selectedDate = Calendar.getInstance();
-        selectedDate.set(year, month, day);
+        Calendar selectedDate = (Calendar) getCalendar().clone();
+        selectedDate.set(Calendar.YEAR, year);
+        selectedDate.set(Calendar.MONTH, month);
+        selectedDate.set(Calendar.DAY_OF_MONTH, day);
 
         // Create a calendar for today with time fields zeroed out for date-only comparison.
         Calendar todayOnly = (Calendar) now.clone();
@@ -85,14 +62,25 @@ public class FragmentDatePicker extends DialogFragment implements DatePickerDial
         }
 
         // Second check: If the selected date is today, is the selected time in the future?
-        if (selectedDayOnly.equals(todayOnly) && selectedDateFromBundle.after(now)) {
+        if (selectedDayOnly.equals(todayOnly) && selectedDate.after(now)) {
             Toast.makeText(getActivity(), R.string.cannot_select_a_future_time, Toast.LENGTH_LONG).show();
         } else {
-            // The date and time are valid, so pass it back to the Activity.
-            if (listener != null) {
-                listener.onDateSelected(year, month, day);
-            }
+            // The date and time are valid, so pass it back to the Activity through ViewModel.
+            ObservationViewModel observationViewModel =
+                    new ViewModelProvider(requireActivity()).get(ObservationViewModel.class);
+            observationViewModel.setCalendar(selectedDate);
         }
     }
 
+    public Calendar getCalendar() {
+        ObservationViewModel observationViewModel =
+                new ViewModelProvider(requireActivity()).get(ObservationViewModel.class);
+        Calendar calendar = observationViewModel.getCalendar().getValue();
+
+        if (calendar == null) {
+            calendar = Calendar.getInstance();
+        }
+
+        return calendar;
+    }
 }

@@ -6,50 +6,28 @@ import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import android.text.format.DateFormat;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import org.biologer.biologer.R;
+import org.biologer.biologer.adapters.ObservationViewModel;
 
 import java.util.Calendar;
 
 public class FragmentTimePicker extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
 
-    // Define an interface to communicate with the host Activity
-    public interface OnTimeSelectedListener {
-        void onTimeSelected(int hourOfDay, int minute);
-    }
-
-    private OnTimeSelectedListener listener;
-    private Calendar selectedDateFromBundle;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        try {
-            listener = (OnTimeSelectedListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement OnTimeSelectedListener");
-        }
-    }
-
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Retrieve the Calendar object from the bundle
-        if (getArguments() != null) {
-            selectedDateFromBundle = (Calendar) getArguments().getSerializable("selected_date");
-        }
-
-        // If the date wasn't passed, default to the current time
-        if (selectedDateFromBundle == null) {
-            selectedDateFromBundle = Calendar.getInstance();
-        }
+        Calendar calendarFromActivity = getCalendar();
 
         // Use the current time as the default values for the picker
-        int hour = selectedDateFromBundle.get(Calendar.HOUR_OF_DAY);
-        int minute = selectedDateFromBundle.get(Calendar.MINUTE);
+        int hour = calendarFromActivity.get(Calendar.HOUR_OF_DAY);
+        int minute = calendarFromActivity.get(Calendar.MINUTE);
 
         // Create a new instance of TimePickerDialog and return it
         return new TimePickerDialog(getActivity(), this, hour, minute,
@@ -59,25 +37,55 @@ public class FragmentTimePicker extends DialogFragment implements TimePickerDial
     // Call the listener's method in onTimeSet()
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        // Get the current time for comparison
         Calendar now = Calendar.getInstance();
 
-        // Create a new Calendar object by combining the selected date
-        // from the bundle with the new time from the picker.
-        Calendar selectedDateTime = (Calendar) selectedDateFromBundle.clone();
+        // Clone current calendar from ViewModel (preserve date fields)
+        Calendar selectedDateTime = (Calendar) getCalendar().clone();
         selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
         selectedDateTime.set(Calendar.MINUTE, minute);
         selectedDateTime.set(Calendar.SECOND, 0);
         selectedDateTime.set(Calendar.MILLISECOND, 0);
 
-        if (selectedDateTime.after(now)) {
-            Toast.makeText(getActivity(), R.string.cannot_select_a_future_time, Toast.LENGTH_LONG).show();
-            // Ignore user input
-        } else {
-            // The time is valid, so pass it back to the Activity
-            if (listener != null) {
-                listener.onTimeSelected(hourOfDay, minute);
-            }
+        // Strip time from both for date-only comparison
+        Calendar todayOnly = (Calendar) now.clone();
+        todayOnly.set(Calendar.HOUR_OF_DAY, 0);
+        todayOnly.set(Calendar.MINUTE, 0);
+        todayOnly.set(Calendar.SECOND, 0);
+        todayOnly.set(Calendar.MILLISECOND, 0);
+
+        Calendar selectedDayOnly = (Calendar) selectedDateTime.clone();
+        selectedDayOnly.set(Calendar.HOUR_OF_DAY, 0);
+        selectedDayOnly.set(Calendar.MINUTE, 0);
+        selectedDayOnly.set(Calendar.SECOND, 0);
+        selectedDayOnly.set(Calendar.MILLISECOND, 0);
+
+        if (selectedDayOnly.after(todayOnly)) {
+            // User somehow picked a future day (shouldn’t happen if DatePicker is used)
+            Toast.makeText(requireActivity(), R.string.cannot_select_a_future_date, Toast.LENGTH_LONG).show();
+            return;
         }
+
+        if (selectedDayOnly.equals(todayOnly) && selectedDateTime.after(now)) {
+            // Same day, but time is in the future
+            Toast.makeText(requireActivity(), R.string.cannot_select_a_future_time, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Valid date & time and save to ViewModel
+        ObservationViewModel observationViewModel =
+                new ViewModelProvider(requireActivity()).get(ObservationViewModel.class);
+        observationViewModel.setCalendar(selectedDateTime);
+    }
+
+    public Calendar getCalendar() {
+        ObservationViewModel observationViewModel =
+                new ViewModelProvider(requireActivity()).get(ObservationViewModel.class);
+        Calendar calendar = observationViewModel.getCalendar().getValue();
+
+        if (calendar == null) {
+            calendar = Calendar.getInstance();
+        }
+
+        return calendar;
     }
 }

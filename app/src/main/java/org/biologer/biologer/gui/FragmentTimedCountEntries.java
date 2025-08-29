@@ -98,7 +98,7 @@ public class FragmentTimedCountEntries extends Fragment {
                         Activity activity = getActivity();
                         if (activity != null) {
                             Log.d(TAG, "Species entry at position " + position + " clicked.");
-                            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
+                            Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
                             intent.putExtra("IS_NEW_ENTRY", "NO");
                             intent.putExtra("ENTRY_ID", entry_id);
                             openEntry.launch(intent);

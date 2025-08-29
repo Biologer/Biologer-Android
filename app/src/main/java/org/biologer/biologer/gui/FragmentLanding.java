@@ -174,7 +174,7 @@ public class FragmentLanding extends Fragment {
 
     // Opens ActivityEntry to add new species observation
     private void newObservation() {
-        Intent intent = new Intent(getActivity(), ActivityEntry.class);
+        Intent intent = new Intent(getActivity(), ActivityObservation.class);
         intent.putExtra("IS_NEW_ENTRY", "YES");
         entryLauncher.launch(intent);
     }
@@ -183,7 +183,7 @@ public class FragmentLanding extends Fragment {
     private void openObservation(long entryId) {
         Activity activity = getActivity();
         if (activity != null) {
-            Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
+            Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
             intent.putExtra("IS_NEW_ENTRY", "NO");
             intent.putExtra("ENTRY_ID", entryId);
             entryLauncher.launch(intent);
@@ -219,7 +219,11 @@ public class FragmentLanding extends Fragment {
 
                     if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
                         long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        long new_second_entry_id = result.getData().getLongExtra("SECOND_ENTRY_ID", 0);
                         Log.d(TAG, "This is a new entry with id: " + new_entry_id);
+                        if (new_second_entry_id != 0) {
+                            addObservationItem(new_second_entry_id);
+                        }
                         addObservationItem(new_entry_id);
                     } else {
                         long old_data_id = 0;
@@ -522,7 +526,7 @@ public class FragmentLanding extends Fragment {
             // Open EntryActivity to edit the new record
             Activity activity = getActivity();
             if (activity != null) {
-                Intent intent = new Intent(activity.getApplicationContext(), ActivityEntry.class);
+                Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
                 intent.putExtra("IS_NEW_ENTRY", "NO");
                 intent.putExtra("ENTRY_ID", new_entry_id);
                 entryLauncher.launch(intent);

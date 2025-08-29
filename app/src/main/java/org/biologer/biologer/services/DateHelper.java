@@ -81,7 +81,7 @@ public class DateHelper {
     }
 
     public static String getMonthFromCalendar(Calendar calendar) {
-        int month = calendar.get(Calendar.MONTH) + 1;
+        int month = calendar.get(Calendar.MONTH);
         return String.valueOf(month);
     }
 
@@ -122,6 +122,12 @@ public class DateHelper {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         Date currentTime = new Date();
         return sdf.format(currentTime);
+    }
+
+    public static String getPlainTime(Calendar calendar) {
+        return String.format(Locale.US, "%02d:%02d",
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE));
     }
 
     public static String getCurrentYear() {

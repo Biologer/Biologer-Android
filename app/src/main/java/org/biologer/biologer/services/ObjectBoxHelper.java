@@ -16,6 +16,8 @@ import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.sql.TimedCountDb_;
+import org.biologer.biologer.sql.UserDb;
+import org.biologer.biologer.sql.UserDb_;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +56,21 @@ public class ObjectBoxHelper {
         long id = box.put(entry);
         Log.d("Biologer.ObjectBox", "Observation will be saved in EntryDb under ID " + id);
         return id;
+    }
+
+    public static int getUniqueObservationID() {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        Query<EntryDb> query = box.query().build();
+        if (query.count() == 0) {
+            Log.i("Biologer.ObjectBox", "Timed counts database is empty, returning ID 1.");
+            query.close();
+            return 1;
+        } else {
+            int maxId = (int) query.property(EntryDb_.id).max();
+            query.close();
+            Log.i("Biologer.ObjectBox", "The last timed count in the database has ID " + maxId + ".");
+            return ++maxId;
+        }
     }
 
     public static ArrayList<TimedCountDb> getTimedCounts() {
@@ -219,6 +236,28 @@ public class ObjectBoxHelper {
             Log.i("Biologer.ObjectBox", "Observed tag has ID " + observed_id + ".");
         }
         return observed_id;
+    }
+
+    public static int getDataLicense() {
+        List<UserDb> user = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        if (user != null) {
+            if (!user.isEmpty()) {
+                return user.get(0).getDataLicense();
+            }
+            return 0;
+        }
+        return 0;
+    }
+
+    public static int getImageLicense() {
+        List<UserDb> user = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        if (user != null) {
+            if (!user.isEmpty()) {
+                return user.get(0).getImageLicense();
+            }
+            return 0;
+        }
+        return 0;
     }
 
     public static Long getIdForPhotographedTag() {
