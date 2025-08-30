@@ -306,4 +306,19 @@ public class ObjectBoxHelper {
         removeAllObservations();
         removeAllTimedCounts();
     }
+
+    public static Boolean hasAtlasCode(long taxonId) {
+        TaxonDb taxon = getTaxonById(taxonId);
+        if (taxon != null) {
+            if (taxon.isUseAtlasCode()) {
+                Log.d("Biologer.ObjectBox", "There is atlas code for taxon ID: " + taxonId);
+                return true;
+            } else {
+                Log.d("Biologer.ObjectBox", "There is no atlas code for taxon ID: " + taxonId);
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 }

@@ -283,7 +283,7 @@
                                 android:text="@string/female"/>
 
                             <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/textInputLayoutSpecimensNo1"
+                                android:id="@+id/textInputLayoutSpecimensNo"
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
@@ -291,30 +291,12 @@
                                 app:boxBackgroundColor="@android:color/transparent">
 
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/textInputEditTextSpecimensNo1"
+                                    android:id="@+id/textInputEditTextSpecimensNo"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:hint="@string/specimens_number_hint"
                                     android:inputType="number"
                                     android:maxLength="10" />
-                            </com.google.android.material.textfield.TextInputLayout>
-
-                            <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/textInputLayoutSpecimensNo2"
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:visibility="gone"
-                                app:boxBackgroundColor="@android:color/transparent">
-
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/textInputEditTextSpecimensNo2"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:hint="@string/specimens_number_hint"
-                                    android:maxLength="10"
-                                    android:inputType="number"/>
                             </com.google.android.material.textfield.TextInputLayout>
 
                         </androidx.appcompat.widget.LinearLayoutCompat>

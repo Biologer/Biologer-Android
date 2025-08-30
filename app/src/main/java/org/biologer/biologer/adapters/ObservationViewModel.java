@@ -29,8 +29,7 @@ public class ObservationViewModel extends ViewModel {
     private String taxonSuggestion = null;
     private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
     private String comment = null;
-    private final MutableLiveData<Integer> numberOfSpecimens = new MutableLiveData<>();
-    private final MutableLiveData<Integer> numberOfSpecimens2 = new MutableLiveData<>();
+    private Integer numberOfSpecimens = null;
     private final MutableLiveData<String> sex = new MutableLiveData<>();
     private final MutableLiveData<Long> stage = new MutableLiveData<>();
     private final MutableLiveData<Long> atlasCode = new MutableLiveData<>();
@@ -101,7 +100,7 @@ public class ObservationViewModel extends ViewModel {
                     DateHelper.getMonthFromCalendar(calendar1),
                     DateHelper.getDayFromCalendar(calendar1),
                     getComment(),
-                    getNumberOfSpecimens().getValue(),
+                    getNumberOfSpecimens(),
                     getSex().getValue(),
                     getStage().getValue(),
                     getAtlasCode().getValue(),
@@ -206,22 +205,6 @@ public class ObservationViewModel extends ViewModel {
 
     public void setCalendar(Calendar data) {
         calendar.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getNumberOfSpecimens() {
-        return numberOfSpecimens;
-    }
-
-    public void setNumberOfSpecimens2(Integer data) {
-        numberOfSpecimens2.setValue(data);
-    }
-
-        public MutableLiveData<Integer> getNumberOfSpecimens2() {
-        return numberOfSpecimens2;
-    }
-
-    public void setNumberOfSpecimens(Integer data) {
-        numberOfSpecimens.setValue(data);
     }
 
     public MutableLiveData<String> getSex() {
@@ -522,5 +505,13 @@ public class ObservationViewModel extends ViewModel {
 
     public void setCallTagIndex(Integer callTagIndex) {
         this.callTagIndex = callTagIndex;
+    }
+
+    public Integer getNumberOfSpecimens() {
+        return numberOfSpecimens;
+    }
+
+    public void setNumberOfSpecimens(Integer numberOfSpecimens) {
+        this.numberOfSpecimens = numberOfSpecimens;
     }
 }

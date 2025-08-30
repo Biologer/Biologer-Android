@@ -218,17 +218,13 @@ public class FragmentLanding extends Fragment {
                     Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
 
                     if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
-                        long new_entry_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
-                        long new_second_entry_id = result.getData().getLongExtra("SECOND_ENTRY_ID", 0);
+                        long new_entry_id = result.getData().getLongExtra("ENTRY_ID", 0);
                         Log.d(TAG, "This is a new entry with id: " + new_entry_id);
-                        if (new_second_entry_id != 0) {
-                            addObservationItem(new_second_entry_id);
-                        }
                         addObservationItem(new_entry_id);
                     } else {
                         long old_data_id = 0;
                         if (result.getData() != null) {
-                            old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                            old_data_id = result.getData().getLongExtra("ENTRY_ID", 0);
                         }
                         Log.d(TAG, "This was an existing entry with id: " + old_data_id);
                         updateEntry(old_data_id);

@@ -100,52 +100,27 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_observation);
-
         binding = ActivityObservationBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setupToolbar();
         setupLocationListenerAndManager();
-        setupView();
+        setupView(); // Get on click listeners and watchers
 
         if (isNewEntry()) {
             Log.i(TAG, "Starting new entry.");
             addNewViewModel();
-
-            // Start obtaining location
-            getLocation(100, 2);
-
-            // Always add Observation Type for observed specimen
-            addObservedTag();
+            getLocation(100, 2); // Start obtaining location
+            addObservedTag(); // Add Observed Type by default
         } else {
             Log.d(TAG, "Opening existing entry.");
             loadExistingViewModel();
             fillExistingEntry();
         }
 
-        // Get the data from the ViewModel and update UI
-        setViewModelObservers();
-
-        binding.editTextDate.setOnClickListener(v -> {
-            Calendar calendar = viewModel.getCalendar().getValue();
-            if (calendar != null) {
-                DialogFragment dateFragment = new FragmentDatePicker();
-                dateFragment.show(getSupportFragmentManager(), "datePicker");
-            }
-        });
-
-        binding.editTextTime.setOnClickListener(v -> {
-            Calendar calendar = viewModel.getCalendar().getValue();
-            if (calendar != null) {
-                DialogFragment timeFragment = new FragmentTimePicker();
-                timeFragment.show(getSupportFragmentManager(), "timePicker");
-            }
-        });
-
-        // Broadcaster used for receiving resized images
-        registerBroadcastReceiver();
-
-        fillObservationTypes();
+        setViewModelObservers(); // Start getting the data from the ViewModel and update UI
+        registerBroadcastReceiver(); // Broadcaster used for receiving resized images
+        fillObservationTypes(); // Populate Chip programmatically from the database
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -172,7 +147,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         binding.checkBoxFemale.setOnClickListener(this);
         binding.textInputEditTextAtlasCode.setOnClickListener(this);
         binding.materialCheckBoxDead.setOnClickListener(this);
-        // Buttons to add images
+        // Buttons to add and delete images
         binding.imageViewPicture1.setOnClickListener(this);
         binding.imageViewDeletePicture1.setOnClickListener(this);
         binding.imageViewPicture2.setOnClickListener(this);
@@ -183,7 +158,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         binding.imageViewPhotoFromGallery.setOnClickListener(this);
         // Map icon
         binding.imageViewMap.setOnClickListener(this);
-        // Tag cloud for observation types
         // Show advanced options for data entry if selected in preferences
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (!preferences.getBoolean("advanced_interface", false)) {
@@ -196,7 +170,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         binding.autoCompleteTextViewSpeciesName.setAdapter(adapter);
         binding.autoCompleteTextViewSpeciesName.setThreshold(2);
         taxonSearchHelper = new TaxonSearchHelper(this);
-        binding.autoCompleteTextViewSpeciesName.setOnItemClickListener((parent, view, position, id) -> {
+        binding.autoCompleteTextViewSpeciesName.setOnItemClickListener(
+                (parent, view, position, id) -> {
             TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
             binding.autoCompleteTextViewSpeciesName.setText(taxonDb.getLatinName());
             viewModel.setTaxonId(taxonDb.getId());
@@ -235,6 +210,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         }
                         viewModel.setTaxonSelectedFromTheList(false);
 
+                        // TODO The list could contain only species names ind IDs to be mode memory efficient
                         List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
 
                         // Add the Query to the drop down list (adapter)
@@ -247,6 +223,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         if (binding.autoCompleteTextViewSpeciesName.getText().toString().length() > 1) {
                             viewModel.setSaveEnabled(true);
                             Log.d(TAG, "Taxon is set to: " + binding.autoCompleteTextViewSpeciesName.getText());
+                            viewModel.setTaxonSuggestion(binding.autoCompleteTextViewSpeciesName.getText().toString());
                         } else {
                             viewModel.setSaveEnabled(false);
                             Log.d(TAG, "Taxon entry field is empty.");
@@ -255,6 +232,22 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     };
                     handler.postDelayed(runnable, 300);
                 }
+            }
+        });
+
+        binding.editTextDate.setOnClickListener(v -> {
+            Calendar calendar = viewModel.getCalendar().getValue();
+            if (calendar != null) {
+                DialogFragment dateFragment = new FragmentDatePicker();
+                dateFragment.show(getSupportFragmentManager(), "datePicker");
+            }
+        });
+
+        binding.editTextTime.setOnClickListener(v -> {
+            Calendar calendar = viewModel.getCalendar().getValue();
+            if (calendar != null) {
+                DialogFragment timeFragment = new FragmentTimePicker();
+                timeFragment.show(getSupportFragmentManager(), "timePicker");
             }
         });
 
@@ -353,12 +346,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             binding.editTextTime.setText(DateHelper.getLocalizedCalendarTime(calendar));
         });
 
-        viewModel.getNumberOfSpecimens().observe(this, specimens
-                -> binding.textInputEditTextSpecimensNo1.setText(specimens != null ? String.valueOf(specimens) : ""));
-
-        viewModel.getNumberOfSpecimens2().observe(this, specimens
-                -> binding.textInputEditTextSpecimensNo2.setText(specimens != null ? String.valueOf(specimens) : ""));
-
         viewModel.getDead().observe(this, dead -> {
             Log.d(TAG, "Specimen is dead? " + dead);
             if (dead) {
@@ -370,6 +357,33 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 binding.textInputEditTextDeathComment.setText("");
             }
         });
+
+        viewModel.getSex().observe(this, sex -> {
+            Log.i(TAG, "Sex view model set to " + sex);
+            if (sex != null) {
+                if (sex.equals("male")) {
+                    Log.i(TAG, "Setting as males");
+                    binding.checkBoxMale.setChecked(true);
+                    binding.checkBoxFemale.setChecked(false);
+                    binding.textInputLayoutSpecimensNo.setHint(getString(R.string.number_of_males));
+                    return;
+                }
+                if (sex.equals("female")) {
+                    binding.checkBoxMale.setChecked(false);
+                    binding.checkBoxFemale.setChecked(true);
+                    binding.textInputLayoutSpecimensNo.setHint(getString(R.string.number_of_females));
+                } else {
+                    binding.checkBoxMale.setChecked(false);
+                    binding.checkBoxFemale.setChecked(false);
+                    binding.textInputLayoutSpecimensNo.setHint(getString(R.string.specimens_number_hint));
+                }
+            } else {
+                binding.checkBoxMale.setChecked(false);
+                binding.checkBoxFemale.setChecked(false);
+                binding.textInputLayoutSpecimensNo.setHint(getString(R.string.specimens_number_hint));
+            }
+        });
+
     }
 
     private void loadImageThumbnail(String image, ImageView imageView, FrameLayout frame) {
@@ -515,24 +529,23 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void fillExistingEntry() {
-        // Get the name of the taxon if there is one (i.e. when opening existing entry)
+        // Get the name of the taxon if there is one (when opening existing entry)
         if (viewModel.getTaxonSuggestion() != null) {
             binding.autoCompleteTextViewSpeciesName.setText(viewModel.getTaxonSuggestion());
             binding.autoCompleteTextViewSpeciesName.dismissDropDown();
         }
 
+        // Display Atlas Code section
         if (viewModel.getTaxonId() != null) {
             viewModel.setTaxonSelectedFromTheList(true);
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
-
-            // Get the atlas code
-            boolean use_atlas_code;
-            if (taxon != null) {
-                use_atlas_code = taxon.isUseAtlasCode();
-                if (use_atlas_code) {
-                    Log.d(TAG, "There is an atlas code ID: "
-                            + viewModel.getAtlasCode().getValue());
-                    binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
+            if (ObjectBoxHelper.hasAtlasCode(viewModel.getTaxonId())) {
+                // Set visibility if taxon has atlas code
+                binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
+                // Display the atlas code in the UI
+                if (viewModel.getAtlasCode().getValue() != null) {
+                    Log.d(TAG, "Setting the spinner to atlas code: " + viewModel.getAtlasCode().getValue());
+                    binding.textInputEditTextAtlasCode.setText(
+                            setAtlasCode(viewModel.getAtlasCode().getValue().intValue()));
                 }
             }
         }
@@ -566,28 +579,26 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             binding.checkBoxFemale.setChecked(true);
         }
 
-        // Get the atlas code.
-        if (viewModel.getAtlasCode().getValue() != null) {
-            Log.d(TAG, "Setting the spinner to atlas code: " + viewModel.getAtlasCode().getValue());
-            binding.textInputEditTextAtlasCode.setText(setAtlasCode(viewModel.getAtlasCode().getValue().intValue()));
-        }
-
+        // Check if photos buttons should be disabled
         disablePhotoButtons(viewModel.getImage1().getValue() != null &&
                 viewModel.getImage2().getValue() != null &&
                 viewModel.getImage3().getValue() != null);
+
+        // Load other data
+        if (!viewModel.getComment().isEmpty()) {
+            binding.textInputEditTextComment.setText(viewModel.getComment());
+        }
         if (viewModel.getHabitat() != null) {
             binding.textInputEditTextHabitat.setText(viewModel.getHabitat());
         }
         if (viewModel.getFoundOn() != null) {
             binding.editTextFoundOn.setText(viewModel.getFoundOn());
         }
-
-        // Get other values
         if (!viewModel.getCauseOfDeath().isEmpty()) {
             binding.textInputEditTextDeathComment.setText(viewModel.getCauseOfDeath());
         }
-        if (!viewModel.getComment().isEmpty()) {
-            binding.textInputEditTextComment.setText(viewModel.getComment());
+        if (viewModel.getNumberOfSpecimens() != null) {
+            binding.textInputEditTextSpecimensNo.setText(String.valueOf(viewModel.getNumberOfSpecimens()));
         }
 
         // Load observation types and delete tag for photographed.
@@ -597,12 +608,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 viewModel.getImage3().getValue() != null) {
             Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
             if (id_photo_tag != null) {
-                viewModel.removeObservationType((int) id_photo_tag.intValue());
+                viewModel.removeObservationType(id_photo_tag.intValue());
             }
         }
     }
-
-
 
     // Add Save button in the right part of the toolbar
     @Override
@@ -671,11 +680,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 break;
             case R.id.checkBoxMale:
                 Log.d(TAG, "Males checkbox selected!");
-                setMalesFemalesChecked();
+                updateSexViewModel("male");
                 break;
             case R.id.checkBoxFemale:
                 Log.d(TAG, "Females checkbox selected!");
-                setMalesFemalesChecked();
+                updateSexViewModel("female");
                 break;
             case R.id.imageViewDeletePicture1:
                 Log.i(TAG, "Deleting image 1.");
@@ -729,34 +738,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         }
     }
 
-    private void setMalesFemalesChecked() {
-        boolean males = binding.checkBoxMale.isChecked();
-        boolean females = binding.checkBoxFemale.isChecked();
-        Log.d(TAG, "Males checkbox is " + males + ". Females checkbox is " + females);
-        if (males && females) {
-            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
-            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.number_of_males));
-            binding.textInputLayoutSpecimensNo2.setVisibility(View.VISIBLE);
-            binding.textInputLayoutSpecimensNo2.setHint(getString(R.string.number_of_females));
-        }
-        if (males && !females) {
-            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
-            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.number_of_males));
-            binding.textInputLayoutSpecimensNo2.setVisibility(View.GONE);
-            viewModel.setNumberOfSpecimens2(null);
-        }
-        if (!males && females) {
-            binding.textInputLayoutSpecimensNo1.setVisibility(View.GONE);
-            viewModel.setNumberOfSpecimens(null);
-            binding.textInputLayoutSpecimensNo2.setVisibility(View.VISIBLE);
-            binding.textInputLayoutSpecimensNo2.setHint(getString(R.string.number_of_females));
-        }
-        if (!males && !females) {
-            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
-            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.specimens_number_hint));
-            viewModel.setNumberOfSpecimens(null);
-            binding.textInputLayoutSpecimensNo2.setVisibility(View.GONE);
-            viewModel.setNumberOfSpecimens2(null);
+    private void updateSexViewModel(String sex) {
+        if (viewModel.getSex().getValue() == null) {
+            viewModel.setSex(sex);
+        } else {
+            if (viewModel.getSex().getValue().equals(sex)) {
+                viewModel.setSex("");
+            } else {
+                viewModel.setSex(sex);
+            }
         }
     }
 
@@ -929,20 +919,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     /  PART 4: Prepare entry and check if both male and female entries should be created
     */
     private void saveEntry4() {
-        Integer specimensNumber1 = null;
-        if (binding.textInputEditTextSpecimensNo1.getText() != null
-                && !binding.textInputEditTextSpecimensNo1.getText().toString().isEmpty()) {
-            specimensNumber1 = Integer
-                    .valueOf(binding.textInputEditTextSpecimensNo1.getText().toString());
-        }
-
-        Integer specimensNumber2 = null;
-        if (binding.textInputEditTextSpecimensNo2.getText() != null
-                && !binding.textInputEditTextSpecimensNo2.getText().toString().isEmpty()) {
-            specimensNumber2 = Integer
-                    .valueOf(binding.textInputEditTextSpecimensNo2.getText().toString());
-        }
-
         viewModel.setComment(binding.textInputEditTextComment.getText() != null
                 ? binding.textInputEditTextComment.getText().toString() : "");
         viewModel.setStage((binding.textInputEditTextStages.getTag() != null)
@@ -953,39 +929,16 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 ? binding.textInputEditTextHabitat.getText().toString() : "");
         viewModel.setFoundOn(binding.editTextFoundOn.getText() != null
                 ? binding.editTextFoundOn.getText().toString() : "");
-        viewModel.setNumberOfSpecimens(specimensNumber1);
-        if (viewModel.getTaxonSuggestion() == null) {
-            viewModel.setTaxonSuggestion(binding.autoCompleteTextViewSpeciesName.getText().toString());
-        }
 
-        Long second_entry_id = null;
-        if (binding.checkBoxMale.isChecked() && !binding.checkBoxFemale.isChecked()) {
-            Log.d(TAG, "Only male individuals selected.");
-            viewModel.setSex("male");
-            long entry_id = saveEntryToObjectBox();
-            entrySaver(entry_id, second_entry_id);
-        }
-        if (!binding.checkBoxMale.isChecked() && binding.checkBoxFemale.isChecked()) {
-            Log.d(TAG, "Only female individuals selected.");
-            viewModel.setNumberOfSpecimens(specimensNumber2);
-            long entry_id = saveEntryToObjectBox();
-            entrySaver(entry_id, second_entry_id);
-        }
-        if (!binding.checkBoxMale.isChecked() && !binding.checkBoxFemale.isChecked()) {
-            Log.d(TAG, "No sex of individuals selected.");
-            viewModel.setSex("");
-            long entry_id = saveEntryToObjectBox();
-            entrySaver(entry_id, second_entry_id);
-        }
-        if (binding.checkBoxMale.isChecked() && binding.checkBoxFemale.isChecked()) {
-            Log.d(TAG, "Both male and female individuals selected.");
-            viewModel.setSex("male");
-            second_entry_id = saveEntryToObjectBox();
-            viewModel.setSex("female");
-            viewModel.setNumberOfSpecimens(specimensNumber2);
-            long entry_id = saveEntryToObjectBox();
-            entrySaver(entry_id, second_entry_id);
-        }
+        long entry_id = saveEntryToObjectBox();
+
+        // Finish the Activity
+        Intent intent = new Intent();
+        intent.putExtra("IS_NEW_ENTRY", isNewEntry());
+        intent.putExtra("ENTRY_ID", entry_id);
+        setResult(RESULT_OK, intent);
+        finish();
+        Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
     }
 
     private long saveEntryToObjectBox() {
@@ -994,18 +947,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         long entryId = ObjectBoxHelper.setObservation(entry);
         Log.d(TAG, "Entry will be saved under ID " + entryId);
         return entryId;
-    }
-
-    //  Gather all the data into the Entry and wright it into the GreenDao database.
-    private void entrySaver(long entry_id, Long second_entry_id) {
-        // Finish the Activity
-        Intent intent = new Intent();
-        intent.putExtra("IS_NEW_ENTRY", isNewEntry());
-        intent.putExtra("ENTRY_LIST_ID", entry_id);
-        intent.putExtra("SECOND_ENTRY_ID", second_entry_id);
-        setResult(RESULT_OK, intent);
-        finish();
-        Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();
     }
 
     private void getPhotoTag() {
@@ -1456,16 +1397,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 boolean b = file.delete();
                 Log.d(TAG, "Deleting image " + image + " returned: " + b);
             }
-        }
-    }
-
-    private TaxonDb getSelectedTaxon(Long taxonID) {
-        if (taxonID == null) {
-            return null;
-        } else {
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(taxonID);
-            Log.d(TAG, "Selected taxon latin name is: " + taxon.getLatinName() + ". Taxon ID: " + taxon.getId());
-            return taxon;
         }
     }
 
