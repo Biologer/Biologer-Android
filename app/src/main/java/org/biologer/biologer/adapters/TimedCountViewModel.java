@@ -1,8 +1,8 @@
 package org.biologer.biologer.adapters;
 
-
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -15,29 +15,32 @@ import java.util.List;
 
 public class TimedCountViewModel extends ViewModel {
 
+    private static final String TAG = "Biologer.TimedCountVM";
     private final MutableLiveData<Double> temperatureData = new MutableLiveData<>();
     private final MutableLiveData<Integer> cloudinessData = new MutableLiveData<>();
-    private final MutableLiveData<Integer> windSpeedData = new MutableLiveData<>();
-    private final MutableLiveData<String> windDirectionData = new MutableLiveData<>();
-    private final MutableLiveData<Integer> pressureData = new MutableLiveData<>();
-    private final MutableLiveData<Integer> humidityData = new MutableLiveData<>();
-    private final MutableLiveData<String> habitatData = new MutableLiveData<>();
-    private final MutableLiveData<String> commentData = new MutableLiveData<>();
-    private final MutableLiveData<Long> taxonId = new MutableLiveData<>();
-    private final MutableLiveData<Integer> timedCountId = new MutableLiveData<>();
+    private Integer windSpeedData = null;
+    private String windDirectionData = null;
+    private Integer pressureData = null;
+    private Integer humidityData = null;
+    private String habitatData = null;
+    private String commentData = null;
+    private Long taxonId = null;
+    private Integer timedCountId = null;
     private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
-    private final MutableLiveData<Boolean> isRunning = new MutableLiveData<>(false);
-    private final MutableLiveData<String> startTimeString = new MutableLiveData<>();
-    private final MutableLiveData<String> endTimeString = new MutableLiveData<>();
+    private Boolean isRunning = null;
+    private Boolean isModified = null;
+    private String startTimeString = null;
+    private String endTimeString = null;
     private final List<Long> newEntryIds = new ArrayList<>();
     private long startTime = 0L;
     private long pausedTime = 0L;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private Boolean newEntry = false;
 
     private final Runnable ticker = new Runnable() {
         @Override
         public void run() {
-            if (Boolean.TRUE.equals(isRunning.getValue())) {
+            if (Boolean.TRUE.equals(isRunning)) {
                 long now = System.currentTimeMillis();
                 elapsedTime.setValue((now - startTime) + pausedTime);
                 handler.postDelayed(this, 1000); // update every second
@@ -46,6 +49,7 @@ public class TimedCountViewModel extends ViewModel {
     };
 
     public void setTemperatureData(Double data) {
+        setModified(true);
         temperatureData.setValue(data);
     }
 
@@ -53,102 +57,39 @@ public class TimedCountViewModel extends ViewModel {
         return temperatureData;
     }
 
-    public void setCloudinessData(Integer data) {
-        cloudinessData.setValue(data);
-    }
-    public LiveData<Integer> getCloudinessData() {
-        return cloudinessData;
-    }
-
-    public MutableLiveData<Integer> getWindSpeedData() {
-        return windSpeedData;
-    }
-
-    public void setWindSpeedData(Integer data) {
-        windSpeedData.setValue(data);
-    }
-
-    public MutableLiveData<String> getWindDirectionData() {
-        return windDirectionData;
-    }
-
-    public void setWindDirectionData(String data) {
-        windDirectionData.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getPressureData() {
-        return pressureData;
-    }
-
-    public void setPressureData(Integer data) {
-        pressureData.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getHumidityData() {
-        return humidityData;
-    }
-
-    public void setHumidityData(Integer data) {
-        humidityData.setValue(data);
-    }
-
-    public MutableLiveData<String> getHabitatData() {
-        return habitatData;
-    }
-
-    public void setHabitatData(String data) {
-        habitatData.setValue(data);
-    }
-
-    public MutableLiveData<String> getCommentData() {
-        return commentData;
-    }
-
-    public void setCommentData(String data) {
-        commentData.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getTimedCountId() {
-        return timedCountId;
-    }
-
-    public void setTimedCountId(Integer data) {
-        timedCountId.setValue(data);
+    public void setElapsedTime(Long data) {
+        elapsedTime.setValue(data);
     }
 
     public LiveData<Long> getElapsedTime() {
         return elapsedTime;
     }
 
-    public LiveData<Boolean> getIsRunning() {
-        return isRunning;
+    public void setCloudinessData(Integer data) {
+        setModified(true);
+        cloudinessData.setValue(data);
     }
-
-    public MutableLiveData<Long> getTaxonId() {
-        return taxonId;
-    }
-
-    public void setTaxonId(Long data) {
-        taxonId.setValue(data);
+    public LiveData<Integer> getCloudinessData() {
+        return cloudinessData;
     }
 
     public void startTimer() {
-        if (Boolean.TRUE.equals(isRunning.getValue())) return;
+        if (Boolean.TRUE.equals(isRunning)) return;
         startTime = System.currentTimeMillis();
-        isRunning.setValue(true);
+        isRunning = true;
         handler.post(ticker);
     }
 
     public void pauseTimer() {
-        if (!Boolean.TRUE.equals(isRunning.getValue())) return;
+        if (!Boolean.TRUE.equals(isRunning)) return;
         pausedTime = elapsedTime.getValue() != null ? elapsedTime.getValue() : 0L;
-        isRunning.setValue(false);
+        isRunning = false;
         handler.removeCallbacks(ticker);
     }
 
     public void resetTimer() {
         handler.removeCallbacks(ticker);
-        isRunning.setValue(false);
+        isRunning = false;
         elapsedTime.setValue(0L);
         startTime = 0L;
         pausedTime = 0L;
@@ -166,7 +107,9 @@ public class TimedCountViewModel extends ViewModel {
         setTimedCountId(timedCount.getTimedCountId());
         setStartTimeString(timedCount.getStartTime());
         setEndTimeString(timedCount.getEndTime());
-        isRunning.setValue(false);
+        setIsRunning(false);
+        setNewEntry(false);
+        setModified(false);
     }
 
     @Override
@@ -175,27 +118,135 @@ public class TimedCountViewModel extends ViewModel {
         handler.removeCallbacks(ticker);
     }
 
-    public MutableLiveData<String> getStartTimeString() {
-        return startTimeString;
-    }
-
-    public void setStartTimeString(String data) {
-        startTimeString.setValue(data);
-    }
-
-    public MutableLiveData<String> getEndTimeString() {
-        return endTimeString;
-    }
-
-    public void setEndTimeString(String data) {
-        endTimeString.setValue(data);
-    }
-
     public List<Long> getNewEntryIds() {
         return newEntryIds;
     }
 
     public void addNewEntryId(long newId) {
+        setModified(true);
         newEntryIds.add(newId);
+    }
+
+    public Boolean getNewEntry() {
+        return newEntry;
+    }
+
+    public boolean isNewEntry() {
+        return Boolean.TRUE.equals(getNewEntry());
+    }
+
+    public void setNewEntry(Boolean newEntry) {
+        this.newEntry = newEntry;
+    }
+
+    public Boolean getIsRunning() {
+        return isRunning;
+    }
+
+    public boolean isRunning() {
+        return Boolean.TRUE.equals(getIsRunning());
+    }
+
+    public void setIsRunning(Boolean isRunning) {
+        this.isRunning = isRunning;
+    }
+
+    public Integer getWindSpeedData() {
+        return windSpeedData;
+    }
+
+    public void setWindSpeedData(Integer windSpeedData) {
+        setModified(true);
+        this.windSpeedData = windSpeedData;
+    }
+
+    public String getWindDirectionData() {
+        return windDirectionData;
+    }
+
+    public void setWindDirectionData(String windDirectionData) {
+        setModified(true);
+        this.windDirectionData = windDirectionData;
+    }
+
+    public Integer getPressureData() {
+        return pressureData;
+    }
+
+    public void setPressureData(Integer pressureData) {
+        setModified(true);
+        this.pressureData = pressureData;
+    }
+
+    public Integer getHumidityData() {
+        return humidityData;
+    }
+
+    public void setHumidityData(Integer humidityData) {
+        setModified(true);
+        this.humidityData = humidityData;
+    }
+
+    public String getHabitatData() {
+        return habitatData;
+    }
+
+    public void setHabitatData(String habitatData) {
+        setModified(true);
+        this.habitatData = habitatData;
+    }
+
+    public String getCommentData() {
+        return commentData;
+    }
+
+    public void setCommentData(String commentData) {
+        setModified(true);
+        this.commentData = commentData;
+    }
+
+    public Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId(Long taxonId) {
+        setModified(true);
+        this.taxonId = taxonId;
+    }
+
+    public Integer getTimedCountId() {
+        return timedCountId;
+    }
+
+    public void setTimedCountId(Integer timedCountId) {
+        this.timedCountId = timedCountId;
+    }
+
+    public String getStartTimeString() {
+        return startTimeString;
+    }
+
+    public void setStartTimeString(String startTimeString) {
+        this.startTimeString = startTimeString;
+    }
+
+    public String getEndTimeString() {
+        return endTimeString;
+    }
+
+    public void setEndTimeString(String endTimeString) {
+        this.endTimeString = endTimeString;
+    }
+
+    public Boolean getModified() {
+        return isModified;
+    }
+
+    public void setModified(Boolean modified) {
+        isModified = modified;
+    }
+
+    public Boolean isModified() {
+        return Boolean.TRUE.equals(getModified());
     }
 }

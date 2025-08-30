@@ -25,7 +25,7 @@ import java.util.Set;
 public class ObservationViewModel extends ViewModel {
     private Long entryId = null;
     private Long taxonId = null;
-    private final MutableLiveData<Integer> timedCountId = new MutableLiveData<>();
+    private Integer timedCountId = null;
     private String taxonSuggestion = null;
     private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
     private String comment = null;
@@ -94,7 +94,7 @@ public class ObservationViewModel extends ViewModel {
         if (calendar1 != null) {
             return new EntryDb(entryId,
                     taxonId,
-                    null,
+                    getTimedCountId(),
                     getTaxonSuggestion(),
                     DateHelper.getYearFromCalendar(calendar1),
                     DateHelper.getMonthFromCalendar(calendar1),
@@ -189,14 +189,6 @@ public class ObservationViewModel extends ViewModel {
 
     public void setCoordinates(LatLng data) {
         coordinates.setValue(data);
-    }
-
-    public MutableLiveData<Integer> getTimedCountId() {
-        return timedCountId;
-    }
-
-    public void setTimedCountId(Integer data) {
-        timedCountId.setValue(data);
     }
 
     public MutableLiveData<Calendar> getCalendar() {
@@ -513,5 +505,13 @@ public class ObservationViewModel extends ViewModel {
 
     public void setNumberOfSpecimens(Integer numberOfSpecimens) {
         this.numberOfSpecimens = numberOfSpecimens;
+    }
+
+    public Integer getTimedCountId() {
+        return timedCountId;
+    }
+
+    public void setTimedCountId(Integer timedCountId) {
+        this.timedCountId = timedCountId;
     }
 }

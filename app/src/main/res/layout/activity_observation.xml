@@ -42,6 +42,7 @@
                     android:verticalScrollbarPosition="right">
 
                     <LinearLayout
+                        android:id="@+id/linearLayoutLocation"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
@@ -129,7 +130,7 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/linearLayoutDataAndTime"
+                        android:id="@+id/linearLayoutDateAndTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"

@@ -26,7 +26,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -41,17 +40,14 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentContainerView;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -67,6 +63,7 @@ import org.biologer.biologer.adapters.SpeciesCount;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.adapters.TimedCountAdapter;
 import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.databinding.ActivityTimedCountBinding;
 import org.biologer.biologer.network.RetrofitWeatherClient;
 import org.biologer.biologer.network.json.WeatherResponse;
 import org.biologer.biologer.services.DateHelper;
@@ -98,34 +95,27 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private static final String TAG = "Biologer.TimedCount";
     private static final int REQUEST_LOCATION_PERMISSION = 1001;
-    TextView elapsed_time;
-    LinearLayout timerLayout, additionalDataLayout;
-    ImageView pauseTimerImage;
-    AutoCompleteTextView autoCompleteTextView_speciesName;
     private TaxonSearchHelper taxonSearchHelper;
     TaxonDb selectedTaxon = null;
     boolean taxonSelectedFromTheList = false;
-    RecyclerView recyclerView;
     private FusedLocationProviderClient fusedLocationClient;
     private TimedCountAdapter timedCountAdapter;
     private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
     int count_duration_minutes = 0;
-    Spinner spinnerTaxaGroup;
     long selectedTaxaGroupID = 0;
     boolean save_enabled = false;
     private boolean is_fragment_visible = false;
-    private TimedCountViewModel timedCountViewModel;
+    private TimedCountViewModel viewModel;
+    private ActivityTimedCountBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timed_count);
+        binding = ActivityTimedCountBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        elapsed_time = findViewById(R.id.time_elapsed);
-        timerLayout = findViewById(R.id.timed_count_timer);
-        additionalDataLayout = findViewById(R.id.timed_count_additional_data);
-        additionalDataLayout.setOnClickListener(v -> displayAdditionalDetailsFragment());
-        pauseTimerImage = findViewById(R.id.pause_timer_image);
+        binding.linearLayoutAdditionalData.setOnClickListener(v -> displayAdditionalDetailsFragment());
 
         setupToolbar();
         setupBackPressedHandler();
@@ -165,17 +155,16 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         TaxaListAdapter adapter = new TaxaListAdapter(this,
                 R.layout.taxa_dropdown_list,
                 new ArrayList<>());
-        autoCompleteTextView_speciesName = findViewById(R.id.textview_list_of_taxa_time_count);
-        autoCompleteTextView_speciesName.setAdapter(adapter);
-        autoCompleteTextView_speciesName.setThreshold(2);
+        binding.autoCompleteTextViewSpecies.setAdapter(adapter);
+        binding.autoCompleteTextViewSpecies.setThreshold(2);
         taxonSearchHelper = new TaxonSearchHelper(this);
 
-        autoCompleteTextView_speciesName.setOnItemClickListener((parent,
+        binding.autoCompleteTextViewSpecies.setOnItemClickListener((parent,
                                                                  view,
                                                                  position,
                                                                  id) -> {
             TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
-            autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
+            binding.autoCompleteTextViewSpecies.setText(taxonDb.getLatinName());
             selectedTaxon = taxonDb;
             taxonSelectedFromTheList = true;
             if (timedCountAdapter.hasSpeciesWithID(selectedTaxon.getId())) {
@@ -186,14 +175,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 speciesCounts.add(new_species);
                 timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
             }
-            autoCompleteTextView_speciesName.setText("");
+            binding.autoCompleteTextViewSpecies.setText("");
 
             addNewObjectBoxEntry(selectedTaxon);
 
         });
 
         // When user type taxon name...
-        autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
+        binding.autoCompleteTextViewSpecies.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler(Looper.getMainLooper());
             Runnable runnable;
             String entered_name = null;
@@ -235,7 +224,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                                 new TaxaListAdapter(ActivityTimedCount.this,
                                         R.layout.taxa_dropdown_list,
                                         allTaxaLists);
-                        autoCompleteTextView_speciesName.setAdapter(adapter1);
+                        binding.autoCompleteTextViewSpecies.setAdapter(adapter1);
                         adapter1.notifyDataSetChanged();
                     };
                     handler.postDelayed(runnable, 300);
@@ -244,12 +233,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         });
 
         // Activate the field for species name and show the keyboard.
-        autoCompleteTextView_speciesName.requestFocus();
+        binding.autoCompleteTextViewSpecies.requestFocus();
     }
 
     private void setupRecyclerView() {
-        recyclerView = findViewById(R.id.recycled_view_timed_counts);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(this));
         timedCountAdapter = new TimedCountAdapter(speciesCounts);
         timedCountAdapter.setOnItemClickListener(new TimedCountAdapter.OnItemClickListener() {
             @Override
@@ -271,7 +259,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 Long species_id = species.getSpeciesID();
                 if (species_id != null) {
                     Log.d(TAG, "Species with ID " + species_id + " is clicked.");
-                    timedCountViewModel.setTaxonId(species_id);
+                    viewModel.setTaxonId(species_id);
                     displayCountEntriesFragment();
                 } else {
                     Log.d(TAG, "Species without ID is clicked!");
@@ -283,31 +271,31 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             }
         });
 
-        recyclerView.setAdapter(timedCountAdapter);
+        binding.recyclerViewTimedCounts.setAdapter(timedCountAdapter);
     }
 
     private void addNewViewModel() {
-        timedCountViewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        timedCountViewModel.setTimedCountId(ObjectBoxHelper.getUniqueTimedCountID());
+        viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        viewModel.setTimedCountId(ObjectBoxHelper.getUniqueTimedCountID());
+        viewModel.setNewEntry(true); // Used to inform if this is a new entry
         addWeatherObserverToViewModel();
 
-        timedCountViewModel.getElapsedTime().observe(this, elapsed -> {
-            elapsed_time.setText(formatTime(elapsed));
+        viewModel.getElapsedTime().observe(this, elapsed -> {
+            binding.textViewElapsedTime.setText(formatTime(elapsed));
 
             if (count_duration_minutes > 0 && elapsed >= count_duration_minutes * 60_000L) {
-                timedCountViewModel.pauseTimer();
+                viewModel.pauseTimer();
                 Log.d(TAG, "Countdown finished!");
 
                 Intent stopIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
                 stopIntent.setAction(LocationTrackingService.ACTION_STOP);
                 startService(stopIntent);
 
-                timedCountViewModel.setEndTimeString(DateHelper.getCurrentTime());
+                viewModel.setEndTimeString(DateHelper.getCurrentTime());
 
-                timerLayout.setEnabled(false);
-                timerLayout.setVisibility(View.GONE);
-                TextView complete_message = findViewById(R.id.timed_count_on_complete_text);
-                complete_message.setVisibility(View.VISIBLE);
+                binding.linearLayoutTimer.setEnabled(false);
+                binding.linearLayoutTimer.setVisibility(View.GONE);
+                binding.textViewOnComplete.setVisibility(View.VISIBLE);
 
                 save_enabled = true;
                 invalidateOptionsMenu();
@@ -316,32 +304,32 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void loadExistingViewModel() {
-        timedCountViewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        viewModel.setNewEntry(false); // Used to inform if this is a new entry
         Integer id = getTimedCountIdFromBundle();
         if (id != null) {
-            timedCountViewModel.setTimedCountId(id);
+            viewModel.setTimedCountId(id);
             TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
-            timedCountViewModel.getFromObjectBox(timedCount);
+            viewModel.getFromObjectBox(timedCount);
 
             addWeatherObserverToViewModel();
 
-            timerLayout.setEnabled(false);
-            timerLayout.setVisibility(View.GONE);
+            binding.linearLayoutTimer.setEnabled(false);
+            binding.linearLayoutTimer.setVisibility(View.GONE);
+            binding.linearLayoutAdditionalData.setPadding(16, 24, 16, 8);
             save_enabled = true;
             invalidateOptionsMenu();
         }
     }
 
     private void addWeatherObserverToViewModel() {
-        timedCountViewModel.getTemperatureData().observe(this, newTemperature -> {
+        viewModel.getTemperatureData().observe(this, newTemperature -> {
             Log.d(TAG, "Temperature updated: " + newTemperature);
-            TextView textViewTemperature = findViewById(R.id.timed_count_text_temperature);
-            textViewTemperature.setText(String.valueOf(newTemperature));
+            binding.textViewTemperature.setText(String.valueOf(newTemperature));
         });
-        timedCountViewModel.getCloudinessData().observe(this, newCloudiness -> {
+        viewModel.getCloudinessData().observe(this, newCloudiness -> {
             Log.d(TAG, "Cloudiness updated: " + newCloudiness);
-            TextView textViewCloudiness = findViewById(R.id.timed_count_text_cloudiness);
-            textViewCloudiness.setText(String.valueOf(newCloudiness));
+            binding.textViewCloudiness.setText(String.valueOf(newCloudiness));
         });
     }
 
@@ -350,15 +338,24 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                int no_fragments = getSupportFragmentManager().getBackStackEntryCount();
-                Log.d(TAG, "There are " + no_fragments + " active Fragments.");
-                if (no_fragments == 0) {
-                    showExitConfirmationDialog();
-                } else if (no_fragments == 1) {
+                int fragments_no = getSupportFragmentManager().getBackStackEntryCount();
+                Log.d(TAG, "There are " + fragments_no + " active Fragments.");
+                if (fragments_no == 0) {
+                    Log.d(TAG, "new entry: " + viewModel.isNewEntry() + "; modified; " + viewModel.isModified());
+                    if (viewModel.isNewEntry()) {
+                        showExitConfirmationDialog();
+                    } else {
+                        if (viewModel.isModified()) {
+                            showSaveOnExitDialog();
+                        } else {
+                            finish();
+                        }
+                    }
+                } else if (fragments_no == 1) {
                     // Fragment is visible. Hide it and show the main layout.
                     getSupportFragmentManager().popBackStack();
-                    findViewById(R.id.timed_count_fragment).setVisibility(View.GONE);
-                    findViewById(R.id.timed_count_main_layout).setVisibility(View.VISIBLE);
+                    binding.fragmentContainerViewTimedCount.setVisibility(View.GONE);
+                    binding.linearLayoutMain.setVisibility(View.VISIBLE);
                     // Enable save button
                     is_fragment_visible = false;
                     invalidateOptionsMenu();
@@ -372,8 +369,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     // Add a toolbar to the Activity
     private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setTitle(R.string.timed_count_title);
@@ -406,7 +402,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
                 EntryDb entryDb = new EntryDb(0,
                         taxon.getId(),
-                        timedCountViewModel.getTimedCountId().getValue(),
+                        viewModel.getTimedCountId(),
                         taxon.getLatinName(),
                         DateHelper.getCurrentYear(),
                         DateHelper.getCurrentMonth(),
@@ -434,7 +430,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                         "",
                         observed_id);
                 long newEntryId = ObjectBoxHelper.setObservation(entryDb);
-                timedCountViewModel.addNewEntryId(newEntryId);
+                viewModel.addNewEntryId(newEntryId);
             }
 
             @Override
@@ -450,16 +446,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         is_fragment_visible = true;
         invalidateOptionsMenu();
 
-        LinearLayout linearLayoutMain = findViewById(R.id.timed_count_main_layout);
-        linearLayoutMain.setVisibility(View.GONE);
-        FragmentContainerView fragmentContainerView = findViewById(R.id.timed_count_fragment);
-        fragmentContainerView.setVisibility(View.VISIBLE);
+        binding.linearLayoutMain.setVisibility(View.GONE);
+        binding.fragmentContainerViewTimedCount.setVisibility(View.VISIBLE);
 
         FragmentTimedCountAdditionalData additionalDataFragment = new FragmentTimedCountAdditionalData();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack("TIMED_COUNT_ADDITIONAL_DATA");
-        fragmentTransaction.replace(R.id.timed_count_fragment, additionalDataFragment);
+        fragmentTransaction.replace(R.id.fragmentContainerViewTimedCount, additionalDataFragment);
         fragmentTransaction.commit();
     }
 
@@ -469,16 +463,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         is_fragment_visible = true;
         invalidateOptionsMenu();
 
-        LinearLayout linearLayoutMain = findViewById(R.id.timed_count_main_layout);
-        linearLayoutMain.setVisibility(View.GONE);
-        FragmentContainerView fragmentContainerView = findViewById(R.id.timed_count_fragment);
-        fragmentContainerView.setVisibility(View.VISIBLE);
+        binding.linearLayoutMain.setVisibility(View.GONE);
+        binding.fragmentContainerViewTimedCount.setVisibility(View.VISIBLE);
 
         FragmentTimedCountEntries timedCountEntries = new FragmentTimedCountEntries();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.addToBackStack("TIMED_COUNT_ENTRIES");
-        fragmentTransaction.replace(R.id.timed_count_fragment, timedCountEntries);
+        fragmentTransaction.replace(R.id.fragmentContainerViewTimedCount, timedCountEntries);
         fragmentTransaction.commit();
     }
 
@@ -488,10 +480,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 .setMessage(R.string.confirmation_exit_time_count)
                 .setPositiveButton(R.string.yes, (dialog, which) -> {
                     // Get the list of new observations and delete them
-                    List<Long> new_entries = timedCountViewModel.getNewEntryIds();
-                    for (Long entryId : new_entries) {
-                        ObjectBoxHelper.removeObservationById(entryId);
-                    }
+                    removeNewEntriesFromObjectBox();
                     // Finish the activity
                     Intent serviceIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
                     stopService(serviceIntent);
@@ -499,6 +488,29 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 })
                 .setNegativeButton(R.string.no, null)
                 .show();
+    }
+
+    private void showSaveOnExitDialog() {
+        new AlertDialog.Builder(ActivityTimedCount.this)
+                .setTitle(R.string.exit_time_count)
+                .setMessage(R.string.save_on_exit_time_count)
+                .setPositiveButton(R.string.save, (dialog, which) -> saveTimedCount())
+                .setNegativeButton(R.string.ignore, (dialog, which) -> {
+                    // Get the list of new observations and delete them
+                    removeNewEntriesFromObjectBox();
+                    // Finish the activity
+                    Intent serviceIntent = new Intent(ActivityTimedCount.this, LocationTrackingService.class);
+                    stopService(serviceIntent);
+                    finish();
+                })
+                .show();
+    }
+
+    private void removeNewEntriesFromObjectBox() {
+        List<Long> new_entries = viewModel.getNewEntryIds();
+        for (Long entryId : new_entries) {
+            ObjectBoxHelper.removeObservationById(entryId);
+        }
     }
 
     @Override
@@ -560,18 +572,18 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void saveTimedCount() {
         TimedCountDb timedCountDb = new TimedCountDb(getObjectBoxID(),
-                timedCountViewModel.getTimedCountId().getValue(),
-                timedCountViewModel.getStartTimeString().getValue(),
-                timedCountViewModel.getEndTimeString().getValue(),
+                viewModel.getTimedCountId(),
+                viewModel.getStartTimeString(),
+                viewModel.getEndTimeString(),
                 count_duration_minutes,
-                timedCountViewModel.getCloudinessData().getValue(),
-                timedCountViewModel.getPressureData().getValue(),
-                timedCountViewModel.getHumidityData().getValue(),
-                timedCountViewModel.getTemperatureData().getValue(),
-                timedCountViewModel.getWindDirectionData().getValue(),
-                timedCountViewModel.getWindSpeedData().getValue(),
-                timedCountViewModel.getHabitatData().getValue(),
-                timedCountViewModel.getCommentData().getValue(),
+                viewModel.getCloudinessData().getValue(),
+                viewModel.getPressureData(),
+                viewModel.getHumidityData(),
+                viewModel.getTemperatureData().getValue(),
+                viewModel.getWindDirectionData(),
+                viewModel.getWindSpeedData(),
+                viewModel.getHabitatData(),
+                viewModel.getCommentData(),
                 String.valueOf(selectedTaxaGroupID),
                 DateHelper.getCurrentDay(),
                 DateHelper.getCurrentMonth(),
@@ -582,8 +594,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         Intent intent = new Intent();
         intent.putExtra("IS_NEW_ENTRY", isNewEntry());
-        intent.putExtra("TIMED_COUNT_ID", timedCountViewModel.getTimedCountId().getValue());
-        intent.putExtra("TIMED_COUNT_START_TIME", timedCountViewModel.getStartTimeString().getValue());
+        intent.putExtra("TIMED_COUNT_ID", viewModel.getTimedCountId());
+        intent.putExtra("TIMED_COUNT_START_TIME", viewModel.getStartTimeString());
         intent.putExtra("TIMED_COUNT_DAY", DateHelper.getCurrentDay());
         intent.putExtra("TIMED_COUNT_MONTH", DateHelper.getCurrentMonth());
         intent.putExtra("TIMED_COUNT_YEAR", DateHelper.getCurrentYear());
@@ -597,7 +609,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         if (Boolean.TRUE.equals(isNewEntry())) {
             return 0;
         } else {
-            Integer id = timedCountViewModel.getTimedCountId().getValue();
+            Integer id = viewModel.getTimedCountId();
             if (id != null) {
                 return ObjectBoxHelper.getIdFromTimeCountId(id);
             } else {
@@ -658,6 +670,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         textViewGroups.setPadding(24, 24, 24, 24);
         layout.addView(textViewGroups);
 
+        Spinner spinnerTaxaGroup;
         spinnerTaxaGroup = new Spinner(this);
         List<String> options = new ArrayList<>();
         options.add(getString(R.string.butterflies));
@@ -717,23 +730,24 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                         public void onResponse(@NonNull Call<WeatherResponse> call, @NonNull Response<WeatherResponse> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 Log.d(TAG, "Weather response successful");
-                                timedCountViewModel.setTemperatureData(response.body().getMain().getTemp());
-                                timedCountViewModel.setCloudinessData(response.body().getClouds().getCloudiness());
-                                timedCountViewModel.setPressureData(response.body().getMain().getPressure());
-                                timedCountViewModel.setHumidityData(response.body().getMain().getHumidity());
-                                timedCountViewModel.setWindSpeedData(
+                                viewModel.setTemperatureData(response.body().getMain().getTemp());
+                                viewModel.setCloudinessData(response.body().getClouds().getCloudiness());
+                                viewModel.setPressureData(response.body().getMain().getPressure());
+                                viewModel.setHumidityData(response.body().getMain().getHumidity());
+                                viewModel.setWindSpeedData(
                                         WeatherUtils.getBeaufortScale(response.body().getWind().getSpeed()));
-                                timedCountViewModel.setWindDirectionData(
+                                viewModel.setWindDirectionData(
                                         WeatherUtils.getWindDirection(response.body().getWind().getDeg()));
 
-                                Log.d(TAG,"Temperature: " + timedCountViewModel.getTemperatureData().getValue() +
-                                        ", Clouds: " + timedCountViewModel.getCloudinessData().getValue() +
-                                        ", Pressure: " + timedCountViewModel.getPressureData().getValue() +
-                                        ", Humidity: " + timedCountViewModel.getHumidityData().getValue() +
-                                        ", Wind speed: " + timedCountViewModel.getWindSpeedData().getValue() +
-                                        ", Wind direction: " + timedCountViewModel.getWindDirectionData().getValue());
+                                Log.d(TAG,"Temperature: " + viewModel.getTemperatureData().getValue() +
+                                        ", Clouds: " + viewModel.getCloudinessData().getValue() +
+                                        ", Pressure: " + viewModel.getPressureData() +
+                                        ", Humidity: " + viewModel.getHumidityData() +
+                                        ", Wind speed: " + viewModel.getWindSpeedData() +
+                                        ", Wind direction: " + viewModel.getWindDirectionData());
                             } else {
-                                Log.d(TAG, "Weather response not successful: " + response.code()  + "; Message: " + response.message());
+                                Log.d(TAG, "Weather response not successful: "
+                                        + response.code()  + "; Message: " + response.message());
                             }
                         }
 
@@ -834,21 +848,21 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         ContextCompat.startForegroundService(this, serviceIntent);
 
         // Start the timer in ViewModel
-        timedCountViewModel.resetTimer();
-        timedCountViewModel.startTimer();
+        viewModel.resetTimer();
+        viewModel.startTimer();
 
-        timerLayout.setOnClickListener(view -> {
-            if (Boolean.TRUE.equals(timedCountViewModel.getIsRunning().getValue())) {
-                timedCountViewModel.pauseTimer();
-                pauseTimerImage.setImageResource(R.drawable.ic_play);
-                elapsed_time.setText(R.string.paused);
+        binding.linearLayoutTimer.setOnClickListener(view -> {
+            if (viewModel.isRunning()) {
+                viewModel.pauseTimer();
+                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_play);
+                binding.textViewElapsedTime.setText(R.string.paused);
 
                 Intent pauseIntent = new Intent(this, LocationTrackingService.class);
                 pauseIntent.setAction(LocationTrackingService.ACTION_PAUSE);
                 startService(pauseIntent);
             } else {
-                timedCountViewModel.startTimer(); // resumes from pausedTime
-                pauseTimerImage.setImageResource(R.drawable.ic_pause);
+                viewModel.startTimer(); // resumes from pausedTime
+                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_pause);
 
                 Intent resumeIntent = new Intent(this, LocationTrackingService.class);
                 resumeIntent.setAction(LocationTrackingService.ACTION_RESUME);
@@ -856,7 +870,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             }
         });
 
-        timedCountViewModel.setStartTimeString(DateHelper.getCurrentTime());
+        viewModel.setStartTimeString(DateHelper.getCurrentTime());
     }
 
 

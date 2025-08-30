@@ -121,10 +121,10 @@ public class FragmentTimedCountEntries extends Fragment {
         List<LandingFragmentItems> items = new ArrayList<>();
 
         // Get the observation data for selected species
-        if (timedCountViewModel.getTaxonId().getValue() != null &&
-                timedCountViewModel.getTimedCountId().getValue() != null) {
-            long taxon_id = timedCountViewModel.getTaxonId().getValue();
-            int timed_count_id = timedCountViewModel.getTimedCountId().getValue();
+        if (timedCountViewModel.getTaxonId() != null &&
+                timedCountViewModel.getTimedCountId() != null) {
+            long taxon_id = timedCountViewModel.getTaxonId();
+            int timed_count_id = timedCountViewModel.getTimedCountId();
             Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
             Query<EntryDb> query = entriesBox
                     .query(EntryDb_.timedCoundId.equal(timed_count_id)
@@ -154,7 +154,7 @@ public class FragmentTimedCountEntries extends Fragment {
                     Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
                     long old_data_id = 0;
                     if (result.getData() != null) {
-                        old_data_id = result.getData().getLongExtra("ENTRY_LIST_ID", 0);
+                        old_data_id = result.getData().getLongExtra("ENTRY_ID", 0);
                     }
                     FragmentTimedCountEntries.this.updateEntry(old_data_id);
                 }

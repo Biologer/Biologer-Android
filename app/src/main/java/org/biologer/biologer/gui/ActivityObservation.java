@@ -40,7 +40,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationListenerCompat;
@@ -105,7 +104,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
         setupToolbar();
         setupLocationListenerAndManager();
-        setupView(); // Get on click listeners and watchers
 
         if (isNewEntry()) {
             Log.i(TAG, "Starting new entry.");
@@ -115,21 +113,25 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         } else {
             Log.d(TAG, "Opening existing entry.");
             loadExistingViewModel();
-            fillExistingEntry();
+            fillExistingEntry(); // Update the UI from View Model
+            setupEntryAsTimedCount(); // Just hide unnecessary stuff from UI.
         }
 
+        setupView(); // Get on click listeners and watchers
         setViewModelObservers(); // Start getting the data from the ViewModel and update UI
         registerBroadcastReceiver(); // Broadcaster used for receiving resized images
         fillObservationTypes(); // Populate Chip programmatically from the database
+        setupOnBackPressed();
+    }
 
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Log.i(TAG, "Back button is pressed!");
-                backPressed();
-            }
-        });
-
+    private void setupEntryAsTimedCount() {
+        if (viewModel.getTimedCountId() != null) {
+            binding.textInputLayoutSpecimensNo.setVisibility(View.GONE);
+            binding.linearLayoutDateAndTime.setVisibility(View.GONE);
+            binding.materialCheckBoxDead.setVisibility(View.GONE);
+            binding.textInputLayoutStages.setVisibility(View.GONE);
+            binding.linearLayoutLocation.setVisibility(View.GONE);
+        }
     }
 
     private void addObservedTag() {
@@ -158,12 +160,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         binding.imageViewPhotoFromGallery.setOnClickListener(this);
         // Map icon
         binding.imageViewMap.setOnClickListener(this);
-        // Show advanced options for data entry if selected in preferences
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!preferences.getBoolean("advanced_interface", false)) {
-            binding.linearLayoutDataAndTime.setVisibility(View.GONE);
-        } else {
-            binding.linearLayoutDataAndTime.setVisibility(View.VISIBLE);
+        // Show advanced options for data entry if selected in preferences.
+        // But ignore this option for Time Counts Entry.
+        if (viewModel.getTimedCountId() == null) {
+            if (!preferences.getBoolean("advanced_interface", false)) {
+                binding.linearLayoutDateAndTime.setVisibility(View.GONE);
+            } else {
+                binding.linearLayoutDateAndTime.setVisibility(View.VISIBLE);
+            }
         }
         // Fill in the drop down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this, R.layout.taxa_dropdown_list, new ArrayList<>());
@@ -420,8 +425,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private void setupToolbar() {
         // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setTitle(R.string.entry_title);
@@ -529,6 +533,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void fillExistingEntry() {
+        viewModel.setSaveEnabled(true);
+
         // Get the name of the taxon if there is one (when opening existing entry)
         if (viewModel.getTaxonSuggestion() != null) {
             binding.autoCompleteTextViewSpeciesName.setText(viewModel.getTaxonSuggestion());
@@ -641,7 +647,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            backPressed();
+            getOnBackPressedDispatcher().onBackPressed();
         }
         if (id == R.id.action_save_entry) {
             saveEntry1();
@@ -649,9 +655,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         return true;
     }
 
-    private void backPressed() {
-        deleteUnsavedImages();
-        finish();
+    private void setupOnBackPressed() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Log.i(TAG, "Back button is pressed!");
+                deleteUnsavedImages();
+                finish();
+            }
+        });
     }
 
     @Override
@@ -856,8 +868,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                                 builder1.setTitle(R.string.location);
 
                                 View view = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
-                                TextInputEditText input = view.findViewById(R.id.edit_text_input);
-
+                                TextInputEditText input = view.findViewById(R.id.textInputEditTextInput);
                                 input.setText(location_name_from_preferences);
                                 input.setInputType(InputType.TYPE_CLASS_TEXT);
 

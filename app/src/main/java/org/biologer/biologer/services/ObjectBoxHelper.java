@@ -17,7 +17,6 @@ import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.sql.TimedCountDb_;
 import org.biologer.biologer.sql.UserDb;
-import org.biologer.biologer.sql.UserDb_;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -9,18 +9,19 @@
 
     <include
         layout="@layout/toolbar_main"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/timed_count_fragment"
+        android:id="@+id/fragmentContainerViewTimedCount"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:visibility="gone" />
 
     <LinearLayout
-        android:id="@+id/timed_count_main_layout"
+        android:id="@+id/linearLayoutMain"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -29,7 +30,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:id="@+id/timed_count_timer"
+            android:id="@+id/linearLayoutTimer"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="16dp">
@@ -51,7 +52,7 @@
                 android:text="@string/duration" />
 
             <TextView
-                android:id="@+id/time_elapsed"
+                android:id="@+id/textViewElapsedTime"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:textSize="20sp"
@@ -68,7 +69,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/pause_timer_image"
+                android:id="@+id/imageViewPauseTimer"
                 android:paddingStart="16dp"
                 android:paddingEnd="0dp"
                 android:layout_gravity="center_vertical"
@@ -80,7 +81,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_on_complete_text"
+            android:id="@+id/textViewOnComplete"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="16dp"
@@ -93,7 +94,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_additional_data"
+            android:id="@+id/linearLayoutAdditionalData"
             android:paddingStart="16dp"
             android:paddingEnd="24dp"
             android:layout_gravity="center_vertical"
@@ -107,7 +108,7 @@
                 android:contentDescription="@string/clock_icon"
                 android:src="@drawable/ic_temperature"/>
             <TextView
-                android:id="@+id/timed_count_text_temperature"
+                android:id="@+id/textViewTemperature"
                 android:layout_gravity="center_vertical"
                 android:textSize="16sp"
                 android:layout_height="wrap_content"
@@ -130,7 +131,7 @@
                 android:contentDescription="@string/clock_icon"
                 android:src="@drawable/ic_cloud"/>
             <TextView
-                android:id="@+id/timed_count_text_cloudiness"
+                android:id="@+id/textViewCloudiness"
                 android:layout_gravity="center_vertical"
                 android:textSize="16sp"
                 android:layout_height="wrap_content"
@@ -163,7 +164,7 @@
             app:boxBackgroundColor="@android:color/transparent">
 
             <AutoCompleteTextView
-                android:id="@+id/textview_list_of_taxa_time_count"
+                android:id="@+id/autoCompleteTextViewSpecies"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/taxon_name_hint"
@@ -175,7 +176,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycled_view_timed_counts"
+            android:id="@+id/recyclerViewTimedCounts"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </androidx.recyclerview.widget.RecyclerView>

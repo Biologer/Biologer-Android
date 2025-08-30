@@ -543,5 +543,7 @@
     <string name="fill_additional_data">Fill additional data</string>
     <string name="can_not_edit_species_with_custom_names">Can not edit species with custom names! Try to use species from the list.</string>
     <string name="at_time">at</string>
+    <string name="save_on_exit_time_count">There are unsaved changes in your timed count. Would you like to save corrections to the time count or ignore them?</string>
+    <string name="save">Save</string>
 
 </resources>

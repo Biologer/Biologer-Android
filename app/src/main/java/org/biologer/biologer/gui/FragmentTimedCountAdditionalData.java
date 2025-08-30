@@ -17,7 +17,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.TimedCountViewModel;
 
 public class FragmentTimedCountAdditionalData extends Fragment {
-    TimedCountViewModel timedCountViewModel;
+    TimedCountViewModel viewModel;
     private static final String TAG = "Biologer.TimedCountFr";
 
     @Override
@@ -26,7 +26,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         View view = inflater.inflate(R.layout.fragment_timed_count_additional_data, container, false);
 
         EditText editTextTemperature = view.findViewById(R.id.timed_count_edit_text_temperature);
-        editTextTemperature.setText(String.valueOf(timedCountViewModel.getTemperatureData().getValue()));
+        editTextTemperature.setText(String.valueOf(viewModel.getTemperatureData().getValue()));
         editTextTemperature.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
@@ -34,12 +34,12 @@ public class FragmentTimedCountAdditionalData extends Fragment {
                 if (!new_value.isEmpty()) {
                     try {
                         Double temperature = Double.valueOf(new_value);
-                        timedCountViewModel.setTemperatureData(temperature);
+                        viewModel.setTemperatureData(temperature);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Invalid number format: " + new_value);
                     }
                 } else {
-                    timedCountViewModel.setTemperatureData(null);
+                    viewModel.setTemperatureData(null);
                 }
             }
 
@@ -53,7 +53,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextCloudiness = view.findViewById(R.id.timed_count_edit_text_cloudiness);
-        Integer cloudiness = timedCountViewModel.getCloudinessData().getValue();
+        Integer cloudiness = viewModel.getCloudinessData().getValue();
         if (cloudiness != null) {
             editTextCloudiness.setText(String.valueOf(cloudiness));
         }
@@ -64,12 +64,12 @@ public class FragmentTimedCountAdditionalData extends Fragment {
                 if (!new_value.isEmpty()) {
                     try {
                         Integer cloudiness = Integer.valueOf(new_value);
-                        timedCountViewModel.setCloudinessData(cloudiness);
+                        viewModel.setCloudinessData(cloudiness);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Invalid number format: " + new_value);
                     }
                 } else {
-                    timedCountViewModel.setCloudinessData(null);
+                    viewModel.setCloudinessData(null);
                 }
             }
 
@@ -83,7 +83,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextWindSpeed = view.findViewById(R.id.timed_count_edit_text_wind_speed);
-        Integer wind_speed = timedCountViewModel.getWindSpeedData().getValue();
+        Integer wind_speed = viewModel.getWindSpeedData();
         if (wind_speed != null) {
             editTextWindSpeed.setText(String.valueOf(wind_speed));
         }
@@ -94,12 +94,12 @@ public class FragmentTimedCountAdditionalData extends Fragment {
                 if (!new_value.isEmpty()) {
                     try {
                         Integer wind_speed = Integer.valueOf(new_value);
-                        timedCountViewModel.setWindSpeedData(wind_speed);
+                        viewModel.setWindSpeedData(wind_speed);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Invalid number format: " + new_value);
                     }
                 } else {
-                    timedCountViewModel.setWindSpeedData(null);
+                    viewModel.setWindSpeedData(null);
                 }
             }
 
@@ -113,7 +113,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextWindDirection = view.findViewById(R.id.timed_count_edit_text_wind_direction);
-        String wind_direction = timedCountViewModel.getWindDirectionData().getValue();
+        String wind_direction = viewModel.getWindDirectionData();
         if (wind_direction != null) {
             editTextWindDirection.setText(wind_direction);
         }
@@ -122,9 +122,9 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
                 if (!new_value.isEmpty()) {
-                    timedCountViewModel.setWindDirectionData(new_value);
+                    viewModel.setWindDirectionData(new_value);
                 } else {
-                    timedCountViewModel.setWindDirectionData(null);
+                    viewModel.setWindDirectionData(null);
                 }
             }
 
@@ -138,7 +138,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextPressure = view.findViewById(R.id.timed_count_edit_text_pressure);
-        Integer pressure = timedCountViewModel.getPressureData().getValue();
+        Integer pressure = viewModel.getPressureData();
         if (pressure != null) {
             editTextPressure.setText(String.valueOf(pressure));
         }
@@ -149,12 +149,12 @@ public class FragmentTimedCountAdditionalData extends Fragment {
                 if (!new_value.isEmpty()) {
                     try {
                         Integer pressure = Integer.valueOf(new_value);
-                        timedCountViewModel.setPressureData(pressure);
+                        viewModel.setPressureData(pressure);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Invalid number format: " + new_value);
                     }
                 } else {
-                    timedCountViewModel.setPressureData(null);
+                    viewModel.setPressureData(null);
                 }
             }
 
@@ -168,7 +168,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextHumidity = view.findViewById(R.id.timed_count_edit_text_humidity);
-        Integer humidity = timedCountViewModel.getHumidityData().getValue();
+        Integer humidity = viewModel.getHumidityData();
         if (humidity != null) {
             editTextHumidity.setText(String.valueOf(humidity));
         }
@@ -179,12 +179,12 @@ public class FragmentTimedCountAdditionalData extends Fragment {
                 if (!new_value.isEmpty()) {
                     try {
                         Integer humidity = Integer.valueOf(new_value);
-                        timedCountViewModel.setHumidityData(humidity);
+                        viewModel.setHumidityData(humidity);
                     } catch (NumberFormatException e) {
                         Log.e(TAG, "Invalid number format: " + new_value);
                     }
                 } else {
-                    timedCountViewModel.setHumidityData(null);
+                    viewModel.setHumidityData(null);
                 }
             }
 
@@ -198,7 +198,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextHabitat = view.findViewById(R.id.timed_count_edit_text_habitat);
-        String habitat = timedCountViewModel.getHabitatData().getValue();
+        String habitat = viewModel.getHabitatData();
         if (habitat != null) {
             editTextHabitat.setText(habitat);
         }
@@ -207,9 +207,9 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
                 if (!new_value.isEmpty()) {
-                    timedCountViewModel.setHabitatData(new_value);
+                    viewModel.setHabitatData(new_value);
                 } else {
-                    timedCountViewModel.setHabitatData(null);
+                    viewModel.setHabitatData(null);
                 }
             }
 
@@ -223,7 +223,7 @@ public class FragmentTimedCountAdditionalData extends Fragment {
         });
 
         EditText editTextComment = view.findViewById(R.id.timed_count_edit_text_comment);
-        String comment = timedCountViewModel.getCommentData().getValue();
+        String comment = viewModel.getCommentData();
         if (comment != null) {
             editTextComment.setText(comment);
         }
@@ -232,9 +232,9 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
                 if (!new_value.isEmpty()) {
-                    timedCountViewModel.setCommentData(new_value);
+                    viewModel.setCommentData(new_value);
                 } else {
-                    timedCountViewModel.setCommentData(null);
+                    viewModel.setCommentData(null);
                 }
             }
 
@@ -247,7 +247,6 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-
         // Return the inflated view
         return view;
     }
@@ -255,6 +254,6 @@ public class FragmentTimedCountAdditionalData extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        timedCountViewModel = new ViewModelProvider(requireActivity()).get(TimedCountViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(TimedCountViewModel.class);
     }
 }
