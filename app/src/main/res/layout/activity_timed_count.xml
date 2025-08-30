@@ -166,7 +166,7 @@
                 android:id="@+id/textview_list_of_taxa_time_count"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/naziv_taksona"
+                android:hint="@string/taxon_name_hint"
                 android:paddingStart="12dp"
                 android:paddingEnd="12dp"
                 android:paddingTop="28dp"

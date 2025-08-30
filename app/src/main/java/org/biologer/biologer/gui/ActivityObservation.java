@@ -26,12 +26,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -57,19 +53,16 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.ObservationViewModel;
 import org.biologer.biologer.adapters.TaxaListAdapter;
-import org.biologer.biologer.services.ArrayHelper;
+import org.biologer.biologer.databinding.ActivityObservationBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.ObjectBoxHelper;
@@ -90,6 +83,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class ActivityObservation extends AppCompatActivity implements View.OnClickListener,
         SwipeRefreshLayout.OnRefreshListener {
@@ -97,45 +91,32 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private static final String TAG = "Biologer.Entry";
     private LocationManager locationManager;
     private LocationListenerCompat locationListener;
-    private TextInputLayout textViewAtlasCodeLayout, textViewSpecimensNo1, textViewSpecimensNo2, textViewDeathComment, textInputStages;
-    private TextView textViewGPSAccuracy, textViewStage, textViewLatitude, textViewLongitude, textViewAtlasCode, textViewMeters;
-    private EditText editTextDeathComment, editTextComment, editTextSpecimensNo1, editTextSpecimensNo2, editTextHabitat,
-            editTextFoundOn, dateSelect, timeSelect;
-    private MaterialCheckBox checkBox_males, checkBox_females, checkBox_dead;
-    AutoCompleteTextView autoCompleteTextView_speciesName;
-    FrameLayout frameLayoutPicture1, frameLayoutPicture2, frameLayoutPicture3;
-    ImageView imageViewPicture1, imageViewPicture1Del, imageViewPicture2, imageViewPicture2Del,
-            imageViewPicture3, imageViewPicture3Del, imageViewMap, imageViewCamera, imageViewGallery;
-    ChipGroup observation_types;
-    LinearLayout layoutCoordinates, layoutUnknownCoordinates;
-    private SwipeRefreshLayout swipeRefreshLayout;
-    boolean locationFromTheMap = false;
-    boolean callTagAutoChecked = false;
-    Integer callTagIndexNumber = null;
     private TaxonSearchHelper taxonSearchHelper;
     BroadcastReceiver receiver;
     private ObservationViewModel viewModel;
+    private ActivityObservationBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_observation);
 
+        binding = ActivityObservationBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
         setupToolbar();
         setupLocationListenerAndManager();
         setupView();
 
         if (isNewEntry()) {
-            addNewViewModel();
             Log.i(TAG, "Starting new entry.");
+            addNewViewModel();
+
+            // Start obtaining location
             getLocation(100, 2);
 
             // Always add Observation Type for observed specimen
-            Long id = ObjectBoxHelper.getIdForObservedTag();
-            if (id != null) {
-                int id_for_observed_tag = id.intValue();
-                viewModel.addObservationType(id_for_observed_tag);
-            }
+            addObservedTag();
         } else {
             Log.d(TAG, "Opening existing entry.");
             loadExistingViewModel();
@@ -145,7 +126,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         // Get the data from the ViewModel and update UI
         setViewModelObservers();
 
-        dateSelect.setOnClickListener(v -> {
+        binding.editTextDate.setOnClickListener(v -> {
             Calendar calendar = viewModel.getCalendar().getValue();
             if (calendar != null) {
                 DialogFragment dateFragment = new FragmentDatePicker();
@@ -153,7 +134,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             }
         });
 
-        timeSelect.setOnClickListener(v -> {
+        binding.editTextTime.setOnClickListener(v -> {
             Calendar calendar = viewModel.getCalendar().getValue();
             if (calendar != null) {
                 DialogFragment timeFragment = new FragmentTimePicker();
@@ -176,87 +157,54 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     }
 
+    private void addObservedTag() {
+        Long id = ObjectBoxHelper.getIdForObservedTag();
+        if (id != null) {
+            int id_for_observed_tag = id.intValue();
+            viewModel.addObservationType(id_for_observed_tag);
+        }
+    }
+
     private void setupView() {
-        dateSelect = findViewById(R.id.date_input);
-        timeSelect = findViewById(R.id.time_input);
-        swipeRefreshLayout = findViewById(R.id.swipe);
-        swipeRefreshLayout.setOnRefreshListener(this);
-        textViewLatitude = findViewById(R.id.tv_latitude);
-        textViewLongitude = findViewById(R.id.tv_longitude);
-        textViewGPSAccuracy = findViewById(R.id.textView_gps_accuracy);
-        textViewMeters = findViewById(R.id.textView_meter);
-        textViewStage = findViewById(R.id.text_view_stages);
-        textViewStage.setOnClickListener(this);
-        editTextDeathComment = findViewById(R.id.editText_death_comment);
-        textViewDeathComment = findViewById(R.id.textView_death_comment);
-        editTextComment = findViewById(R.id.editText_comment);
-        editTextSpecimensNo1 = findViewById(R.id.editText_number_of_specimens_1);
-        textViewSpecimensNo1 = findViewById(R.id.textView_specimens_no_1);
-        editTextSpecimensNo2 = findViewById(R.id.editText_number_of_specimens_2);
-        textViewSpecimensNo2 = findViewById(R.id.textView_specimens_no_2);
-        editTextHabitat = findViewById(R.id.editText_habitat);
-        editTextFoundOn = findViewById(R.id.editText_found_on);
-        checkBox_males = findViewById(R.id.male);
-        checkBox_males.setOnClickListener(this);
-        checkBox_females = findViewById(R.id.female);
-        checkBox_females.setOnClickListener(this);
-        textViewAtlasCodeLayout = findViewById(R.id.text_view_atlas_code_layout);
-        textViewAtlasCode = findViewById(R.id.text_view_atlas_code);
-        textViewAtlasCode.setOnClickListener(this);
-        checkBox_dead = findViewById(R.id.dead_specimen);
-        checkBox_dead.setOnClickListener(this);
+        binding.swipeRefreshLayout.setOnRefreshListener(this);
+        binding.textInputEditTextStages.setOnClickListener(this);
+        binding.checkBoxMale.setOnClickListener(this);
+        binding.checkBoxFemale.setOnClickListener(this);
+        binding.textInputEditTextAtlasCode.setOnClickListener(this);
+        binding.materialCheckBoxDead.setOnClickListener(this);
         // Buttons to add images
-        frameLayoutPicture1 = findViewById(R.id.ib_pic1_frame);
-        imageViewPicture1 = findViewById(R.id.ib_pic1);
-        imageViewPicture1.setOnClickListener(this);
-        imageViewPicture1Del = findViewById(R.id.ib_pic1_del);
-        imageViewPicture1Del.setOnClickListener(this);
-        frameLayoutPicture2 = findViewById(R.id.ib_pic2_frame);
-        imageViewPicture2 = findViewById(R.id.ib_pic2);
-        imageViewPicture2.setOnClickListener(this);
-        imageViewPicture2Del = findViewById(R.id.ib_pic2_del);
-        imageViewPicture2Del.setOnClickListener(this);
-        frameLayoutPicture3 = findViewById(R.id.ib_pic3_frame);
-        imageViewPicture3 = findViewById(R.id.ib_pic3);
-        imageViewPicture3.setOnClickListener(this);
-        imageViewPicture3Del = findViewById(R.id.ib_pic3_del);
-        imageViewPicture3Del.setOnClickListener(this);
-        imageViewCamera = findViewById(R.id.image_view_take_photo_camera);
-        imageViewCamera.setOnClickListener(this);
-        imageViewGallery = findViewById(R.id.image_view_take_photo_gallery);
-        imageViewGallery.setOnClickListener(this);
+        binding.imageViewPicture1.setOnClickListener(this);
+        binding.imageViewDeletePicture1.setOnClickListener(this);
+        binding.imageViewPicture2.setOnClickListener(this);
+        binding.imageViewDeletePicture2.setOnClickListener(this);
+        binding.imageViewPicture3.setOnClickListener(this);
+        binding.imageViewDeletePicture3.setOnClickListener(this);
+        binding.imageViewPhotoFromCamera.setOnClickListener(this);
+        binding.imageViewPhotoFromGallery.setOnClickListener(this);
         // Map icon
-        imageViewMap = findViewById(R.id.iv_map);
-        imageViewMap.setOnClickListener(this);
+        binding.imageViewMap.setOnClickListener(this);
         // Tag cloud for observation types
-        observation_types = findViewById(R.id.observation_types);
         // Show advanced options for data entry if selected in preferences
-        layoutCoordinates = findViewById(R.id.layout_coordinates);
-        layoutUnknownCoordinates = findViewById(R.id.layout_unknown_coordinates);
-        // This linear layout holds the stages. We will hide it before the taxon is not selected.
-        textInputStages = findViewById(R.id.text_input_stages);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        LinearLayout linearLayout = findViewById(R.id.data_and_time_entry);
         if (!preferences.getBoolean("advanced_interface", false)) {
-            linearLayout.setVisibility(View.GONE);
+            binding.linearLayoutDataAndTime.setVisibility(View.GONE);
         } else {
-            linearLayout.setVisibility(View.VISIBLE);
+            binding.linearLayoutDataAndTime.setVisibility(View.VISIBLE);
         }
         // Fill in the drop down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this, R.layout.taxa_dropdown_list, new ArrayList<>());
-        autoCompleteTextView_speciesName = findViewById(R.id.textview_list_of_taxa);
-        autoCompleteTextView_speciesName.setAdapter(adapter);
-        autoCompleteTextView_speciesName.setThreshold(2);
+        binding.autoCompleteTextViewSpeciesName.setAdapter(adapter);
+        binding.autoCompleteTextViewSpeciesName.setThreshold(2);
         taxonSearchHelper = new TaxonSearchHelper(this);
-        autoCompleteTextView_speciesName.setOnItemClickListener((parent, view, position, id) -> {
+        binding.autoCompleteTextViewSpeciesName.setOnItemClickListener((parent, view, position, id) -> {
             TaxonDb taxonDb = (TaxonDb) parent.getItemAtPosition(position);
-            autoCompleteTextView_speciesName.setText(taxonDb.getLatinName());
+            binding.autoCompleteTextViewSpeciesName.setText(taxonDb.getLatinName());
             viewModel.setTaxonId(taxonDb.getId());
             viewModel.setTaxonSuggestion(taxonDb.getLatinName());
             viewModel.setTaxonSelectedFromTheList(true);
             showStagesAndAtlasCode(preferences);
         });
-        autoCompleteTextView_speciesName.addTextChangedListener(new TextWatcher() {
+        binding.autoCompleteTextViewSpeciesName.addTextChangedListener(new TextWatcher() {
             final Handler handler = new Handler(Looper.getMainLooper());
             Runnable runnable;
             String entered_name = null;
@@ -292,13 +240,13 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         // Add the Query to the drop down list (adapter)
                         TaxaListAdapter adapter1 =
                                 new TaxaListAdapter(ActivityObservation.this, R.layout.taxa_dropdown_list, allTaxaLists);
-                        autoCompleteTextView_speciesName.setAdapter(adapter1);
+                        binding.autoCompleteTextViewSpeciesName.setAdapter(adapter1);
                         adapter1.notifyDataSetChanged();
 
                         // Enable/disable Save button in the Toolbar
-                        if (autoCompleteTextView_speciesName.getText().toString().length() > 1) {
+                        if (binding.autoCompleteTextViewSpeciesName.getText().toString().length() > 1) {
                             viewModel.setSaveEnabled(true);
-                            Log.d(TAG, "Taxon is set to: " + autoCompleteTextView_speciesName.getText());
+                            Log.d(TAG, "Taxon is set to: " + binding.autoCompleteTextViewSpeciesName.getText());
                         } else {
                             viewModel.setSaveEnabled(false);
                             Log.d(TAG, "Taxon entry field is empty.");
@@ -311,7 +259,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         });
 
         // Activate the field for species name and show the keyboard.
-        autoCompleteTextView_speciesName.requestFocus();
+        binding.autoCompleteTextViewSpeciesName.requestFocus();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
 
@@ -352,72 +300,74 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private void setViewModelObservers() {
         viewModel.getImage1().observe(this, imageUri -> {
             Log.d(TAG, "Image 1 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, imageViewPicture1, frameLayoutPicture1);
+            loadImageThumbnail(imageUri, binding.imageViewPicture1, binding.frameLayoutPicture1);
         });
         viewModel.getImage2().observe(this, imageUri -> {
             Log.d(TAG, "Image 2 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, imageViewPicture2, frameLayoutPicture2);
+            loadImageThumbnail(imageUri, binding.imageViewPicture2, binding.frameLayoutPicture2);
         });
         viewModel.getImage3().observe(this, imageUri -> {
             Log.d(TAG, "Image 3 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, imageViewPicture3, frameLayoutPicture3);
+            loadImageThumbnail(imageUri, binding.imageViewPicture3, binding.frameLayoutPicture3);
         });
 
         viewModel.getCalendar().observe(this, calendar -> {
             Log.d(TAG, "Calendar changed.");
-            dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
-            timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
+            binding.editTextDate.setText(DateHelper.getLocalizedCalendarDate(calendar));
+            binding.editTextTime.setText(DateHelper.getLocalizedCalendarTime(calendar));
         });
 
         viewModel.getCoordinates().observe(this, coordinates -> {
             Log.d(TAG, "Coordinates changed.");
-            textViewLatitude.setText(viewModel.getLocalizedLatitiudeString());
-            textViewLongitude.setText(viewModel.getLocalizedLongitudeString());
-            layoutUnknownCoordinates.setVisibility(View.GONE);
-            layoutCoordinates.setVisibility(View.VISIBLE);
+            binding.textViewLatitude.setText(viewModel.getLocalizedLatitiudeString());
+            binding.textViewLongitude.setText(viewModel.getLocalizedLongitudeString());
+            binding.linearLayoutUnknownCoordinates.setVisibility(View.GONE);
+            binding.linearLayoutCoordinates.setVisibility(View.VISIBLE);
         });
 
         viewModel.getAccuracy().observe(this, accuracy -> {
             // Update the coordinate accuracy labels
             if (accuracy == null || accuracy == 0.0) {
-                textViewGPSAccuracy.setText(R.string.unknown);
-                textViewMeters.setVisibility(View.GONE);
+                binding.textViewAccuracy.setText(R.string.unknown);
+                binding.textViewAccuracyMeters.setVisibility(View.GONE);
             } else {
-                textViewGPSAccuracy.setText(String.valueOf(viewModel.getRoundedAccuracy().intValue()));
-                textViewMeters.setVisibility(View.VISIBLE);
+                binding.textViewAccuracy.setText(String.valueOf(viewModel.getRoundedAccuracy().intValue()));
+                binding.textViewAccuracyMeters.setVisibility(View.VISIBLE);
                 // Set the colors to red if the accuracy is low
                 if (accuracy <= 25) {
-                    textViewMeters.setTextColor(ContextCompat.getColor(this, R.color.checkBox_text));
-                    textViewGPSAccuracy.setTextColor(ContextCompat.getColor(this, R.color.checkBox_text));
+                    binding.textViewAccuracyMeters.setTextColor(
+                            ContextCompat.getColor(this,R.color.checkBox_text));
+                    binding.textViewAccuracy.setTextColor(
+                            ContextCompat.getColor(this, R.color.checkBox_text));
                 } else {
-                    textViewMeters.setTextColor(ContextCompat.getColor(this, R.color.warningRed));
-                    textViewGPSAccuracy.setTextColor(ContextCompat.getColor(this, R.color.warningRed));
+                    binding.textViewAccuracyMeters.setTextColor(
+                            ContextCompat.getColor(this, R.color.warningRed));
+                    binding.textViewAccuracy.setTextColor(
+                            ContextCompat.getColor(this, R.color.warningRed));
                 }
             }
         });
 
         viewModel.getCalendar().observe(this, calendar -> {
-            dateSelect.setText(DateHelper.getLocalizedCalendarDate(calendar));
-            timeSelect.setText(DateHelper.getLocalizedCalendarTime(calendar));
+            binding.editTextDate.setText(DateHelper.getLocalizedCalendarDate(calendar));
+            binding.editTextTime.setText(DateHelper.getLocalizedCalendarTime(calendar));
         });
 
-        viewModel.getNumberOfSpecimens().observe(this, specimens -> {
-            editTextSpecimensNo1.setText(specimens != null ? String.valueOf(specimens) : "");
-        });
+        viewModel.getNumberOfSpecimens().observe(this, specimens
+                -> binding.textInputEditTextSpecimensNo1.setText(specimens != null ? String.valueOf(specimens) : ""));
 
-        viewModel.getNumberOfSpecimens2().observe(this, specimens -> {
-            editTextSpecimensNo2.setText(specimens != null ? String.valueOf(specimens) : "");
-        });
+        viewModel.getNumberOfSpecimens2().observe(this, specimens
+                -> binding.textInputEditTextSpecimensNo2.setText(specimens != null ? String.valueOf(specimens) : ""));
 
         viewModel.getDead().observe(this, dead -> {
             Log.d(TAG, "Specimen is dead? " + dead);
             if (dead) {
-                checkBox_dead.setChecked(true);
-                textViewDeathComment.setVisibility(View.VISIBLE);
+                binding.materialCheckBoxDead.setChecked(true);
+                binding.textInputLayoutDeathComment.setVisibility(View.VISIBLE);
             } else {
-                checkBox_dead.setChecked(false);
-                textViewDeathComment.setVisibility(View.GONE);
-                editTextDeathComment.setText("");
+                binding.materialCheckBoxDead.setChecked(false);
+                binding.textInputLayoutDeathComment.setVisibility(View.GONE);
+                binding.textInputEditTextDeathComment.setText("");
             }
         });
     }
@@ -476,7 +426,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             if (stages != null) {
                 if (!stages.isEmpty()) {
                     Log.d(TAG, "Enabling Stages for this taxon.");
-                    textInputStages.setVisibility(View.VISIBLE);
+                    binding.textInputLayoutStages.setVisibility(View.VISIBLE);
 
                     String[] all_stages = stages.split(";");
 
@@ -488,8 +438,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             if (Arrays.asList(all_stages).contains(String.valueOf(viewModel.getStage().getValue()))) {
                                 String stageName = StageAndSexLocalization
                                         .getStageLocaleFromID(this, viewModel.getStage().getValue());
-                                textViewStage.setText(stageName);
-                                textViewStage.setTag(viewModel.getStage().getValue());
+                                binding.textInputEditTextStages.setText(stageName);
+                                binding.textInputEditTextStages.setTag(viewModel.getStage().getValue());
                             }
                         }
                     }
@@ -499,29 +449,30 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     if (preferences.getBoolean("adult_by_default", false)) {
                         Log.d(TAG, "Should set adult by default.");
                         // If stage is already selected ignore this...
-                        if (textViewStage.getText().toString().isEmpty()) {
+                        if (binding.textInputEditTextStages.getText() != null
+                                && binding.textInputEditTextStages.getText().toString().isEmpty()) {
                             Log.d(TAG, "Should fill in the textViewStage.");
                             Long adultId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
                             String stageName = StageAndSexLocalization.getStageLocaleFromID(this, adultId);
-                            textViewStage.setTag(adultId);
-                            textViewStage.setText(stageName);
+                            binding.textInputEditTextStages.setTag(adultId);
+                            binding.textInputEditTextStages.setText(stageName);
                         }
                     }
                 }
             }
             if (taxon.isUseAtlasCode()) {
                 Log.d(TAG, "Enabling Atlas code for this taxon.");
-                textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
             }
         }
     }
 
     private void hideStagesAndAtlasCode() {
-        textInputStages.setVisibility(View.GONE);
-        textViewStage.setTag(null);
-        textViewStage.setText(null);
-        textViewAtlasCodeLayout.setVisibility(View.GONE);
-        textViewAtlasCode.setText("");
+        binding.textInputLayoutStages.setVisibility(View.GONE);
+        binding.textInputEditTextStages.setTag(null);
+        binding.textInputEditTextStages.setText(null);
+        binding.textInputLayoutAtlasCode.setVisibility(View.GONE);
+        binding.textInputEditTextAtlasCode.setText("");
         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
     }
 
@@ -546,10 +497,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             viewModel.setImage3(s);
                             viewModel.addItemToListNewImage(s);
                             // Form is full, disable adding more images
-                            imageViewGallery.setEnabled(false);
-                            imageViewGallery.setImageAlpha(20);
-                            imageViewCamera.setEnabled(false);
-                            imageViewCamera.setImageAlpha(20);
+                            binding.imageViewPhotoFromGallery.setEnabled(false);
+                            binding.imageViewPhotoFromGallery.setImageAlpha(20);
+                            binding.imageViewPhotoFromCamera.setEnabled(false);
+                            binding.imageViewPhotoFromCamera.setImageAlpha(20);
                         }
                     }
                 }
@@ -566,8 +517,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private void fillExistingEntry() {
         // Get the name of the taxon if there is one (i.e. when opening existing entry)
         if (viewModel.getTaxonSuggestion() != null) {
-            autoCompleteTextView_speciesName.setText(viewModel.getTaxonSuggestion());
-            autoCompleteTextView_speciesName.dismissDropDown();
+            binding.autoCompleteTextViewSpeciesName.setText(viewModel.getTaxonSuggestion());
+            binding.autoCompleteTextViewSpeciesName.dismissDropDown();
         }
 
         if (viewModel.getTaxonId() != null) {
@@ -581,7 +532,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 if (use_atlas_code) {
                     Log.d(TAG, "There is an atlas code ID: "
                             + viewModel.getAtlasCode().getValue());
-                    textViewAtlasCodeLayout.setVisibility(View.VISIBLE);
+                    binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
                 }
             }
         }
@@ -591,50 +542,52 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Log.d(TAG, "There is a stage already selected for this entry!");
             long stage_id = ObjectBoxHelper.getStageById(viewModel.getStage().getValue()).getId();
             String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
-            textViewStage.setTag(stage_id);
-            textViewStage.setText(stageName);
-            textInputStages.setVisibility(View.VISIBLE);
+            binding.textInputEditTextStages.setTag(stage_id);
+            binding.textInputEditTextStages.setText(stageName);
+            binding.textInputLayoutStages.setVisibility(View.VISIBLE);
         } else {
             if (isStageAvailable(viewModel.getTaxonId())) {
-                textInputStages.setVisibility(View.VISIBLE);
+                binding.textInputLayoutStages.setVisibility(View.VISIBLE);
             } else {
-                textInputStages.setVisibility(View.GONE);
+                binding.textInputLayoutStages.setVisibility(View.GONE);
             }
         }
 
         // Get the selected sex. If not selected set spinner to default...
         Log.d(TAG, "Sex of individual from previous entry is " + viewModel.getSex().getValue());
-        if (viewModel.getSex().getValue().equals("male")) {
+        if (viewModel.getSex().getValue() != null
+                && viewModel.getSex().getValue().equals("male")) {
             Log.d(TAG, "Setting spinner selected item to male.");
-            checkBox_males.setChecked(true);
+            binding.checkBoxMale.setChecked(true);
         }
-        if (viewModel.getSex().getValue().equals("female")) {
+        if (viewModel.getSex().getValue() != null
+                && viewModel.getSex().getValue().equals("female")) {
             Log.d(TAG, "Setting spinner selected item to female.");
-            checkBox_females.setChecked(true);
+            binding.checkBoxFemale.setChecked(true);
         }
 
         // Get the atlas code.
         if (viewModel.getAtlasCode().getValue() != null) {
             Log.d(TAG, "Setting the spinner to atlas code: " + viewModel.getAtlasCode().getValue());
-            textViewAtlasCode.setText(setAtlasCode(viewModel.getAtlasCode().getValue().intValue()));
+            binding.textInputEditTextAtlasCode.setText(setAtlasCode(viewModel.getAtlasCode().getValue().intValue()));
         }
 
         disablePhotoButtons(viewModel.getImage1().getValue() != null &&
                 viewModel.getImage2().getValue() != null &&
                 viewModel.getImage3().getValue() != null);
         if (viewModel.getHabitat() != null) {
-            editTextHabitat.setText(viewModel.getHabitat());
+            binding.textInputEditTextHabitat.setText(viewModel.getHabitat());
         }
         if (viewModel.getFoundOn() != null) {
-            editTextFoundOn.setText(viewModel.getFoundOn());
+            binding.editTextFoundOn.setText(viewModel.getFoundOn());
         }
 
         // Get other values
         if (!viewModel.getCauseOfDeath().isEmpty()) {
-            editTextDeathComment.setText(viewModel.getCauseOfDeath());
+            binding.textInputEditTextDeathComment.setText(viewModel.getCauseOfDeath());
         }
         if (!viewModel.getComment().isEmpty()) {
-            editTextComment.setText(viewModel.getComment());
+            binding.textInputEditTextComment.setText(viewModel.getComment());
         }
 
         // Load observation types and delete tag for photographed.
@@ -710,61 +663,63 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.text_view_atlas_code:
+            case R.id.textInputEditTextAtlasCode:
                 getAtlasCodeForList();
                 break;
-            case R.id.text_view_stages:
+            case R.id.textInputEditTextStages:
                 getStageForTaxon();
                 break;
-            case R.id.male:
+            case R.id.checkBoxMale:
                 Log.d(TAG, "Males checkbox selected!");
                 setMalesFemalesChecked();
                 break;
-            case R.id.female:
+            case R.id.checkBoxFemale:
                 Log.d(TAG, "Females checkbox selected!");
                 setMalesFemalesChecked();
                 break;
-            case R.id.ib_pic1_del:
+            case R.id.imageViewDeletePicture1:
                 Log.i(TAG, "Deleting image 1.");
-                frameLayoutPicture1.setVisibility(View.GONE);
+                binding.frameLayoutPicture1.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 deleteImageFile(viewModel.getImage1().getValue());
                 viewModel.setImage1(null);
                 break;
-            case R.id.ib_pic1:
+            case R.id.imageViewPicture1:
                 Log.i(TAG, "Image 1 clicked. URL: " + viewModel.getImage1().getValue());
                 viewImage(viewModel.getImage1().getValue());
                 break;
-            case R.id.ib_pic2_del:
-                frameLayoutPicture2.setVisibility(View.GONE);
+            case R.id.imageViewDeletePicture2:
+                Log.i(TAG, "Deleting image 2.");
+                binding.frameLayoutPicture2.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 deleteImageFile(viewModel.getImage2().getValue());
                 viewModel.setImage2(null);
                 break;
-            case R.id.ib_pic2:
+            case R.id.imageViewPicture2:
                 Log.i(TAG, "Image 2 clicked. URL: " + viewModel.getImage2().getValue());
                 viewImage(viewModel.getImage2().getValue());
                 break;
-            case R.id.ib_pic3_del:
-                frameLayoutPicture3.setVisibility(View.GONE);
+            case R.id.imageViewDeletePicture3:
+                Log.i(TAG, "Deleting image 3.");
+                binding.frameLayoutPicture3.setVisibility(View.GONE);
                 disablePhotoButtons(false);
                 deleteImageFile(viewModel.getImage3().getValue());
                 viewModel.setImage3(null);
                 break;
-            case R.id.ib_pic3:
+            case R.id.imageViewPicture3:
                 Log.i(TAG, "Image 3 clicked. URL: " + viewModel.getImage3().getValue());
                 viewImage(viewModel.getImage3().getValue());
                 break;
-            case R.id.dead_specimen:
+            case R.id.materialCheckBoxDead:
                 viewModel.checkDead();
                 break;
-            case R.id.iv_map:
+            case R.id.imageViewMap:
                 showMap();
                 break;
-            case R.id.image_view_take_photo_camera:
+            case R.id.imageViewPhotoFromCamera:
                 takePhoto();
                 break;
-            case R.id.image_view_take_photo_gallery:
+            case R.id.imageViewPhotoFromGallery:
                 pickMultipleImages.launch(
                         new PickVisualMediaRequest.Builder()
                                 .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
@@ -775,32 +730,32 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void setMalesFemalesChecked() {
-        boolean males = checkBox_males.isChecked();
-        boolean females = checkBox_females.isChecked();
+        boolean males = binding.checkBoxMale.isChecked();
+        boolean females = binding.checkBoxFemale.isChecked();
         Log.d(TAG, "Males checkbox is " + males + ". Females checkbox is " + females);
         if (males && females) {
-            textViewSpecimensNo1.setVisibility(View.VISIBLE);
-            textViewSpecimensNo1.setHint(getString(R.string.number_of_males));
-            textViewSpecimensNo2.setVisibility(View.VISIBLE);
-            textViewSpecimensNo2.setHint(getString(R.string.number_of_females));
+            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
+            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.number_of_males));
+            binding.textInputLayoutSpecimensNo2.setVisibility(View.VISIBLE);
+            binding.textInputLayoutSpecimensNo2.setHint(getString(R.string.number_of_females));
         }
         if (males && !females) {
-            textViewSpecimensNo1.setVisibility(View.VISIBLE);
-            textViewSpecimensNo1.setHint(getString(R.string.number_of_males));
-            textViewSpecimensNo2.setVisibility(View.GONE);
+            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
+            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.number_of_males));
+            binding.textInputLayoutSpecimensNo2.setVisibility(View.GONE);
             viewModel.setNumberOfSpecimens2(null);
         }
         if (!males && females) {
-            textViewSpecimensNo1.setVisibility(View.GONE);
+            binding.textInputLayoutSpecimensNo1.setVisibility(View.GONE);
             viewModel.setNumberOfSpecimens(null);
-            textViewSpecimensNo2.setVisibility(View.VISIBLE);
-            textViewSpecimensNo2.setHint(getString(R.string.number_of_females));
+            binding.textInputLayoutSpecimensNo2.setVisibility(View.VISIBLE);
+            binding.textInputLayoutSpecimensNo2.setHint(getString(R.string.number_of_females));
         }
         if (!males && !females) {
-            textViewSpecimensNo1.setVisibility(View.VISIBLE);
-            textViewSpecimensNo1.setHint(getString(R.string.broj_jedinki));
+            binding.textInputLayoutSpecimensNo1.setVisibility(View.VISIBLE);
+            binding.textInputLayoutSpecimensNo1.setHint(getString(R.string.specimens_number_hint));
             viewModel.setNumberOfSpecimens(null);
-            textViewSpecimensNo2.setVisibility(View.GONE);
+            binding.textInputLayoutSpecimensNo2.setVisibility(View.GONE);
             viewModel.setNumberOfSpecimens2(null);
         }
     }
@@ -853,7 +808,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 // or if the user opened existing entry.
                 if (viewModel.getAccuracy().getValue() == null ||
                         viewModel.getAccuracy().getValue() <= 25 ||
-                        locationFromTheMap ||
+                        viewModel.isLocationFromTheMap() ||
                         !isNewEntry()) {
                     saveEntry3();
                 } else {
@@ -974,47 +929,55 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     /  PART 4: Prepare entry and check if both male and female entries should be created
     */
     private void saveEntry4() {
-        String specimens_1 = editTextSpecimensNo1.getText().toString();
-        Integer specimensNumber1 = (!specimens_1.isEmpty()) ? Integer.valueOf(specimens_1) : null;
-        Log.d(TAG, "Number of specimens 1: " + specimensNumber1);
-        String specimens_2 = editTextSpecimensNo2.getText().toString();
-        Integer specimensNumber2 = (!specimens_2.isEmpty()) ? Integer.valueOf(specimens_2) : null;
-        Log.d(TAG, "Number of specimens 2: " + specimensNumber2);
+        Integer specimensNumber1 = null;
+        if (binding.textInputEditTextSpecimensNo1.getText() != null
+                && !binding.textInputEditTextSpecimensNo1.getText().toString().isEmpty()) {
+            specimensNumber1 = Integer
+                    .valueOf(binding.textInputEditTextSpecimensNo1.getText().toString());
+        }
 
-        viewModel.setComment(editTextComment.getText().toString());
-        viewModel.setStage((textViewStage.getTag() != null)
-                ? Long.parseLong(textViewStage.getTag().toString()) : null);
-        viewModel.setCauseOfDeath((editTextDeathComment.getText() != null)
-                ? editTextDeathComment.getText().toString() : "");
-        viewModel.setHabitat(editTextHabitat.getText() != null
-                ? editTextHabitat.getText().toString() : "");
-        viewModel.setFoundOn(editTextFoundOn.getText() != null
-                ? editTextFoundOn.getText().toString() : "");
+        Integer specimensNumber2 = null;
+        if (binding.textInputEditTextSpecimensNo2.getText() != null
+                && !binding.textInputEditTextSpecimensNo2.getText().toString().isEmpty()) {
+            specimensNumber2 = Integer
+                    .valueOf(binding.textInputEditTextSpecimensNo2.getText().toString());
+        }
+
+        viewModel.setComment(binding.textInputEditTextComment.getText() != null
+                ? binding.textInputEditTextComment.getText().toString() : "");
+        viewModel.setStage((binding.textInputEditTextStages.getTag() != null)
+                ? Long.parseLong(binding.textInputEditTextStages.getTag().toString()) : null);
+        viewModel.setCauseOfDeath((binding.textInputEditTextDeathComment.getText() != null)
+                ? binding.textInputEditTextDeathComment.getText().toString() : "");
+        viewModel.setHabitat(binding.textInputEditTextHabitat.getText() != null
+                ? binding.textInputEditTextHabitat.getText().toString() : "");
+        viewModel.setFoundOn(binding.editTextFoundOn.getText() != null
+                ? binding.editTextFoundOn.getText().toString() : "");
         viewModel.setNumberOfSpecimens(specimensNumber1);
         if (viewModel.getTaxonSuggestion() == null) {
-            viewModel.setTaxonSuggestion(autoCompleteTextView_speciesName.getText().toString());
+            viewModel.setTaxonSuggestion(binding.autoCompleteTextViewSpeciesName.getText().toString());
         }
 
         Long second_entry_id = null;
-        if (checkBox_males.isChecked() && !checkBox_females.isChecked()) {
+        if (binding.checkBoxMale.isChecked() && !binding.checkBoxFemale.isChecked()) {
             Log.d(TAG, "Only male individuals selected.");
             viewModel.setSex("male");
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
-        if (!checkBox_males.isChecked() && checkBox_females.isChecked()) {
+        if (!binding.checkBoxMale.isChecked() && binding.checkBoxFemale.isChecked()) {
             Log.d(TAG, "Only female individuals selected.");
             viewModel.setNumberOfSpecimens(specimensNumber2);
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
-        if (!checkBox_males.isChecked() && !checkBox_females.isChecked()) {
+        if (!binding.checkBoxMale.isChecked() && !binding.checkBoxFemale.isChecked()) {
             Log.d(TAG, "No sex of individuals selected.");
             viewModel.setSex("");
             long entry_id = saveEntryToObjectBox();
             entrySaver(entry_id, second_entry_id);
         }
-        if (checkBox_males.isChecked() && checkBox_females.isChecked()) {
+        if (binding.checkBoxMale.isChecked() && binding.checkBoxFemale.isChecked()) {
             Log.d(TAG, "Both male and female individuals selected.");
             viewModel.setSex("male");
             second_entry_id = saveEntryToObjectBox();
@@ -1063,7 +1026,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 getString(R.string.atlas_code_9), getString(R.string.atlas_code_10), getString(R.string.atlas_code_11),
                 getString(R.string.atlas_code_12), getString(R.string.atlas_code_13), getString(R.string.atlas_code_14),
                 getString(R.string.atlas_code_15), getString(R.string.atlas_code_16)};
-        String atlas_code = textViewAtlasCode.getText().toString();
+        String atlas_code = binding.textInputEditTextAtlasCode.getText() != null
+                ? binding.textInputEditTextAtlasCode.getText().toString() : null;
         int atlas_code_id = Arrays.asList(atlas_codes).indexOf(atlas_code);
         if (atlas_code_id == -1) {
             Log.i(TAG, "Atlas code is not selected.");
@@ -1091,7 +1055,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
             String stages = taxon.getStages();
             if (stages == null || stages.trim().isEmpty()) {
-                textViewStage.setEnabled(false);
+                binding.textInputEditTextStages.setEnabled(false);
                 Log.d(TAG, "Stage list from selectedTaxon is null or empty for taxon " + getLatinName() + ".");
             } else {
                 String[] all_stages_ids = stages.split(";");
@@ -1107,12 +1071,12 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setItems(all_stages_names, (DialogInterface dialogInterface, int i) -> {
-                        textViewStage.setText(all_stages_names[i]);
+                        binding.textInputEditTextStages.setText(all_stages_names[i]);
                         if (i == 0) {
-                            textViewStage.setTag(null); // If no stage selected
+                            binding.textInputEditTextStages.setTag(null); // If no stage selected
                             viewModel.setStage(null);
                         } else {
-                            textViewStage.setTag(all_stages_ids[i - 1]);
+                            binding.textInputEditTextStages.setTag(all_stages_ids[i - 1]);
                             viewModel.setStage(Long.parseLong(all_stages_ids[i - 1]));
                             Log.d(TAG, "Setting stage to: " + all_stages_ids[i - 1]);
                         }
@@ -1121,7 +1085,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     Log.d(TAG, "Available stages for " + getLatinName() + " include: " + Arrays.toString(all_stages_names));
 
                 } else {
-                    textViewStage.setEnabled(false);
+                    binding.textInputEditTextStages.setEnabled(false);
                     Log.d(TAG, "Stage list from GreenDao is empty for taxon " + getLatinName() + ".");
                 }
             }
@@ -1141,11 +1105,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 getString(R.string.atlas_code_16)};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(atlas_codes, (dialogInterface, i)
-                -> textViewAtlasCode.setText(atlas_codes[i]));
+                -> binding.textInputEditTextAtlasCode.setText(atlas_codes[i]));
         builder.show();
 
         // If user select atlas code 2, the "call" tag should also be checked.
-        textViewAtlasCode.addTextChangedListener(new TextWatcher() {
+        binding.textInputEditTextAtlasCode.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -1155,16 +1119,16 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 Long atlas_code_id = getAtlasCode();
                 viewModel.setAtlasCode(atlas_code_id);
-                if (callTagIndexNumber != null) {
-                    Chip chip = (Chip) observation_types.getChildAt(callTagIndexNumber);
+                if (viewModel.getCallTagIndex() != null) {
+                    Chip chip = (Chip) binding.chipGroupObservationTypes.getChildAt(viewModel.getCallTagIndex());
                     if (atlas_code_id != null && atlas_code_id == 2) {
                         Log.d(TAG, "This atlas code assume that the bird was calling...");
                         chip.setChecked(true);
-                        callTagAutoChecked = true;
+                        viewModel.setCallTagSelected(true);
                     } else {
-                        if (callTagAutoChecked) {
+                        if (viewModel.isCallTagSelected()) {
                             chip.setChecked(false);
-                            callTagAutoChecked = false;
+                            viewModel.setCallTagSelected(false);
                         }
                     }
                 }
@@ -1218,15 +1182,15 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
     private void disablePhotoButtons(Boolean value) {
         if (value) {
-            imageViewGallery.setEnabled(false);
-            imageViewGallery.setImageAlpha(20);
-            imageViewCamera.setEnabled(false);
-            imageViewCamera.setImageAlpha(20);
+            binding.imageViewPhotoFromGallery.setEnabled(false);
+            binding.imageViewPhotoFromGallery.setImageAlpha(20);
+            binding.imageViewPhotoFromCamera.setEnabled(false);
+            binding.imageViewPhotoFromCamera.setImageAlpha(20);
         } else {
-            imageViewGallery.setEnabled(true);
-            imageViewGallery.setImageAlpha(255);
-            imageViewCamera.setEnabled(true);
-            imageViewCamera.setImageAlpha(255);
+            binding.imageViewPhotoFromGallery.setEnabled(true);
+            binding.imageViewPhotoFromGallery.setImageAlpha(255);
+            binding.imageViewPhotoFromCamera.setEnabled(true);
+            binding.imageViewPhotoFromCamera.setImageAlpha(255);
         }
     }
 
@@ -1355,7 +1319,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         viewModel.setElevation(getElevationFromMap(result));
                         viewModel.setLocation(getLocationNameFromMap(result));
                         Log.d(TAG, "Map returned this result: " + getLatLongFromMap(result));
-                        locationFromTheMap = true;
+                        viewModel.setLocationFromTheMap(true);
                     }
                 }
             });
@@ -1463,21 +1427,21 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     @Override
     public void onRefresh() {
         if (isNewEntry()) {
-            swipeRefreshLayout.setRefreshing(true);
+            binding.swipeRefreshLayout.setRefreshing(true);
             getLocation(0, 0);
-            swipeRefreshLayout.setRefreshing(false);
+            binding.swipeRefreshLayout.setRefreshing(false);
         } else {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(getString(R.string.gps_update))
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.yes), (dialog, id) -> {
-                        swipeRefreshLayout.setRefreshing(true);
+                        binding.swipeRefreshLayout.setRefreshing(true);
                         getLocation(0, 0);
-                        swipeRefreshLayout.setRefreshing(false);
+                        binding.swipeRefreshLayout.setRefreshing(false);
                     })
                     .setNegativeButton(getString(R.string.no), (dialog, id) -> {
                         dialog.cancel();
-                        swipeRefreshLayout.setRefreshing(false);
+                        binding.swipeRefreshLayout.setRefreshing(false);
                     });
             final AlertDialog alert = builder.create();
             alert.show();
@@ -1506,7 +1470,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private String getLatinName() {
-        String entered_taxon_name = autoCompleteTextView_speciesName.getText().toString();
+        String entered_taxon_name = binding.autoCompleteTextViewSpeciesName.getText().toString();
         return entered_taxon_name.split(" \\(")[0];
     }
 
@@ -1540,8 +1504,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 chip.setId(observation_id);
                 chip.setTag(slug);
                 chip.setText(observation_type.getName());
-                int[] ids = viewModel.getObservationTypes();
-                chip.setChecked(ArrayHelper.arrayContainsNumber(ids, observation_id));
+                Set<Integer> ids = viewModel.getObservationTypes();
+                chip.setChecked(ids.contains(observation_id));
                 chip.setOnCheckedChangeListener((compoundButton, b) -> {
                     String text = (String) compoundButton.getTag();
                     int id = compoundButton.getId();
@@ -1553,10 +1517,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         viewModel.removeObservationType(id);
                     }
                 });
-                observation_types.addView(chip);
+                binding.chipGroupObservationTypes.addView(chip);
                 if (slug.equals("call")) {
-                    callTagIndexNumber = observation_types.getChildCount() - 1;
-                    Log.d(TAG, "The index number of the call chip is " + callTagIndexNumber);
+                    viewModel.setCallTagIndex(binding.chipGroupObservationTypes.getChildCount() - 1);
+                    Log.d(TAG, "The index number of the call chip is " + viewModel.getCallTagIndex());
                 }
             }
 

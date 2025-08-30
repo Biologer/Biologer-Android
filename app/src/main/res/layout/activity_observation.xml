@@ -17,13 +17,14 @@
 
             <include
                 layout="@layout/toolbar_main"
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
         </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-            android:id="@+id/swipe"
+            android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -45,7 +46,7 @@
                         android:layout_height="wrap_content">
 
                         <ImageView
-                            android:id="@+id/iv_map"
+                            android:id="@+id/imageViewMap"
                             android:layout_width="32dp"
                             android:layout_height="match_parent"
                             android:contentDescription="@string/map"
@@ -62,7 +63,7 @@
                             android:columnCount="1">
 
                             <LinearLayout
-                                android:id="@+id/layout_unknown_coordinates"
+                                android:id="@+id/linearLayoutUnknownCoordinates"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal">
@@ -74,14 +75,14 @@
                                     android:text="@string/location_is_not_available"/>
                             </LinearLayout>
                             <LinearLayout
-                                android:id="@+id/layout_coordinates"
+                                android:id="@+id/linearLayoutCoordinates"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:visibility="gone">
 
                                 <TextView
-                                    android:id="@+id/tv_latitude"
+                                    android:id="@+id/textViewLatitude"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:text="@string/unknown" />
@@ -92,7 +93,7 @@
                                     android:text="@string/north_dot_comma" />
 
                                 <TextView
-                                    android:id="@+id/tv_longitude"
+                                    android:id="@+id/textViewLongitude"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:text="@string/unknown" />
@@ -110,14 +111,14 @@
                                     android:text="@string/accuracy" />
 
                                 <TextView
-                                    android:id="@+id/textView_gps_accuracy"
+                                    android:id="@+id/textViewAccuracy"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:layout_marginStart="4dp"
                                     android:text="@string/unknown" />
 
                                 <TextView
-                                    android:id="@+id/textView_meter"
+                                    android:id="@+id/textViewAccuracyMeters"
                                     android:layout_width="wrap_content"
                                     android:layout_height="match_parent"
                                     android:layout_marginStart="4dp"
@@ -128,7 +129,7 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/data_and_time_entry"
+                        android:id="@+id/linearLayoutDataAndTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
@@ -138,7 +139,7 @@
                         android:layout_gravity="center">
 
                         <EditText
-                            android:id="@+id/date_input"
+                            android:id="@+id/editTextDate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:autofillHints="@string/select_date"
@@ -148,12 +149,12 @@
                             android:drawablePadding="8dp"
                             app:drawableTint="@color/colorPrimaryDark"
                             android:cursorVisible="false"
-                            android:background="@null"
+                            android:background="@android:color/transparent"
                             android:textSize="14sp"
                             android:inputType="date" />
 
                         <EditText
-                            android:id="@+id/time_input"
+                            android:id="@+id/editTextTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:autofillHints="@string/select_time"
@@ -165,7 +166,7 @@
                             android:paddingStart="16dp"
                             android:paddingEnd="0dp"
                             android:cursorVisible="false"
-                            android:background="@null"
+                            android:background="@android:color/transparent"
                             android:textSize="14sp"
                             android:inputType="time" />
                     </LinearLayout>
@@ -177,7 +178,7 @@
                         android:gravity="center_horizontal">
 
                         <ImageView
-                            android:id="@+id/image_view_take_photo_camera"
+                            android:id="@+id/imageViewPhotoFromCamera"
                             android:layout_width="32dp"
                             android:layout_height="match_parent"
                             android:contentDescription="@string/camera"
@@ -190,7 +191,7 @@
                             android:src="@drawable/ic_photo_camera" />
 
                         <ImageView
-                            android:id="@+id/image_view_take_photo_gallery"
+                            android:id="@+id/imageViewPhotoFromGallery"
                             android:layout_width="32dp"
                             android:layout_height="match_parent"
                             android:contentDescription="@string/gallery"
@@ -211,10 +212,10 @@
                             app:boxBackgroundColor="@android:color/transparent">
 
                             <AutoCompleteTextView
-                                android:id="@+id/textview_list_of_taxa"
+                                android:id="@+id/autoCompleteTextViewSpeciesName"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="@string/naziv_taksona"
+                                android:hint="@string/taxon_name_hint"
                                 android:maxLength="300"
                                 android:paddingStart="12dp"
                                 android:paddingEnd="12dp"
@@ -226,13 +227,13 @@
                     </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/text_view_atlas_code_layout"
+                        android:id="@+id/textInputLayoutAtlasCode"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:boxBackgroundColor="@android:color/transparent"
                         android:visibility="gone">
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/text_view_atlas_code"
+                            android:id="@+id/textInputEditTextAtlasCode"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:drawableEnd="@drawable/ic_arrow_drop_down"
@@ -246,11 +247,11 @@
                         android:layout_height="wrap_content"
                         app:boxBackgroundColor="@android:color/transparent">
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editText_comment"
+                            android:id="@+id/textInputEditTextComment"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:maxLength="1000"
-                            android:hint="@string/komentar"/>
+                            android:hint="@string/comment_hint"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout
@@ -264,7 +265,7 @@
                             android:layout_height="wrap_content">
 
                             <com.google.android.material.checkbox.MaterialCheckBox
-                                android:id="@+id/male"
+                                android:id="@+id/checkBoxMale"
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:textColor="@color/checkBox_text"
@@ -273,7 +274,7 @@
                                 android:text="@string/male"/>
 
                             <com.google.android.material.checkbox.MaterialCheckBox
-                                android:id="@+id/female"
+                                android:id="@+id/checkBoxFemale"
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:textColor="@color/checkBox_text"
@@ -282,7 +283,7 @@
                                 android:text="@string/female"/>
 
                             <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/textView_specimens_no_1"
+                                android:id="@+id/textInputLayoutSpecimensNo1"
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
@@ -290,16 +291,16 @@
                                 app:boxBackgroundColor="@android:color/transparent">
 
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/editText_number_of_specimens_1"
+                                    android:id="@+id/textInputEditTextSpecimensNo1"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:hint="@string/broj_jedinki"
+                                    android:hint="@string/specimens_number_hint"
                                     android:inputType="number"
                                     android:maxLength="10" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <com.google.android.material.textfield.TextInputLayout
-                                android:id="@+id/textView_specimens_no_2"
+                                android:id="@+id/textInputLayoutSpecimensNo2"
                                 android:layout_width="0dp"
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
@@ -308,10 +309,10 @@
                                 app:boxBackgroundColor="@android:color/transparent">
 
                                 <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/editText_number_of_specimens_2"
+                                    android:id="@+id/textInputEditTextSpecimensNo2"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
-                                    android:hint="@string/broj_jedinki"
+                                    android:hint="@string/specimens_number_hint"
                                     android:maxLength="10"
                                     android:inputType="number"/>
                             </com.google.android.material.textfield.TextInputLayout>
@@ -319,7 +320,7 @@
                         </androidx.appcompat.widget.LinearLayoutCompat>
 
                         <com.google.android.material.chip.ChipGroup
-                            android:id="@+id/observation_types"
+                            android:id="@+id/chipGroupObservationTypes"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -328,13 +329,13 @@
                         </com.google.android.material.chip.ChipGroup>
 
                         <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/text_input_stages"
+                            android:id="@+id/textInputLayoutStages"
                             android:layout_width="match_parent"
                             android:layout_height="56dp"
                             app:boxBackgroundColor="@android:color/transparent"
                             android:visibility="gone">
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/text_view_stages"
+                                android:id="@+id/textInputEditTextStages"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:drawableEnd="@drawable/ic_arrow_drop_down"
@@ -348,7 +349,7 @@
                             android:layout_height="wrap_content"
                             app:boxBackgroundColor="@android:color/transparent">
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editText_habitat"
+                                android:id="@+id/textInputEditTextHabitat"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:maxLength="100"
@@ -360,7 +361,7 @@
                             android:layout_height="wrap_content"
                             app:boxBackgroundColor="@android:color/transparent">
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editText_found_on"
+                                android:id="@+id/editTextFoundOn"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:maxLength="100"
@@ -374,26 +375,26 @@
                             android:padding="5dp">
 
                             <com.google.android.material.checkbox.MaterialCheckBox
-                                android:id="@+id/dead_specimen"
+                                android:id="@+id/materialCheckBoxDead"
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:textColor="@color/checkBox_text"
-                                android:text="@string/jedinka_je"/>
+                                android:text="@string/specimen_is_dead"/>
 
                         </LinearLayout>
 
                         <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/textView_death_comment"
+                            android:id="@+id/textInputLayoutDeathComment"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:visibility="gone"
                             app:boxBackgroundColor="@android:color/transparent">
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/editText_death_comment"
+                                android:id="@+id/textInputEditTextDeathComment"
                                 android:layout_width="match_parent"
                                 android:maxLength="1000"
                                 android:layout_height="wrap_content"
-                                android:hint="@string/razlog_smrti"
+                                android:hint="@string/dead_comment_hint"
                                 android:inputType="text"/>
                         </com.google.android.material.textfield.TextInputLayout>
 
@@ -405,14 +406,14 @@
                         android:gravity="center">
 
                         <FrameLayout
-                            android:id="@+id/ib_pic1_frame"
+                            android:id="@+id/frameLayoutPicture1"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:layout_marginEnd="5dp"
                             android:visibility="gone">
 
                             <ImageView
-                                android:id="@+id/ib_pic1"
+                                android:id="@+id/imageViewPicture1"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:contentDescription="@string/image_frame"
@@ -420,7 +421,7 @@
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/ic_photo_camera" />
                             <ImageView
-                                android:id="@+id/ib_pic1_del"
+                                android:id="@+id/imageViewDeletePicture1"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:layout_margin="4dp"
@@ -432,13 +433,13 @@
                         </FrameLayout>
 
                         <FrameLayout
-                            android:id="@+id/ib_pic2_frame"
+                            android:id="@+id/frameLayoutPicture2"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:layout_marginEnd="5dp"
                             android:visibility="gone">
                             <ImageView
-                                android:id="@+id/ib_pic2"
+                                android:id="@+id/imageViewPicture2"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:contentDescription="@string/image_frame"
@@ -446,7 +447,7 @@
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/ic_photo_camera" />
                             <ImageView
-                                android:id="@+id/ib_pic2_del"
+                                android:id="@+id/imageViewDeletePicture2"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:layout_margin="4dp"
@@ -458,13 +459,13 @@
                         </FrameLayout>
 
                         <FrameLayout
-                            android:id="@+id/ib_pic3_frame"
+                            android:id="@+id/frameLayoutPicture3"
                             android:layout_width="100dp"
                             android:layout_height="100dp"
                             android:layout_marginEnd="5dp"
                             android:visibility="gone">
                             <ImageView
-                                android:id="@+id/ib_pic3"
+                                android:id="@+id/imageViewPicture3"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:contentDescription="@string/image_frame"
@@ -472,7 +473,7 @@
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/ic_photo_camera" />
                             <ImageView
-                                android:id="@+id/ib_pic3_del"
+                                android:id="@+id/imageViewDeletePicture3"
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:layout_margin="4dp"

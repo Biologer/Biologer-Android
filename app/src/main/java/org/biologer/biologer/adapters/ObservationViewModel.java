@@ -2,6 +2,7 @@ package org.biologer.biologer.adapters;
 
 
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -9,17 +10,17 @@ import androidx.lifecycle.ViewModel;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.services.ArrayHelper;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 public class ObservationViewModel extends ViewModel {
     private Long entryId = null;
@@ -51,7 +52,10 @@ public class ObservationViewModel extends ViewModel {
     private Uri currentImage = null;
     private final ArrayList<String> listNewImages = new ArrayList<>();
     private Boolean taxonFromTheList = false;
-    private int[] observationTypeIds = null;
+    private Boolean locationFromTheMap = false;
+    private Boolean callTagSelected = false;
+    private Integer callTagIndex = null;
+    private final Set<Integer> observationTypeIds = new HashSet<>();
 
     public void getFromObjectBox(EntryDb entry) {
         setEntryId(entry.getId());
@@ -78,7 +82,7 @@ public class ObservationViewModel extends ViewModel {
         setDataLicence(entry.getDataLicence());
         setImageLicence(entry.getImageLicence());
         setHabitat(entry.getHabitat());
-        setObservationTypes(ArrayHelper.getArrayFromText(entry.getObservationTypeIds()));
+        setObservationTypesFromString(entry.getObservationTypeIds());
     }
 
     public EntryDb getObservation() {
@@ -117,7 +121,7 @@ public class ObservationViewModel extends ViewModel {
                     imageLicense,
                     DateHelper.getPlainTime(calendar1),
                     getHabitat(),
-                    Arrays.toString(getObservationTypes()));
+                    getObservationTypes().toString());
         }
         return null;
     }
@@ -350,20 +354,16 @@ public class ObservationViewModel extends ViewModel {
         this.taxonFromTheList = taxonFromTheList;
     }
 
-    public int[] getObservationTypes() {
+    public Set<Integer> getObservationTypes() {
         return observationTypeIds;
     }
 
-    public void setObservationTypes(int[] observationTypeIds) {
-        this.observationTypeIds = observationTypeIds;
-    }
-
     public void addObservationType(int id) {
-        this.observationTypeIds = ArrayHelper.insertIntoArray(observationTypeIds, id);
+        observationTypeIds.add(id);
     }
 
     public void removeObservationType(int id) {
-        this.observationTypeIds = ArrayHelper.removeFromArray(observationTypeIds, id);
+        observationTypeIds.remove(id);
     }
 
     public Long getEntryId() {
@@ -464,5 +464,63 @@ public class ObservationViewModel extends ViewModel {
 
     public void setCurrentImage(Uri currentImage) {
         this.currentImage = currentImage;
+    }
+
+    public void setObservationTypesFromString(String observationTypeString) {
+        observationTypeIds.clear();
+        if (observationTypeString == null || observationTypeString.trim().isEmpty() || "[]".equals(observationTypeString.trim())) {
+            return;
+        }
+
+        try {
+            // Clean the string and split into an array of number-strings
+            String[] stringIds = observationTypeString.replaceAll("[\\[\\]\\s]", "").split(",");
+            for (String idString : stringIds) {
+                int id = Integer.parseInt(idString);
+                addObservationType(id);
+            }
+        } catch (NumberFormatException e) {
+            Log.e("ViewModel", "Failed to parse observation types string: " + observationTypeString, e);
+        }
+    }
+
+    public Boolean getLocationFromTheMap() {
+        return locationFromTheMap;
+    }
+
+    public Boolean isLocationFromTheMap() {
+        if (getLocationFromTheMap() != null) {
+            return locationFromTheMap;
+        } else {
+            return false;
+        }
+    }
+
+    public void setLocationFromTheMap(Boolean locationFromTheMap) {
+        this.locationFromTheMap = locationFromTheMap;
+    }
+
+    public Boolean getCallTagSelected() {
+        return callTagSelected;
+    }
+
+    public Boolean isCallTagSelected() {
+        if (callTagSelected != null) {
+            return callTagSelected;
+        } else {
+            return false;
+        }
+    }
+
+    public void setCallTagSelected(Boolean callTagSelected) {
+        this.callTagSelected = callTagSelected;
+    }
+
+    public Integer getCallTagIndex() {
+        return callTagIndex;
+    }
+
+    public void setCallTagIndex(Integer callTagIndex) {
+        this.callTagIndex = callTagIndex;
     }
 }
