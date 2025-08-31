@@ -8,20 +8,20 @@
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="butt"/>
   <path
       android:pathData="M4.1224,1.2283 L2.9982,3.9876"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="M2.7748,4.536m-0.7281,-0.2967a0.7863,0.7863 67.1669,1 1,1.4563 0.5933a0.7863,0.7863 67.1669,1 1,-1.4563 -0.5933"
       android:strokeWidth="0.217985"
-      android:fillColor="#000000"
-      android:strokeColor="#00000000"
+      android:fillColor="?attr/iconColor"
+      android:strokeColor="?attr/iconColor"
       android:fillType="evenOdd"
       android:strokeLineCap="round"/>
   <path
@@ -29,27 +29,27 @@
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="M2.5519,2.0783 L2.0789,1.8986"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="M2.6891,1.6486 L2.5443,1.5951"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="M2.3601,2.4618 L2.2153,2.4083"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.244476"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
 </vector>

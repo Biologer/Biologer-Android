@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="iconColor">@color/icon_color</item>
     </style>
 
     <!-- Toolbar text color. -->

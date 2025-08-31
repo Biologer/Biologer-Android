@@ -8,41 +8,41 @@
       android:strokeLineJoin="miter"
       android:strokeWidth="0.28"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="m3.0585,1.3983c-0.39,0.6171 -0.0517,0.7803 0.0903,1.2922 0.1309,0.3905 0.0328,0.9516 -0.1677,1.7227"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.28"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="m5.273,0.6692c-0.3813,0.2516 -0.7062,0.6064 -0.6246,1.2029 0.1008,0.3233 0.1883,0.3592 0.3065,0.6362 0.4418,0.8336 0.0328,2.1784 -0.1677,2.9495"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.28"
       android:fillColor="#00000000"
-      android:strokeColor="#000000"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="round"/>
   <path
       android:pathData="m1.3096,4.9662 l-0.5147,-0.4569 0.3354,1.1509 0.8097,-0.7923z"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.264583"
-      android:fillColor="#000000"
-      android:strokeColor="#000000"
+      android:fillColor="?attr/iconColor"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="butt"/>
   <path
       android:pathData="m2.952,4.479 l-0.5147,-0.4569 0.3354,1.1509 0.8097,-0.7923z"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.264583"
-      android:fillColor="#000000"
-      android:strokeColor="#000000"
+      android:fillColor="?attr/iconColor"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="butt"/>
   <path
       android:pathData="m4.8911,5.0634 l-0.5147,-0.4569 0.3354,1.1509 0.8097,-0.7923z"
       android:strokeLineJoin="miter"
       android:strokeWidth="0.264583"
-      android:fillColor="#000000"
-      android:strokeColor="#000000"
+      android:fillColor="?attr/iconColor"
+      android:strokeColor="?attr/iconColor"
       android:strokeLineCap="butt"/>
 </vector>

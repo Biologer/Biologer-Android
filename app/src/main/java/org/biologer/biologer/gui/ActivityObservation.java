@@ -160,6 +160,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         binding.imageViewPhotoFromGallery.setOnClickListener(this);
         // Map icon
         binding.imageViewMap.setOnClickListener(this);
+        binding.linearLayoutLocation.setOnClickListener(this);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         // Show advanced options for data entry if selected in preferences.
         // But ignore this option for Time Counts Entry.
@@ -259,6 +260,29 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         // Activate the field for species name and show the keyboard.
         binding.autoCompleteTextViewSpeciesName.requestFocus();
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+
+        binding.textInputEditTextSpecimensNo.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s != null) {
+                    if (!s.toString().isEmpty()) {
+                        viewModel.setNumberOfSpecimens(Integer.parseInt(s.toString()));
+                    } else {
+                        viewModel.setNumberOfSpecimens(null);
+                    }
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+        });
     }
 
     private void setupLocationListenerAndManager() {
@@ -734,7 +758,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             case R.id.materialCheckBoxDead:
                 viewModel.checkDead();
                 break;
-            case R.id.imageViewMap:
+            case R.id.linearLayoutLocation, R.id.imageViewMap:
                 showMap();
                 break;
             case R.id.imageViewPhotoFromCamera:

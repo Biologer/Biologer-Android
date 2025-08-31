@@ -13,4 +13,5 @@
     <color name="fragment_background">#121212</color>
     <color name="checkBox_text">#999999</color>
     <color name="black_on_light_white_on_night">#ffffff</color>
+    <color name="icon_color">#E0E0E0</color>
 </resources>
