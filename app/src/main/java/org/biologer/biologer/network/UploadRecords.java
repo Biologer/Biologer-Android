@@ -229,7 +229,9 @@ public class UploadRecords extends Service {
         }
         apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
         apiEntry.setYear(entryDb.getYear());
-        apiEntry.setMonth(entryDb.getMonth());
+        // The month is given starting with 0 (0-11), convert it for the online API
+        int month = Integer.parseInt(entryDb.getMonth()) + 1;
+        apiEntry.setMonth(String.valueOf(month));
         apiEntry.setDay(entryDb.getDay());
         apiEntry.setLatitude(entryDb.getLattitude());
         apiEntry.setLongitude(entryDb.getLongitude());
