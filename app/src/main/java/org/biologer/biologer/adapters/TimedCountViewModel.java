@@ -31,6 +31,8 @@ public class TimedCountViewModel extends ViewModel {
     private Boolean isModified = null;
     private String startTimeString = null;
     private String endTimeString = null;
+    private Integer area = null;
+    private Integer distance = null;
     private final List<Long> newEntryIds = new ArrayList<>();
     private long startTime = 0L;
     private long pausedTime = 0L;
@@ -248,5 +250,21 @@ public class TimedCountViewModel extends ViewModel {
 
     public Boolean isModified() {
         return Boolean.TRUE.equals(getModified());
+    }
+
+    public Integer getArea() {
+        return area;
+    }
+
+    public void setArea(Integer area) {
+        this.area = area;
+    }
+
+    public Integer getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Integer distance) {
+        this.distance = distance;
     }
 }

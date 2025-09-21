@@ -48,6 +48,7 @@ public class LocationTrackingService extends Service {
     public static final String CURRENT_LOCATION = "current_location";
     public static final String ACTION_ROUTE_RESULT = "org.biologer.biologer.action.ROUTE_RESULT";
     public static final String WALKED_AREA = "walked_area";
+    public static final String WALKED_DISTANCE = "walked_distance";
     private boolean isTracking = true;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -223,15 +224,37 @@ public class LocationTrackingService extends Service {
         return polygon.getArea();
     }
 
+    // Calculate total walked distance in meters from UTM coordinates
+    public double calculateDistance() {
+        if (routeUtmPoints.size() < 2) {
+            return 0.0; // Need at least 2 points for distance
+        }
+
+        double totalDistance = 0.0;
+        for (int i = 0; i < routeUtmPoints.size() - 1; i++) {
+            UTMPoint p1 = routeUtmPoints.get(i);
+            UTMPoint p2 = routeUtmPoints.get(i + 1);
+
+            double dx = p2.easting - p1.easting;
+            double dy = p2.northing - p1.northing;
+
+            totalDistance += Math.sqrt(dx * dx + dy * dy);
+        }
+
+        return totalDistance;
+    }
+
     private void stopTrackingAndCalculate() {
         fusedLocationClient.removeLocationUpdates(locationCallback);
 
         double totalArea = calculateArea();
-        Log.d(TAG, "Total area walked: " + totalArea + " square meters.");
+        double totalDistance = calculateDistance();
+        Log.d(TAG, "Total area walked: " + totalArea + " m2 (distance = " + totalDistance + " m).");
 
         // Broadcast the result back to the Activity
         Intent resultIntent = new Intent(ACTION_ROUTE_RESULT);
         resultIntent.putExtra(WALKED_AREA, totalArea);
+        resultIntent.putExtra(WALKED_DISTANCE, totalDistance);
         LocalBroadcastManager.getInstance(this).sendBroadcast(resultIntent);
 
         stopSelf();

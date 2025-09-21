@@ -628,7 +628,7 @@
     },
     {
       "id": "22:5077654541060987432",
-      "lastPropertyId": "17:3745161465141926660",
+      "lastPropertyId": "19:452295637882575111",
       "name": "TimedCountDb",
       "properties": [
         {
@@ -716,6 +716,16 @@
           "id": "17:3745161465141926660",
           "name": "year",
           "type": 9
+        },
+        {
+          "id": "18:4657190102378698014",
+          "name": "walkedArea",
+          "type": 5
+        },
+        {
+          "id": "19:452295637882575111",
+          "name": "walkedDistance",
+          "type": 5
         }
       ],
       "relations": []

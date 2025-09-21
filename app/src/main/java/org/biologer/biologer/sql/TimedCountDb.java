@@ -12,6 +12,8 @@ public class TimedCountDb {
     private String startTime;
     private String endTime;
     private Integer countDurationMinutes;
+    private Integer walkedArea;
+    private Integer walkedDistance;
     private Integer cloudCoverPercentage;
     private Integer atmosphericPressureHPa;
     private Integer humidityPercentage;
@@ -28,7 +30,8 @@ public class TimedCountDb {
     public TimedCountDb() {
     }
     public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, Integer countDurationMinutes,
-                        Integer cloudCoverPercentage, Integer atmosphericPressureHPa, Integer humidityPercentage,
+                        Integer walkedArea, Integer walkedDistance, Integer cloudCoverPercentage,
+                        Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
                         String comment, String taxonGroup, String day, String month, String year) {
         this.id = id;
@@ -36,6 +39,8 @@ public class TimedCountDb {
         this.startTime = startTime;
         this.endTime = endTime;
         this.countDurationMinutes = countDurationMinutes;
+        this.walkedArea = walkedArea;
+        this.walkedDistance = walkedDistance;
         this.cloudCoverPercentage = cloudCoverPercentage;
         this.atmosphericPressureHPa = atmosphericPressureHPa;
         this.humidityPercentage = humidityPercentage;
@@ -179,5 +184,21 @@ public class TimedCountDb {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public Integer getWalkedArea() {
+        return walkedArea;
+    }
+
+    public void setWalkedArea(Integer walkedArea) {
+        this.walkedArea = walkedArea;
+    }
+
+    public Integer getWalkedDistance() {
+        return walkedDistance;
+    }
+
+    public void setWalkedDistance(Integer walkedDistance) {
+        this.walkedDistance = walkedDistance;
     }
 }

@@ -576,6 +576,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 viewModel.getStartTimeString(),
                 viewModel.getEndTimeString(),
                 count_duration_minutes,
+                viewModel.getArea(),
+                viewModel.getDistance(),
                 viewModel.getCloudinessData().getValue(),
                 viewModel.getPressureData(),
                 viewModel.getHumidityData(),
@@ -971,6 +973,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 } else if (intent.getAction().equals(LocationTrackingService.ACTION_ROUTE_RESULT)) {
                     double totalArea = intent.getDoubleExtra(LocationTrackingService.WALKED_AREA, 0.0);
                     Log.d(TAG, "Received total area: " + totalArea);
+                    double totalDistance = intent.getDoubleExtra(LocationTrackingService.WALKED_DISTANCE, 0.0);
+                    Log.d(TAG, "Received total area: " + totalDistance);
+                    viewModel.setArea( (int) totalArea );
+                    viewModel.setDistance( (int) totalDistance);
                 }
             }
         }
