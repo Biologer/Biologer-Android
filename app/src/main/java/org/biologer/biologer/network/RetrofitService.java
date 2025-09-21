@@ -2,6 +2,8 @@ package org.biologer.biologer.network;
 
 import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryResponse;
+import org.biologer.biologer.network.json.APITimedCounts;
+import org.biologer.biologer.network.json.APITimedCountsResponse;
 import org.biologer.biologer.network.json.AnnouncementsResponse;
 import org.biologer.biologer.network.json.ElevationResponse;
 import org.biologer.biologer.network.json.FieldObservationResponse;
@@ -88,6 +90,11 @@ public interface RetrofitService {
     ,"content-type: application/json"})
     @POST("api/field-observations")
     Call<APIEntryResponse> uploadEntry(@Body APIEntry apiEntry);
+
+    @Headers({"Accept: application/json"
+            ,"content-type: application/json"})
+    @POST("api/timed-count-observations")
+    Call<APITimedCountsResponse> uploadTimedCount(@Body APITimedCounts timedCounts);
 
     @Headers({"Accept: application/json"})
     @GET("api/field-observations/")

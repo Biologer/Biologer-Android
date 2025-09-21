@@ -39,15 +39,10 @@ import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +59,7 @@ public class FragmentLanding extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
 
-        items = (ArrayList<LandingFragmentItems>) loadAllEntries(); // Load the entries from the database
+        items = LandingFragmentItems.loadAllEntries(requireContext()); // Load the entries from the database
         setupRecycleView(rootView);
         setupFloatActionButton(rootView);
         setupBroadcastReceiver();
@@ -105,8 +100,18 @@ public class FragmentLanding extends Fragment {
                         if (s.equals("id_uploaded")) {
                             Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
                             int index = getIndexFromID(entry_id);
-                            items.remove(index);
-                            entriesAdapter.notifyItemRemoved(index);
+                            if (index != -1) {
+                                items.remove(index);
+                                entriesAdapter.notifyItemRemoved(index);
+                            }
+                        }
+                        if (s.equals("timed_count_uploaded")) {
+                            Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
+                            int index = getIndexFromTimedCountID(entry_id);
+                            if (index != -1) {
+                                items.remove(index);
+                                entriesAdapter.notifyItemRemoved(index);
+                            }
                         }
                     }
 
@@ -252,39 +257,13 @@ public class FragmentLanding extends Fragment {
                         }
                     });
 
-    // Loads all LandingFragmentItems inti the RecyclerView list of items
-    private List<LandingFragmentItems> loadAllEntries() {
-        // This list will hold all the items displayed
-        List<LandingFragmentItems> items = new ArrayList<>();
-
-        // Get the ObjectBox entries containing regular species observation data
-        ArrayList<EntryDb> observations = ObjectBoxHelper.getObservations();
-        Log.d(TAG, "There are " + observations.size() + " regular observations.");
-        for (EntryDb entry : observations) {
-            items.add(getItemFromEntry(entry));
-        }
-
-        // Get the ObjectBox entries containing timed count data
-        ArrayList<TimedCountDb> timedCounts = ObjectBoxHelper.getTimedCounts();
-        Log.d(TAG, "There are " + timedCounts.size() + " timed counts.");
-        for (TimedCountDb timedCountDb : timedCounts) {
-            items.add(getItemFromTimedCount(timedCountDb));
-        }
-
-        // Sort items in descending order
-        Collections.sort(items, (item1, item2) ->
-                item2.getDate().compareTo(item1.getDate()));
-
-        return items;
-    }
-
     private void addObservationItem(long newEntryId) {
         // Load the entry from ObjectBox
         EntryDb entryDb = ObjectBoxHelper.getObservationById(newEntryId);
 
         // Add the entry to the entry list (RecycleView)
         if (entryDb != null) {
-            LandingFragmentItems item = getItemFromEntry(entryDb);
+            LandingFragmentItems item = LandingFragmentItems.getItemFromEntry(requireContext(), entryDb);
             addItemToRecyclerView(item);
         }
     }
@@ -321,51 +300,6 @@ public class FragmentLanding extends Fragment {
         removeInfoText();
     }
 
-    private LandingFragmentItems getItemFromEntry(EntryDb entry) {
-        Long observationId = entry.getId();
-        String title = entry.getTaxonSuggestion();
-
-        String subtitle = "";
-        Long stage_id = entry.getStage();
-        if (stage_id != null) {
-            StageDb stage = ObjectBoxHelper.getStageById(stage_id);
-            if (stage != null) {
-                subtitle = StageAndSexLocalization.getStageLocale(getContext(), stage.getName());
-            }
-        }
-
-        String image = null;
-        if (entry.getSlika3() != null) {
-            image = entry.getSlika3();
-        }
-        if (entry.getSlika2() != null) {
-            image = entry.getSlika2();
-        }
-        if (entry.getSlika1() != null) {
-            image = entry.getSlika1();
-        }
-
-        Calendar calendar = DateHelper.getCalendar(entry.getYear(),
-                entry.getMonth(), entry.getDay(), entry.getTime());
-
-        return new LandingFragmentItems(observationId, null,
-                title, subtitle, image, calendar.getTime());
-    }
-
-    private LandingFragmentItems getItemFromTimedCount(TimedCountDb timed_count) {
-        String title = getString(R.string.timed_count);
-        String image = "timed_count";
-        String subtitle;
-        Calendar calendar = DateHelper.getCalendar(timed_count.getYear(),
-                timed_count.getMonth(), timed_count.getDay(), timed_count.getStartTime());
-        subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
-                getString(R.string.at_time) + " " +
-                DateHelper.getLocalizedCalendarTime(calendar);
-
-        return new LandingFragmentItems(null, timed_count.getTimedCountId(),
-                title, subtitle, image, calendar.getTime());
-    }
-
     @Override
     public void onPause() {
         super.onPause();
@@ -380,13 +314,13 @@ public class FragmentLanding extends Fragment {
         super.onResume();
         Context context = getContext();
         if (context != null) {
-            LocalBroadcastManager.getInstance(getContext()).registerReceiver((broadcastReceiver),
+            LocalBroadcastManager.getInstance(context).registerReceiver((broadcastReceiver),
                     new IntentFilter(UploadRecords.TASK_COMPLETED)
             );
         }
 
         if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
-            loadAllEntries();
+            items = LandingFragmentItems.loadAllEntries(context);
             entriesAdapter = new LandingFragmentAdapter(items);
             recyclerView.setAdapter(entriesAdapter);
         }
@@ -459,25 +393,36 @@ public class FragmentLanding extends Fragment {
 
         // Update the item in the RecycleView
         if (entryDb != null) {
-            items.set(entry_id, getItemFromEntry(entryDb));
+            items.set(entry_id, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
             entriesAdapter.notifyItemChanged(entry_id);
         }
     }
 
-    // Find the entry’s index ID
+    // Find the entry’s index by ObservationId
     private int getIndexFromID(long entry_id) {
-
-        int index_id = 0;
         for (int i = items.size() - 1; i >= 0; i--) {
             Long entryId = items.get(i).getObservationId();
-            if (entryId != null) {
-                if (entryId == entry_id) {
-                    index_id = i;
-                }
+            if (entryId != null && entryId == entry_id) {
+                Log.d(TAG, "Entry " + entry_id + " index ID is " + i);
+                return i; // found, return immediately
             }
         }
-        Log.d(TAG, "Entry " + entry_id + " index ID is " + index_id);
-        return index_id;
+        Log.d(TAG, "Entry " + entry_id + " not found in items.");
+        return -1; // Not found
+    }
+
+
+    // Find the entry’s index by TimedCountId
+    private int getIndexFromTimedCountID(long tc_id) {
+        for (int i = items.size() - 1; i >= 0; i--) {
+            Integer timedCountId = items.get(i).getTimedCountId();
+            if (timedCountId != null && timedCountId.longValue() == tc_id) {
+                Log.d(TAG, "Entry " + tc_id + " index ID is " + i);
+                return i;
+            }
+        }
+        Log.d(TAG, "Entry " + tc_id + " not found in items.");
+        return -1; // Not found
     }
 
     public void duplicateEntry(int position) {
@@ -510,7 +455,7 @@ public class FragmentLanding extends Fragment {
                     entry_from.getTime(),
                     entry_from.getHabitat(),
                     "");
-            items.add(0, getItemFromEntry(entry));
+            items.add(0, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
 
             // Update ObjectBox
             long new_entry_id = ObjectBoxHelper.setObservation(entry);

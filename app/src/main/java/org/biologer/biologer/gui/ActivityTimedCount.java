@@ -101,8 +101,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private FusedLocationProviderClient fusedLocationClient;
     private TimedCountAdapter timedCountAdapter;
     private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
-    int count_duration_minutes = 0;
-    long selectedTaxaGroupID = 0;
     boolean save_enabled = false;
     private boolean is_fragment_visible = false;
     private TimedCountViewModel viewModel;
@@ -213,10 +211,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                         taxonSelectedFromTheList = false;
 
                         List<TaxonDb> allTaxaLists;
-                        if (selectedTaxaGroupID == 0) {
+                        if (viewModel.getTaxonGroupId() == 0) {
                             allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
                         } else {
-                            allTaxaLists = taxonSearchHelper.searchTaxaByGroup(s.toString(), selectedTaxaGroupID);
+                            allTaxaLists = taxonSearchHelper.searchTaxaByGroup(s.toString(), viewModel.getTaxonGroupId());
                         }
 
                         // Add the Query to the drop down list (adapter)
@@ -283,7 +281,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         viewModel.getElapsedTime().observe(this, elapsed -> {
             binding.textViewElapsedTime.setText(formatTime(elapsed));
 
-            if (count_duration_minutes > 0 && elapsed >= count_duration_minutes * 60_000L) {
+            if (viewModel.getCountDuration() > 0 && elapsed >= viewModel.getCountDuration() * 60_000L) {
                 viewModel.pauseTimer();
                 Log.d(TAG, "Countdown finished!");
 
@@ -575,7 +573,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 viewModel.getTimedCountId(),
                 viewModel.getStartTimeString(),
                 viewModel.getEndTimeString(),
-                count_duration_minutes,
+                viewModel.getCountDuration(),
                 viewModel.getArea(),
                 viewModel.getDistance(),
                 viewModel.getCloudinessData().getValue(),
@@ -586,7 +584,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 viewModel.getWindSpeedData(),
                 viewModel.getHabitatData(),
                 viewModel.getCommentData(),
-                String.valueOf(selectedTaxaGroupID),
+                String.valueOf(viewModel.getTaxonGroupId()),
                 DateHelper.getCurrentDay(),
                 DateHelper.getCurrentMonth(),
                 DateHelper.getCurrentYear());
@@ -688,12 +686,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         builder.setPositiveButton(R.string.start_counting, (dialog, which) -> {
             String minutesString = editTextMinutes.getText().toString();
             if (!minutesString.isEmpty()) {
-                count_duration_minutes = Integer.parseInt(minutesString);
+                viewModel.setCountDuration(Integer.parseInt(minutesString));
             }
 
             // Get the taxa group ID for selected taxa
             String selectedTaxa = (String) spinnerTaxaGroup.getSelectedItem();
-            Log.d(TAG, "Minutes: " + count_duration_minutes + ", Selected Option: " + selectedTaxa);
+            Log.d(TAG, "Minutes: " + viewModel.getCountDuration() + ", Selected Option: " + selectedTaxa);
             Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
             if (selectedTaxa.equals(getString(R.string.butterflies))) {
                 Query<TaxonGroupsDb> query = taxonGroupsDataBox
@@ -703,7 +701,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 List<TaxonGroupsDb> listParents = query.find();
                 query.close();
                 if (!listParents.isEmpty()) {
-                    selectedTaxaGroupID = listParents.get(0).getId();
+                    viewModel.setTaxonGroupId(listParents.get(0).getId());
                 }
             }
             if (selectedTaxa.equals(getString(R.string.birds))) {
@@ -713,10 +711,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 List<TaxonGroupsDb> listParents = query.find();
                 query.close();
                 if (!listParents.isEmpty()) {
-                    selectedTaxaGroupID = listParents.get(0).getId();
+                    viewModel.setTaxonGroupId(listParents.get(0).getId());
                 }
             }
-            Log.d(TAG, "Selected taxa (" + selectedTaxa + ") has ID: " + selectedTaxaGroupID);
+            Log.d(TAG, "Selected taxa (" + selectedTaxa + ") has ID: " + viewModel.getTaxonGroupId());
 
             String api_key = BuildConfig.OpenWeather_KEY;
             fetchLatestLocation(new LocationResultCallback() {

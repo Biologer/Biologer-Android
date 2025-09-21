@@ -2,7 +2,6 @@ package org.biologer.biologer.adapters;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -25,6 +24,7 @@ public class TimedCountViewModel extends ViewModel {
     private String habitatData = null;
     private String commentData = null;
     private Long taxonId = null;
+    private Long taxonGroupId = null;
     private Integer timedCountId = null;
     private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
     private Boolean isRunning = null;
@@ -36,6 +36,7 @@ public class TimedCountViewModel extends ViewModel {
     private final List<Long> newEntryIds = new ArrayList<>();
     private long startTime = 0L;
     private long pausedTime = 0L;
+    private int countDuration = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Boolean newEntry = false;
 
@@ -266,5 +267,21 @@ public class TimedCountViewModel extends ViewModel {
 
     public void setDistance(Integer distance) {
         this.distance = distance;
+    }
+
+    public int getCountDuration() {
+        return countDuration;
+    }
+
+    public void setCountDuration(int countDuration) {
+        this.countDuration = countDuration;
+    }
+
+    public Long getTaxonGroupId() {
+        return taxonGroupId;
+    }
+
+    public void setTaxonGroupId(Long taxonGroupId) {
+        this.taxonGroupId = taxonGroupId;
     }
 }
