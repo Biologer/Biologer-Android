@@ -2,6 +2,9 @@ package org.biologer.biologer.network.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.biologer.biologer.services.ArrayHelper;
+import org.biologer.biologer.sql.EntryDb;
+
 import java.util.List;
 
 /**
@@ -293,5 +296,37 @@ public class APIEntry {
 
     public void setPhotos(List<APIEntryPhotos> photos) {
         this.photos = photos;
+    }
+
+    public void getFromEntryDb (EntryDb entry) {
+        // Set the ID or set the null if there is no ID.
+        if (entry.getTaxonId() != 0) setTaxonId( (int) entry.getTaxonId());
+        else setTaxonId(null);
+
+        setTaxonSuggestion(entry.getTaxonSuggestion());
+        setYear(entry.getYear());
+        int month = Integer.parseInt(entry.getMonth()) + 1; // Add 1 since months range from 0 to 11
+        setMonth(String.valueOf(month));
+        setDay(entry.getDay());
+        setLatitude(entry.getLattitude());
+        setLongitude(entry.getLongitude());
+        setAccuracy(entry.getAccuracy() == 0.0 ? null : (int) entry.getAccuracy());
+        setLocation(entry.getLocation());
+        setElevation((int) entry.getElevation());
+        setNote(entry.getComment());
+        setSex(entry.getSex());
+        setNumber(entry.getNoSpecimens());
+        setProject(entry.getProjectId());
+        setFoundOn(entry.getFoundOn());
+        setStageId(entry.getStage());
+        setAtlasCode(entry.getAtlasCode());
+        setFoundDead(entry.getDeadOrAlive().equals("true") ? 0 : 1);
+        setFoundDeadNote(entry.getCauseOfDeath());
+        setDataLicense(entry.getDataLicence());
+        setTime(entry.getTime());
+        int[] observation_types = ArrayHelper.getArrayFromText(entry.getObservationTypeIds());
+        if (observation_types == null) observation_types = new int[]{1};
+        setTypes(observation_types);
+        setHabitat(entry.getHabitat());
     }
 }

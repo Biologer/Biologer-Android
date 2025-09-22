@@ -11,7 +11,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -19,17 +18,12 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.LandingFragmentItems;
+import org.biologer.biologer.gui.ActivityLanding;
 import org.biologer.biologer.network.json.APITimedCounts;
 import org.biologer.biologer.network.json.APITimedCountsResponse;
-import org.biologer.biologer.services.ArrayHelper;
-import org.biologer.biologer.gui.ActivityLanding;
 import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
@@ -41,6 +35,7 @@ import org.biologer.biologer.sql.TimedCountDb;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -54,17 +49,16 @@ public class UploadRecords extends Service {
     private static final String TAG = "Biologer.UploadRecords";
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_CANCEL = "ACTION_CANCEL";
-    static final public String TASK_COMPLETED = "org.biologer.biologer.UploadRecordsService.TASK_COMPLETED";
-    boolean keep_going = true;
-    ArrayList<LandingFragmentItems> entries;
-    int totalEntries = 0;
-    int remainingEntries = 0;
-    ArrayList<String> images_array = new ArrayList<>();
-    List<APIEntryPhotos> photos = null;
-    LocalBroadcastManager broadcaster;
-    String[] filenames = new String[3]; // save image names to be deleted on success
-    int n = 0;
-    int m = 0;
+    public static final String TASK_COMPLETED = "org.biologer.biologer.UploadRecordsService.TASK_COMPLETED";
+
+    private static final int MAX_RETRIES = 3;
+
+    private boolean keepGoing = true;
+    private ArrayList<LandingFragmentItems> entries;
+    private int totalEntries = 0;
+    private int remainingEntries = 0;
+    private LocalBroadcastManager broadcaster;
+    private AtomicInteger remainingUploads;
 
     @Override
     public void onCreate() {
@@ -89,12 +83,13 @@ public class UploadRecords extends Service {
                         Log.d(TAG, "Starting upload process…");
                         entries = LandingFragmentItems.loadAllEntries(this);
                         totalEntries = entries.size();
+                        remainingUploads = new AtomicInteger(entries.size());
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
                         notificationInitiate();
                         break;
                     case ACTION_CANCEL:
-                        // Stop uploading!
-                        cancelUpload(getString(R.string.notify_title_upload_canceled), getString(R.string.notify_desc_upload_canceled));
+                        cancelUpload(getString(R.string.notify_title_upload_canceled),
+                                getString(R.string.notify_desc_upload_canceled));
                         stopSelf();
                         break;
                 }
@@ -105,11 +100,10 @@ public class UploadRecords extends Service {
 
     private void cancelUpload(String title, String description) {
         Log.d(TAG, "Canceling upload process…");
-        keep_going = false;
+        keepGoing = false;
         stopForegroundAndNotify(title, description);
     }
 
-    // Stop the foreground service and update the notification
     @SuppressLint("deprecation")
     private void stopForegroundAndNotify(String title, String description) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -123,21 +117,17 @@ public class UploadRecords extends Service {
 
     @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationInitiate() {
-        // Start the uploading and display notification
-        Log.i(TAG, "Displaying notification for uploading service.");
-
-        // Create initial notification to be set to Foreground
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         } else {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         }
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_entries")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_entries")
                 .setSmallIcon(R.mipmap.ic_notification)
                 .setContentTitle(getString(R.string.notify_title_entries))
                 .setContentText(getString(R.string.notify_desc_entries))
@@ -147,402 +137,234 @@ public class UploadRecords extends Service {
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(false);
 
-        Notification notification = mBuilder.build();
+        Notification notification = builder.build();
 
-        // Delay starting the upload, trying to fix an issue on some phones.
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Log.d(TAG, "Starting foreground service after delay.");
             startForeground(1, notification);
             startUpload();
         }, 150);
     }
 
     private void startUpload() {
-        for (int i = 0; i < entries.size(); i++) {
-            LandingFragmentItems item = entries.get(i);
-            // Update upload status bar
-            remainingEntries++;
-            String statusText =
-                    getString(R.string.notify_desc_uploading) + " " + remainingEntries + " " +
-                            getString(R.string.notify_desc_uploading1) + " " + totalEntries + " " +
-                            getString(R.string.notify_desc_uploading2);
-            notificationUpdateProgress(totalEntries, remainingEntries, statusText);
+        for (LandingFragmentItems item : entries) {
+            if (!keepGoing) {
+                Log.i(TAG, "Uploading canceled by user.");
+                break;
+            }
 
-            // Check if the upload has been canceled
-            if (keep_going) {
-                Integer timedCountId = item.getTimedCountId();
-                if (timedCountId != null) {
-                    Log.i(TAG, "Uploading timed count data ID " + item.getTimedCountId());
-                    uploadTimedCount(item.getTimedCountId());
-                } else {
-                    Log.i(TAG, "Uploading regular observation ID " + item.getObservationId());
-                    uploadObservation(item.getObservationId());
-                }
+            Integer timedCountId = item.getTimedCountId();
+            incrementRemainingEntries();
+            if (timedCountId != null) {
+                uploadTimedCount(timedCountId, this::onUploadFinished, 0);
             } else {
-                Log.i(TAG, "Uploading has bean canceled by the user.");
-            }
-        }
-
-        // When all entries are uploaded
-        Log.i(TAG, "All entries seems to be uploaded to the server!");
-        sendResult("success", 0);
-        // Stop the foreground service and update the notification
-        stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
-                getString(R.string.notify_desc_entries_uploaded));
-        stopSelf();
-    }
-
-    // This checks if there are photos in the Entry Record.
-    // If there are upload photos first.
-    // If no photos/or after the photos are uploaded, upload the data.
-    private void uploadObservation(Long entryId) {
-
-        // n is a number of images from 1 to 3
-        n = 0;
-        ArrayList<String> listOfImages = new ArrayList<>();
-        images_array.clear();
-
-        EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
-        if (entryDb != null ) {
-            if (entryDb.getSlika1() != null) {
-                n++;
-                listOfImages.add(entryDb.getSlika1());
-            }
-            if (entryDb.getSlika2() != null) {
-                n++;
-                listOfImages.add(entryDb.getSlika2());
-            }
-            if (entryDb.getSlika3() != null) {
-                n++;
-                listOfImages.add(entryDb.getSlika3());
-            }
-
-            // If no photos upload the data
-            if (n == 0) {
-                uploadObservationStep2(entryDb);
-            }
-
-            // If there are photos send them first
-            else {
-                for (int i = 0; i < n; i++) {
-                    String image = listOfImages.get(i);
-                    int image_number = i + 1;
-                    Log.d(TAG, "Uploading image " + image_number + ": " + image);
-                    filenames[i] = new File(image).getName();
-                    final File file = new File(getFilesDir(), filenames[i]);
-                    uploadPhoto(entryDb, file);
-                }
+                uploadObservation(item.getObservationId(), this::onUploadFinished);
             }
         }
     }
 
-    private void uploadTimedCount(Integer id) {
+    private void incrementRemainingEntries() {
+        remainingEntries++;
+        String statusText = getString(R.string.notify_desc_uploading) + " " + remainingEntries +
+                " " + getString(R.string.notify_desc_uploading1) + " " + totalEntries +
+                " " + getString(R.string.notify_desc_uploading2);
+        notificationUpdateProgress(totalEntries, remainingEntries, statusText);
+    }
+
+    private void onUploadFinished() {
+        if (remainingUploads.decrementAndGet() == 0) {
+            Log.i(TAG, "All entries have been uploaded!");
+            sendResult("success", 0);
+            stopForegroundAndNotify(getString(R.string.notify_title_entries_uploaded),
+                    getString(R.string.notify_desc_entries_uploaded));
+            stopSelf();
+        }
+    }
+
+    private void uploadTimedCount(Integer id, Runnable onFinished, int retryCount) {
         TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
         APITimedCounts tc = new APITimedCounts();
         tc.getFromTimedCountDatabase(timedCount);
 
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            String s = mapper.writeValueAsString(tc);
-            Log.i(TAG, "Upload Time Count " + s);
-        } catch (JsonProcessingException e) {
-            Log.e(TAG, "Error converting object to JSON: ", e);
-        }
+        RetrofitClient.getService(SettingsManager.getDatabaseName())
+                .uploadTimedCount(tc)
+                .enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<APITimedCountsResponse> call,
+                                           @NonNull Response<APITimedCountsResponse> response) {
 
-        Call<APITimedCountsResponse> call = RetrofitClient
-                .getService(SettingsManager.getDatabaseName()).uploadTimedCount(tc);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(Call<APITimedCountsResponse> call, Response<APITimedCountsResponse> response) {
-
-                // Retry on server resource limit
-                if (response.code() == 429) {
-                    String retry_after = response.headers().get("Retry-After");
-                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
-                    if (retry_after != null) {
-                        int wait = Integer.parseInt(retry_after) * 1000;
-
-                        // Move the sleep and retry to a background thread
-                        new Thread(() -> {
-                            SystemClock.sleep(wait);
-                            // Call the same method again on background thread after wait
-                            if (keep_going) {
-                                // run on main thread to keep Retrofit happy
-                                new Handler(Looper.getMainLooper()).post(() -> uploadTimedCount(id));
+                        if (response.code() == 429 && retryCount < MAX_RETRIES) {
+                            String retryAfter = response.headers().get("Retry-After");
+                            if (retryAfter != null) {
+                                int wait = Integer.parseInt(retryAfter) * 1000;
+                                new Thread(() -> {
+                                    try { Thread.sleep(wait); } catch (InterruptedException ignored) {}
+                                    if (keepGoing) new Handler(Looper.getMainLooper())
+                                            .post(() -> uploadTimedCount(id, onFinished, retryCount + 1));
+                                }).start();
+                                return;
                             }
-                        }).start();
-                        return;
+                        }
+
+                        if (response.isSuccessful() && keepGoing) {
+                            Log.i(TAG, "Timed Count uploaded ID " + id);
+                            sendResult("timed_count_uploaded", id);
+
+                            ArrayList<EntryDb> timedCountObservations = ObjectBoxHelper.getTimedCountObservations(id);
+                            for (EntryDb observation : timedCountObservations) {
+                                uploadObservation(observation.getId(), null);
+                            }
+
+                            if (onFinished != null) onFinished.run();
+                        } else if (retryCount < MAX_RETRIES) {
+                            Log.w(TAG, "Retrying timedCount ID " + id + " attempt " + (retryCount + 1));
+                            uploadTimedCount(id, onFinished, retryCount + 1);
+                        } else {
+                            Log.e(TAG, "Timed Count upload failed after max retries!");
+                            cancelUpload("Failed!", "Timed Count upload failed!");
+                            if (onFinished != null) onFinished.run();
+                        }
                     }
-                }
 
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "This is the response: " + response);
-
-                    //ObjectBoxHelper.removeTimedCountById(id);
-
-                    ArrayList<EntryDb> timedCountObservations = ObjectBoxHelper.getTimedCountObservations(id);
-                    sendResult("timed_count_uploaded", id);
-
-
-
-                    // Inform the broadcaster on success
-                    //if (!entryList.isEmpty()) {
-                    //    sendResult("id_uploaded", entryList.get(0).getId());
-                    //    Log.d(TAG, "Entry ID " + entryList.get(0).getId() + " uploaded!");
-                    //    entryList.remove(0);
-                    //}
-
-                    // Delete image files from internal storage
-                    //for (String filename : filenames) {
-                    //    if (filename != null) {
-                    //        final File file = new File(getFilesDir(), filename);
-                    //        boolean b = file.delete();
-                    //        Log.d(TAG, "Deleting image " + filename + " returned: " + b);
-                    //    }
-                    //}
-                    //filenames = new String[3];
-                    // Reset the counter
-                    //m = 0;
-
-                    // All done! Upload next entry :)
-                    //if (keep_going) {
-                    //    uploadStep1();
-                    //} else {
-                    //    Log.i(TAG, "Uploading has bean canceled by the user.");
-                    //}
-                }
-            }
-
-            @Override
-            public void onFailure(Call<APITimedCountsResponse> call, Throwable t) {
-
-            }
-        });
+                    @Override
+                    public void onFailure(@NonNull Call<APITimedCountsResponse> call, @NonNull Throwable t) {
+                        if (retryCount < MAX_RETRIES) {
+                            Log.w(TAG, "Retrying timedCount ID " + id + " after failure attempt " + (retryCount + 1));
+                            uploadTimedCount(id, onFinished, retryCount + 1);
+                        } else {
+                            Log.e(TAG, "Timed Count upload failed after max retries: " + t.getMessage());
+                            cancelUpload("Failed!", "Timed Count upload failed!");
+                            if (onFinished != null) onFinished.run();
+                        }
+                    }
+                });
     }
 
-    // Checks weather to upload data on Biologer
-    private void uploadObservationStep2(EntryDb entryDb) {
-        Log.d(TAG, "Upload data step 2 started...");
+    private void uploadObservation(Long entryId, Runnable onFinished) {
+        EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
+        if (entryDb == null) {
+            Log.e(TAG, "Entry not found in DB: " + entryId);
+            if (onFinished != null) onFinished.run();
+            return;
+        }
+
+        ArrayList<String> imagesToUpload = new ArrayList<>();
+        if (entryDb.getSlika1() != null) imagesToUpload.add(entryDb.getSlika1());
+        if (entryDb.getSlika2() != null) imagesToUpload.add(entryDb.getSlika2());
+        if (entryDb.getSlika3() != null) imagesToUpload.add(entryDb.getSlika3());
+
+        if (imagesToUpload.isEmpty()) {
+            uploadObservationStep2(entryDb, onFinished, new ArrayList<>(), 0);
+        } else {
+            uploadPhotos(entryDb, imagesToUpload, onFinished, 0);
+        }
+    }
+
+    private void uploadPhotos(EntryDb entryDb, ArrayList<String> images, Runnable onFinished, int retryCount) {
+        ArrayList<APIEntryPhotos> uploadedPhotos = new ArrayList<>();
+        final int totalPhotos = images.size();
+        final AtomicInteger photosLeft = new AtomicInteger(totalPhotos);
+
+        for (String path : images) {
+            File file = new File(getFilesDir(), new File(path).getName());
+            RequestBody reqFile = RequestBody.create(file, MediaType.parse("image/*"));
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), reqFile);
+
+            RetrofitClient.getService(SettingsManager.getDatabaseName())
+                    .uploadFile(body)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
+                            if (response.isSuccessful() && keepGoing) {
+                                UploadFileResponse resp = response.body();
+                                if (resp != null) {
+                                    APIEntryPhotos photo = new APIEntryPhotos();
+                                    photo.setPath(resp.getFile());
+                                    photo.setLicense(entryDb.getImageLicence());
+                                    uploadedPhotos.add(photo);
+                                }
+                                if (photosLeft.decrementAndGet() == 0) {
+                                    uploadObservationStep2(entryDb, onFinished, uploadedPhotos, retryCount);
+                                }
+                            } else if (retryCount < MAX_RETRIES) {
+                                Log.w(TAG, "Retrying photo upload for entry " + entryDb.getId() + " attempt " + (retryCount + 1));
+                                uploadPhotos(entryDb, images, onFinished, retryCount + 1);
+                            } else {
+                                Log.e(TAG, "Photo upload failed after max retries!");
+                                cancelUpload("Failed!", "Photo upload failed!");
+                                if (onFinished != null) onFinished.run();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
+                            if (retryCount < MAX_RETRIES) {
+                                Log.w(TAG, "Retrying photo upload for entry " + entryDb.getId() + " after failure attempt " + (retryCount + 1));
+                                uploadPhotos(entryDb, images, onFinished, retryCount + 1);
+                            } else {
+                                Log.e(TAG, "Photo upload failed after max retries: " + t.getMessage());
+                                cancelUpload("Failed!", "Photo upload failed!");
+                                if (onFinished != null) onFinished.run();
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void uploadObservationStep2(EntryDb entryDb, Runnable onFinished, List<APIEntryPhotos> photos, int retryCount) {
         APIEntry apiEntry = new APIEntry();
-        photos = new ArrayList<>();
-        // Create apiEntry object
-        if (entryDb.getTaxonId() != 0) {
-            apiEntry.setTaxonId((int) entryDb.getTaxonId());
-        } else {
-            apiEntry.setTaxonId(null);
-        }
-        apiEntry.setTaxonSuggestion(entryDb.getTaxonSuggestion());
-        apiEntry.setYear(entryDb.getYear());
-        // The month is given starting with 0 (0-11), convert it for the online API
-        int month = Integer.parseInt(entryDb.getMonth()) + 1;
-        apiEntry.setMonth(String.valueOf(month));
-        apiEntry.setDay(entryDb.getDay());
-        apiEntry.setLatitude(entryDb.getLattitude());
-        apiEntry.setLongitude(entryDb.getLongitude());
-        if (entryDb.getAccuracy() == 0.0) {
-            apiEntry.setAccuracy(null);
-        } else {
-            apiEntry.setAccuracy((int) entryDb.getAccuracy());
-        }
-        apiEntry.setLocation(entryDb.getLocation());
-        apiEntry.setElevation((int) entryDb.getElevation());
-        apiEntry.setNote(entryDb.getComment());
-        apiEntry.setSex(entryDb.getSex());
-        apiEntry.setNumber(entryDb.getNoSpecimens());
-        apiEntry.setProject(entryDb.getProjectId());
-        apiEntry.setLocation(entryDb.getLocation());
-        apiEntry.setFoundOn(entryDb.getFoundOn());
-        apiEntry.setStageId(entryDb.getStage());
-        apiEntry.setAtlasCode(entryDb.getAtlasCode());
-        apiEntry.setFoundDead(entryDb.getDeadOrAlive().equals("true") ? 0 : 1);
-        apiEntry.setFoundDeadNote(entryDb.getCauseOfDeath());
-        apiEntry.setDataLicense(entryDb.getDataLicence());
-        apiEntry.setTime(entryDb.getTime());
-        int[] observation_types = ArrayHelper.getArrayFromText(entryDb.getObservationTypeIds());
-        // Handle situations when observation types are not downloaded from server
-        if (observation_types == null) {
-            Log.e(TAG, "Observation types are null!");
-            int[] null_observation_types = new int[1];
-            null_observation_types[0] = 1;
-            apiEntry.setTypes(null_observation_types);
-        } else {
-            apiEntry.setTypes(observation_types);
-        }
-        for (int i = 0; i < n; i++) {
-            APIEntryPhotos p = new APIEntryPhotos();
-            p.setPath(images_array.get(i));
-            p.setLicense(entryDb.getImageLicence());
-            photos.add(p);
-        }
+        apiEntry.getFromEntryDb(entryDb);
         apiEntry.setPhotos(photos);
-        apiEntry.setHabitat(entryDb.getHabitat());
 
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            String s = mapper.writeValueAsString(apiEntry);
-            Log.i(TAG, "Upload Entry " + s);
-        } catch (JsonProcessingException e) {
-            Log.e(TAG, "Error converting object to JSON: ", e);
-        }
-
-        Call<APIEntryResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadEntry(apiEntry);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
-
-                // Retry on server resource limit
-                if (response.code() == 429) {
-                    String retry_after = response.headers().get("Retry-After");
-                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
-                    if (retry_after != null) {
-                        int wait = Integer.parseInt(retry_after) * 1000;
-
-                        // Move the sleep and retry to a background thread
-                        new Thread(() -> {
-                            SystemClock.sleep(wait);
-                            // Call the same method again on background thread after wait
-                            if (keep_going) {
-                                // run on main thread to keep Retrofit happy
-                                new Handler(Looper.getMainLooper()).post(() -> uploadObservationStep2(entryDb));
-                            }
-                        }).start();
-                        return;
-                    }
-                }
-
-                if (response.isSuccessful()) {
-                    long id = entryDb.getId();
-                    Integer tcId = entryDb.getTimedCoundId();
-                    Log.d(TAG, "Entry ID " + id + " uploaded!");
-                    // Wait... Don’t send too many requests to the server!
-                    SystemClock.sleep(300);
-                    // Delete uploaded entry
-                    ObjectBoxHelper.removeObservationById(id);
-
-                    // Inform the broadcaster on success
-                    if (tcId == null) { // But check if this is regular observation, not timed count one
-                        sendResult("id_uploaded", id);
-                    }
-
-                    // Delete image files from internal storage
-                    for (String filename : filenames) {
-                        if (filename != null) {
-                            final File file = new File(getFilesDir(), filename);
-                            boolean b = file.delete();
-                            Log.d(TAG, "Deleting image " + filename + " returned: " + b);
+        RetrofitClient.getService(SettingsManager.getDatabaseName())
+                .uploadEntry(apiEntry)
+                .enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<APIEntryResponse> call, @NonNull Response<APIEntryResponse> response) {
+                        if (response.isSuccessful() && keepGoing) {
+                            long id = entryDb.getId();
+                            ObjectBoxHelper.removeObservationById(id);
+                            Log.d(TAG, "Entry ID " + id + " uploaded!");
+                            if (entryDb.getTimedCoundId() == null) sendResult("id_uploaded", id);
+                            if (onFinished != null) onFinished.run();
+                        } else if (retryCount < MAX_RETRIES) {
+                            Log.w(TAG, "Retrying uploadObservationStep2 for entry " + entryDb.getId() +
+                                    " attempt " + (retryCount + 1));
+                            uploadObservationStep2(entryDb, onFinished, photos, retryCount + 1);
+                        } else {
+                            Log.e(TAG, "Entry upload failed after max retries!");
+                            cancelUpload("Failed!", "Entry upload failed!");
+                            if (onFinished != null) onFinished.run();
                         }
                     }
-                    filenames = new String[3];
-                    // Reset the counter
-                    m = 0;
-                }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
-                String errorMessage = t.getLocalizedMessage();
-                if (errorMessage == null || errorMessage.isEmpty()) {
-                    errorMessage = t.getMessage();
-                    if (errorMessage == null || errorMessage.isEmpty()) {
-                        errorMessage = "Unknown reason (no localized or general message)";
-                    }
-                }
-                Log.i(TAG, "Uploading of entry failed for some reason: " + errorMessage);
-                Log.e(TAG, "Full stack trace of upload failure:", t);
-                cancelUpload(getResources().getString(R.string.failed), getResources().getString(R.string.upload_not_succesfull));
-                sendResult("failed_entry", 0);
-                stopSelf();
-            }
-        });
-    }
-
-    private void uploadPhoto(EntryDb entryDb, File image) {
-        Log.i(TAG, "Opening image from the path: " + image.getAbsolutePath() + ".");
-
-        RequestBody reqFile = RequestBody.create(image, MediaType.parse("image/*"));
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", image.getName(), reqFile);
-
-        Call<UploadFileResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).uploadFile(body);
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<UploadFileResponse> call, @NonNull Response<UploadFileResponse> response) {
-
-                // Retry on server resources limit
-                if (response.code() == 429) {
-                    String retry_after = response.headers().get("Retry-After");
-                    Log.e(TAG, "Server had too many requests from the app. Waiting " + retry_after + " seconds.");
-                    if (retry_after != null) {
-                        int wait = Integer.parseInt(retry_after) * 1000;
-
-                        // Move the sleep and retry to a background thread
-                        new Thread(() -> {
-                            SystemClock.sleep(wait);
-                            // Call the same method again on background thread after wait
-                            if (keep_going) {
-                                // run on main thread to keep Retrofit happy
-                                new Handler(Looper.getMainLooper()).post(() -> uploadPhoto(entryDb, image));
-                            }
-                        }).start();
-                        return;
-                    }
-                }
-
-                if (response.isSuccessful()) {
-                    if (keep_going) {
-                        UploadFileResponse responseFile = response.body();
-
-                        if (responseFile != null) {
-                            images_array.add(responseFile.getFile());
-                            Log.d(TAG, "Uploaded file name: " + responseFile.getFile());
-                            m++;
-                            if (m == n) {
-                                uploadObservationStep2(entryDb);
-                            }
+                    @Override
+                    public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
+                        if (retryCount < MAX_RETRIES) {
+                            Log.w(TAG, "Retrying uploadObservationStep2 after failure for entry " + entryDb.getId() +
+                                    " attempt " + (retryCount + 1));
+                            uploadObservationStep2(entryDb, onFinished, photos, retryCount + 1);
+                        } else {
+                            Log.e(TAG, "Entry upload failed after max retries: " + t.getMessage());
+                            cancelUpload("Failed!", "Entry upload failed!");
+                            if (onFinished != null) onFinished.run();
                         }
-                    } else {
-                        Log.i(TAG, "Uploading of images has bean canceled by the user.");
                     }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
-                if (t.getLocalizedMessage() != null) {
-                    Log.e(TAG, "Upload of photo failed for some reason: " + t.getLocalizedMessage());
-                    cancelUpload("Failed!", "Uploading of photo was not successful!");
-                    sendResult("failed_photo", 0);
-                    stopSelf();
-                }
-            }
-        });
+                });
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateProgress(int maxValue, int currentValue, String descriptionText) {
-        // To do something if notification is taped, we must set up an intent
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         } else {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         }
 
-        // Add Cancel button intent in notification.
-        Intent cancelIntent = new Intent(this, UploadRecords.class);
-        cancelIntent.setAction(ACTION_CANCEL);
-        PendingIntent pendingCancelIntent;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, PendingIntent.FLAG_IMMUTABLE);
-        } else {
-            pendingCancelIntent = PendingIntent.getService(this, 0, cancelIntent, 0);
-        }
-        NotificationCompat.Action cancelAction = new NotificationCompat.Action(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.cancel), pendingCancelIntent);
-
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_entries")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_entries")
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(getString(R.string.notify_title_entries))
                 .setContentText(descriptionText)
@@ -551,30 +373,25 @@ public class UploadRecords extends Service {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(false)
-                .addAction(cancelAction);
+                .setAutoCancel(false);
 
-        Notification notification = mBuilder.build();
-
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        assert mNotificationManager != null;
-        mNotificationManager.notify(1, notification);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.notify(1, builder.build());
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
     private void notificationUpdateText(String title, String description) {
-        // To do something if notification is taped, we must set up an intent
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pendingIntent;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         } else {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         }
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "biologer_taxa")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_taxa")
                 .setSmallIcon(R.mipmap.ic_notification)
                 .setContentTitle(title)
                 .setContentText(description)
@@ -584,11 +401,8 @@ public class UploadRecords extends Service {
                 .setOnlyAlertOnce(false)
                 .setAutoCancel(true);
 
-        Notification notification = mBuilder.build();
-
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        assert mNotificationManager != null;
-        mNotificationManager.notify(1, notification);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.notify(1, builder.build());
     }
 
     public void sendResult(String message, long id) {
@@ -598,3 +412,4 @@ public class UploadRecords extends Service {
         broadcaster.sendBroadcast(intent);
     }
 }
+
