@@ -57,21 +57,6 @@ public class ObjectBoxHelper {
         return id;
     }
 
-    public static int getUniqueObservationID() {
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query().build();
-        if (query.count() == 0) {
-            Log.i("Biologer.ObjectBox", "Timed counts database is empty, returning ID 1.");
-            query.close();
-            return 1;
-        } else {
-            int maxId = (int) query.property(EntryDb_.id).max();
-            query.close();
-            Log.i("Biologer.ObjectBox", "The last timed count in the database has ID " + maxId + ".");
-            return ++maxId;
-        }
-    }
-
     public static ArrayList<TimedCountDb> getTimedCounts() {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         Query<TimedCountDb> query = box.query().build();
@@ -274,22 +259,28 @@ public class ObjectBoxHelper {
 
     public static void removeObservationsForTimedCountId(int timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build();
-        long removedCount = query.remove();
+        long removedCount;
+        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
+            removedCount = query.remove();
+        }
         Log.i("Biologer.ObjectBox", "Removed " + removedCount + " objects for time count ID " + timedCountId + ".");
     }
 
     public static void removeObservationById(long observationId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.id.equal(observationId)).build();
-        long removedCount = query.remove();
+        long removedCount;
+        try (Query<EntryDb> query = box.query(EntryDb_.id.equal(observationId)).build()) {
+            removedCount = query.remove();
+        }
         Log.i("Biologer.ObjectBox", "Removed " + removedCount + " observation with ID " + observationId + ".");
     }
 
     public static void removeTimedCountById(int timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build();
-        long removedCount = query.remove();
+        long removedCount;
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
+            removedCount = query.remove();
+        }
         Log.i("Biologer.ObjectBox", "Removed " + removedCount + " time count with ID " + timedCountId + ".");
     }
 

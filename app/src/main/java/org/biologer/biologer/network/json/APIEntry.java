@@ -15,6 +15,8 @@ public class APIEntry {
 
     @JsonProperty("taxon_id")
     private Integer taxonId;
+    @JsonProperty("timed_count_id")
+    private Integer timedCountId;
     @JsonProperty("taxon_suggestion")
     private String taxonSuggestion;
     @JsonProperty("year")
@@ -303,6 +305,7 @@ public class APIEntry {
         if (entry.getTaxonId() != 0) setTaxonId( (int) entry.getTaxonId());
         else setTaxonId(null);
 
+        setTimedCountId(entry.getTimedCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setYear(entry.getYear());
         int month = Integer.parseInt(entry.getMonth()) + 1; // Add 1 since months range from 0 to 11
@@ -328,5 +331,13 @@ public class APIEntry {
         if (observation_types == null) observation_types = new int[]{1};
         setTypes(observation_types);
         setHabitat(entry.getHabitat());
+    }
+
+    public Integer getTimedCountId() {
+        return timedCountId;
+    }
+
+    public void setTimedCountId(Integer timedCountId) {
+        this.timedCountId = timedCountId;
     }
 }

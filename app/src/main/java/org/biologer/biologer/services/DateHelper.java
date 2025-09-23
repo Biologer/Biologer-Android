@@ -137,7 +137,7 @@ public class DateHelper {
 
     public static String getCurrentMonth() {
         Calendar calendar = Calendar.getInstance();
-        int month = calendar.get(Calendar.MONTH) + 1;
+        int month = calendar.get(Calendar.MONTH);
         return String.valueOf(month);
     }
 

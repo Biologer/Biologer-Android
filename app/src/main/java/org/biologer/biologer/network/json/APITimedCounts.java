@@ -193,7 +193,8 @@ public class APITimedCounts {
         setTaxonGroup(db.getTaxonGroup());
         setComment(db.getComment());
         setDay(db.getDay());
-        setMonth(db.getMonth());
+        int real_month = Integer.parseInt(db.getMonth()) + 1; // Add 1 since months range from 0 to 11
+        setMonth(String.valueOf(real_month));
         setYear(db.getYear());
     }
 }
