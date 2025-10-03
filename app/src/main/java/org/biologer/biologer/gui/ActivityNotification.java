@@ -29,12 +29,13 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
-import org.biologer.biologer.services.PreparePhotos;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.PhotoUtils;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
@@ -355,7 +356,12 @@ public class ActivityNotification extends AppCompatActivity {
                                 imageView1.setImageBitmap(bitmap);
                                 frameLayout1.setVisibility(View.VISIBLE);
                                 image1 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
+                                Uri image_uri;
+                                try {
+                                    image_uri = PhotoUtils.saveBitmap(ActivityNotification.this, bitmap);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView1.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
@@ -368,7 +374,12 @@ public class ActivityNotification extends AppCompatActivity {
                                 imageView2.setImageBitmap(bitmap);
                                 frameLayout2.setVisibility(View.VISIBLE);
                                 image2 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
+                                Uri image_uri;
+                                try {
+                                    image_uri = PhotoUtils.saveBitmap(ActivityNotification.this, bitmap);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView2.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
@@ -381,7 +392,12 @@ public class ActivityNotification extends AppCompatActivity {
                                 imageView3.setImageBitmap(bitmap);
                                 frameLayout3.setVisibility(View.VISIBLE);
                                 image3 = true;
-                                Uri image_uri = PreparePhotos.saveBitmap(ActivityNotification.this, bitmap);
+                                Uri image_uri;
+                                try {
+                                    image_uri = PhotoUtils.saveBitmap(ActivityNotification.this, bitmap);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
                                 imageView3.setOnClickListener(view -> {
                                     touchImageView.setImageBitmap(bitmap);
@@ -423,8 +439,7 @@ public class ActivityNotification extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.d(TAG, "Something is wrong with image response!");
-                t.printStackTrace();
+                Log.d(TAG, "Something is wrong with image response: " + t);
             }
         });
     }

@@ -2,11 +2,8 @@ package org.biologer.biologer.gui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -46,9 +43,11 @@ import androidx.core.location.LocationListenerCompat;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.maps.model.LatLng;
@@ -65,7 +64,7 @@ import org.biologer.biologer.databinding.ActivityObservationBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.ObjectBoxHelper;
-import org.biologer.biologer.services.PreparePhotos;
+import org.biologer.biologer.services.PreparePhotosWorker;
 import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.sql.EntryDb;
@@ -91,7 +90,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private LocationManager locationManager;
     private LocationListenerCompat locationListener;
     private TaxonSearchHelper taxonSearchHelper;
-    BroadcastReceiver receiver;
     private ObservationViewModel viewModel;
     private ActivityObservationBinding binding;
 
@@ -119,7 +117,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
         setupView(); // Get on click listeners and watchers
         setViewModelObservers(); // Start getting the data from the ViewModel and update UI
-        registerBroadcastReceiver(); // Broadcaster used for receiving resized images
         fillObservationTypes(); // Populate Chip programmatically from the database
         setupOnBackPressed();
     }
@@ -518,38 +515,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         Log.d(TAG, "Taxon is not selected from the list. Disabling Stages and Atlas Codes for this taxon.");
     }
 
-    private void registerBroadcastReceiver() {
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(PreparePhotos.RESIZED);
-                if (s != null) {
-                    Log.d(TAG, "Resize Images returned code: " + s);
-
-                    if (s.equals("error")) {
-                        Toast.makeText(ActivityObservation.this, getString(R.string.image_resize_error), Toast.LENGTH_LONG).show();
-                    } else {
-                        if (viewModel.getImage1().getValue() == null) {
-                            viewModel.setImage1(s);
-                            viewModel.addItemToListNewImage(s);
-                        } else if (viewModel.getImage2().getValue() == null) {
-                            viewModel.setImage2(s);
-                            viewModel.addItemToListNewImage(s);
-                        } else if (viewModel.getImage3().getValue() == null) {
-                            viewModel.setImage3(s);
-                            viewModel.addItemToListNewImage(s);
-                            // Form is full, disable adding more images
-                            binding.imageViewPhotoFromGallery.setEnabled(false);
-                            binding.imageViewPhotoFromGallery.setImageAlpha(20);
-                            binding.imageViewPhotoFromCamera.setEnabled(false);
-                            binding.imageViewPhotoFromCamera.setImageAlpha(20);
-                        }
-                    }
-                }
-            }
-        };
-    }
-
     private Boolean isNewEntry() {
         String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
         assert is_new_entry != null;
@@ -688,20 +653,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 finish();
             }
         });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
-                new IntentFilter(PreparePhotos.RESIZED)
-        );
-    }
-
-    @Override
-    protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
-        super.onStop();
     }
 
     // On click
@@ -1440,14 +1391,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         return entered_taxon_name.split(" \\(")[0];
     }
 
-    // When screen is rotated activity is destroyed, thus images should be saved and opened again!
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
-        Log.d(TAG, "Activity will be recreated. Saving the state!");
-        super.onSaveInstanceState(outState);
-    }
-
     private void fillObservationTypes() {
         List<ObservationTypesDb> list = ObjectBoxHelper.getObservationTypes();
         long number_of_observation_types = list.size();
@@ -1491,13 +1434,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             }
 
         }
-    }
-
-    private void resizeAndDisplayImage(Uri uri) {
-        // Start another Activity to resize captured image.
-        Intent resizeImage = new Intent(this, PreparePhotos.class);
-        resizeImage.putExtra("image_uri", String.valueOf(uri));
-        startService(resizeImage);
     }
 
     private final ActivityResultLauncher<String[]> requestLocationPermissions =
@@ -1572,5 +1508,39 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             }
         }
         return null;
+    }
+
+    private void resizeAndDisplayImage(Uri uri) {
+        OneTimeWorkRequest resizeRequest = PreparePhotosWorker.buildRequest(uri.toString());
+
+        WorkManager.getInstance(this).enqueue(resizeRequest);
+
+        WorkManager.getInstance(this)
+                .getWorkInfoByIdLiveData(resizeRequest.getId())
+                .observe(this, workInfo -> {
+                    if (workInfo != null && workInfo.getState().isFinished()) {
+                        if (workInfo.getState() == WorkInfo.State.SUCCEEDED) {
+                            String s = workInfo.getOutputData()
+                                    .getString(PreparePhotosWorker.KEY_OUTPUT_URI);
+                            if (s != null) {
+                                if (viewModel.getImage1().getValue() == null) {
+                                    viewModel.setImage1(s);
+                                    viewModel.addItemToListNewImage(s);
+                                } else if (viewModel.getImage2().getValue() == null) {
+                                    viewModel.setImage2(s);
+                                    viewModel.addItemToListNewImage(s);
+                                } else if (viewModel.getImage3().getValue() == null) {
+                                    viewModel.setImage3(s);
+                                    viewModel.addItemToListNewImage(s);
+                                    disablePhotoButtons(true);
+                                }
+                            }
+                        } else if (workInfo.getState() == WorkInfo.State.FAILED) {
+                            Toast.makeText(this,
+                                    getString(R.string.image_resize_error),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 }

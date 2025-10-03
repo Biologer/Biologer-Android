@@ -28,10 +28,11 @@ import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
-import org.biologer.biologer.services.PreparePhotos;
+import org.biologer.biologer.services.PhotoUtils;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -259,7 +260,13 @@ public class NotificationsAdapter
                                                                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                                                                 // Store the original image 1 first
-                                                                Uri uri = PreparePhotos.saveBitmap(context, bitmap);
+                                                                Uri uri;
+                                                                try {
+                                                                    uri = PhotoUtils.saveBitmap(context, bitmap);
+                                                                } catch (IOException e) {
+                                                                    throw new RuntimeException(e);
+                                                                }
+
                                                                 for (int j = 0; j < notifications.size(); j++) {
                                                                     notifications.get(j).setImage1(uri != null ? uri.toString() : null);
                                                                 }
@@ -272,7 +279,12 @@ public class NotificationsAdapter
                                                                     int rest_to_crop = (h - size) / 2;
                                                                     Bitmap thumbnail = Bitmap.createBitmap(bitmap, 100, rest_to_crop, size, size);
                                                                     imageView.setImageBitmap(thumbnail);
-                                                                    Uri th_uri = PreparePhotos.saveBitmap(context, thumbnail);
+                                                                    Uri th_uri;
+                                                                    try {
+                                                                        th_uri = PhotoUtils.saveBitmap(context, thumbnail);
+                                                                    } catch (IOException e) {
+                                                                        throw new RuntimeException(e);
+                                                                    }
                                                                     for (int j = 0; j < notifications.size(); j++) {
                                                                         notifications.get(j).setThumbnail(th_uri != null ? th_uri.toString() : null);
                                                                         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
@@ -282,7 +294,12 @@ public class NotificationsAdapter
                                                                     int rest_to_crop = (w - size) / 2;
                                                                     Bitmap thumbnail = Bitmap.createBitmap(bitmap, rest_to_crop, 100, size, size);
                                                                     imageView.setImageBitmap(thumbnail);
-                                                                    Uri th_uri = PreparePhotos.saveBitmap(context, thumbnail);
+                                                                    Uri th_uri;
+                                                                    try {
+                                                                        th_uri = PhotoUtils.saveBitmap(context, thumbnail);
+                                                                    } catch (IOException e) {
+                                                                        throw new RuntimeException(e);
+                                                                    }
                                                                     for (int j = 0; j < notifications.size(); j++) {
                                                                         notifications.get(j).setThumbnail(th_uri != null ? th_uri.toString() : null);
                                                                         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notifications.get(j));
