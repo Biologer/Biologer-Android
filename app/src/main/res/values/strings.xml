@@ -545,5 +545,7 @@
     <string name="at_time">at</string>
     <string name="save_on_exit_time_count">There are unsaved changes in your timed count. Would you like to save corrections to the time count or ignore them?</string>
     <string name="save">Save</string>
+    <string name="sort_by_observation_time">By observation time</string>
+    <string name="sort_by_species_name">By species name</string>
 
 </resources>

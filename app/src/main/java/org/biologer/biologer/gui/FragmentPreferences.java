@@ -151,6 +151,7 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
         ListPreference imageLicense = findPreference("image_license");
         ListPreference autoDownload = findPreference("auto_download");
         ListPreference languageSettings = findPreference("language_settings");
+        ListPreference sortObservations = findPreference("sort_observations");
 
         if (dataLicense != null) {
             getDataLicences(dataLicense);
@@ -166,6 +167,10 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
 
         if (languageSettings != null) {
             getLanguages(languageSettings);
+        }
+
+        if (sortObservations != null) {
+            getObservations(sortObservations);
         }
 
         // Add button fot taxa sync process
@@ -223,6 +228,14 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
             });
         }
 
+    }
+
+    private void getObservations(ListPreference sortObservations) {
+        CharSequence[] entries = {getString(R.string.sort_by_observation_time), getString(R.string.sort_by_species_name)};
+        CharSequence[] entryValues = {"time", "name"};
+        sortObservations.setEntries(entries);
+        sortObservations.setDefaultValue("0");
+        sortObservations.setEntryValues(entryValues);
     }
 
     private void toggleFetchTaxaButton(Preference preference) {

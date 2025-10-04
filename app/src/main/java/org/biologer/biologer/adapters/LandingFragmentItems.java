@@ -1,7 +1,10 @@
 package org.biologer.biologer.adapters;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.services.DateHelper;
@@ -102,9 +105,19 @@ public class LandingFragmentItems {
             items.add(getItemFromTimedCount(context, timedCountDb));
         }
 
-        // Sort items in descending order
-        Collections.sort(items, (item1, item2) ->
-                item2.getDate().compareTo(item1.getDate()));
+        // Sort items based of preference settings
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String sortBy = prefs.getString("sort_observations", "time");
+
+        if ("name".equals(sortBy)) {
+            // Sort alphabetically by title (case-insensitive)
+            Collections.sort(items, (item1, item2) ->
+                    item1.getTitle().compareToIgnoreCase(item2.getTitle()));
+        } else {
+            // Sort by date descending (newest first)
+            Collections.sort(items, (item1, item2) ->
+                    item2.getDate().compareTo(item1.getDate()));
+        }
 
         return items;
     }

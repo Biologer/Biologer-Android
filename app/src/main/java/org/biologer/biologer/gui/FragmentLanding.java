@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -25,6 +26,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,11 +45,13 @@ import org.biologer.biologer.sql.EntryDb;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class FragmentLanding extends Fragment {
+public class FragmentLanding extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private ArrayList<LandingFragmentItems> items;
     String TAG = "Biologer.LandingFragment";
@@ -63,6 +67,8 @@ public class FragmentLanding extends Fragment {
         setupRecycleView(rootView);
         setupFloatActionButton(rootView);
         setupBroadcastReceiver();
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .registerOnSharedPreferenceChangeListener(this);
 
         return rootView;
     }
@@ -294,9 +300,29 @@ public class FragmentLanding extends Fragment {
     }
 
     private void addItemToRecyclerView(LandingFragmentItems item) {
-        items.add(0, item);
-        entriesAdapter.notifyItemInserted(0);
-        recyclerView.smoothScrollToPosition(0);
+        // If the user choose to sort by name we should insert the
+        // entry in the right place.
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        String sortBy = prefs.getString("sort_observations", "time");
+
+        if ("name".equals(sortBy)) {
+            // Alphabetical insert with binary search
+            Comparator<LandingFragmentItems> comparator =
+                    (a, b) -> a.getTitle().compareToIgnoreCase(b.getTitle());
+
+            int index = Collections.binarySearch(items, item, comparator);
+            if (index < 0) index = -index - 1;
+
+            items.add(index, item);
+            entriesAdapter.notifyItemInserted(index);
+            recyclerView.smoothScrollToPosition(index);
+        } else {
+            // Time sort → always newest first at top
+            items.add(0, item);
+            entriesAdapter.notifyItemInserted(0);
+            recyclerView.smoothScrollToPosition(0);
+        }
+
         removeInfoText();
     }
 
@@ -552,6 +578,19 @@ public class FragmentLanding extends Fragment {
 
             alert.show();
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if ("sort_observations".equals(key)) {
+            reloadRecyclerView(); // force reload when preference changes
+        }
+    }
+
+    private void reloadRecyclerView() {
+        items = LandingFragmentItems.loadAllEntries(requireContext());
+        entriesAdapter = new LandingFragmentAdapter(items);
+        recyclerView.setAdapter(entriesAdapter);
     }
 
 }

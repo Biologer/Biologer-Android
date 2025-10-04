@@ -523,7 +523,7 @@ public class UploadRecords extends Service {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_taxa")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "biologer_entries")
                 .setSmallIcon(R.mipmap.ic_notification)
                 .setContentTitle(title)
                 .setContentText(description)
