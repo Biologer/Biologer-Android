@@ -6,7 +6,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -123,10 +122,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private void getSavedData(Bundle savedInstanceState) {
         double lat = savedInstanceState.getDouble("STATE_LATITUDE", 0.0);
         double lon = savedInstanceState.getDouble("STATE_LONGITUDE", 0.0);
+        accuracy     = savedInstanceState.getString("STATE_ACCURACY", "50");
+        elevation    = savedInstanceState.getString("STATE_ELEVATION", "0");
+        location_name= savedInstanceState.getString("STATE_LOCATION_NAME", null);
         latLong = new LatLng(lat, lon);
-        accuracy = savedInstanceState.getString("STATE_ACCURACY", "50");
-        elevation = savedInstanceState.getString("STATE_ELEVATION", "0");
-        location_name = savedInstanceState.getString("STATE_LOCATION_NAME", null);
 
         Log.d(TAG, "Restored map state from bundle: "
                 + lat + ", " + lon + " | accuracy: " + accuracy
@@ -159,11 +158,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         editTextLocation = binding.locationNameText;
 
         lastSavedLocationName = preferences.getString("location_name", "");
-        if (location_name != null) {
-            editTextLocation.setText(location_name);
-        } else {
-            editTextLocation.setText(lastSavedLocationName);
-        }
+        editTextLocation.setText(location_name != null ? location_name : lastSavedLocationName);
         editTextLocation.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable editable) {
@@ -308,7 +303,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     );
 
                     // Update map visuals
-                    updateMarkerAndCircle();
+                    updateMarkerAndCircle(true);
 
                 } catch (ParseException e) {
                     Toast.makeText(ActivityMap.this,
@@ -413,7 +408,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             accuracy = "0";
             Log.d(TAG, "Bundle is null for some reason! Setting default LatLong and accuracy.");
         }
-        updateMarkerAndCircle();
+        updateMarkerAndCircle(true);
     }
 
     private void saveLocationName() {
@@ -483,6 +478,11 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setZoomGesturesEnabled(true);
+        mMap.getUiSettings().setScrollGesturesEnabled(true);
+        mMap.getUiSettings().setRotateGesturesEnabled(true);
+        mMap.getUiSettings().setTiltGesturesEnabled(true);
+
         kmlHelper = new KmlHelper(this, mMap);
         geoJsonHelper = new GeoJsonHelper(this, mMap);
         geoJsonHelper.loadUtmLines();
@@ -530,11 +530,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         View mapView = mapFrag != null ? mapFrag.getView() : null;
 
-        if (mapView instanceof ViewGroup) {
-            ViewGroup mapContainer = (ViewGroup) mapView;
+        if (mapView instanceof ViewGroup mapContainer) {
 
             // Grab the original map child BEFORE adding our overlay
-            final View mapContent = mapContainer.getChildAt(0); // this is the MapView
+            final View mapContent = mapContainer.getChildAt(0);
 
             // Avoid adding multiple overlays on config changes etc.
             final String OVERLAY_TAG = "tap_pass_through_overlay";
@@ -543,12 +542,19 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 mapContainer.removeView(existing);
             }
 
-            final View touchOverlay = new View(this);
+            final View touchOverlay = new View(this) {
+                @Override public boolean performClick() {
+                    super.performClick();  // accessibility event
+                    return true;
+                }
+            };
             touchOverlay.setTag(OVERLAY_TAG);
+            touchOverlay.setClickable(true);
+            touchOverlay.setContentDescription("Map touch overlay");
             touchOverlay.setLayoutParams(new ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
             ));
-            mapContainer.addView(touchOverlay); // put on top
+            mapContainer.addView(touchOverlay);
 
             touchOverlay.setOnTouchListener(new View.OnTouchListener() {
                 private static final int TAP_TIMEOUT_MS = 200;
@@ -564,13 +570,11 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     @Override public void run() {
                         if (mMap == null || marker == null) return;
                         longPressFired = true;
-                        // hit test: is the down point close to marker on screen?
                         android.graphics.Point mp = mMap.getProjection().toScreenLocation(marker.getPosition());
                         float dx = Math.abs(downX - mp.x);
                         float dy = Math.abs(downY - mp.y);
                         if (dx <= dpToPx(HIT_SLOP_DP) && dy <= dpToPx(HIT_SLOP_DP)) {
-                            // 👉 Long-pressed on marker: open your accuracy UI
-                            Toast.makeText(ActivityMap.this, "DRAG", Toast.LENGTH_SHORT).show();
+                            // Long-pressed on marker code to be executed
                             startAccuracyHandle();
                             draggingHandle = true;
                         }
@@ -592,9 +596,9 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     touchOverlay.removeCallbacks(longPressRunnable);
                 }
 
-                private MotionEvent cloneWithAction(MotionEvent e, int action) {
+                private MotionEvent cloneWithAction(MotionEvent e) {
                     return MotionEvent.obtain(downTime == 0 ? e.getDownTime() : downTime,
-                            e.getEventTime(), action, e.getX(), e.getY(), e.getMetaState());
+                            e.getEventTime(), MotionEvent.ACTION_DOWN, e.getX(), e.getY(), e.getMetaState());
                 }
 
                 @Override
@@ -626,7 +630,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                         // cancel long-press & start forwarding for multitouch gestures
                         cancelLongPress();
                         forwarding = true;
-                        MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                        MotionEvent syntheticDown = cloneWithAction(event);
                         mapContent.dispatchTouchEvent(syntheticDown);
                         syntheticDown.recycle();
                         mapContent.dispatchTouchEvent(event);
@@ -648,7 +652,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             // If finger down is near the handle → start dragging the handle
                             if (isNearHandle(event.getX(), event.getY())) {
                                 draggingHandle = true;
-                                // optional: vibrate or change icon
                                 moveAccuracyHandleToScreen(event.getX(), event.getY());
                                 return true; // consume; do not forward to map
                             }
@@ -667,7 +670,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                                 // became a drag → cancel long-press and forward as pan
                                 cancelLongPress();
                                 forwarding = true;
-                                MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                                MotionEvent syntheticDown = cloneWithAction(event);
                                 mapContent.dispatchTouchEvent(syntheticDown);
                                 syntheticDown.recycle();
                                 mapContent.dispatchTouchEvent(event);
@@ -683,6 +686,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                                 float dx = Math.abs(event.getX() - downX);
                                 float dy = Math.abs(event.getY() - downY);
                                 if (dt < TAP_TIMEOUT_MS && dx < dpToPx(TAP_SLOP_DP) && dy < dpToPx(TAP_SLOP_DP)) {
+                                    v.performClick();
                                     android.graphics.Point p = new android.graphics.Point(Math.round(event.getX()), Math.round(event.getY()));
                                     LatLng tapped = mMap.getProjection().fromScreenLocation(p);
                                     handleUserTap(tapped);
@@ -690,7 +694,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                                     // end a late drag
                                     if (!forwarding) {
                                         forwarding = true;
-                                        MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                                        MotionEvent syntheticDown = cloneWithAction(event);
                                         mapContent.dispatchTouchEvent(syntheticDown);
                                         syntheticDown.recycle();
                                     }
@@ -721,15 +725,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         latLong = latLng;
         Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
 
-        if (marker != null) marker.setPosition(latLong);
-        if (circle != null) circle.setCenter(latLong);
+        updateMarkerAndCircle(false);
 
         editTextLatitude.setText(formatCoordinate(latLong.latitude));
         editTextLongitude.setText(formatCoordinate(latLong.longitude));
 
         updateElevationAndSave(latLong, true, false);
     }
-
 
     private void initMapObjects() {
         // Add marker at the GPS position on the map or default position
@@ -746,7 +748,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 latLong = new LatLng(42.8, 19.1);
                 addLocationMarker(9, myMarkers);
             }
-            if (database_name.equals("https://biologer.rs") || database_name.equals("https://dev.biologer.org")) {
+            if (database_name.equals("https://biologer.rs")
+                    || database_name.equals("https://dev.biologer.org")) {
                 latLong = new LatLng(44.1, 20.7);
                 addLocationMarker(7, myMarkers);
             }
@@ -754,7 +757,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             addLocationMarker(16, myMarkers);
         }
 
-        // Add a circle and resize handle
+        // Add a circle
         addCircle();
     }
 
@@ -776,12 +779,12 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     geoJsonHelper.showUtmLines();
                     final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
                     for (GeoJsonHelper.UTMName utmName : geoJsonHelper.getUtmNames()) {
-                        if (bounds.contains(utmName.getLatLng())) {
+                        if (bounds.contains(utmName.latLng())) {
                             IconGenerator iconFactory = new IconGenerator(ActivityMap.this);
                             iconFactory.setStyle(IconGenerator.STYLE_GREEN);
                             MarkerOptions markerOptions = new MarkerOptions()
-                                    .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
-                                    .position(utmName.getLatLng())
+                                    .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.name())))
+                                    .position(utmName.latLng())
                                     .anchor(iconFactory.getAnchorU(), iconFactory.getAnchorV());
                             Marker utmMarker = collection.addMarker(markerOptions);
                             utmMarkers.add(utmMarker);
@@ -984,7 +987,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         if (Integer.parseInt(accuracy) > 100000) {
             accuracy = "100000";
         }
-        returnLocation.putExtra("google_map_accuracy", accuracy);
+        returnLocation.putExtra("google_map_accuracy", String.valueOf(safeAccuracyInt()));
         returnLocation.putExtra("google_map_lat", String.valueOf(latLong.latitude));
         returnLocation.putExtra("google_map_long", String.valueOf(latLong.longitude));
         returnLocation.putExtra("google_map_elevation", elevation);
@@ -998,28 +1001,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         Log.d(TAG, "Location name: " + location_name);
 
         finish();
-    }
-
-    private static class UTMName {
-        private String name;
-        private final LatLng latLng;
-
-        public UTMName(String name, LatLng latLng) {
-            this.name = name;
-            this.latLng = latLng;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(final String name) {
-            this.name = name;
-        }
-
-        public LatLng getLatLng() {
-            return latLng;
-        }
     }
 
     private void addSlider() {
@@ -1058,11 +1039,11 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putDouble("lat", latLong.latitude);
-        outState.putDouble("lon", latLong.longitude);
-        outState.putString("acc", accuracy);
-        outState.putString("elev", elevation);
-        outState.putString("loc", location_name);
+        outState.putDouble("STATE_LATITUDE",  latLong.latitude);
+        outState.putDouble("STATE_LONGITUDE", latLong.longitude);
+        outState.putString("STATE_ACCURACY",  accuracy);
+        outState.putString("STATE_ELEVATION", elevation);
+        outState.putString("STATE_LOCATION_NAME", location_name);
     }
 
     private static String formatCoordinate(double value) {
@@ -1084,11 +1065,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         }
     }
 
-    private void updateMarkerAndCircle() {
+    private void updateMarkerAndCircle(boolean update_radius) {
         if (marker != null) marker.setPosition(latLong);
         if (circle != null) {
             circle.setCenter(latLong);
-            circle.setRadius(Double.parseDouble(accuracy));
+            if (update_radius) {
+                circle.setRadius(Double.parseDouble(accuracy));
+            }
         }
     }
 
@@ -1104,7 +1087,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             accuracyHandle = mMap.addMarker(
                     new MarkerOptions()
                             .position(at)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_radius))
                             .zIndex(6000f)
                             .draggable(false)
                             .title(getString(R.string.precision))
@@ -1128,6 +1111,14 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         if (circle != null) circle.setRadius(meters);
         if (slider != null) slider.setValue((float) meters);
         if (editTextPrecision != null) editTextPrecision.setText(accuracy);
+        setSliderMeters((float) meters);
+    }
+
+    private void setSliderMeters(float meters) {
+        if (slider == null) return;
+        float max = slider.getValueTo();
+        if (meters > max) slider.setValueTo(Math.min(meters + 50_0f, max * 5f)); // grow generously
+        slider.setValue(Math.min(meters, slider.getValueTo()));
     }
 
     // Finish drag (finger up). You can also keep the handle visible for later drags.
@@ -1147,12 +1138,22 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         return dx <= slop && dy <= slop;
     }
 
+    private int safeAccuracyInt() {
+        try { return Math.min(250000, Math.max(0, Integer.parseInt(accuracy))); }
+        catch (Exception e) { return 0; }
+    }
+
     @Override
     protected void onDestroy() {
         if (elevationCall != null && !elevationCall.isCanceled()) {
             Log.d(TAG, "Cancelling pending elevation request...");
             elevationCall.cancel();
             elevationCall = null;
+        }
+        locationNameHandler.removeCallbacksAndMessages(null);
+        if (isFinishing() && kmlHelper != null) {
+            String uri = SettingsManager.getKmlFile();
+            if (uri != null) kmlHelper.removeKml(uri);
         }
         binding = null;
         super.onDestroy();

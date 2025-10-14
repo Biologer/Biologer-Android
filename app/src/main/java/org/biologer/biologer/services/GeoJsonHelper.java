@@ -12,7 +12,6 @@ import com.google.maps.android.data.geojson.GeoJsonLineStringStyle;
 
 import org.biologer.biologer.R;
 import org.json.JSONException;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,17 +88,9 @@ public class GeoJsonHelper {
         return utmNames;
     }
 
-    /** Simple data holder for grid label name and coordinates. */
-    public static class UTMName {
-        private final String name;
-        private final LatLng latLng;
-
-        public UTMName(String name, LatLng latLng) {
-            this.name = name;
-            this.latLng = latLng;
-        }
-
-        public String getName() { return name; }
-        public LatLng getLatLng() { return latLng; }
+    /**
+     * Simple data holder for grid label name and coordinates.
+     */
+        public record UTMName(String name, LatLng latLng) {
     }
 }
