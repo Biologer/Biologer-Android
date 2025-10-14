@@ -395,7 +395,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
             double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
-            if (elevation_bundle == 0) {
+            if (elevation_bundle == 0 && latLong != null) {
                 updateElevationAndSave(latLong, true, false);
             } else {
                 elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
