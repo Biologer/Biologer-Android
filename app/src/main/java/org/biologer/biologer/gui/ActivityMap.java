@@ -82,12 +82,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private String accuracy, elevation, location_name;
     private LatLng latLong;
     private final String google_map_type = SettingsManager.getGoogleMapType();
-    private final String database_name = SettingsManager.getDatabaseName();
     private Circle circle;
     private Marker marker;
     private final List<Marker> utmMarkers = new ArrayList<>();
     private MenuItem menuItemLoadKML;
-    private MarkerManager.Collection myMarkers;
     private EditText editTextLocation, editTextLongitude, editTextLatitude, editTextPrecision, editTextElevation;
     Slider slider;
     private ImageView imageViewSaveLocationName;
@@ -101,7 +99,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private Marker accuracyHandle;
     private boolean draggingHandle = false;
     private static final int HANDLE_HIT_SLOP_DP = 24;
-
+    int zoom_level = 16;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,14 +115,19 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
         setupToolbar();
         getViews();
+
+        // Elevation fetch after views exist
+        if (elevation == null || "0".equals(elevation)) {
+            updateElevationAndSave(latLong, true, false);
+        }
     }
 
     private void getSavedData(Bundle savedInstanceState) {
         double lat = savedInstanceState.getDouble("STATE_LATITUDE", 0.0);
         double lon = savedInstanceState.getDouble("STATE_LONGITUDE", 0.0);
-        accuracy     = savedInstanceState.getString("STATE_ACCURACY", "50");
-        elevation    = savedInstanceState.getString("STATE_ELEVATION", "0");
-        location_name= savedInstanceState.getString("STATE_LOCATION_NAME", null);
+        accuracy = savedInstanceState.getString("STATE_ACCURACY", "50");
+        elevation = savedInstanceState.getString("STATE_ELEVATION", "0");
+        location_name = savedInstanceState.getString("STATE_LOCATION_NAME", null);
         latLong = new LatLng(lat, lon);
 
         Log.d(TAG, "Restored map state from bundle: "
@@ -272,7 +275,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         ImageView floatButtonMapType = binding.floatButtonMapType;
         floatButtonMapType.setImageAlpha(255);
         floatButtonMapType.setOnClickListener(view -> showMapTypeSelectorDialog());
-        
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         binding.floatButtonMyLocation.setOnClickListener(v -> moveToCurrentLocation());
     }
@@ -375,34 +378,41 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     private void getBundleData() {
         Bundle bundle = getIntent().getExtras();
+
         if (bundle != null) {
-            if (bundle.getDouble("LATITUDE") == 0 || bundle.getDouble("LONGITUDE") == 0) {
+            double inLat = bundle.getDouble("LATITUDE", 0);
+            double inLon = bundle.getDouble("LONGITUDE", 0);
+
+            if (inLat == 0 || inLon == 0) {
                 String database = SettingsManager.getDatabaseName();
-                if (database.equals("https://biologer.org")) {
-                    latLong = new LatLng(44.0, 20.8);
-                }
-                if (database.equals("https://dev.biologer.org")) {
-                    latLong = new LatLng(44.0, 20.8);
+                if (database.equals("https://biologer.rs")
+                        || database.equals("https://dev.biologer.org")) {
+                    latLong = new LatLng(44.1, 20.7);
+                    zoom_level = 7;
                 }
                 if (database.equals("https://biologer.hr")) {
                     latLong = new LatLng(45.5, 16.3);
+                    zoom_level = 7;
                 }
                 if (database.equals("https://biologer.ba")) {
                     latLong = new LatLng(44.3, 17.9);
+                    zoom_level = 7;
+                }
+                if (database.equals("https://biologer.me")) {
+                    latLong = new LatLng(42.8, 19.1);
+                    zoom_level = 9;
                 }
             } else {
-                latLong = new LatLng(bundle.getDouble("LATITUDE"), bundle.getDouble("LONGITUDE"));
+                latLong = new LatLng(inLat, inLon);
             }
+
             double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
             double elevation_bundle = bundle.getDouble("ELEVATION", 0);
-            if (elevation_bundle == 0 && latLong != null) {
-                updateElevationAndSave(latLong, true, false);
-            } else {
-                elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
-            }
+            elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
             accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
             location_name = bundle.getString("LOCATION", null);
             Log.d(TAG, "Accuracy from GPS:" + accuracy + "; elevation: " + elevation + ".");
+
         } else {
             latLong = new LatLng(45.5, 16.3);
             accuracy = "0";
@@ -502,7 +512,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         }
 
         // Create a MarkerManager and a custom collection for your markers
-        myMarkers = markerManager.newCollection("my_markers");
+        MarkerManager.Collection myMarkers = markerManager.newCollection("my_markers");
 
         // Set up map type
         if (google_map_type.equals("NORMAL")) {
@@ -524,7 +534,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         // Click on the map should change the locality
         mMap.setOnMapClickListener(this::handleUserTap);
 
-        initMapObjects();
+        // Add marker at the GPS position on the map or default position
+        addLocationMarker(myMarkers);
+        // Add a circle
+        addCircle();
 
         SupportMapFragment mapFrag =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -733,34 +746,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         updateElevationAndSave(latLong, true, false);
     }
 
-    private void initMapObjects() {
-        // Add marker at the GPS position on the map or default position
-        if (latLong.latitude == 0.0) {
-            if (database_name.equals("https://biologer.hr")) {
-                latLong = new LatLng(45.5, 16.3);
-                addLocationMarker(7, myMarkers);
-            }
-            if (database_name.equals("https://biologer.ba")) {
-                latLong = new LatLng(44.3, 17.9);
-                addLocationMarker(7, myMarkers);
-            }
-            if (database_name.equals("https://biologer.me")) {
-                latLong = new LatLng(42.8, 19.1);
-                addLocationMarker(9, myMarkers);
-            }
-            if (database_name.equals("https://biologer.rs")
-                    || database_name.equals("https://dev.biologer.org")) {
-                latLong = new LatLng(44.1, 20.7);
-                addLocationMarker(7, myMarkers);
-            }
-        } else {
-            addLocationMarker(16, myMarkers);
-        }
-
-        // Add a circle
-        addCircle();
-    }
-
     private void addZoomHandler(MarkerManager.Collection collection) {
         mMap.setOnCameraIdleListener(() -> {
             float zoomLevel = mMap.getCameraPosition().zoom;
@@ -829,7 +814,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         utmMarkers.clear();
     }
 
-    private void addLocationMarker(Integer zoom, MarkerManager.Collection collection) {
+    private void addLocationMarker(MarkerManager.Collection collection) {
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(latLong)
                 .title(getString(R.string.you_are_here))
@@ -838,11 +823,9 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 .draggable(true);
         marker = collection.addMarker(markerOptions);
 
-        if (zoom != null) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom));
-            mMap.animateCamera(CameraUpdateFactory.zoomIn());
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom), 1000, null);
-        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, zoom_level));
+        mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(zoom_level), 1000, null);
     }
 
     private void addCircle() {
@@ -935,6 +918,13 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private void updateElevationAndSave(LatLng coordinates, boolean update_elevation, boolean save) {
         if (InternetConnection.isConnected(this)) {
             if (update_elevation) {
+                // Sometimes the coordinates are null. Don't know why!
+                if (coordinates == null) {
+                    Log.w(TAG, "updateElevationAndSave called with null coordinates; skipping");
+                    if (save) saveAndExit();
+                    return;
+                }
+
                 if (elevationCall != null && !elevationCall.isCanceled()) {
                     elevationCall.cancel();
                 }
