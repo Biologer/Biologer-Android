@@ -1,16 +1,25 @@
 package org.biologer.biologer.gui;
 
+import org.biologer.biologer.databinding.ActivityMapBinding;
+
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,9 +31,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -37,12 +49,9 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.slider.Slider;
+import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.collections.CircleManager;
 import com.google.maps.android.collections.MarkerManager;
-import com.google.maps.android.data.geojson.GeoJsonFeature;
-import com.google.maps.android.data.geojson.GeoJsonLayer;
-import com.google.maps.android.data.geojson.GeoJsonLineStringStyle;
-import com.google.maps.android.data.kml.KmlLayer;
 import com.google.maps.android.ui.IconGenerator;
 
 import org.biologer.biologer.Localisation;
@@ -51,13 +60,9 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.ElevationResponse;
-import org.json.JSONException;
-import org.xmlpull.v1.XmlPullParserException;
+import org.biologer.biologer.services.GeoJsonHelper;
+import org.biologer.biologer.services.KmlHelper;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
@@ -73,7 +78,7 @@ import retrofit2.Response;
 public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "Biologer.GoogleMaps";
-    private final List<UTMName> utmNames = new ArrayList<>();
+    private ActivityMapBinding binding;
     private GoogleMap mMap;
     private String accuracy, elevation, location_name;
     private LatLng latLong;
@@ -82,45 +87,54 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private Circle circle;
     private Marker marker;
     private final List<Marker> utmMarkers = new ArrayList<>();
-    private GeoJsonLayer utmGridLines;
-    private KmlLayer kmlLayer;
     private MenuItem menuItemLoadKML;
     private MarkerManager.Collection myMarkers;
     private EditText editTextLocation, editTextLongitude, editTextLatitude, editTextPrecision, editTextElevation;
     Slider slider;
     private ImageView imageViewSaveLocationName;
+    private Call<ElevationResponse> elevationCall;
+    private final Handler locationNameHandler = new Handler(Looper.getMainLooper());
+    private String lastSavedLocationName = null;
+    private static final int REQUEST_LOCATION_PERMISSION = 101;
+    private FusedLocationProviderClient fusedLocationClient;
+    private KmlHelper kmlHelper;
+    private GeoJsonHelper geoJsonHelper;
+    private Marker accuracyHandle;
+    private boolean draggingHandle = false;
+    private static final int HANDLE_HIT_SLOP_DP = 24;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_map);
+        binding = ActivityMapBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.map_actionbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        // Add the back button to the toolbar
-        if (actionbar != null) {
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-            actionbar.setTitle(R.string.google_maps_title);
-        }
-
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            latLong = new LatLng(bundle.getDouble("LATITUDE"), bundle.getDouble("LONGITUDE"));
-            double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
-            double elevation_bundle = bundle.getDouble("ELEVATION", 0);
-            accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
-            elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
-            location_name = bundle.getString("LOCATION", null);
-            Log.d(TAG, "Accuracy from GPS:" + accuracy + "; elevation: " + elevation + ".");
+        if (savedInstanceState != null) {
+            getSavedData(savedInstanceState); // To restore on screen rotation
         } else {
-            latLong = new LatLng(45.5, 16.3);
-            accuracy = "50"; // Default accuracy
-            Log.d(TAG, "Bundle is null for some reason! Setting default LatLong and accuracy.");
+            getBundleData();
         }
 
+        setupToolbar();
+        getViews();
+    }
+
+    private void getSavedData(Bundle savedInstanceState) {
+        double lat = savedInstanceState.getDouble("STATE_LATITUDE", 0.0);
+        double lon = savedInstanceState.getDouble("STATE_LONGITUDE", 0.0);
+        latLong = new LatLng(lat, lon);
+        accuracy = savedInstanceState.getString("STATE_ACCURACY", "50");
+        elevation = savedInstanceState.getString("STATE_ELEVATION", "0");
+        location_name = savedInstanceState.getString("STATE_LOCATION_NAME", null);
+
+        Log.d(TAG, "Restored map state from bundle: "
+                + lat + ", " + lon + " | accuracy: " + accuracy
+                + " | elevation: " + elevation
+                + " | location: " + location_name);
+    }
+
+    private void getViews() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -131,30 +145,38 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         }
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        LinearLayout linearLayout = findViewById(R.id.map_location_name);
+        LinearLayout linearLayout = binding.mapLocationName;
         if (!preferences.getBoolean("advanced_interface", false)) {
             linearLayout.setVisibility(View.GONE);
         } else {
             linearLayout.setVisibility(View.VISIBLE);
         }
 
-        imageViewSaveLocationName = findViewById(R.id.map_save_location_name);
+        imageViewSaveLocationName = binding.mapSaveLocationName;
         imageViewSaveLocationName.setClickable(false);
         imageViewSaveLocationName.setAlpha(0.25f);
 
-        editTextLocation = findViewById(R.id.location_name_text);
-        String locationNameFromPreferences = preferences.getString("location_name", "");
+        editTextLocation = binding.locationNameText;
+
+        lastSavedLocationName = preferences.getString("location_name", "");
         if (location_name != null) {
             editTextLocation.setText(location_name);
         } else {
-            editTextLocation.setText(locationNameFromPreferences);
+            editTextLocation.setText(lastSavedLocationName);
         }
         editTextLocation.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable editable) {
-                location_name = String.valueOf(editTextLocation.getText()).trim();
-                imageViewSaveLocationName.setClickable(true);
-                imageViewSaveLocationName.setAlpha(1.0f);
+                locationNameHandler.removeCallbacksAndMessages(null);
+                locationNameHandler.postDelayed(() -> {
+                    String newName = editable.toString().trim();
+                    location_name = newName;
+
+                    boolean enableSave = (!newName.equals(lastSavedLocationName));
+
+                    imageViewSaveLocationName.setClickable(enableSave);
+                    imageViewSaveLocationName.setAlpha(enableSave ? 1.0f : 0.25f);
+                }, 500);
             }
 
             @Override
@@ -182,81 +204,17 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
-        DecimalFormat formatCoordinates = new DecimalFormat("#,##0.000000", symbols);
-        editTextLatitude = findViewById(R.id.map_latitude_text);
-        editTextLatitude.setText(formatCoordinates.format(latLong.latitude));
-        editTextLatitude.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Locale currentLocale = Locale.forLanguageTag(Localisation.getLocaleScript());
-                DecimalFormatSymbols symbols = new DecimalFormatSymbols(currentLocale);
-                DecimalFormat decimalFormat = new DecimalFormat("#.#########", symbols);
-                String latitudeString = editTextLatitude.getText().toString();
-                try {
-                    Number number = decimalFormat.parse(latitudeString);
-                    double latitude;
-                    if (number != null) {
-                        latitude = number.doubleValue();
-                        double currentLongitude = latLong.longitude;
-                        latLong = new LatLng(latitude, currentLongitude);
-                        marker.setPosition(latLong);
-                        circle.setCenter(latLong);
-                        circle.setRadius(Double.parseDouble(accuracy));
-                    }
-                } catch (ParseException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        // Latitude
+        editTextLatitude = binding.mapLatitudeText;
+        editTextLatitude.setText(formatCoordinate(latLong.latitude));
+        setupCoordinateField(editTextLatitude, true);
 
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+        // Longitude
+        editTextLongitude = binding.mapLongitudeText;
+        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+        setupCoordinateField(editTextLongitude, false);
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-        });
-
-        editTextLongitude = findViewById(R.id.map_longitude_text);
-        editTextLongitude.setText(formatCoordinates.format(latLong.longitude));
-        editTextLongitude.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Locale currentLocale = Locale.forLanguageTag(Localisation.getLocaleScript());
-                DecimalFormatSymbols symbols = new DecimalFormatSymbols(currentLocale);
-                DecimalFormat decimalFormat = new DecimalFormat("#.#########", symbols);
-                String longitudeString = editTextLongitude.getText().toString();
-                try {
-                    Number number = decimalFormat.parse(longitudeString);
-                    double longitude;
-                    if (number != null) {
-                        longitude = number.doubleValue();
-                        double currentLatitude = latLong.latitude;
-                        latLong = new LatLng(currentLatitude, longitude);
-                        marker.setPosition(latLong);
-                        circle.setCenter(latLong);
-                        circle.setRadius(Double.parseDouble(accuracy));
-                    }
-                } catch (ParseException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-        });
-
-        editTextPrecision = findViewById(R.id.map_precision_text);
+        editTextPrecision = binding.mapPrecisionText;
         editTextPrecision.setText(String.valueOf(accuracy));
         editTextPrecision.addTextChangedListener(new TextWatcher() {
             @Override
@@ -268,7 +226,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     accuracy = accuracy_from_input;
                 }
                 double a = Double.parseDouble(accuracy);
-                circle.setRadius(a);
+                if (circle != null) circle.setRadius(a);
                 double a_min = (a - 50);
                 if (a_min < 0) {
                     slider.setValueFrom(0);
@@ -292,7 +250,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
-        editTextElevation = findViewById(R.id.map_elevation_text);
+        editTextElevation = binding.mapElevationText;
         editTextElevation.setText(String.valueOf(elevation));
         editTextElevation.addTextChangedListener(new TextWatcher() {
             @Override
@@ -316,13 +274,152 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
         });
 
-        ImageView floatButtonMapType = findViewById(R.id.float_button_map_type);
+        ImageView floatButtonMapType = binding.floatButtonMapType;
         floatButtonMapType.setImageAlpha(255);
         floatButtonMapType.setOnClickListener(view -> showMapTypeSelectorDialog());
+        
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        binding.floatButtonMyLocation.setOnClickListener(v -> moveToCurrentLocation());
+    }
+
+    /**
+     * Sets up a coordinate EditText (latitude or longitude) so that changes update the marker & circle.
+     * @param field       EditText to monitor.
+     * @param isLatitude  true → latitude field, false → longitude field.
+     */
+    private void setupCoordinateField(EditText field, boolean isLatitude) {
+        field.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String text = editable.toString().trim();
+                if (text.isEmpty()) return;
+
+                try {
+                    Locale locale = Locale.forLanguageTag(Localisation.getLocaleScript());
+                    DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
+                    DecimalFormat df = new DecimalFormat("#.#########", symbols);
+                    Number parsed = df.parse(text);
+                    if (parsed == null) return;
+
+                    double value = parsed.doubleValue();
+                    latLong = new LatLng(
+                            isLatitude ? value : latLong.latitude,
+                            isLatitude ? latLong.longitude : value
+                    );
+
+                    // Update map visuals
+                    updateMarkerAndCircle();
+
+                } catch (ParseException e) {
+                    Toast.makeText(ActivityMap.this,
+                            getString(R.string.invalid_format) + ": " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
+    }
+
+
+    private void moveToCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+            return;
+        }
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, location -> {
+                    if (location != null) {
+                        LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        Log.d(TAG, "Current GPS location: " + currentLatLng.latitude + ", " + currentLatLng.longitude);
+
+                        float accuracyValue = location.hasAccuracy() ? location.getAccuracy() : 0;
+                        accuracy = String.format(Locale.ENGLISH, "%.0f", accuracyValue);
+                        binding.mapPrecisionText.setText(accuracy);
+                        binding.mapSlider.setValue(accuracyValue);
+                        Log.d(TAG, "Current location accuracy: " + accuracy + " m");
+
+                        latLong = currentLatLng;
+                        if (mMap != null) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16));
+                        }
+
+                        if (marker != null) marker.setPosition(latLong);
+                        if (circle != null) {
+                            circle.setCenter(latLong);
+                        }
+
+                        editTextLatitude.setText(formatCoordinate(latLong.latitude));
+                        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+
+                        updateElevationAndSave(latLong, true, false);
+                    } else {
+                        Toast.makeText(this, R.string.location_not_available, Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting location: ", e);
+                    Toast.makeText(this, R.string.location_not_available, Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(binding.mapActionbar.toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setTitle(R.string.google_maps_title);
+        }
+    }
+
+    private void getBundleData() {
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            if (bundle.getDouble("LATITUDE") == 0 || bundle.getDouble("LONGITUDE") == 0) {
+                String database = SettingsManager.getDatabaseName();
+                if (database.equals("https://biologer.org")) {
+                    latLong = new LatLng(44.0, 20.8);
+                }
+                if (database.equals("https://dev.biologer.org")) {
+                    latLong = new LatLng(44.0, 20.8);
+                }
+                if (database.equals("https://biologer.hr")) {
+                    latLong = new LatLng(45.5, 16.3);
+                }
+                if (database.equals("https://biologer.ba")) {
+                    latLong = new LatLng(44.3, 17.9);
+                }
+            } else {
+                latLong = new LatLng(bundle.getDouble("LATITUDE"), bundle.getDouble("LONGITUDE"));
+            }
+            double accuracy_bundle = bundle.getDouble("ACCURACY", 0);
+            double elevation_bundle = bundle.getDouble("ELEVATION", 0);
+            if (elevation_bundle == 0) {
+                updateElevationAndSave(latLong, true, false);
+            } else {
+                elevation = String.format(Locale.ENGLISH, "%.0f", elevation_bundle);
+            }
+            accuracy = String.format(Locale.ENGLISH, "%.0f", accuracy_bundle);
+            location_name = bundle.getString("LOCATION", null);
+            Log.d(TAG, "Accuracy from GPS:" + accuracy + "; elevation: " + elevation + ".");
+        } else {
+            latLong = new LatLng(45.5, 16.3);
+            accuracy = "0";
+            Log.d(TAG, "Bundle is null for some reason! Setting default LatLong and accuracy.");
+        }
+        updateMarkerAndCircle();
     }
 
     private void saveLocationName() {
         String location = String.valueOf(editTextLocation.getText()).trim();
+        lastSavedLocationName = location;
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("location_name", location);
@@ -364,38 +461,37 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             menuItemLoadKML.setIcon(R.drawable.ic_kmz_remove);
         }
         menuItemLoadKML.setOnMenuItemClickListener(menuItem -> {
-            // If there is no KML/KMZ file pick one.
-            if (SettingsManager.getKmlFile() == null) {
+            String uriString = SettingsManager.getKmlFile();
+
+            if (uriString == null) {
                 addKmlFile();
             }
-            // If KML/KMZ file exist we should remove it.
+
             else {
-                String uri_string = String.valueOf(SettingsManager.getKmlFile());
-                SettingsManager.setKmlFile(null);
-                if (kmlLayer.isLayerOnMap()) {
-                    kmlLayer.removeLayerFromMap();
+                if (kmlHelper.removeKml(uriString)) {
+                    SettingsManager.setKmlFile(null);
+                    menuItemLoadKML.setIcon(R.drawable.ic_kmz);
+                    Log.d(TAG, "KML removed.");
                 }
-                menuItemLoadKML.setIcon(R.drawable.ic_kmz);
-                String fileExtension = uri_string.substring(uri_string.lastIndexOf("."));
-                final File file = new File(getFilesDir(), "KmlOverlay" + fileExtension);
-                boolean b = file.delete();
-                Log.d(TAG, "Deleting KML/KMZ file returned: " + b + "; Files dir: " + getFilesDir());
             }
-            return false;
+            return true;
         });
+
         return true;
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
+        kmlHelper = new KmlHelper(this, mMap);
+        geoJsonHelper = new GeoJsonHelper(this, mMap);
+        geoJsonHelper.loadUtmLines();
+        geoJsonHelper.loadUtmPoints();
 
         MarkerManager markerManager = new MarkerManager(googleMap);
 
         // Add UTM 10×10 km grid lines and label points over the map
         MarkerManager.Collection markerCollectionUtm = markerManager.newCollection("utm");
-        addUTMLines();
-        addUTMPoints();
 
         // Handle UTM grid visibility on Zoom
         addZoomHandler(markerCollectionUtm);
@@ -426,21 +522,214 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         addSlider();
 
         // Click on the map should change the locality
-        mMap.setOnMapClickListener(latLng -> {
-            latLong = latLng;
-            Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
-            updateElevationAndSave(latLong, true, false);
-
-            DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
-            DecimalFormat formatCoordinates = new DecimalFormat("#,##0.000000", symbols);
-            editTextLatitude.setText(formatCoordinates.format(latLong.latitude));
-            editTextLongitude.setText(formatCoordinates.format(latLong.longitude));
-            marker.setPosition(latLong);
-            circle.setCenter(latLong);
-        });
+        mMap.setOnMapClickListener(this::handleUserTap);
 
         initMapObjects();
+
+        SupportMapFragment mapFrag =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        View mapView = mapFrag != null ? mapFrag.getView() : null;
+
+        if (mapView instanceof ViewGroup) {
+            ViewGroup mapContainer = (ViewGroup) mapView;
+
+            // Grab the original map child BEFORE adding our overlay
+            final View mapContent = mapContainer.getChildAt(0); // this is the MapView
+
+            // Avoid adding multiple overlays on config changes etc.
+            final String OVERLAY_TAG = "tap_pass_through_overlay";
+            View existing = mapContainer.findViewWithTag(OVERLAY_TAG);
+            if (existing != null) {
+                mapContainer.removeView(existing);
+            }
+
+            final View touchOverlay = new View(this);
+            touchOverlay.setTag(OVERLAY_TAG);
+            touchOverlay.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+            mapContainer.addView(touchOverlay); // put on top
+
+            touchOverlay.setOnTouchListener(new View.OnTouchListener() {
+                private static final int TAP_TIMEOUT_MS = 200;
+                private static final int LONG_PRESS_MS  = android.view.ViewConfiguration.getLongPressTimeout(); // ~500ms
+                private static final int TAP_SLOP_DP    = 14;
+                private static final int HIT_SLOP_DP    = 24; // how close you must be to the marker to count as "on marker"
+
+                private long downTime = 0L;
+                private float downX, downY;
+                private boolean forwarding = false;
+                private boolean longPressFired = false;
+                private final Runnable longPressRunnable = new Runnable() {
+                    @Override public void run() {
+                        if (mMap == null || marker == null) return;
+                        longPressFired = true;
+                        // hit test: is the down point close to marker on screen?
+                        android.graphics.Point mp = mMap.getProjection().toScreenLocation(marker.getPosition());
+                        float dx = Math.abs(downX - mp.x);
+                        float dy = Math.abs(downY - mp.y);
+                        if (dx <= dpToPx(HIT_SLOP_DP) && dy <= dpToPx(HIT_SLOP_DP)) {
+                            // 👉 Long-pressed on marker: open your accuracy UI
+                            Toast.makeText(ActivityMap.this, "DRAG", Toast.LENGTH_SHORT).show();
+                            startAccuracyHandle();
+                            draggingHandle = true;
+                        }
+                    }
+                };
+
+                private int dpToPx(int dp) {
+                    float d = getResources().getDisplayMetrics().density;
+                    return Math.round(dp * d);
+                }
+
+                private void postLongPress() {
+                    touchOverlay.removeCallbacks(longPressRunnable);
+                    longPressFired = false;
+                    touchOverlay.postDelayed(longPressRunnable, LONG_PRESS_MS);
+                }
+
+                private void cancelLongPress() {
+                    touchOverlay.removeCallbacks(longPressRunnable);
+                }
+
+                private MotionEvent cloneWithAction(MotionEvent e, int action) {
+                    return MotionEvent.obtain(downTime == 0 ? e.getDownTime() : downTime,
+                            e.getEventTime(), action, e.getX(), e.getY(), e.getMetaState());
+                }
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (mMap == null || mapContent == null) return false;
+
+                    // 0) If we are dragging the accuracy handle, consume events and move it.
+                    // Do this BEFORE other gesture logic so the map doesn’t pan.
+                    if (draggingHandle) {
+                        switch (event.getActionMasked()) {
+                            case MotionEvent.ACTION_MOVE: {
+                                moveAccuracyHandleToScreen(event.getX(), event.getY());
+                                return true; // consume, don't forward to map
+                            }
+                            case MotionEvent.ACTION_UP:
+                            case MotionEvent.ACTION_CANCEL: {
+                                moveAccuracyHandleToScreen(event.getX(), event.getY());
+                                finishAccuracyHandleDrag();
+                                return true;
+                            }
+                            default:
+                                return true;
+                        }
+                    }
+
+                    int action = event.getActionMasked();
+
+                    if (action == MotionEvent.ACTION_POINTER_DOWN && !forwarding) {
+                        // cancel long-press & start forwarding for multitouch gestures
+                        cancelLongPress();
+                        forwarding = true;
+                        MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                        mapContent.dispatchTouchEvent(syntheticDown);
+                        syntheticDown.recycle();
+                        mapContent.dispatchTouchEvent(event);
+                        return true;
+                    }
+
+                    if (forwarding) {
+                        cancelLongPress();
+                        mapContent.dispatchTouchEvent(event);
+                        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                            forwarding = false;
+                        }
+                        return true;
+                    }
+
+                    switch (action) {
+                        case MotionEvent.ACTION_DOWN: {
+                            if (event.getPointerCount() > 1) return false;
+                            // If finger down is near the handle → start dragging the handle
+                            if (isNearHandle(event.getX(), event.getY())) {
+                                draggingHandle = true;
+                                // optional: vibrate or change icon
+                                moveAccuracyHandleToScreen(event.getX(), event.getY());
+                                return true; // consume; do not forward to map
+                            }
+                            downTime = System.currentTimeMillis();
+                            downX = event.getX();
+                            downY = event.getY();
+                            forwarding = false;
+                            postLongPress();
+                            return true;
+                        }
+
+                        case MotionEvent.ACTION_MOVE: {
+                            float dx = Math.abs(event.getX() - downX);
+                            float dy = Math.abs(event.getY() - downY);
+                            if (dx > dpToPx(TAP_SLOP_DP) || dy > dpToPx(TAP_SLOP_DP)) {
+                                // became a drag → cancel long-press and forward as pan
+                                cancelLongPress();
+                                forwarding = true;
+                                MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                                mapContent.dispatchTouchEvent(syntheticDown);
+                                syntheticDown.recycle();
+                                mapContent.dispatchTouchEvent(event);
+                            }
+                            return true;
+                        }
+
+                        case MotionEvent.ACTION_UP: {
+                            cancelLongPress();
+                            if (!longPressFired) {
+                                // treat as tap if quick and small movement
+                                long dt = System.currentTimeMillis() - downTime;
+                                float dx = Math.abs(event.getX() - downX);
+                                float dy = Math.abs(event.getY() - downY);
+                                if (dt < TAP_TIMEOUT_MS && dx < dpToPx(TAP_SLOP_DP) && dy < dpToPx(TAP_SLOP_DP)) {
+                                    android.graphics.Point p = new android.graphics.Point(Math.round(event.getX()), Math.round(event.getY()));
+                                    LatLng tapped = mMap.getProjection().fromScreenLocation(p);
+                                    handleUserTap(tapped);
+                                } else {
+                                    // end a late drag
+                                    if (!forwarding) {
+                                        forwarding = true;
+                                        MotionEvent syntheticDown = cloneWithAction(event, MotionEvent.ACTION_DOWN);
+                                        mapContent.dispatchTouchEvent(syntheticDown);
+                                        syntheticDown.recycle();
+                                    }
+                                    mapContent.dispatchTouchEvent(event);
+                                    forwarding = false;
+                                }
+                            }
+                            return true;
+                        }
+
+                        case MotionEvent.ACTION_CANCEL: {
+                            cancelLongPress();
+                            if (forwarding) {
+                                mapContent.dispatchTouchEvent(event);
+                                forwarding = false;
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+        }
+
     }
+
+    private void handleUserTap(@NonNull LatLng latLng) {
+        latLong = latLng;
+        Log.d(TAG, "New coordinates of the marker: " + latLng.latitude + ", " + latLng.longitude);
+
+        if (marker != null) marker.setPosition(latLong);
+        if (circle != null) circle.setCenter(latLong);
+
+        editTextLatitude.setText(formatCoordinate(latLong.latitude));
+        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+
+        updateElevationAndSave(latLong, true, false);
+    }
+
 
     private void initMapObjects() {
         // Add marker at the GPS position on the map or default position
@@ -475,25 +764,21 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             Log.d(TAG, "Zoom: " + zoomLevel + "; UTM shown: " + SettingsManager.isUtmShown());
 
             if (SettingsManager.isUtmShown()) {
-                // Remove the UTM markers first
                 removeAllUtmMarkers();
 
-                // Add UTM lines
                 if (zoomLevel < 8) {
-                    if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+                    geoJsonHelper.hideUtmLines();
                 } else {
-                    if (!utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
+                    geoJsonHelper.showUtmLines();
                 }
 
-                // Re-add the UTM markers
                 if (zoomLevel > 10) {
-                    utmGridLines.addLayerToMap();
+                    geoJsonHelper.showUtmLines();
                     final LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-                    for (UTMName utmName : utmNames) {
+                    for (GeoJsonHelper.UTMName utmName : geoJsonHelper.getUtmNames()) {
                         if (bounds.contains(utmName.getLatLng())) {
                             IconGenerator iconFactory = new IconGenerator(ActivityMap.this);
                             iconFactory.setStyle(IconGenerator.STYLE_GREEN);
-
                             MarkerOptions markerOptions = new MarkerOptions()
                                     .icon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(utmName.getName())))
                                     .position(utmName.getLatLng())
@@ -519,88 +804,17 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                     });
 
     private void loadKmlFile(Uri uri) {
-        // If uri is not given, take it from the Settings
         if (uri == null) {
-            String uri_string = SettingsManager.getKmlFile();
-            if (uri_string != null) {
-                uri = Uri.parse(uri_string);
-                drawKmlOverlay(uri);
+            String savedUri = SettingsManager.getKmlFile();
+            if (savedUri != null) {
+                kmlHelper.drawKmlOverlay(Uri.parse(savedUri));
             }
-        }
-        // If the uri is given, save the file and open it.
-        else {
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(uri);
-                if (inputStream != null) {
-                    String uri_string = String.valueOf(uri);
-                    String extension = uri_string.substring(uri_string.lastIndexOf("."));
-                    String filename = "KmlOverlay" + extension;
-                    File filesDir = getFilesDir();
-                    if (!filesDir.exists()) {
-                        boolean created = filesDir.mkdirs();
-                        Log.d(TAG, "Creating directory for KML/KMZ file returned " + created);
-                    }
-                    final File file = new File(getFilesDir(), filename);
-                    if (!file.exists()) {
-                        boolean created = file.createNewFile();
-                        Log.d(TAG, "Creating directory for KML/KMZ file returned " + created);
-                    }
-                    Uri fileUri = Uri.fromFile(file);
-                    Log.d(TAG, "KML/KMZ file should be saved to " + fileUri + ".");
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    int read;
-                    byte[] bytes = new byte[8192];
-                    while ((read = inputStream.read(bytes)) != -1) {
-                        fileOutputStream.write(bytes, 0, read);
-                    }
-                    fileOutputStream.flush();
-                    fileOutputStream.close();
-                    inputStream.close();
-                    SettingsManager.setKmlFile(String.valueOf(fileUri));
-                    menuItemLoadKML.setIcon(R.drawable.ic_kmz_remove);
-
-                    drawKmlOverlay(fileUri);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        } else {
+            String saved = kmlHelper.saveAndDrawKml(uri);
+            if (saved != null) {
+                SettingsManager.setKmlFile(saved);
+                menuItemLoadKML.setIcon(R.drawable.ic_kmz_remove);
             }
-        }
-    }
-
-    private void drawKmlOverlay(Uri uri) {
-        InputStream inputStream;
-        try {
-            inputStream = getContentResolver().openInputStream(uri);
-            if (inputStream != null) {
-                kmlLayer = new KmlLayer(mMap, inputStream, this);
-                kmlLayer.addLayerToMap();
-                inputStream.close();
-            }
-        } catch (XmlPullParserException | IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void addUTMLines() {
-        try {
-            utmGridLines = new GeoJsonLayer(mMap, R.raw.utm_grid_lines, this);
-            GeoJsonLineStringStyle geoJsonLineStringStyle = utmGridLines.getDefaultLineStringStyle();
-            geoJsonLineStringStyle.setColor(0xFF669900);
-            geoJsonLineStringStyle.setZIndex(300);
-        } catch (IOException | JSONException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void addUTMPoints() {
-        try {
-            GeoJsonLayer utmGridPoints = new GeoJsonLayer(mMap, R.raw.utm_grid_points, this);
-            Iterable<GeoJsonFeature> pointNames = utmGridPoints.getFeatures();
-            for(GeoJsonFeature i: pointNames){
-                utmNames.add(new UTMName(i.getProperty("Name"), (LatLng)i.getGeometry().getGeometryObject()));
-            }
-        } catch (IOException | JSONException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -618,7 +832,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 .title(getString(R.string.you_are_here))
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker))
                 .zIndex(5000)
-                .draggable(false);
+                .draggable(true);
         marker = collection.addMarker(markerOptions);
 
         if (zoom != null) {
@@ -705,51 +919,48 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             Log.d(TAG, "UTM grid is shown. Hiding the grid now.");
             SettingsManager.setUtmShown(false);
             Objects.requireNonNull(menuItem.getIcon()).setAlpha(128);
-            if (utmGridLines.isLayerOnMap()) {utmGridLines.removeLayerFromMap();}
+            geoJsonHelper.hideUtmLines();
             removeAllUtmMarkers();
         } else {
             Log.d(TAG, "UTM grid is hidden. Showing the grid now.");
             SettingsManager.setUtmShown(true);
             Objects.requireNonNull(menuItem.getIcon()).setAlpha(255);
-            if (utmGridLines.isLayerOnMap()) {utmGridLines.addLayerToMap();}
+            geoJsonHelper.showUtmLines();
         }
     }
 
     private void updateElevationAndSave(LatLng coordinates, boolean update_elevation, boolean save) {
         if (InternetConnection.isConnected(this)) {
             if (update_elevation) {
-                Call<ElevationResponse> call = RetrofitClient.getService(SettingsManager.getDatabaseName()).getElevation(coordinates.latitude, coordinates.longitude);
+                if (elevationCall != null && !elevationCall.isCanceled()) {
+                    elevationCall.cancel();
+                }
+
+                elevationCall = RetrofitClient
+                        .getService(SettingsManager.getDatabaseName())
+                        .getElevation(coordinates.latitude, coordinates.longitude);
+
                 Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
-                call.enqueue(new Callback<>() {
+                elevationCall.enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<ElevationResponse> call, @NonNull Response<ElevationResponse> response) {
-                        if (response.body() != null) {
+                        if (response.body() != null && !isFinishing()) {
                             Long elev = response.body().getElevation();
-                            if (elev != null) {
-                                elevation = String.valueOf(elev);
-                            } else {
-                                elevation = "0.0";
-                            }
-                        } else {
-                            elevation = "0.0";
+                            elevation = elev != null ? String.valueOf(elev) : "0.0";
+                            Log.d(TAG, "Elevation for this point is " + elevation + ".");
+                            if (save) saveAndExit(); else editTextElevation.setText(elevation);
                         }
-                        Log.d(TAG, "Elevation for this point is " + elevation + ".");
-                        if (save) {
-                            saveAndExit();
-                        } else {
-                            editTextElevation.setText(elevation);
-                        }
+                        elevationCall = null;
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<ElevationResponse> call, @NonNull Throwable t) {
-                        Log.d(TAG, "No elevation returned from server...");
-                        elevation = "0.0";
-                        if (save) {
-                            saveAndExit();
-                        } else {
-                            editTextElevation.setText(elevation);
+                        if (!isFinishing()) {
+                            Log.w(TAG, "Failed to fetch elevation: " + t.getMessage());
+                            elevation = "0.0";
+                            if (save) saveAndExit(); else editTextElevation.setText(elevation);
                         }
+                        elevationCall = null;
                     }
                 });
             } else {
@@ -814,18 +1025,15 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
     private void addSlider() {
         slider = findViewById(R.id.map_slider);
         float current_value = Float.parseFloat(accuracy);
-        if (current_value >= 100) {
-            slider.setValueTo(500);
-        } if (current_value >= 500) {
-            slider.setValueTo(1000);
-        } if (current_value >= 1000) {
-            slider.setValueTo(10000);
-        } if (current_value >= 10000) {
-            slider.setValueTo(50000);
-        }
-        slider.setValue(current_value);
+        float limit = current_value >= 10000 ? 50000 :
+                current_value >= 1000  ? 10000 :
+                        current_value >= 500   ? 1000  :
+                                current_value >= 100   ? 500   : 100;
+        slider.setValueTo(limit);
         slider.setLabelFormatter(value -> getString(R.string.precision) + " " + Math.round(value) + " m");
-        slider.addOnChangeListener((slider1, value, fromUser) -> circle.setRadius(value));
+        slider.addOnChangeListener((slider1, value, fromUser) -> {
+            if (circle != null) circle.setRadius(value);
+        });
         slider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
 
             @Override
@@ -846,4 +1054,108 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
             }
         });
     }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putDouble("lat", latLong.latitude);
+        outState.putDouble("lon", latLong.longitude);
+        outState.putString("acc", accuracy);
+        outState.putString("elev", elevation);
+        outState.putString("loc", location_name);
+    }
+
+    private static String formatCoordinate(double value) {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
+        DecimalFormat df = new DecimalFormat("#,##0.000000", symbols);
+        return df.format(value);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                moveToCurrentLocation();
+            } else {
+                Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void updateMarkerAndCircle() {
+        if (marker != null) marker.setPosition(latLong);
+        if (circle != null) {
+            circle.setCenter(latLong);
+            circle.setRadius(Double.parseDouble(accuracy));
+        }
+    }
+
+    private void startAccuracyHandle() {
+        double rMeters = 0;
+        try { rMeters = Double.parseDouble(accuracy); } catch (Exception ignored) {}
+        if (rMeters <= 0) rMeters = 100;
+
+        // Place handle east of center at current accuracy
+        LatLng at = SphericalUtil.computeOffset(latLong, rMeters, /*bearing=*/90.0);
+
+        if (accuracyHandle == null) {
+            accuracyHandle = mMap.addMarker(
+                    new MarkerOptions()
+                            .position(at)
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+                            .zIndex(6000f)
+                            .draggable(false)
+                            .title(getString(R.string.precision))
+            );
+        } else {
+            accuracyHandle.setPosition(at);
+            accuracyHandle.setVisible(true);
+        }
+    }
+
+    // Move handle to a screen x/y (map overlay touch → LatLng)
+    private void moveAccuracyHandleToScreen(float x, float y) {
+        if (mMap == null || accuracyHandle == null) return;
+        android.graphics.Point p = new android.graphics.Point(Math.round(x), Math.round(y));
+        LatLng pos = mMap.getProjection().fromScreenLocation(p);
+        accuracyHandle.setPosition(pos);
+
+        // Live update accuracy & circle
+        double meters = SphericalUtil.computeDistanceBetween(latLong, pos);
+        accuracy = String.format(Locale.ENGLISH, "%.0f", meters);
+        if (circle != null) circle.setRadius(meters);
+        if (slider != null) slider.setValue((float) meters);
+        if (editTextPrecision != null) editTextPrecision.setText(accuracy);
+    }
+
+    // Finish drag (finger up). You can also keep the handle visible for later drags.
+    private void finishAccuracyHandleDrag() {
+        draggingHandle = false;
+        // Hide the handle after setting accuracy:
+        if (accuracyHandle != null) accuracyHandle.setVisible(false);
+    }
+
+    // Hit-test helper: is (x,y) near the handle on screen?
+    private boolean isNearHandle(float x, float y) {
+        if (mMap == null || accuracyHandle == null || !accuracyHandle.isVisible()) return false;
+        android.graphics.Point hp = mMap.getProjection().toScreenLocation(accuracyHandle.getPosition());
+        float dx = Math.abs(x - hp.x);
+        float dy = Math.abs(y - hp.y);
+        float slop = getResources().getDisplayMetrics().density * HANDLE_HIT_SLOP_DP;
+        return dx <= slop && dy <= slop;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (elevationCall != null && !elevationCall.isCanceled()) {
+            Log.d(TAG, "Cancelling pending elevation request...");
+            elevationCall.cancel();
+            elevationCall = null;
+        }
+        binding = null;
+        super.onDestroy();
+    }
+
 }

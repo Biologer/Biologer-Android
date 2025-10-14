@@ -1084,23 +1084,17 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         // If location is not loaded put some location on the map at the Balkan
         Bundle bundle = new Bundle();
         if (viewModel.getLatitude() == null || viewModel.getLatitude() == 0) {
-            String database = SettingsManager.getDatabaseName();
-            if (database.equals("https://biologer.org")) {
-                viewModel.setCoordinates(new LatLng(44.0, 20.8));
-            }
-            if (database.equals("https://dev.biologer.org")) {
-                viewModel.setCoordinates(new LatLng(44.0, 20.8));
-            }
-            if (database.equals("https://biologer.hr")) {
-                viewModel.setCoordinates(new LatLng(45.5, 16.3));
-            }
-            if (database.equals("https://biologer.ba")) {
-                viewModel.setCoordinates(new LatLng(44.3, 17.9));
-            }
+            bundle.putDouble("LATITUDE", 0);
+            bundle.putDouble("LONGITUDE", 0);
+        } else {
+            bundle.putDouble("LATITUDE", viewModel.getLatitude());
+            bundle.putDouble("LONGITUDE", viewModel.getLongitude());
         }
-        bundle.putDouble("LATITUDE", viewModel.getLatitude());
-        bundle.putDouble("LONGITUDE", viewModel.getLongitude());
-        bundle.putDouble("ACCURACY", viewModel.getRoundedAccuracy());
+        if (viewModel.getRoundedAccuracy() != null) {
+            bundle.putDouble("ACCURACY", viewModel.getRoundedAccuracy());
+        } else {
+            bundle.putDouble("ACCURACY", 0);
+        }
         bundle.putDouble("ELEVATION", viewModel.getRoundedElevation());
         bundle.putString("LOCATION", viewModel.getLocation().getValue());
         intent.putExtras(bundle);

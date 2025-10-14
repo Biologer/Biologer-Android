@@ -547,5 +547,9 @@
     <string name="save">Save</string>
     <string name="sort_by_observation_time">By observation time</string>
     <string name="sort_by_species_name">By species name</string>
+    <string name="invalid_format">Invalid format</string>
+    <string name="my_location">My location</string>
+    <string name="location_not_available">Location is not available!</string>
+    <string name="permission_denied">Permission denied!</string>
 
 </resources>
