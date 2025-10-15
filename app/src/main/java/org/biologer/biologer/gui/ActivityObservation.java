@@ -96,7 +96,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_observation);
         binding = ActivityObservationBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 

@@ -19,7 +19,7 @@
     <string name="taxon_name_hint">Назив таксона</string>
     <string name="specimens_number_hint">Број јединки</string>
     <string name="stage_hint">Развојни стадијум таксона</string>
-    <string name="specimen_is_dead">Јединка је нађена мртва?</string>
+    <string name="specimen_is_dead">Нађена мртва?</string>
     <string name="dead_comment_hint">Узрок смрти</string>
     <string name="habitat">Станиште</string>
     <string name="comment_hint">Белешка</string>
@@ -496,6 +496,7 @@
     <string name="duration">Трајање:</string>
     <string name="channel_location">Праћење локације</string>
     <string name="channel_location_description">Приказује обавештење док прикупља локацију током бројања врста.</string>
+    <string name="timed_count_finished">Временско бројање је завршено! Сада можете да проверите, уредите или сачувате ваше податке.</string>
     <string name="error_fetching_user_data">Не могу да добијем податке о кориснику: подаци су празни.</string>
     <string name="error_fetching_user_data1">Не могу да добијем податке о кориснику: одговор је празан.</string>
     <string name="timed_count_title">Временско бројање</string>
@@ -516,5 +517,39 @@
     <string name="edit_location_name">Уреди назив локације</string>
     <string name="butterflies">дневни лептири</string>
     <string name="birds">птице</string>
+    <string name="save_time_count">Сачувај временско бројање</string>
+    <string name="cloud_icon">Иконица за облачност</string>
+    <string name="temperature_icon">Иконица за температуру</string>
+    <string name="temperature">Температура</string>
+    <string name="cloudiness">Облачност</string>
+    <string name="c">°C</string>
+    <string name="percent">%</string>
+    <string name="wind_icon">Иконица за ветар</string>
+    <string name="wind_speed">Брзина ветра</string>
+    <string name="wind_direction">Смер ветра</string>
+    <string name="atmospheric_pressure_icon">Иконица за атмосферски притисак</string>
+    <string name="atmospheric_pressure">Атмосферски притисак</string>
+    <string name="hpa">hPa</string>
+    <string name="humidity_icon">Иконица за влажност ваздуха</string>
+    <string name="air_humidity">Влажност ваздуха</string>
+    <string name="habitat_icon">Иконица за станиште</string>
+    <string name="comment_icon">Иконица за белешку</string>
+    <string name="additional_comments">Додатни коментари</string>
+    <string name="other_data">Остали подаци</string>
+    <string name="other_data_desc">Овде можете унети тип станишта и додатне коментаре уз временско бројање.</string>
+    <string name="weather_data">Временске прилике</string>
+    <string name="weather_data_desc">Подаци о времену су преузети са странице OpenWeather. Овде их можете проверити и кориговати уколико је потребно.</string>
+    <string name="empty">празно</string>
+    <string name="fill_additional_data">Додирните да попуните податке</string>
+    <string name="can_not_edit_species_with_custom_names">Не могу да уредим врсте са произвољним именима! Пробајте да изаберете врсту са списка.</string>
+    <string name="at_time">у</string>
+    <string name="save_on_exit_time_count">Неке промене у вашем временском бројању нису сачуване. Да ли желите да сачувате промене или да из занемарите?</string>
+    <string name="save">Сачувај</string>
+    <string name="sort_by_observation_time">По времену посматрања</string>
+    <string name="sort_by_species_name">По називу врсте</string>
+    <string name="invalid_format">Неисправан формат</string>
+    <string name="my_location">Моја локација</string>
+    <string name="location_not_available">Локација није доступна!</string>
+    <string name="permission_denied">Није добијена дозвола!</string>
 
 </resources>

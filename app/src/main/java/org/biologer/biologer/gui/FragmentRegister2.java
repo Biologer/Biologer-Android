@@ -55,8 +55,8 @@ public class FragmentRegister2 extends Fragment {
 
         Activity activity = getActivity();
         if (activity != null) {
-            editTextEmail.setText(((ActivityLogin) activity).et_username.getText().toString());
-            editTextPassword.setText(((ActivityLogin) activity).et_password.getText().toString());
+            editTextEmail.setText(((ActivityLogin) activity).editTextUsername.getText().toString());
+            editTextPassword.setText(((ActivityLogin) activity).editTextPassword.getText().toString());
 
             ImageView imageViewShowPassword = activity.findViewById(R.id.show_password_icon_type);
             imageViewShowPassword.setOnClickListener(view1 -> {
@@ -107,8 +107,8 @@ public class FragmentRegister2 extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
-                editTextEmail.setText(((ActivityLogin) activity).et_username.getText().toString());
-                editTextPassword.setText(((ActivityLogin) activity).et_password.getText().toString());
+                editTextEmail.setText(((ActivityLogin) activity).editTextUsername.getText().toString());
+                editTextPassword.setText(((ActivityLogin) activity).editTextPassword.getText().toString());
                 editTextPassword.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -205,8 +205,8 @@ public class FragmentRegister2 extends Fragment {
 
 
     private void onNextClicked(View view) {
-        ((ActivityLogin) requireActivity()).et_username.setText(editTextEmail.getText().toString());
-        ((ActivityLogin) requireActivity()).et_password.setText(editTextPassword.getText().toString());
+        ((ActivityLogin) requireActivity()).editTextUsername.setText(editTextEmail.getText().toString());
+        ((ActivityLogin) requireActivity()).editTextPassword.setText(editTextPassword.getText().toString());
 
         Log.d(TAG, "Registering with email address: " + editTextEmail.getText().toString());
 

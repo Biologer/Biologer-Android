@@ -6,19 +6,18 @@ import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.services.DateHelper;
+import org.biologer.biologer.databinding.ActivityAnnouncementBinding;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
 import org.biologer.biologer.sql.AnnouncementsDb;
@@ -37,16 +36,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ActivityAnnouncement extends AppCompatActivity {
+
     private static final String TAG = "Biologer.AnnouncementsR";
+    private ActivityAnnouncementBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_announcement);
+        binding = ActivityAnnouncementBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        // Toolbar
+        setSupportActionBar(binding.toolbar.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setTitle(R.string.announcement);
@@ -54,18 +55,19 @@ public class ActivityAnnouncement extends AppCompatActivity {
             actionbar.setDisplayShowHomeEnabled(true);
         }
 
-        // If opening from Activity use index of taped list, else use bundle received from other Fragment
-        int index;
+        // Get index from intent
         Bundle bundle = getIntent().getExtras();
-        index = Objects.requireNonNull(bundle).getInt("index");
+        int index = Objects.requireNonNull(bundle).getInt("index");
         Log.d(TAG, "Displaying announcement with index ID: " + index + ".");
 
+        // Load announcements
         List<AnnouncementsDb> announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class).getAll();
         Collections.reverse(announcements);
         long id = announcements.get(index).getId();
         String locale = Localisation.getLocaleScript();
         Log.d(TAG, "Opening announcement with index: " + index + "; ID: " + id + "; locale: " + locale);
 
+        // Query translation
         Box<AnnouncementTranslationsDb> box = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
         Query<AnnouncementTranslationsDb> query = box
                 .query(AnnouncementTranslationsDb_.announcementId.equal(id)
@@ -74,45 +76,38 @@ public class ActivityAnnouncement extends AppCompatActivity {
         AnnouncementTranslationsDb translation = query.findFirst();
         query.close();
 
-        TextView textTitle = findViewById(R.id.announcement_reading_title);
+        // Title
         String title = announcements.get(index).getTitle();
-        if (translation != null) {
-            title = translation.getTitle();
-        }
-        textTitle.setText(title);
+        if (translation != null) title = translation.getTitle();
+        binding.announcementReadingTitle.setText(title);
 
-        TextView textText = findViewById(R.id.announcement_reading_text);
-        textText.setMovementMethod(new ScrollingMovementMethod());
+        // Message
         String text = announcements.get(index).getMessage();
-        if (translation != null) {
-            text = translation.getMessage();
-        }
+        if (translation != null) text = translation.getMessage();
+        binding.announcementReadingText.setMovementMethod(new ScrollingMovementMethod());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            textText.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
+            binding.announcementReadingText.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
         } else {
-            textText.setText(Html.fromHtml(text));
+            binding.announcementReadingText.setText(Html.fromHtml(text));
         }
 
-        TextView textAuthor = findViewById(R.id.announcement_reading_author);
+        // Author
         String author = announcements.get(index).getCreatorName();
-        textAuthor.setText(author);
+        binding.announcementReadingAuthor.setText(author);
 
-        TextView textDate = findViewById(R.id.announcement_reading_date);
+        // Date
         Date date = DateHelper.getDateFromJSON(announcements.get(index).getCreatedAt());
-        String date_string = getString(R.string.created_on) + " " + DateHelper.getLocalizedDate(date, this);
-        textDate.setText(date_string);
+        String dateString = getString(R.string.created_on) + " " + DateHelper.getLocalizedDate(date, this);
+        binding.announcementReadingDate.setText(dateString);
 
+        // Mark as read
         markAnnouncementAsRead(id);
-
     }
 
     private void markAnnouncementAsRead(long id) {
-
-        // Mark Announcement as read locally
+        // Mark locally
         Box<AnnouncementsDb> announcements = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
-        Query<AnnouncementsDb> query = announcements
-                .query(AnnouncementsDb_.id.equal(id))
-                .build();
+        Query<AnnouncementsDb> query = announcements.query(AnnouncementsDb_.id.equal(id)).build();
         AnnouncementsDb announcement = query.findFirst();
         query.close();
         if (announcement != null) {
@@ -120,9 +115,9 @@ public class ActivityAnnouncement extends AppCompatActivity {
             App.get().getBoxStore().boxFor(AnnouncementsDb.class).put(announcement);
         }
 
-        // Mark announcement as read online
-        Call<ResponseBody> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).setAnnouncementAsRead(id);
+        // Mark online
+        Call<ResponseBody> call = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                .setAnnouncementAsRead(id);
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
@@ -136,16 +131,14 @@ public class ActivityAnnouncement extends AppCompatActivity {
                 Log.d(TAG, "Announcement could not be marked as read " + t.getLocalizedMessage());
             }
         });
-
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            this.getOnBackPressedDispatcher().onBackPressed();
+        if (item.getItemId() == android.R.id.home) {
+            getOnBackPressedDispatcher().onBackPressed();
+            return true;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
     }
-
 }

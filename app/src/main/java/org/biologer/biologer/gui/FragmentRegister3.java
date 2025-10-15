@@ -96,7 +96,7 @@ public class FragmentRegister3 extends Fragment {
                     public void onClick(@NonNull View textView) {
                         Fragment fragment = new FragmentRegisterPrivacyPolicy();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.login_layout, fragment);
+                        fragmentTransaction.replace(R.id.linearLayoutLogin, fragment);
                         fragmentTransaction.addToBackStack("Register fragment privacy");
                         fragmentTransaction.commit();
                     }
@@ -125,7 +125,7 @@ public class FragmentRegister3 extends Fragment {
                     public void onClick(@NonNull View textView) {
                         Fragment fragment = new FragmentLicense();
                         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.login_layout, fragment);
+                        fragmentTransaction.replace(R.id.linearLayoutLogin, fragment);
                         fragmentTransaction.addToBackStack("License Fragment");
                         fragmentTransaction.commit();
                     }
@@ -217,8 +217,8 @@ public class FragmentRegister3 extends Fragment {
                 ((ActivityLogin) requireActivity()).register_surname,
                 getDataLicense(), getImageLicense(),
                 ((ActivityLogin) requireActivity()).register_institution,
-                ((ActivityLogin) requireActivity()).et_username.getText().toString(),
-                ((ActivityLogin) requireActivity()).et_password.getText().toString());
+                ((ActivityLogin) requireActivity()).editTextUsername.getText().toString(),
+                ((ActivityLogin) requireActivity()).editTextPassword.getText().toString());
         registerResponseCall.enqueue(new Callback<>() {
 
             @Override

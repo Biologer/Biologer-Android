@@ -22,13 +22,14 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -37,6 +38,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
+import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
@@ -53,24 +55,29 @@ import java.util.concurrent.TimeUnit;
 
 public class FragmentLanding extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    private FragmentLandingBinding binding;
     private ArrayList<LandingFragmentItems> items;
     String TAG = "Biologer.LandingFragment";
     LandingFragmentAdapter entriesAdapter;
-    RecyclerView recyclerView;
     BroadcastReceiver broadcastReceiver;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_landing, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentLandingBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         items = LandingFragmentItems.loadAllEntries(requireContext()); // Load the entries from the database
-        setupRecycleView(rootView);
-        setupFloatActionButton(rootView);
+        setupRecyclerView();
+        setupFloatingActionButton();
         setupBroadcastReceiver();
+
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
-
-        return rootView;
     }
 
     private void setupBroadcastReceiver() {
@@ -126,16 +133,12 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         };
     }
 
-    private void setupFloatActionButton(View rootView) {
+    private void setupFloatingActionButton() {
         // Add the + button for making new records
-        FloatingActionButton floatingActionButton = rootView.findViewById(R.id.float_button_new_entry);
-        if (SettingsManager.isMailConfirmed()) {
-            floatingActionButton.setEnabled(true);
-            floatingActionButton.setAlpha(1f);
-        } else {
-            floatingActionButton.setEnabled(false);
-            floatingActionButton.setAlpha(0.25f);
-        }
+        FloatingActionButton floatingActionButton = binding.floatButtonNewEntry;
+        boolean mail_confirmed = SettingsManager.isMailConfirmed();
+        floatingActionButton.setEnabled(mail_confirmed);
+        floatingActionButton.setAlpha(mail_confirmed ? 1f : 0.25f);
 
         floatingActionButton.setOnClickListener(v -> {
             // When user opens the EntryActivity for the first time set this to true.
@@ -154,18 +157,16 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         });
     }
 
-    private void setupRecycleView(View rootView) {
-        // If there are entries display the list with taxa
-        recyclerView = rootView.findViewById(R.id.recycled_view_entries);
+    private void setupRecyclerView() {
         entriesAdapter = new LandingFragmentAdapter(items);
-        recyclerView.setAdapter(entriesAdapter);
-        recyclerView.setClickable(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.addOnItemTouchListener(
-                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+        binding.recycledViewEntries.setAdapter(entriesAdapter);
+        binding.recycledViewEntries.setClickable(true);
+        binding.recycledViewEntries.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recycledViewEntries.addOnItemTouchListener(
+                new RecyclerOnClickListener(requireContext(), binding.recycledViewEntries, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        recyclerView.setClickable(false);
+                        binding.recycledViewEntries.setClickable(false);
                         LandingFragmentItems item = items.get(position);
                         if (item.getTimedCountId() != null) {
                             openTimedCount(item.getTimedCountId());
@@ -179,8 +180,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                         Log.d(TAG, "Item " + position + " long pressed.");
                         entriesAdapter.setPosition(position);
                     }
-                }));
-        registerForContextMenu(recyclerView);
+                })
+        );
+        registerForContextMenu(binding.recycledViewEntries);
     }
 
     // Opens ActivityEntry to add new species observation
@@ -315,12 +317,12 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
             items.add(index, item);
             entriesAdapter.notifyItemInserted(index);
-            recyclerView.smoothScrollToPosition(index);
+            binding.recycledViewEntries.smoothScrollToPosition(index);
         } else {
             // Time sort → always newest first at top
             items.add(0, item);
             entriesAdapter.notifyItemInserted(0);
-            recyclerView.smoothScrollToPosition(0);
+            binding.recycledViewEntries.smoothScrollToPosition(0);
         }
 
         removeInfoText();
@@ -348,7 +350,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
             items = LandingFragmentItems.loadAllEntries(context);
             entriesAdapter = new LandingFragmentAdapter(items);
-            recyclerView.setAdapter(entriesAdapter);
+            binding.recycledViewEntries.setAdapter(entriesAdapter);
         }
     }
 
@@ -488,7 +490,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
             // Update the list in RecycleView
             entriesAdapter.notifyItemInserted(0);
-            recyclerView.smoothScrollToPosition(0);
+            binding.recycledViewEntries.smoothScrollToPosition(0);
 
             // Open EntryActivity to edit the new record
             Activity activity = getActivity();
@@ -590,7 +592,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private void reloadRecyclerView() {
         items = LandingFragmentItems.loadAllEntries(requireContext());
         entriesAdapter = new LandingFragmentAdapter(items);
-        recyclerView.setAdapter(entriesAdapter);
+        binding.recycledViewEntries.setAdapter(entriesAdapter);
     }
 
 }

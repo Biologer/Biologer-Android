@@ -5,6 +5,7 @@
     android:background="@color/fragment_background">
     <include
         layout="@layout/toolbar_main"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

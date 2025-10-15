@@ -25,28 +25,24 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-
-import com.google.android.material.textfield.TextInputLayout;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.databinding.ActivityLoginBinding;
+import org.biologer.biologer.databinding.DatabasesAndIconsBinding;
+import org.biologer.biologer.databinding.DialogResetEmailBinding;
 import org.biologer.biologer.network.json.LoginResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.json.UserDataSer;
@@ -65,15 +61,12 @@ import retrofit2.Response;
 public class ActivityLogin extends AppCompatActivity {
 
     private static final String TAG = "Biologer.Login";
+    private ActivityLoginBinding binding;
     int retry_login = 1;
     Handler handler = new Handler(Looper.getMainLooper());
     Runnable runnable;
-    EditText et_username, et_password;
-    TextInputLayout til_username, til_password;
-    TextView tv_devDatabase, forgotPassTextView;
-    Button loginButton;
+    EditText editTextUsername, editTextPassword;
     public String database_name;
-    ProgressBar progressBar;
     String old_username, old_password,
             register_name, register_surname, register_institution;
     static String[] allDatabases = {"https://biologer.rs",
@@ -81,26 +74,20 @@ public class ActivityLogin extends AppCompatActivity {
             "https://biologer.ba",
             "https://biologer.me",
             "https://dev.biologer.org"};
-
     Call <LoginResponse> login;
-
-    // Initialise list for Database selection
     Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle(getString(R.string.biologer_login));
-        setSupportActionBar(toolbar);
+        binding.toolbar.toolbar.setTitle(getString(R.string.biologer_login));
+        setSupportActionBar(binding.toolbar.toolbar);
 
-        et_username = findViewById(R.id.et_username);
-        et_password = findViewById(R.id.et_password);
-        til_password = findViewById(R.id.layout_password);
-        til_username = findViewById(R.id.layout_name);
-        tv_devDatabase = findViewById(R.id.tv_devDatabase);
+        editTextUsername = binding.textInputEditTextUsername;
+        editTextPassword = binding.textInputEditTextPassword;
 
         database_name = SettingsManager.getDatabaseName();
         Log.d(TAG, "Database URL written in the settings is: " + database_name);
@@ -110,11 +97,11 @@ public class ActivityLogin extends AppCompatActivity {
         if (!user.isEmpty()) {
             Log.d(TAG, "There is user in the SQL database: " + user.get(0).getUsername());
             // Just set the user email so that is does not need to be written once again
-            et_username.setText(user.get(0).getEmail());
+            editTextUsername.setText(user.get(0).getEmail());
         }
 
         // Fill in the data for database list
-        spinner = findViewById(R.id.spinner_databases);
+        spinner = binding.spinnerDatabases;
         String[] Databases = {
                 getString(R.string.database_serbia),
                 getString(R.string.database_croatia),
@@ -136,12 +123,10 @@ public class ActivityLogin extends AppCompatActivity {
 
         // Android 4.4 (KitKat) compatibility: Set button listener programmatically.
         // Login button.
-        loginButton = findViewById(R.id.btn_login);
-        loginButton.setOnClickListener(this::onLogin);
+        binding.buttonLogin.setOnClickListener(this::onLogin);
 
         // Register link.
         // This is intro text which should contain a link to privacy policy to click on
-        TextView registerTextView = findViewById(R.id.ctv_register);
         String register_string = getString(R.string.no_account1) + " " +
                 getString(R.string.no_account2) + " " +
                 getString(R.string.no_account3) + ".";
@@ -162,26 +147,23 @@ public class ActivityLogin extends AppCompatActivity {
         int start = register_string.indexOf(getString(R.string.no_account2));
         int end = register_string.lastIndexOf(getString(R.string.no_account2)) + getString(R.string.no_account2).length();
         register_string_span.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        registerTextView.setText(register_string_span);
-        registerTextView.setMovementMethod(LinkMovementMethod.getInstance());
-        registerTextView.setHighlightColor(Color.TRANSPARENT);
+        binding.textViewRegister.setText(register_string_span);
+        binding.textViewRegister.setMovementMethod(LinkMovementMethod.getInstance());
+        binding.textViewRegister.setHighlightColor(Color.TRANSPARENT);
 
         // Forgot password link.
-        forgotPassTextView = findViewById(R.id.ctv_forgotPass);
-        forgotPassTextView.setOnClickListener(this::onForgotPass);
+        binding.textViewForgotPassword.setOnClickListener(this::onForgotPass);
 
-        progressBar = findViewById(R.id.login_progressBar);
-
-        et_username.setOnFocusChangeListener((v, hasFocus) -> {
+        editTextUsername.setOnFocusChangeListener((v, hasFocus) -> {
             Log.d(TAG, "Username focus changed!");
-            tv_devDatabase.setText("");
-            if (!et_username.getText().toString().isEmpty()) {
+            binding.textViewDatabase.setText("");
+            if (!editTextUsername.getText().toString().isEmpty()) {
                 Log.d(TAG, "There is some text written as the username.");
                 setEmailError();
-                et_username.addTextChangedListener(new TextWatcher() {
+                editTextUsername.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        old_username = et_username.getText().toString();
+                        old_username = editTextUsername.getText().toString();
                     }
 
                     @Override
@@ -189,7 +171,7 @@ public class ActivityLogin extends AppCompatActivity {
                         setEmailError();
                         enableButton();
 
-                        if (!old_username.equals(et_username.getText().toString())) {
+                        if (!old_username.equals(editTextUsername.getText().toString())) {
                             if (SettingsManager.getAccessToken() != null) {
                                 Log.d(TAG, "Username changed! Deleting Access Token.");
                                 SettingsManager.deleteAccessToken();
@@ -204,16 +186,16 @@ public class ActivityLogin extends AppCompatActivity {
             }
         });
 
-        et_password.setOnFocusChangeListener((v, hasFocus) -> {
+        editTextPassword.setOnFocusChangeListener((v, hasFocus) -> {
             Log.d(TAG, "Password focus changed!");
             setPasswordError();
-            tv_devDatabase.setText("");
-            if (!et_password.getText().toString().isEmpty()) {
+            binding.textViewDatabase.setText("");
+            if (!editTextPassword.getText().toString().isEmpty()) {
                 Log.d(TAG, "There is some text written as password.");
-                et_password.addTextChangedListener(new TextWatcher() {
+                editTextPassword.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        old_password = et_password.getText().toString();
+                        old_password = editTextPassword.getText().toString();
                     }
 
                     @Override
@@ -221,7 +203,7 @@ public class ActivityLogin extends AppCompatActivity {
                         setPasswordError();
                         enableButton();
 
-                        if (!old_password.equals(et_password.getText().toString())) {
+                        if (!old_password.equals(editTextPassword.getText().toString())) {
                             if (SettingsManager.getAccessToken() != null) {
                                 Log.d(TAG, "Password changed! Deleting Access Token.");
                                 SettingsManager.deleteAccessToken();
@@ -236,7 +218,7 @@ public class ActivityLogin extends AppCompatActivity {
             }
         });
 
-        et_password.addTextChangedListener(new TextWatcher() {
+        editTextPassword.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -257,7 +239,7 @@ public class ActivityLogin extends AppCompatActivity {
             }
         });
 
-        et_username.addTextChangedListener(new TextWatcher() {
+        editTextUsername.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -278,41 +260,38 @@ public class ActivityLogin extends AppCompatActivity {
             }
         });
 
-        ImageView imageViewShowPassword = findViewById(R.id.show_password_icon);
-        imageViewShowPassword.setOnClickListener(view -> {
-            int inputType = et_password.getInputType();
+        binding.imageViewShowPassword.setOnClickListener(view -> {
+            int inputType = editTextPassword.getInputType();
             if (inputType == (InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
-                imageViewShowPassword.setImageResource(R.drawable.eye_open);
-                et_password.setInputType(InputType.TYPE_CLASS_TEXT
+                binding.imageViewShowPassword.setImageResource(R.drawable.eye_open);
+                editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
                         | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
+                binding.imageViewShowPassword.setContentDescription(getString(R.string.hide_password));
             } else {
-                imageViewShowPassword.setImageResource(R.drawable.eye_closed);
-                et_password.setInputType(InputType.TYPE_CLASS_TEXT
+                binding.imageViewShowPassword.setImageResource(R.drawable.eye_closed);
+                editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT
                         | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                imageViewShowPassword.setContentDescription(getString(R.string.show_password));
+                binding.imageViewShowPassword.setContentDescription(getString(R.string.show_password));
             }
-            et_password.setSelection(et_password.getText().length());
+            editTextPassword.setSelection(editTextPassword.getText().length());
         });
 
         // Disable login button if there is no username and password
-        if (et_username.getText().toString().isEmpty() && et_password.getText().toString().isEmpty()) {
-            loginButton.setEnabled(false);
+        if (editTextUsername.getText().toString().isEmpty()
+                && editTextPassword.getText().toString().isEmpty()) {
+            binding.buttonLogin.setEnabled(false);
         }
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             if (bundle.getString("refreshToken") != null) {
                 Log.d(TAG, "It looks like login token is expired. We must use the password.");
-                registerTextView.setText("");
-                LinearLayout linearLayout = findViewById(R.id.linearlayout_databases);
-                linearLayout.setVisibility(View.GONE);
-                View view = findViewById(R.id.underline);
-                view.setVisibility(View.GONE);
-                TextView textView = findViewById(R.id.tv_refreshToken);
-                textView.setText(R.string.refresh_token_text);
-                textView.setVisibility(View.VISIBLE);
-                et_password.requestFocus();
+                binding.textViewRegister.setText("");
+                binding.linearLayoutDatabases.setVisibility(View.GONE);
+                binding.viewUnderline.setVisibility(View.GONE);
+                binding.textViewRefreshToken.setText(R.string.refresh_token_text);
+                binding.textViewRefreshToken.setVisibility(View.VISIBLE);
+                editTextPassword.requestFocus();
                 getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
             }
         }
@@ -327,28 +306,29 @@ public class ActivityLogin extends AppCompatActivity {
     }
 
     private void setEmailError() {
-        if (!(isValidEmail(et_username.getText().toString()))) {
-            til_username.setError(getString(R.string.invalid_email));
+        if (!(isValidEmail(editTextUsername.getText().toString()))) {
+            binding.textInputLayoutUsername.setError(getString(R.string.invalid_email));
         }
         else {
-            til_username.setError(null);
+            binding.textInputLayoutUsername.setError(null);
         }
     }
 
     private void setPasswordError() {
-        int passwordLength = et_password.getText().length();
+        int passwordLength = editTextPassword.getText().length();
 
         if (passwordLength == 0) {
-            til_password.setError(null);
+            binding.textInputLayoutPassword.setError(null);
         } else if (passwordLength < 8) {
-            til_password.setError(getString(R.string.password_too_short));
+            binding.textInputLayoutPassword.setError(getString(R.string.password_too_short));
         } else {
-            til_password.setError(null);
+            binding.textInputLayoutPassword.setError(null);
         }
     }
 
     private void enableButton() {
-        loginButton.setEnabled(et_password.getText().length() >= 8 && isValidEmail(et_username.getText().toString()));
+        binding.buttonLogin.setEnabled(editTextPassword.getText().length() >= 8
+                && isValidEmail(editTextUsername.getText().toString()));
     }
 
     public static int getSpinnerIdFromUrl(String url) {
@@ -359,13 +339,13 @@ public class ActivityLogin extends AppCompatActivity {
     public static class ImageArrayAdapter extends ArrayAdapter<Integer> {
         private final Integer[] images;
         private final String[] text;
-        private final Context context;
+        private final LayoutInflater inflater;
 
         ImageArrayAdapter(Context context, Integer[] images, String[] text) {
             super(context, R.layout.databases_and_icons, images);
             this.images = images;
             this.text = text;
-            this.context = context;
+            this.inflater = LayoutInflater.from(context);
         }
 
         @Override
@@ -380,14 +360,12 @@ public class ActivityLogin extends AppCompatActivity {
         }
 
         private View getImageForPosition(int position, ViewGroup parent) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            assert inflater != null;
-            View row = inflater.inflate(R.layout.databases_and_icons, parent, false);
-            TextView textView = row.findViewById(R.id.database_name);
-            textView.setText(text[position]);
-            ImageView imageView = row.findViewById(R.id.database_icon);
-            imageView.setImageResource(images[position]);
-            return row;
+            DatabasesAndIconsBinding binding = DatabasesAndIconsBinding.inflate(inflater, parent, false);
+
+            binding.textViewDatabaseName.setText(text[position]);
+            binding.textViewDatabaseIcon.setImageResource(images[position]);
+
+            return binding.getRoot();
         }
     }
 
@@ -412,11 +390,13 @@ public class ActivityLogin extends AppCompatActivity {
             }
 
             String hint_text = getString(R.string.URL_address) + " " + database_name;
-            tv_devDatabase.setText(hint_text);
+            binding.textViewDatabase.setText(hint_text);
             if (database_name.equals("https://dev.biologer.org")) {
-                tv_devDatabase.setTextColor(ContextCompat.getColor(ActivityLogin.this, R.color.warningRed));
+                binding.textViewDatabase.setTextColor(
+                        ContextCompat.getColor(ActivityLogin.this, R.color.warningRed));
             } else {
-                tv_devDatabase.setTextColor(ContextCompat.getColor(ActivityLogin.this, R.color.colorPrimary));
+                binding.textViewDatabase.setTextColor(
+                        ContextCompat.getColor(ActivityLogin.this, R.color.colorPrimary));
             }
         }
 
@@ -428,7 +408,7 @@ public class ActivityLogin extends AppCompatActivity {
 
     // Run when user click the login button
     public void onLogin(View view) {
-        loginButton.setEnabled(false);
+        binding.buttonLogin.setEnabled(false);
         String token = SettingsManager.getAccessToken();
 
         // If there is no token, we should get one from the server
@@ -449,9 +429,16 @@ public class ActivityLogin extends AppCompatActivity {
 
             displayProgressBar(true);
 
-            login = RetrofitClient.getService(database_name).login("password", getClientIdForDatabase(database_name), getClientKeyForDatabase(database_name), "*", et_username.getText().toString(), et_password.getText().toString());
+            login = RetrofitClient.getService(database_name).login(
+                    "password",
+                    getClientIdForDatabase(database_name),
+                    getClientKeyForDatabase(database_name),
+                    "*",
+                    editTextUsername.getText().toString(),
+                    editTextPassword.getText().toString());
 
-            Log.d(TAG, "Logging into " + database_name + " as user " + et_username.getText().toString());
+            Log.d(TAG, "Logging into " + database_name + " as user "
+                    + editTextUsername.getText().toString());
 
             // Get the response from the call
             Log.d(TAG, "Getting Token from server.");
@@ -476,10 +463,10 @@ public class ActivityLogin extends AppCompatActivity {
                     } else {
                         retry_login++;
                         if (retry_login >= 4) {
-                            forgotPassTextView.setVisibility(View.VISIBLE);
+                            binding.textViewForgotPassword.setVisibility(View.VISIBLE);
                         }
-                        til_password.setError(getString(R.string.wrong_creds));
-                        til_username.setError(getString(R.string.wrong_creds));
+                        binding.textInputLayoutPassword.setError(getString(R.string.wrong_creds));
+                        binding.textInputLayoutUsername.setError(getString(R.string.wrong_creds));
                         displayProgressBar(false);
                         Log.d(TAG, "Unsuccessful response! The response body was: " + response.body());
                     }
@@ -506,7 +493,7 @@ public class ActivityLogin extends AppCompatActivity {
                     if (response.body() != null) {
 
                         if (response.code() == 401) {
-                            tv_devDatabase.setText(getString(R.string.check_database));
+                            binding.textViewDatabase.setText(getString(R.string.check_database));
                             displayProgressBar(false);
                             dialogConfirmMail(getString(R.string.unauthorised));
                         }
@@ -567,13 +554,13 @@ public class ActivityLogin extends AppCompatActivity {
 
     private void displayProgressBar(Boolean value) {
         if (value) {
-            loginButton.setEnabled(false);
-            loginButton.setVisibility(View.GONE);
-            progressBar.setVisibility(View.VISIBLE);
+            binding.buttonLogin.setEnabled(false);
+            binding.buttonLogin.setVisibility(View.GONE);
+            binding.progressBarLogin.setVisibility(View.VISIBLE);
         } else {
-            progressBar.setVisibility(View.GONE);
-            loginButton.setVisibility(View.VISIBLE);
-            loginButton.setEnabled(true);
+            binding.progressBarLogin.setVisibility(View.GONE);
+            binding.buttonLogin.setVisibility(View.VISIBLE);
+            binding.buttonLogin.setEnabled(true);
         }
     }
 
@@ -583,7 +570,7 @@ public class ActivityLogin extends AppCompatActivity {
         builder_taxon.setMessage(message)
                 .setCancelable(true)
                 .setPositiveButton(getString(R.string.OK), (dialog, id) -> {
-                    loginButton.setEnabled(true);
+                    binding.buttonLogin.setEnabled(true);
                     dialog.dismiss();
                 });
         final AlertDialog alert = builder_taxon.create();
@@ -591,8 +578,7 @@ public class ActivityLogin extends AppCompatActivity {
     }
 
     public void onRegister(View view) {
-        LinearLayout linearLayout = findViewById(R.id.login_layout);
-        linearLayout.setVisibility(View.GONE);
+        binding.linearLayoutLogin.setVisibility(View.GONE);
         Fragment fragment = new FragmentRegister1();
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.login_container, fragment);
@@ -602,11 +588,10 @@ public class ActivityLogin extends AppCompatActivity {
 
     public void onForgotPass(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_reset_email, null);
-        builder.setView(dialogView);
 
-        EditText editTextEmail = dialogView.findViewById(R.id.dialog_edit_text);
+        DialogResetEmailBinding dialogBinding =
+                DialogResetEmailBinding.inflate(getLayoutInflater());
+        builder.setView(dialogBinding.getRoot());
 
         builder.setTitle(getString(R.string.change_password_dialog));
         builder.setMessage(getString(R.string.change_pass_msg1) + ". " +
@@ -620,6 +605,8 @@ public class ActivityLogin extends AppCompatActivity {
         Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
         positiveButton.setEnabled(false);
 
+        EditText editTextEmail = dialogBinding.editTextDialog;
+
         positiveButton.setOnClickListener(v -> {
             String emailText = editTextEmail.getText().toString();
             Call<ResponseBody> resetForgottenPassword = RetrofitClient.getService(database_name).resetForgottenPassword(emailText);
@@ -630,9 +617,9 @@ public class ActivityLogin extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), getString(R.string.success_check_email), Toast.LENGTH_LONG).show();
                         Log.d(TAG, "Link to change email is sent to " + editTextEmail.getText().toString() +
                                 ". Code: " + response.code());
-                        et_password.setText("");
-                        til_password.setError(null);
-                        til_username.setError(null);
+                        editTextPassword.setText("");
+                        binding.textInputLayoutPassword.setError(null);
+                        binding.textInputLayoutUsername.setError(null);
                         dialog.dismiss();
                     } else {
                         Log.e(TAG, "Password change failed with okhttp code " + response.code());
@@ -719,8 +706,7 @@ public class ActivityLogin extends AppCompatActivity {
             finishAffinity();
         } else {
             if (fragments.size() == 1) {
-                LinearLayout linearLayout = findViewById(R.id.login_layout);
-                linearLayout.setVisibility(View.VISIBLE);
+                binding.linearLayoutLogin.setVisibility(View.VISIBLE);
             }
             getSupportFragmentManager().popBackStack();
         }

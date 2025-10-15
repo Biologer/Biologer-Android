@@ -23,12 +23,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
@@ -43,6 +41,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.databinding.ActivityLandingBinding;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.network.InternetConnection;
@@ -86,8 +85,7 @@ import retrofit2.Response;
 public class ActivityLanding extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Biologer.Landing";
-
-    private DrawerLayout drawer;
+    private ActivityLandingBinding binding;
     static String how_to_use_network;
 
     // Define upload menu so that we can hide it if required
@@ -96,30 +94,25 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_landing);
+        binding = ActivityLandingBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         String database_url = SettingsManager.getDatabaseName();
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar.toolbar);
 
-        drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.nav_open_drawer, R.string.nav_close_drawer);
-        drawer.addDrawerListener(toggle);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this,
+                binding.drawerLayout,
+                binding.toolbar.toolbar,
+                R.string.nav_open_drawer,
+                R.string.nav_close_drawer);
+        binding.drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        binding.navView.setNavigationItemSelectedListener(this);
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        View header = navigationView.getHeaderView(0);
-        TextView tv_username = header.findViewById(R.id.tv_username);
-        TextView tv_email = header.findViewById(R.id.tv_email);
-
-        // Set the text for side panel
-        tv_username.setText(getUserName());
-        tv_email.setText(getUserEmail());
-
+        updateNavHeader();
         showLandingFragment();
 
         // If there is no token, falling back to the login screen
@@ -148,9 +141,8 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
                     // If the user did not start the EntryActivity show a short help
                     if (!SettingsManager.getEntryOpen()) {
-                        TextView textView = findViewById(R.id.list_entries_info_text);
-                        textView.setText(R.string.entry_info_first_run);
-                        textView.setVisibility(View.VISIBLE);
+                        binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
+                        binding.listEntriesInfoText.setVisibility(View.VISIBLE);
                     }
 
                 } else {
@@ -209,29 +201,24 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     private void backPressed() {
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+            return;
         }
 
-        if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
-            Log.d(TAG, "Back button pressed, while LandingFragment is active.");
-            getSupportFragmentManager().popBackStack();
+        int stackCount = getSupportFragmentManager().getBackStackEntryCount();
+        if (stackCount <= 1) {
             finishAffinity();
         } else {
-            Log.d(TAG, "Back button pressed, while there are many fragments opened.");
             getSupportFragmentManager().popBackStack();
         }
-
-
     }
 
     @Override
     public void onResume() {
-        //navDrawerFill();
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        binding.navView.setNavigationItemSelectedListener(this);
 
-        View header = navigationView.getHeaderView(0);
+        View header = binding.navView.getHeaderView(0);
         TextView tv_username = header.findViewById(R.id.tv_username);
         TextView tv_email = header.findViewById(R.id.tv_email);
         tv_username.setText(getUserName());
@@ -547,8 +534,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                         if (response.body().getData().isEmailVerified()) {
                             updateGuiOnMailConfirmed(true);
                             SettingsManager.setMailConfirmed(true);
-                            TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
-                            textView_confirmEmail.setVisibility(View.GONE);
+                            binding.listEntriesEmailNotConfirmed.setVisibility(View.GONE);
                         } else {
                             updateGuiOnMailConfirmed(false);
                         }
@@ -565,14 +551,13 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     private void updateGuiOnMailConfirmed(boolean mail_confirmed) {
-        TextView textView_confirmEmail = findViewById(R.id.list_entries_email_not_confirmed);
         FloatingActionButton floatingActionButton = findViewById(R.id.float_button_new_entry);
         floatingActionButton.setEnabled(mail_confirmed);
         if (mail_confirmed) {
-            textView_confirmEmail.setVisibility(View.GONE);
+            binding.listEntriesEmailNotConfirmed.setVisibility(View.GONE);
             floatingActionButton.setAlpha(1f);
         } else {
-            textView_confirmEmail.setVisibility(View.VISIBLE);
+            binding.listEntriesEmailNotConfirmed.setVisibility(View.VISIBLE);
             floatingActionButton.setAlpha(0.25f);
         }
     }
@@ -587,6 +572,13 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         }
         startActivity(intent);
     }
+
+    private void updateNavHeader() {
+        View header = binding.navView.getHeaderView(0);
+        ((TextView) header.findViewById(R.id.tv_username)).setText(getUserName());
+        ((TextView) header.findViewById(R.id.tv_email)).setText(getUserEmail());
+    }
+
 
     private void RefreshToken(String database_name, boolean warn_user) {
         String refreshToken = SettingsManager.getRefreshToken();
@@ -634,7 +626,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                         if (response.body() != null) {
                             String token1 = response.body().getAccessToken();
                             String refresh_token = response.body().getRefreshToken();
-                            Log.d(TAG, "New token value is: " + token1);
+                            Log.d(TAG, "New access token received.");
                             SettingsManager.setAccessToken(token1);
                             SettingsManager.setRefreshToken(refresh_token);
                             long expire = response.body().getExpiresIn();
@@ -803,21 +795,17 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-
         // Hide the info text if user moves away from landing fragment
-        TextView textView = findViewById(R.id.list_entries_info_text);
-        TextView textView1 = findViewById(R.id.list_entries_email_not_confirmed);
-        textView.setVisibility(View.GONE);
-        textView1.setVisibility(View.GONE);
+        binding.listEntriesInfoText.setVisibility(View.GONE);
+        binding.listEntriesEmailNotConfirmed.setVisibility(View.GONE);
 
         if (id == R.id.nav_list) {
             // Show the info text once back to the list
             if (!SettingsManager.getEntryOpen()) {
-                textView.setVisibility(View.VISIBLE);
+                binding.listEntriesInfoText.setVisibility(View.VISIBLE);
             }
             if (!SettingsManager.isMailConfirmed()) {
-                textView1.setVisibility(View.VISIBLE);
+                binding.listEntriesEmailNotConfirmed.setVisibility(View.VISIBLE);
             }
             showLandingFragment();
         }
@@ -840,7 +828,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             showAnnouncementsFragment();
         }
 
-        drawer.closeDrawer(GravityCompat.START);
+        binding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
