@@ -53,7 +53,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_temperature"
+            android:id="@+id/editTextTemperature"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:background="@null"
@@ -94,7 +94,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_cloudiness"
+            android:id="@+id/editTextCloudiness"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:textSize="20sp"
@@ -135,7 +135,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_wind_speed"
+            android:id="@+id/editTextWindSpeed"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:textSize="20sp"
@@ -170,7 +170,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_wind_direction"
+            android:id="@+id/editTextWindDirection"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:textSize="20sp"
@@ -205,7 +205,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_pressure"
+            android:id="@+id/edittextPressure"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:textSize="20sp"
@@ -246,7 +246,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/timed_count_edit_text_humidity"
+            android:id="@+id/editTextHumidity"
             android:layout_gravity="center_vertical"
             android:gravity="end"
             android:textSize="20sp"
@@ -289,7 +289,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/timed_count_edit_text_habitat"
+        android:id="@+id/editTextHabitat"
         android:layout_gravity="center_vertical"
         android:hint="@string/habitat"
         android:importantForAutofill="no"
@@ -302,7 +302,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/timed_count_edit_text_comment"
+        android:id="@+id/editTextComment"
         android:layout_gravity="center_vertical"
         android:hint="@string/additional_comments"
         android:minWidth="100sp"

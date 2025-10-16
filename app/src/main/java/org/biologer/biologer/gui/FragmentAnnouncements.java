@@ -7,14 +7,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
-import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.AnnouncementsAdapter;
+import org.biologer.biologer.databinding.FragmentAnnouncementsBinding;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
@@ -30,23 +31,28 @@ import io.objectbox.query.Query;
 public class FragmentAnnouncements extends Fragment {
 
     private static final String TAG = "Biologer.Announcements";
-    RecyclerView recyclerView;
+    private FragmentAnnouncementsBinding binding;
     AnnouncementsAdapter announcementsAdapter;
     int current_size;
     int index;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_announcements, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentAnnouncementsBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         List<AnnouncementsDb> announcements = getAnnouncements();
 
-        recyclerView = rootView.findViewById(R.id.recycled_view_announcements);
         announcementsAdapter = new AnnouncementsAdapter(announcements);
-        recyclerView.setAdapter(announcementsAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.addOnItemTouchListener(
-                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+        binding.recycledViewAnnouncements.setAdapter(announcementsAdapter);
+        binding.recycledViewAnnouncements.setLayoutManager(new LinearLayoutManager(getActivity()));
+        binding.recycledViewAnnouncements.addOnItemTouchListener(
+                new RecyclerOnClickListener(getActivity(), binding.recycledViewAnnouncements,
+                        new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
                         index = position;
@@ -61,9 +67,6 @@ public class FragmentAnnouncements extends Fragment {
                         Log.d(TAG, "Announcements item " + position + " long pressed");
                     }
                 }));
-
-        return rootView;
-
     }
 
     // Function used to get all announcements from SQL database
@@ -105,7 +108,7 @@ public class FragmentAnnouncements extends Fragment {
         Log.i(TAG, "Announcements Fragment resumed.");
         List<AnnouncementsDb> announcements = getAnnouncements();
         announcementsAdapter = new AnnouncementsAdapter(announcements);
-        recyclerView.setAdapter(announcementsAdapter);
+        binding.recycledViewAnnouncements.setAdapter(announcementsAdapter);
     }
 
 }

@@ -10,23 +10,16 @@ import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import com.google.android.material.button.MaterialButton;
-import com.ortiz.touchview.TouchImageView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.databinding.ActivityNotificationBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.network.RetrofitClient;
@@ -50,14 +43,9 @@ import retrofit2.Response;
 
 public class ActivityNotification extends AppCompatActivity {
     private static final String TAG = "Biologer.NotyActivity";
+    private ActivityNotificationBinding binding;
     String downloaded;
-    ImageView imageView1, imageView2, imageView3;
     boolean image1, image2, image3, image1_ok, image2_ok, image3_ok;
-    FrameLayout frameLayout1,frameLayout2, frameLayout3;
-    LinearLayout linearLayoutZoom;
-    TouchImageView touchImageView;
-    MaterialButton buttonReadNext;
-    TextView textView, textViewAllRead, textViewDate, textViewLocation, textViewID, textViewProject, textViewFinalTaxon;
     UnreadNotificationsDb notification;
     int indexId;
     long notificationId;
@@ -65,17 +53,11 @@ public class ActivityNotification extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notification);
+        binding = ActivityNotificationBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle(R.string.notification);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-        }
+        addToolbar();
 
         // If opening from Activity use index of taped list, else use bundle received from other Fragment
         Bundle bundle = getIntent().getExtras();
@@ -92,28 +74,13 @@ public class ActivityNotification extends AppCompatActivity {
         notification = queryNotification.find().get(0);
         queryNotification.close();
 
-        textView = findViewById(R.id.notification_text);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            textView.setText(Html.fromHtml(getFormattedMessage(), Html.FROM_HTML_MODE_LEGACY));
+            binding.textViewNotificationText.setText(Html.fromHtml(getFormattedMessage(),
+                    Html.FROM_HTML_MODE_LEGACY));
         } else {
-            textView.setText(Html.fromHtml(getFormattedMessage()));
+            binding.textViewNotificationText.setText(Html.fromHtml(getFormattedMessage()));
         }
-        textViewID = findViewById(R.id.notification_text_id);
-        textViewFinalTaxon = findViewById(R.id.notification_text_final_taxon);
-        textViewDate = findViewById(R.id.notification_text_date);
-        textViewLocation = findViewById(R.id.notification_text_location);
-        textViewProject = findViewById(R.id.notification_text_project);
-        textViewAllRead = findViewById(R.id.notification_all_read_text);
         downloaded = "no";
-
-        frameLayout1 = findViewById(R.id.notification_view_imageFrame1);
-        imageView1 = findViewById(R.id.notification_view_image1);
-        frameLayout2 = findViewById(R.id.notification_view_imageFrame2);
-        imageView2 = findViewById(R.id.notification_view_image2);
-        frameLayout3 = findViewById(R.id.notification_view_imageFrame3);
-        imageView3 = findViewById(R.id.notification_view_image3);
-        touchImageView = findViewById(R.id.imageViewNotificationZoom);
-        linearLayoutZoom = findViewById(R.id.notification_view_zoomed_image);
 
         // Check if there is notification with larger ID
         Query<UnreadNotificationsDb> queryLargerId = unreadNotificationsDbBox
@@ -123,22 +90,21 @@ public class ActivityNotification extends AppCompatActivity {
         Log.d(TAG, "There are " + queryLargerId.find().size() + " IDs that are larger than the selected one! Reporting " + is_last);
         queryLargerId.close();
 
-        buttonReadNext = findViewById(R.id.notification_view_read_next_button);
-        buttonReadNext.setOnClickListener(v -> {
-            buttonReadNext.setEnabled(false);
+        binding.buttonReadNext.setOnClickListener(v -> {
+            binding.buttonReadNext.setEnabled(false);
             openNextNotification();
         });
 
         if (is_last) {
             Log.d(TAG, "This is the last notification.");
-            buttonReadNext.setText(R.string.first_unread_notification);
+            binding.buttonReadNext.setText(R.string.first_unread_notification);
         }
 
         if (unreadNotificationsDbBox.count() == 1) {
             Log.d(TAG, "There is only 1 notification, disabling buttons.");
-            buttonReadNext.setEnabled(false);
-            buttonReadNext.setVisibility(View.GONE);
-            textViewAllRead.setVisibility(View.VISIBLE);
+            binding.buttonReadNext.setEnabled(false);
+            binding.buttonReadNext.setVisibility(View.GONE);
+            binding.textViewAllRead.setVisibility(View.VISIBLE);
         }
 
         getFieldObservationData();
@@ -148,7 +114,7 @@ public class ActivityNotification extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 Log.i(TAG, "Back button is pressed in Notification Activity.");
-                if (linearLayoutZoom.getVisibility() == View.VISIBLE) {
+                if (binding.linearLayoutZoomedImage.getVisibility() == View.VISIBLE) {
                     Log.i(TAG, "Image is currently showing in the touch image view.");
                     showUiElements();
                 } else {
@@ -156,6 +122,16 @@ public class ActivityNotification extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void addToolbar() {
+        setSupportActionBar(binding.toolbar.toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.notification);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
     }
 
     private String getFormattedMessage() {
@@ -214,33 +190,33 @@ public class ActivityNotification extends AppCompatActivity {
         // Show current identification of the taxon online
         String finalTaxon = getString(R.string.observation_taxon) + " <i>" + notification.getFinalTaxonName() + "</i>";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            textViewFinalTaxon.setText(Html.fromHtml(finalTaxon, Html.FROM_HTML_MODE_LEGACY));
+            binding.textViewFinalTaxon.setText(Html.fromHtml(finalTaxon, Html.FROM_HTML_MODE_LEGACY));
         } else {
-            textViewFinalTaxon.setText(Html.fromHtml(finalTaxon));
+            binding.textViewFinalTaxon.setText(Html.fromHtml(finalTaxon));
         }
 
         // Show field observation ID
         String idText = getString(R.string.observation_id) + " " + notification.getFieldObservationId();
-        textViewID.setText(idText);
+        binding.textViewId.setText(idText);
 
         // Add observation date
         String date = notification.getDate();
         Date dateReal = DateHelper.getDate(date);
         String dateText = getString(R.string.observation_date) + " " +
                 DateHelper.getLocalizedDate(dateReal, ActivityNotification.this);
-        textViewDate.setText(dateText);
+        binding.textViewDate.setText(dateText);
 
         // Add the place of observation
         String location = notification.getLocation();
         String locationText = getString(R.string.notification_location) + " " + location;
-        textViewLocation.setText(locationText);
+        binding.textViewLocation.setText(locationText);
 
         // Get the name of the project if it exist
         String project = notification.getProject();
         if (project != null) {
             if (!project.isEmpty()) {
                 String projectText = getString(R.string.notification_project_name) + " " +  project;
-                textViewProject.setText(projectText);
+                binding.textViewProject.setText(projectText);
             }
         }
     }
@@ -259,13 +235,13 @@ public class ActivityNotification extends AppCompatActivity {
                     if (type.equals("file")) {
                         // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage1());
-                        imageView1.setImageURI(uri);
-                        frameLayout1.setVisibility(View.VISIBLE);
+                        binding.imageView1.setImageURI(uri);
+                        binding.frameLayoutImage1.setVisibility(View.VISIBLE);
                         image1 = true;
-                        imageView1.setOnClickListener(view -> {
+                        binding.imageView1.setOnClickListener(view -> {
                             File file = FileManipulation.getInternalFileFromUri(this, uri);
                             Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                            touchImageView.setImageBitmap(bitmap);
+                            binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                             hideUiElements();
                         });
                         image1_ok = true;
@@ -289,13 +265,13 @@ public class ActivityNotification extends AppCompatActivity {
                     if (type.equals("file")) {
                         // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage2());
-                        imageView2.setImageURI(uri);
-                        frameLayout2.setVisibility(View.VISIBLE);
+                        binding.imageView2.setImageURI(uri);
+                        binding.frameLayoutImage2.setVisibility(View.VISIBLE);
                         image2 = true;
-                        imageView2.setOnClickListener(view -> {
+                        binding.imageView2.setOnClickListener(view -> {
                             File file = FileManipulation.getInternalFileFromUri(this, uri);
                             Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                            touchImageView.setImageBitmap(bitmap);
+                            binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                             hideUiElements();
                         });
                         image2_ok = true;
@@ -319,13 +295,13 @@ public class ActivityNotification extends AppCompatActivity {
                     if (type.equals("file")) {
                         // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage3());
-                        imageView3.setImageURI(uri);
-                        frameLayout3.setVisibility(View.VISIBLE);
+                        binding.imageView3.setImageURI(uri);
+                        binding.frameLayoutImage3.setVisibility(View.VISIBLE);
                         image3 = true;
-                        imageView3.setOnClickListener(view -> {
+                        binding.imageView3.setOnClickListener(view -> {
                             File file = FileManipulation.getInternalFileFromUri(this, uri);
                             Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                            touchImageView.setImageBitmap(bitmap);
+                            binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                             hideUiElements();
                         });
                         image3_ok = true;
@@ -353,8 +329,8 @@ public class ActivityNotification extends AppCompatActivity {
                             Log.d(TAG, bitmap.toString() + "; " + bitmap.getHeight() + "x" + bitmap.getWidth());
 
                             if (position == 0) {
-                                imageView1.setImageBitmap(bitmap);
-                                frameLayout1.setVisibility(View.VISIBLE);
+                                binding.imageView1.setImageBitmap(bitmap);
+                                binding.frameLayoutImage1.setVisibility(View.VISIBLE);
                                 image1 = true;
                                 Uri image_uri;
                                 try {
@@ -363,16 +339,16 @@ public class ActivityNotification extends AppCompatActivity {
                                     throw new RuntimeException(e);
                                 }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
-                                imageView1.setOnClickListener(view -> {
-                                    touchImageView.setImageBitmap(bitmap);
+                                binding.imageView1.setOnClickListener(view -> {
+                                    binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
                                 image1_ok = true;
                             }
 
                             if (position == 1) {
-                                imageView2.setImageBitmap(bitmap);
-                                frameLayout2.setVisibility(View.VISIBLE);
+                                binding.imageView2.setImageBitmap(bitmap);
+                                binding.frameLayoutImage2.setVisibility(View.VISIBLE);
                                 image2 = true;
                                 Uri image_uri;
                                 try {
@@ -381,16 +357,16 @@ public class ActivityNotification extends AppCompatActivity {
                                     throw new RuntimeException(e);
                                 }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
-                                imageView2.setOnClickListener(view -> {
-                                    touchImageView.setImageBitmap(bitmap);
+                                binding.imageView2.setOnClickListener(view -> {
+                                    binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
                                 image2_ok = true;
                             }
 
                             if (position == 2) {
-                                imageView3.setImageBitmap(bitmap);
-                                frameLayout3.setVisibility(View.VISIBLE);
+                                binding.imageView3.setImageBitmap(bitmap);
+                                binding.frameLayoutImage3.setVisibility(View.VISIBLE);
                                 image3 = true;
                                 Uri image_uri;
                                 try {
@@ -399,8 +375,8 @@ public class ActivityNotification extends AppCompatActivity {
                                     throw new RuntimeException(e);
                                 }
                                 updateObjectBox(position, image_uri != null ? image_uri.toString() : null, realNotificationID);
-                                imageView3.setOnClickListener(view -> {
-                                    touchImageView.setImageBitmap(bitmap);
+                                binding.imageView3.setOnClickListener(view -> {
+                                    binding.imageViewNotificationZoom.setImageBitmap(bitmap);
                                     hideUiElements();
                                 });
                                 image3_ok = true;
@@ -445,21 +421,21 @@ public class ActivityNotification extends AppCompatActivity {
     }
 
     private void hideUiElements() {
-        linearLayoutZoom.setVisibility(View.VISIBLE);
-        frameLayout1.setVisibility(View.GONE);
-        frameLayout2.setVisibility(View.GONE);
-        frameLayout3.setVisibility(View.GONE);
-        buttonReadNext.setVisibility(View.GONE);
-        textView.setVisibility(View.GONE);
+        binding.linearLayoutZoomedImage.setVisibility(View.VISIBLE);
+        binding.frameLayoutImage1.setVisibility(View.GONE);
+        binding.frameLayoutImage2.setVisibility(View.GONE);
+        binding.frameLayoutImage3.setVisibility(View.GONE);
+        binding.buttonReadNext.setVisibility(View.GONE);
+        binding.textViewNotificationText.setVisibility(View.GONE);
     }
 
     private void showUiElements() {
-        linearLayoutZoom.setVisibility(View.GONE);
-        if (image1) {frameLayout1.setVisibility(View.VISIBLE);}
-        if (image2) {frameLayout2.setVisibility(View.VISIBLE);}
-        if (image3) {frameLayout3.setVisibility(View.VISIBLE);}
-        buttonReadNext.setVisibility(View.VISIBLE);
-        textView.setVisibility(View.VISIBLE);
+        binding.linearLayoutZoomedImage.setVisibility(View.GONE);
+        if (image1) {binding.frameLayoutImage1.setVisibility(View.VISIBLE);}
+        if (image2) {binding.frameLayoutImage2.setVisibility(View.VISIBLE);}
+        if (image3) {binding.frameLayoutImage3.setVisibility(View.VISIBLE);}
+        binding.buttonReadNext.setVisibility(View.VISIBLE);
+        binding.textViewNotificationText.setVisibility(View.VISIBLE);
     }
 
     private void openNextNotification() {

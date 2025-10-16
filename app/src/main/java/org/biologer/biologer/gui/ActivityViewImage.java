@@ -7,38 +7,41 @@ import android.view.MenuItem;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import com.ortiz.touchview.TouchImageView;
 
 import org.biologer.biologer.R;
+import org.biologer.biologer.databinding.ActivityViewImageBinding;
 
 public class ActivityViewImage extends AppCompatActivity {
+
+    private ActivityViewImageBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_imageview);
+        binding = ActivityViewImageBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        addToolbar();
+
+        // Get the image location from previous activity
+        Intent intent = getIntent();
+        String image_url = intent.getStringExtra("image");
+
+        if (image_url != null) {
+            binding.imageViewZoom.setImageURI(Uri.parse(image_url));
+        }
+
+    }
+
+    private void addToolbar() {
+        setSupportActionBar(binding.toolbar.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setTitle(getString(R.string.image_view));
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setDisplayShowHomeEnabled(true);
         }
-
-        // Get the image location from previous activity
-        Intent intent = getIntent();
-        String image_url = intent.getStringExtra("image");
-
-        TouchImageView imageView = findViewById(R.id.imageViewZoom);
-        if (image_url != null) {
-            imageView.setImageURI(Uri.parse(image_url));
-        }
-
     }
 
     // Process running after clicking the toolbar buttons (back and save)

@@ -55,9 +55,9 @@ import java.util.concurrent.TimeUnit;
 
 public class FragmentLanding extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    String TAG = "Biologer.LandingFragment";
     private FragmentLandingBinding binding;
     private ArrayList<LandingFragmentItems> items;
-    String TAG = "Biologer.LandingFragment";
     LandingFragmentAdapter entriesAdapter;
     BroadcastReceiver broadcastReceiver;
 

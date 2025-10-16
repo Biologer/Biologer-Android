@@ -47,13 +47,7 @@ public class ActivityAnnouncement extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         // Toolbar
-        setSupportActionBar(binding.toolbar.toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle(R.string.announcement);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-        }
+        addToolbar();
 
         // Get index from intent
         Bundle bundle = getIntent().getExtras();
@@ -102,6 +96,16 @@ public class ActivityAnnouncement extends AppCompatActivity {
 
         // Mark as read
         markAnnouncementAsRead(id);
+    }
+
+    private void addToolbar() {
+        setSupportActionBar(binding.toolbar.toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.announcement);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
     }
 
     private void markAnnouncementAsRead(long id) {

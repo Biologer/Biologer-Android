@@ -4,27 +4,28 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import org.biologer.biologer.R;
+import org.biologer.biologer.databinding.FragmentImageLicense1Binding;
 
 public class FragmentImageLicense1 extends Fragment {
+
+    private FragmentImageLicense1Binding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.license_image_1, container, false);
+        binding = FragmentImageLicense1Binding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        Button button = requireActivity().findViewById(R.id.button_image_license1);
-        button.setOnClickListener(view1 -> requireActivity().getSupportFragmentManager().popBackStack());
+        binding.buttonLicense.setOnClickListener(view1 -> requireActivity().getSupportFragmentManager().popBackStack());
     }
 
 }

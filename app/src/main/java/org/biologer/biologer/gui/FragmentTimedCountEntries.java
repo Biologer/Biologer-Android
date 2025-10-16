@@ -12,16 +12,16 @@ import android.view.ViewGroup;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.databinding.FragmentTimedCountEntriesBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.services.StageAndSexLocalization;
@@ -40,8 +40,8 @@ import io.objectbox.query.Query;
 
 public class FragmentTimedCountEntries extends Fragment {
     String TAG = "Biologer.TCEntries";
+    private FragmentTimedCountEntriesBinding binding;
     private ArrayList<LandingFragmentItems> items;
-    RecyclerView recyclerView;
     LandingFragmentAdapter entriesAdapter;
     TimedCountViewModel timedCountViewModel;
     long taxonId;
@@ -63,8 +63,14 @@ public class FragmentTimedCountEntries extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_timed_count_entries, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentTimedCountEntriesBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         timedCountViewModel = new ViewModelProvider(requireActivity()).get(TimedCountViewModel.class);
 
@@ -74,16 +80,15 @@ public class FragmentTimedCountEntries extends Fragment {
         loadEntries();
 
         // If there are entries display the list with taxa
-        recyclerView = rootView.findViewById(R.id.recycled_view_timed_count_entries);
         entriesAdapter = new LandingFragmentAdapter(items);
-        recyclerView.setAdapter(entriesAdapter);
-        recyclerView.setClickable(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        recyclerView.addOnItemTouchListener(
-                new RecyclerOnClickListener(getActivity(), recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+        binding.recyclerViewTimedCounts.setAdapter(entriesAdapter);
+        binding.recyclerViewTimedCounts.setClickable(true);
+        binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(getActivity()));
+        binding.recyclerViewTimedCounts.addOnItemTouchListener(
+                new RecyclerOnClickListener(getActivity(), binding.recyclerViewTimedCounts, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        recyclerView.setClickable(false);
+                        binding.recyclerViewTimedCounts.setClickable(false);
                         LandingFragmentItems item = items.get(position);
                         long entry_id = item.getObservationId();
                         Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
@@ -111,9 +116,8 @@ public class FragmentTimedCountEntries extends Fragment {
                         entriesAdapter.setPosition(position);
                     }
                 }));
-        registerForContextMenu(recyclerView);
+        registerForContextMenu(binding.recyclerViewTimedCounts);
 
-        return rootView;
     }
 
     private List<LandingFragmentItems> loadEntries() {

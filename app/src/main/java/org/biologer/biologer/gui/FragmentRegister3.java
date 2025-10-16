@@ -14,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,12 +22,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.google.android.material.checkbox.MaterialCheckBox;
-import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.databinding.FragmentRegister3Binding;
 import org.biologer.biologer.network.json.RegisterResponse;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.UserDataResponse;
@@ -46,32 +42,21 @@ import retrofit2.Response;
 public class FragmentRegister3 extends Fragment {
 
     private static final String TAG = "Biologer.Register";
-
-    Button buttonRegister;
-    MaterialCheckBox checkBox;
-    MaterialAutoCompleteTextView dataLicense, imageLicense;
-    ProgressBar progressBar;
-    TextView textViewError;
+    private FragmentRegister3Binding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_register3, container, false);
+        binding = FragmentRegister3Binding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        buttonRegister = view.findViewById(R.id.buttonRegisterUser);
-        buttonRegister.setOnClickListener(this::onRegisterClicked);
-        buttonRegister.setEnabled(false);
-
-        checkBox = view.findViewById(R.id.checkBox_privacy_policy);
-        dataLicense = view.findViewById(R.id.autoComplete_register_dataLicense);
-        imageLicense = view.findViewById(R.id.autoComplete_register_imageLicense);
-        textViewError = view.findViewById(R.id.register_error_into_text);
-
+        binding.buttonRegister.setOnClickListener(this::onRegisterClicked);
+        binding.buttonRegister.setEnabled(false);
     }
 
     @Override
@@ -151,60 +136,58 @@ public class FragmentRegister3 extends Fragment {
                         android.R.layout.simple_dropdown_item_1line, dataLicenses);
                 ArrayAdapter<String> adapterImageLicense = new ArrayAdapter<>(getContext(),
                         android.R.layout.simple_dropdown_item_1line, imageLicenses);
-                dataLicense.setAdapter(adapterDataLicense);
-                dataLicense.setText(getString(R.string.license10), false);
-                imageLicense.setAdapter(adapterImageLicense);
-                imageLicense.setText(getString(R.string.license_image_10), false);
+                binding.autoCompleteTextViewDataLicense.setAdapter(adapterDataLicense);
+                binding.autoCompleteTextViewDataLicense.setText(getString(R.string.license10), false);
+                binding.autoCompleteTextViewImageLicense.setAdapter(adapterImageLicense);
+                binding.autoCompleteTextViewImageLicense.setText(getString(R.string.license_image_10), false);
 
-                progressBar = activity.findViewById(R.id.progressBar_register);
-
-                checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> enableButton());
+                binding.checkBoxPrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> enableButton());
             }
         }
     }
 
     private void enableButton() {
-        buttonRegister.setEnabled(checkBox.isChecked());
+        binding.buttonRegister.setEnabled(binding.checkBoxPrivacy.isChecked());
     }
 
     private int getDataLicense() {
-        if (dataLicense.getText().toString().equals(getString(R.string.license10))) {
+        if (binding.autoCompleteTextViewDataLicense.getText().toString().equals(getString(R.string.license10))) {
             return 10;
         }
-        if (dataLicense.getText().toString().equals(getString(R.string.license20))) {
+        if (binding.autoCompleteTextViewDataLicense.getText().toString().equals(getString(R.string.license20))) {
             return 20;
         }
-        if (dataLicense.getText().toString().equals(getString(R.string.license30))) {
+        if (binding.autoCompleteTextViewDataLicense.getText().toString().equals(getString(R.string.license30))) {
             return 30;
         }
-        if (dataLicense.getText().toString().equals(getString(R.string.license_timed))) {
+        if (binding.autoCompleteTextViewDataLicense.getText().toString().equals(getString(R.string.license_timed))) {
             return 35;
         }
-        if (dataLicense.getText().toString().equals(getString(R.string.license40))) {
+        if (binding.autoCompleteTextViewDataLicense.getText().toString().equals(getString(R.string.license40))) {
             return 40;
         }
         return 10;
     }
 
     private int getImageLicense() {
-        if (imageLicense.getText().toString().equals(getString(R.string.license_image_10))) {
+        if (binding.autoCompleteTextViewImageLicense.getText().toString().equals(getString(R.string.license_image_10))) {
             return 10;
         }
-        if (imageLicense.getText().toString().equals(getString(R.string.license_image_20))) {
+        if (binding.autoCompleteTextViewImageLicense.getText().toString().equals(getString(R.string.license_image_20))) {
             return 20;
         }
-        if (imageLicense.getText().toString().equals(getString(R.string.license_image_30))) {
+        if (binding.autoCompleteTextViewImageLicense.getText().toString().equals(getString(R.string.license_image_30))) {
             return 30;
         }
-        if (imageLicense.getText().toString().equals(getString(R.string.license_image_40))) {
+        if (binding.autoCompleteTextViewImageLicense.getText().toString().equals(getString(R.string.license_image_40))) {
             return 40;
         }
         return 10;
     }
 
     private void onRegisterClicked(View view) {
-        buttonRegister.setEnabled(false);
-        progressBar.setVisibility(View.VISIBLE);
+        binding.buttonRegister.setEnabled(false);
+        binding.progressBarRegister.setVisibility(View.VISIBLE);
 
         String database = ((ActivityLogin) requireActivity()).database_name;
         String clientKey = ((ActivityLogin) requireActivity()).getClientKeyForDatabase(database);
@@ -225,27 +208,27 @@ public class FragmentRegister3 extends Fragment {
             public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
                 if (response.code() == 422) {
                     Log.e(TAG, "Given email already exist/wrong name/surname/short password!");
-                    textViewError.setText(getString(R.string.email_already_exist));
-                    textViewError.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
+                    binding.textViewError.setText(getString(R.string.email_already_exist));
+                    binding.textViewError.setVisibility(View.VISIBLE);
+                    binding.progressBarRegister.setVisibility(View.GONE);
                     registerResponseCall.cancel();
-                    buttonRegister.setEnabled(true);
+                    binding.buttonRegister.setEnabled(true);
                 }
                 if (response.code() == 500) {
                     Log.e(TAG, "Error 500: Server could not send email to the given address.");
-                    textViewError.setText(getString(R.string.email_domain_wrong_500));
-                    textViewError.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
+                    binding.textViewError.setText(getString(R.string.email_domain_wrong_500));
+                    binding.textViewError.setVisibility(View.VISIBLE);
+                    binding.progressBarRegister.setVisibility(View.GONE);
                     registerResponseCall.cancel();
-                    buttonRegister.setEnabled(true);
+                    binding.buttonRegister.setEnabled(true);
                 }
                 if (response.code() == 404) {
                     Log.e(TAG, "Error 404: Server could not send email to the given address.");
-                    textViewError.setText(getString(R.string.email_domain_wrong_404));
-                    textViewError.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
+                    binding.textViewError.setText(getString(R.string.email_domain_wrong_404));
+                    binding.textViewError.setVisibility(View.VISIBLE);
+                    binding.progressBarRegister.setVisibility(View.GONE);
                     registerResponseCall.cancel();
-                    buttonRegister.setEnabled(true);
+                    binding.buttonRegister.setEnabled(true);
                 }
                 if (response.isSuccessful()) {
                     if (response.body() != null) {
@@ -262,7 +245,7 @@ public class FragmentRegister3 extends Fragment {
                         SettingsManager.setTokenExpire(String.valueOf(expire_date));
                         Log.d(TAG, "Token will expire on timestamp: " + expire_date);
 
-                        progressBar.setVisibility(View.GONE);
+                        binding.progressBarRegister.setVisibility(View.GONE);
                         getUserData(database);
                     } else {
                         Log.e(TAG, "Register response is null!");
@@ -270,15 +253,15 @@ public class FragmentRegister3 extends Fragment {
                 } else {
                     Log.e(TAG, "Something went wrong, response not successful!");
                 }
-                buttonRegister.setEnabled(true);
+                binding.buttonRegister.setEnabled(true);
             }
 
             @Override
             public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Network failure!" + t);
                 registerResponseCall.cancel();
-                progressBar.setVisibility(View.GONE);
-                buttonRegister.setEnabled(true);
+                binding.progressBarRegister.setVisibility(View.GONE);
+                binding.buttonRegister.setEnabled(true);
             }
         });
     }

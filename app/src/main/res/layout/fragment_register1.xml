@@ -11,25 +11,25 @@
     android:focusable="true">
 
     <ImageView
-        android:id="@+id/database_flag"
+        android:id="@+id/imageViewFlag"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:contentDescription="@string/serbian_flag"
         android:src="@drawable/flag_serbia" />
 
     <TextView
-        android:id="@+id/register_database_description"
+        android:id="@+id/textViewDatabaseDesc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/register_right_arrow"
-        android:layout_toEndOf="@+id/database_flag"
+        android:layout_toStartOf="@+id/imageVireRightArrow"
+        android:layout_toEndOf="@+id/imageViewFlag"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:text="@string/database"
         android:textSize="16sp" />
 
     <ImageView
-        android:id="@+id/register_right_arrow"
+        android:id="@+id/imageVireRightArrow"
         android:layout_width="36dp"
         android:layout_height="36dp"
         android:layout_alignParentEnd="true"
@@ -37,40 +37,40 @@
         android:src="@drawable/change" />
 
     <TextView
-        android:id="@+id/register_database_text"
+        android:id="@+id/textViewDatabase"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/database_flag"
+        android:layout_below="@+id/imageViewFlag"
         android:paddingTop="12dp"
         android:layout_alignParentStart="true"
         android:text="@string/Biologer"
         android:textAlignment="center"/>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editTextLayout_given_name"
+        android:id="@+id/textInputLayoutName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/register_database_text"
+        android:layout_below="@+id/textViewDatabase"
         android:layout_alignParentStart="true"
         app:boxBackgroundColor="@android:color/transparent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editText_given_name"
+            android:id="@+id/editTextName"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/name" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/editTextLayout_family_name"
+        android:id="@+id/textInputLayoutSurname"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextLayout_given_name"
+        android:layout_below="@+id/textInputLayoutName"
         android:layout_alignParentStart="true"
         app:boxBackgroundColor="@android:color/transparent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editText_family_name"
+            android:id="@+id/editTextSurname"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/surname" />
@@ -80,12 +80,12 @@
         android:id="@+id/editTextLayout_institution"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextLayout_family_name"
+        android:layout_below="@+id/textInputLayoutSurname"
         android:layout_alignParentStart="true"
         app:boxBackgroundColor="@android:color/transparent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/editText_institution_name"
+            android:id="@+id/editTextInstitution"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/institution"
@@ -93,7 +93,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonRegisterNext1"
+        android:id="@+id/buttonNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"

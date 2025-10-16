@@ -7,27 +7,32 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.databinding.FragmentTimedCountAdditionalDataBinding;
 
 public class FragmentTimedCountAdditionalData extends Fragment {
-    TimedCountViewModel viewModel;
     private static final String TAG = "Biologer.TimedCountFr";
+    private FragmentTimedCountAdditionalDataBinding binding;
+    TimedCountViewModel viewModel;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_timed_count_additional_data, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentTimedCountAdditionalDataBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
 
-        EditText editTextTemperature = view.findViewById(R.id.timed_count_edit_text_temperature);
-        editTextTemperature.setText(String.valueOf(viewModel.getTemperatureData().getValue()));
-        editTextTemperature.addTextChangedListener(new TextWatcher() {
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        binding.editTextTemperature.setText(String.valueOf(viewModel.getTemperatureData().getValue()));
+        binding.editTextTemperature.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -52,12 +57,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextCloudiness = view.findViewById(R.id.timed_count_edit_text_cloudiness);
         Integer cloudiness = viewModel.getCloudinessData().getValue();
         if (cloudiness != null) {
-            editTextCloudiness.setText(String.valueOf(cloudiness));
+            binding.editTextCloudiness.setText(String.valueOf(cloudiness));
         }
-        editTextCloudiness.addTextChangedListener(new TextWatcher() {
+        binding.editTextCloudiness.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -82,12 +86,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextWindSpeed = view.findViewById(R.id.timed_count_edit_text_wind_speed);
         Integer wind_speed = viewModel.getWindSpeedData();
         if (wind_speed != null) {
-            editTextWindSpeed.setText(String.valueOf(wind_speed));
+            binding.editTextWindSpeed.setText(String.valueOf(wind_speed));
         }
-        editTextWindSpeed.addTextChangedListener(new TextWatcher() {
+        binding.editTextWindSpeed.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -112,12 +115,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextWindDirection = view.findViewById(R.id.timed_count_edit_text_wind_direction);
         String wind_direction = viewModel.getWindDirectionData();
         if (wind_direction != null) {
-            editTextWindDirection.setText(wind_direction);
+            binding.editTextWindDirection.setText(wind_direction);
         }
-        editTextWindDirection.addTextChangedListener(new TextWatcher() {
+        binding.editTextWindDirection.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -137,12 +139,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextPressure = view.findViewById(R.id.timed_count_edit_text_pressure);
         Integer pressure = viewModel.getPressureData();
         if (pressure != null) {
-            editTextPressure.setText(String.valueOf(pressure));
+            binding.edittextPressure.setText(String.valueOf(pressure));
         }
-        editTextPressure.addTextChangedListener(new TextWatcher() {
+        binding.edittextPressure.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -167,12 +168,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextHumidity = view.findViewById(R.id.timed_count_edit_text_humidity);
         Integer humidity = viewModel.getHumidityData();
         if (humidity != null) {
-            editTextHumidity.setText(String.valueOf(humidity));
+            binding.editTextHumidity.setText(String.valueOf(humidity));
         }
-        editTextHumidity.addTextChangedListener(new TextWatcher() {
+        binding.editTextHumidity.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -197,12 +197,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextHabitat = view.findViewById(R.id.timed_count_edit_text_habitat);
         String habitat = viewModel.getHabitatData();
         if (habitat != null) {
-            editTextHabitat.setText(habitat);
+            binding.editTextHabitat.setText(habitat);
         }
-        editTextHabitat.addTextChangedListener(new TextWatcher() {
+        binding.editTextHabitat.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -222,12 +221,11 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             }
         });
 
-        EditText editTextComment = view.findViewById(R.id.timed_count_edit_text_comment);
         String comment = viewModel.getCommentData();
         if (comment != null) {
-            editTextComment.setText(comment);
+            binding.editTextComment.setText(comment);
         }
-        editTextComment.addTextChangedListener(new TextWatcher() {
+        binding.editTextComment.addTextChangedListener(new TextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
                 String new_value = s.toString();
@@ -246,9 +244,6 @@ public class FragmentTimedCountAdditionalData extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
         });
-
-        // Return the inflated view
-        return view;
     }
 
     @Override

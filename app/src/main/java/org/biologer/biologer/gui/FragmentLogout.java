@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
@@ -21,6 +22,7 @@ import com.google.android.material.button.MaterialButton;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.databinding.FragmentLogoutBinding;
 import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
@@ -30,10 +32,12 @@ import java.util.List;
 public class FragmentLogout extends Fragment {
 
     private static final String TAG = "Biologer.Logout";
+    private FragmentLogoutBinding binding;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-        return inflater.inflate(R.layout.fragment_logout, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+        binding = FragmentLogoutBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
@@ -44,9 +48,6 @@ public class FragmentLogout extends Fragment {
         if (view != null) {
             Activity activity = getActivity();
             if (activity != null) {
-                MaterialButton buttonLogout = getActivity().findViewById(R.id.btn_logout);
-                TextView textViewUser = getActivity().findViewById(R.id.current_logged_in_text);
-                TextView textViewLogout = getActivity().findViewById(R.id.logout_text);
 
                 List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
                 UserDb userData = userDataList.get(0);
@@ -61,9 +62,9 @@ public class FragmentLogout extends Fragment {
                         database_url + " " + getString(R.string.as_user) + " " +
                         username + " (" +
                         userData.getEmail() + ").";
-                textViewUser.setText(database_text);
+                binding.textViewUser.setText(database_text);
 
-                buttonLogout.setOnClickListener(v -> {
+                binding.buttonLogout.setOnClickListener(v -> {
                     // If there are entries warn the user that the data will be lost!
                     Log.d(TAG, "There are " + App.get().getBoxStore().boxFor(EntryDb.class).count() + " entries in the list.");
                     if (!App.get().getBoxStore().boxFor(EntryDb.class).isEmpty()) {
@@ -102,7 +103,7 @@ public class FragmentLogout extends Fragment {
                     }
                 });
 
-                logoutEnableDisable(buttonLogout, textViewLogout);
+                logoutEnableDisable(binding.buttonLogout, binding.textViewLogout);
 
             }
         }

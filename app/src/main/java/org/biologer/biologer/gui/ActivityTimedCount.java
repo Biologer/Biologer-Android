@@ -109,13 +109,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_timed_count);
         binding = ActivityTimedCountBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         binding.linearLayoutAdditionalData.setOnClickListener(v -> displayAdditionalDetailsFragment());
 
-        setupToolbar();
+        addToolbar();
         setupBackPressedHandler();
         setupRecyclerView();
         if (Boolean.TRUE.equals(isNewEntry())) {
@@ -366,7 +365,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     // Add a toolbar to the Activity
-    private void setupToolbar() {
+    private void addToolbar() {
         setSupportActionBar(binding.toolbar.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {

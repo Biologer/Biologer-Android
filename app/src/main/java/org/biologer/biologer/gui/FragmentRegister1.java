@@ -8,60 +8,38 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.google.android.material.textfield.TextInputLayout;
-
 import org.biologer.biologer.R;
+import org.biologer.biologer.databinding.FragmentRegister1Binding;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class FragmentRegister1 extends Fragment {
 
     private static final String TAG = "Biologer.Register";
-
-    Button buttonNext;
-    EditText editTextName, editTextSurname, editTextInstitution;
-    TextInputLayout nameLayout, surnameLayout;
-    TextView textViewDatabaseText, textViewDatabaseInfo;
-    ImageView flag, rightArrow;
+    private FragmentRegister1Binding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_register1, container, false);
+        binding = FragmentRegister1Binding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        buttonNext = view.findViewById(R.id.buttonRegisterNext1);
-        buttonNext.setOnClickListener(this::onNextClicked);
-        buttonNext.setEnabled(false);
-
-        editTextName = view.findViewById(R.id.editText_given_name);
-        nameLayout = view.findViewById(R.id.editTextLayout_given_name);
-        editTextSurname = view.findViewById(R.id.editText_family_name);
-        surnameLayout = view.findViewById(R.id.editTextLayout_family_name);
-        editTextInstitution = view.findViewById(R.id.editText_institution_name);
-
-        textViewDatabaseText = view.findViewById(R.id.register_database_text);
-
-        textViewDatabaseInfo = view.findViewById(R.id.register_database_description);
-
+        binding.buttonNext.setOnClickListener(this::onNextClicked);
+        binding.buttonNext.setEnabled(false);
         enableButton();
-
-        rightArrow = view.findViewById(R.id.register_right_arrow);
     }
 
     @Override
@@ -74,8 +52,7 @@ public class FragmentRegister1 extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
-
-                rightArrow.setOnClickListener(view1 -> {
+                binding.imageVireRightArrow.setOnClickListener(view1 -> {
                     String current_database = ((ActivityLogin) requireActivity()).database_name;
                     String[] databases = ActivityLogin.allDatabases;
                     List<String> databasesList = Arrays.asList(databases);
@@ -91,12 +68,12 @@ public class FragmentRegister1 extends Fragment {
                     int spinnerID = ActivityLogin.getSpinnerIdFromUrl(new_database);
                     ((ActivityLogin) requireActivity()).spinner.setSelection(spinnerID);
 
-                    updateDatabaseView(activity, new_database);
+                    updateDatabaseView(new_database);
                 });
 
-                updateDatabaseView(activity, ((ActivityLogin)activity).database_name);
+                updateDatabaseView(((ActivityLogin)activity).database_name);
 
-                editTextName.addTextChangedListener(new TextWatcher() {
+                binding.editTextName.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                     }
@@ -109,10 +86,10 @@ public class FragmentRegister1 extends Fragment {
                     public void afterTextChanged(Editable s) {
                         ((ActivityLogin)activity).handler.removeCallbacks(((ActivityLogin)activity).runnable);
                         ((ActivityLogin)activity).runnable = () -> {
-                            if (!(editTextName.getText().length() > 2)) {
-                                nameLayout.setError(getString(R.string.name_is_obligatory));
+                            if (!(Objects.requireNonNull(binding.editTextName.getText()).length() > 2)) {
+                                binding.textInputLayoutName.setError(getString(R.string.name_is_obligatory));
                             } else {
-                                nameLayout.setError(null);
+                                binding.textInputLayoutName.setError(null);
                             }
                             enableButton();
                         };
@@ -120,7 +97,7 @@ public class FragmentRegister1 extends Fragment {
                     }
                 });
 
-                editTextSurname.addTextChangedListener(new TextWatcher() {
+                binding.editTextSurname.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                     }
@@ -133,10 +110,10 @@ public class FragmentRegister1 extends Fragment {
                     public void afterTextChanged(Editable s) {
                         ((ActivityLogin)activity).handler.removeCallbacks(((ActivityLogin)activity).runnable);
                         ((ActivityLogin)activity).runnable = () -> {
-                            if (!(editTextSurname.getText().length() > 2)) {
-                                surnameLayout.setError("Surname is obligatory");
+                            if (!(Objects.requireNonNull(binding.editTextSurname.getText()).length() > 2)) {
+                                binding.textInputLayoutSurname.setError("Surname is obligatory");
                             } else {
-                                surnameLayout.setError(null);
+                                binding.textInputLayoutSurname.setError(null);
                             }
                             enableButton();
                         };
@@ -149,49 +126,47 @@ public class FragmentRegister1 extends Fragment {
 
     }
 
-    private void updateDatabaseView(Activity activity, String database) {
+    private void updateDatabaseView(String database) {
 
-        textViewDatabaseText.setText(getString(R.string.register_database_info, database));
-
-        flag = activity.findViewById(R.id.database_flag);
+        binding.textViewDatabase.setText(getString(R.string.register_database_info, database));
 
         if (database.equals("https://biologer.ba")) {
-            flag.setImageResource(R.drawable.flag_bosnia);
-            textViewDatabaseInfo.setText(R.string.community_bosnia);
+            binding.imageViewFlag.setImageResource(R.drawable.flag_bosnia);
+            binding.textViewDatabaseDesc.setText(R.string.community_bosnia);
         }
         if (database.equals("https://biologer.rs")) {
-            flag.setImageResource(R.drawable.flag_serbia);
-            textViewDatabaseInfo.setText(R.string.community_serbia);
+            binding.imageViewFlag.setImageResource(R.drawable.flag_serbia);
+            binding.textViewDatabaseDesc.setText(R.string.community_serbia);
         }
         if (database.equals("https://biologer.me")) {
-            flag.setImageResource(R.drawable.flag_montenegro);
-            textViewDatabaseInfo.setText(R.string.community_montenegro);
+            binding.imageViewFlag.setImageResource(R.drawable.flag_montenegro);
+            binding.textViewDatabaseDesc.setText(R.string.community_montenegro);
         }
         if (database.equals("https://dev.biologer.org")) {
-            flag.setImageResource(R.drawable.flag_dev);
-            textViewDatabaseInfo.setText(R.string.community_developers);
+            binding.imageViewFlag.setImageResource(R.drawable.flag_dev);
+            binding.textViewDatabaseDesc.setText(R.string.community_developers);
         }
         if (database.equals("https://biologer.hr")) {
-            flag.setImageResource(R.drawable.flag_croatia);
-            textViewDatabaseInfo.setText(R.string.community_croatia);
+            binding.imageViewFlag.setImageResource(R.drawable.flag_croatia);
+            binding.textViewDatabaseDesc.setText(R.string.community_croatia);
         }
     }
 
     private void enableButton() {
-        buttonNext.setEnabled(editTextSurname.getText().length() > 2 &&
-                editTextName.getText().length() > 2);
+        binding.buttonNext.setEnabled(Objects.requireNonNull(binding.editTextSurname.getText()).length() > 2 &&
+                Objects.requireNonNull(binding.editTextName.getText()).length() > 2);
     }
 
     private void onNextClicked(View view) {
 
-        ((ActivityLogin) requireActivity()).register_name = editTextName.getText().toString();
-        ((ActivityLogin) requireActivity()).register_surname = editTextSurname.getText().toString();
-        ((ActivityLogin) requireActivity()).register_institution = editTextInstitution.getText().toString();
+        ((ActivityLogin) requireActivity()).register_name = Objects.requireNonNull(binding.editTextName.getText()).toString();
+        ((ActivityLogin) requireActivity()).register_surname = Objects.requireNonNull(binding.editTextSurname.getText()).toString();
+        ((ActivityLogin) requireActivity()).register_institution = Objects.requireNonNull(binding.editTextInstitution.getText()).toString();
 
         Log.d(TAG, "Registering as " +
-                editTextName.getText().toString() + " " +
-                editTextSurname.getText().toString() + " (from " +
-                editTextInstitution.getText().toString() + ").");
+                binding.editTextName.getText().toString() + " " +
+                binding.editTextSurname.getText().toString() + " (from " +
+                binding.editTextInstitution.getText().toString() + ").");
 
         Fragment fragment = new FragmentRegister2();
         FragmentTransaction fragmentTransaction = requireActivity().getSupportFragmentManager().beginTransaction();

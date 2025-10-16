@@ -34,7 +34,7 @@
             app:boxBackgroundColor="@android:color/transparent">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/autoComplete_register_dataLicense"
+                android:id="@+id/autoCompleteTextViewDataLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none" />
@@ -51,14 +51,14 @@
             app:boxBackgroundColor="@android:color/transparent">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/autoComplete_register_imageLicense"
+                android:id="@+id/autoCompleteTextViewImageLicense"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/checkBox_privacy_policy"
+            android:id="@+id/checkBoxPrivacy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/textInput_register_imageLicense"
@@ -67,30 +67,30 @@
             android:textColorHint="@color/black_on_light_white_on_night" />
 
         <ProgressBar
-            android:id="@+id/progressBar_register"
+            android:id="@+id/progressBarRegister"
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/checkBox_privacy_policy"
+            android:layout_below="@+id/checkBoxPrivacy"
             android:layout_centerHorizontal="true"
             android:visibility="gone"/>
 
         <TextView
-            android:id="@+id/register_error_into_text"
+            android:id="@+id/textViewError"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/progressBar_register"
+            android:layout_below="@+id/progressBarRegister"
             android:layout_centerHorizontal="true"
             android:textColor="@color/design_default_color_error"
             android:visibility="gone">
         </TextView>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonRegisterUser"
+            android:id="@+id/buttonRegister"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:layout_below="@+id/register_error_into_text"
+            android:layout_below="@+id/textViewError"
             android:layout_centerHorizontal="true"
             android:text="@string/register_btn" />
 

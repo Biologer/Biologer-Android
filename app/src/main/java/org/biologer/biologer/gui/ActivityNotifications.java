@@ -16,7 +16,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -27,15 +26,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.NotificationsAdapter;
+import org.biologer.biologer.databinding.ActivityNotificationsBinding;
 import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
@@ -50,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ActivityNotifications extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
-    RecyclerView recyclerView;
+    private ActivityNotificationsBinding binding;
     BroadcastReceiver downloadNotifications;
     List<UnreadNotificationsDb> notifications;
     NotificationsAdapter notificationsAdapter;
@@ -60,20 +58,13 @@ public class ActivityNotifications extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notifications);
+        binding = ActivityNotificationsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Add a toolbar to the Activity
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-        if (actionbar != null) {
-            actionbar.setTitle(R.string.notifications);
-            actionbar.setDisplayHomeAsUpEnabled(true);
-            actionbar.setDisplayShowHomeEnabled(true);
-        }
+        addToolbar();
 
         notifications = getNotifications();
-        recyclerView = findViewById(R.id.recycled_view_notifications);
         initiateRecycleView(notifications);
 
         make_selection = false;
@@ -82,8 +73,7 @@ public class ActivityNotifications extends AppCompatActivity {
 
         // If downloading is disables, we should ask user to download notifications
         if (!ActivityLanding.shouldDownload(this)) {
-            TextView textView = findViewById(R.id.recycled_view_notifications_text);
-            recyclerView.setVisibility(View.GONE);
+            binding.recyclerViewNotifications.setVisibility(View.GONE);
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.downloading_notifications_disabled)
                     .setCancelable(true)
@@ -93,7 +83,7 @@ public class ActivityNotifications extends AppCompatActivity {
                         startService(update_notifications);
                     })
                     .setNegativeButton(getString(R.string.ignore), (dialog, id) -> {
-                        textView.setVisibility(View.VISIBLE);
+                        binding.textViewNotifications.setVisibility(View.VISIBLE);
                         dialog.cancel();
                     });
             final AlertDialog alert = builder.create();
@@ -114,6 +104,16 @@ public class ActivityNotifications extends AppCompatActivity {
 
     }
 
+    private void addToolbar() {
+        setSupportActionBar(binding.toolbar.toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null) {
+            actionbar.setTitle(R.string.notifications);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setDisplayShowHomeEnabled(true);
+        }
+    }
+
     private void registerDownloadNotificationsReceiver() {
         downloadNotifications = new BroadcastReceiver() {
             @Override
@@ -122,7 +122,7 @@ public class ActivityNotifications extends AppCompatActivity {
                 if (received != null) {
                     if (received.equals("downloaded")) {
                         Toast.makeText(ActivityNotifications.this, getString(R.string.notifications_downloaded), Toast.LENGTH_SHORT).show();
-                        recyclerView.setVisibility(View.VISIBLE);
+                        binding.recyclerViewNotifications.setVisibility(View.VISIBLE);
                     }
                 }
             }
@@ -218,12 +218,14 @@ public class ActivityNotifications extends AppCompatActivity {
 
     private void initiateRecycleView(List<UnreadNotificationsDb> notifications) {
         notificationsAdapter = new NotificationsAdapter(notifications);
-        recyclerView.setAdapter(notificationsAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setClickable(true);
-        recyclerView.addOnItemTouchListener(
-                new RecyclerOnClickListener(this, recyclerView, new RecyclerOnClickListener.OnItemClickListener() {
+        binding.recyclerViewNotifications.setAdapter(notificationsAdapter);
+        binding.recyclerViewNotifications.setLayoutManager(new LinearLayoutManager(this));
+        binding.recyclerViewNotifications.setItemAnimator(new DefaultItemAnimator());
+        binding.recyclerViewNotifications.setClickable(true);
+        binding.recyclerViewNotifications.addOnItemTouchListener(
+                new RecyclerOnClickListener(this,
+                        binding.recyclerViewNotifications,
+                        new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
                         // Select the notifications
@@ -233,7 +235,7 @@ public class ActivityNotifications extends AppCompatActivity {
                         }
                         // Or open it in normal way...
                         else {
-                            recyclerView.setClickable(false);
+                            binding.recyclerViewNotifications.setClickable(false);
                             openNotification(position);
                         }
                     }

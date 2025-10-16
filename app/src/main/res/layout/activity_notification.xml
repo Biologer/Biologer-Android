@@ -6,11 +6,12 @@
 
     <include
         layout="@layout/toolbar_main"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
     <LinearLayout
-        android:id="@+id/notification_view_zoomed_image"
+        android:id="@+id/linearLayoutZoomedImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -25,7 +26,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/notification_text"
+        android:id="@+id/textViewNotificationText"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -44,14 +45,14 @@
         android:gravity="center">
 
         <FrameLayout
-            android:id="@+id/notification_view_imageFrame1"
+            android:id="@+id/frameLayoutImage1"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginEnd="5dp"
             android:visibility="gone">
 
             <ImageView
-                android:id="@+id/notification_view_image1"
+                android:id="@+id/imageView1"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/image_frame"
@@ -61,13 +62,13 @@
         </FrameLayout>
 
         <FrameLayout
-            android:id="@+id/notification_view_imageFrame2"
+            android:id="@+id/frameLayoutImage2"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginEnd="5dp"
             android:visibility="gone">
             <ImageView
-                android:id="@+id/notification_view_image2"
+                android:id="@+id/imageView2"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/image_frame"
@@ -77,13 +78,13 @@
         </FrameLayout>
 
         <FrameLayout
-            android:id="@+id/notification_view_imageFrame3"
+            android:id="@+id/frameLayoutImage3"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginEnd="5dp"
             android:visibility="gone">
             <ImageView
-                android:id="@+id/notification_view_image3"
+                android:id="@+id/imageView3"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/image_frame"
@@ -94,7 +95,7 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/notification_text_final_taxon"
+        android:id="@+id/textViewFinalTaxon"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -106,7 +107,7 @@
     </TextView>
 
     <TextView
-        android:id="@+id/notification_text_id"
+        android:id="@+id/textViewId"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -117,7 +118,7 @@
     </TextView>
 
     <TextView
-        android:id="@+id/notification_text_date"
+        android:id="@+id/textViewDate"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -128,7 +129,7 @@
     </TextView>
 
     <TextView
-        android:id="@+id/notification_text_location"
+        android:id="@+id/textViewLocation"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -139,7 +140,7 @@
     </TextView>
 
     <TextView
-        android:id="@+id/notification_text_project"
+        android:id="@+id/textViewProject"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"
@@ -154,12 +155,12 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="12dp"
-        android:id="@+id/notification_view_read_next_button"
+        android:id="@+id/buttonReadNext"
         android:text="@string/next_unread">
     </com.google.android.material.button.MaterialButton>
 
     <TextView
-        android:id="@+id/notification_all_read_text"
+        android:id="@+id/textViewAllRead"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_gravity="center_horizontal"

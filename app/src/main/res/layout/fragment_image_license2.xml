@@ -10,31 +10,31 @@
     android:focusable="true">
 
     <TextView
-        android:id="@+id/textView_data_license_title1"
+        android:id="@+id/textView_img_license_title2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/license_title_1"
+        android:text="@string/license_image_title_2"
         android:textSize="24sp" />
 
     <ScrollView
-        android:id="@+id/scrollView_data_license1"
+        android:id="@+id/scrollView_img_license2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button_data_license1"
-        android:layout_below="@+id/textView_data_license_title1"
+        android:layout_above="@+id/buttonLicense"
+        android:layout_below="@+id/textView_img_license_title2"
         android:layout_alignParentStart="true"
         android:layout_marginTop="12dp">
 
         <TextView
-            android:id="@+id/textView_data_license_description_1"
+            android:id="@+id/textView_img_license_description_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:autoLink="web"
-            android:text="@string/open_license_text" />
+            android:text="@string/non_commercial_data_text" />
     </ScrollView>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_data_license1"
+        android:id="@+id/buttonLicense"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
