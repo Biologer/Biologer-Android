@@ -43,13 +43,13 @@ public class StageAndSexLocalization {
 
     public static String getSexLocale(Context context, String sexName) {
         if (sexName == null) {
-            return "";
+            return null;
         }
 
         return switch (sexName) {
             case "male" -> context.getString(R.string.male_text);
             case "female" -> context.getString(R.string.female_text);
-            default -> "";
+            default -> null;
         };
     }
 

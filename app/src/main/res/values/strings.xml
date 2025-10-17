@@ -551,5 +551,10 @@
     <string name="my_location">My location</string>
     <string name="location_not_available">Location is not available!</string>
     <string name="permission_denied">Permission denied!</string>
+    <string name="upload_failed">Upload failed!</string>
+    <string name="maximum_retries">upload reached maximum number of retries</string>
+    <string name="photo">Photo</string>
+    <string name="observation">Observation</string>
+    <string name="upload_response_invalid">upload response invalid</string>
 
 </resources>

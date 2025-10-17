@@ -92,7 +92,8 @@ public class TimedCountAdapter
         viewHolder.speciesCount.setText(String.valueOf(species.getNumberOfIndividuals()));
 
         viewHolder.plusImage.setOnClickListener(view -> {
-            int adapterPosition = viewHolder.getAdapterPosition();
+            int adapterPosition = viewHolder.getBindingAdapterPosition();
+            if (adapterPosition == RecyclerView.NO_POSITION) return;
 
             Log.d(TAG, "Plus button clicked for species " + species.getSpeciesName());
             int individuals = species.getNumberOfIndividuals();
@@ -107,7 +108,8 @@ public class TimedCountAdapter
         });
 
         viewHolder.speciesCount.setOnClickListener(view -> {
-            int adapterPosition = viewHolder.getAdapterPosition();
+            int adapterPosition = viewHolder.getBindingAdapterPosition();
+            if (adapterPosition == RecyclerView.NO_POSITION) return;
 
             Log.d(TAG, "Number of species clicked for species " + species.getSpeciesName());
             int individuals = species.getNumberOfIndividuals();
@@ -122,7 +124,8 @@ public class TimedCountAdapter
         });
 
         viewHolder.speciesName.setOnClickListener(v -> {
-            int adapterPosition = viewHolder.getAdapterPosition();
+            int adapterPosition = viewHolder.getBindingAdapterPosition();
+            if (adapterPosition == RecyclerView.NO_POSITION) return;
 
             Log.d(TAG, "Species name clicked for species " + species.getSpeciesName() +
                     "(position " + adapterPosition + ")");

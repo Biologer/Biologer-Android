@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/textView_privacy_policy_title"
-        android:layout_above="@+id/button_privacy_policy_back"
+        android:layout_above="@+id/buttonBack"
         android:layout_alignParentStart="true"
         android:layout_marginTop="8dp">
 

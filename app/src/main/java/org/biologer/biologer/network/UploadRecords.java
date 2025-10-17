@@ -290,7 +290,9 @@ public class UploadRecords extends Service {
                             uploadTimedCount(id, onFinished, retryCount + 1);
                         } else {
                             Log.e(TAG, "Timed Count upload failed after max retries!");
-                            cancelUpload("Failed!", "Timed Count upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.timed_count) + " "
+                                            + getString(R.string.maximum_retries) + ".");
                             if (onFinished != null) onFinished.run();
                         }
                     }
@@ -302,7 +304,10 @@ public class UploadRecords extends Service {
                             uploadTimedCount(id, onFinished, retryCount + 1);
                         } else {
                             Log.e(TAG, "Timed Count upload failed after max retries: " + t.getMessage());
-                            cancelUpload("Failed!", "Timed Count upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.timed_count) + " "
+                                    + getString(R.string.upload_response_invalid) + ": "
+                                            + t.getMessage());
                             if (onFinished != null) onFinished.run();
                         }
                     }
@@ -392,7 +397,9 @@ public class UploadRecords extends Service {
                             return;
                         } else {
                             Log.e(TAG, "Photo upload failed after max retries: " + path);
-                            cancelUpload("Failed!", "Photo upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.photo) + " "
+                                            + getString(R.string.maximum_retries) + ".");
                         }
 
                         // Check if all photos are done
@@ -410,7 +417,10 @@ public class UploadRecords extends Service {
                                     onFinished, retryCount + 1);
                         } else {
                             Log.e(TAG, "Photo upload failed after max retries: " + t.getMessage());
-                            cancelUpload("Failed!", "Photo upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.photo) + " "
+                                            + getString(R.string.upload_response_invalid) + ": "
+                                            + t.getMessage());
                         }
 
                         if (photosLeft.decrementAndGet() == 0) {
@@ -464,7 +474,9 @@ public class UploadRecords extends Service {
                             uploadObservationStep2(entryDb, onFinished, photos, retryCount + 1);
                         } else {
                             Log.e(TAG, "Entry upload failed after max retries!");
-                            cancelUpload("Failed!", "Entry upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.observation) + " "
+                                            + getString(R.string.maximum_retries) + ".");
                             if (onFinished != null) onFinished.run();
                         }
                     }
@@ -477,7 +489,10 @@ public class UploadRecords extends Service {
                             uploadObservationStep2(entryDb, onFinished, photos, retryCount + 1);
                         } else {
                             Log.e(TAG, "Entry upload failed after max retries: " + t.getMessage());
-                            cancelUpload("Failed!", "Entry upload failed!");
+                            cancelUpload(getString(R.string.upload_failed),
+                                    getString(R.string.observation) + " "
+                                            + getString(R.string.upload_response_invalid) + ": "
+                                            + t.getMessage());
                             if (onFinished != null) onFinished.run();
                         }
                     }
