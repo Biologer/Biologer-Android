@@ -1,7 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Biologer</string>
-
-    <!--  Login  -->
     <string name="username">Username (email)</string>
     <string name="password">Password</string>
     <string name="login">Log in</string>
@@ -11,8 +10,6 @@
     <string name="no_account2">register here</string>
     <string name="no_account3">if you don’t have an account</string>
     <string name="pass_forgotten">Reset forgotten password online!</string>
-
-    <!--  Unos  -->
     <string name="latitude">Latitude:</string>
     <string name="longitude">Longitude:</string>
     <string name="unknown">unknown</string>
@@ -31,16 +28,10 @@
     <string name="saved">The entry is saved.</string>
     <string name="location_is_zero">Location is not retrieved yet. Would you like to wait for location or cancel this entry?</string>
     <string name="wait">Wait</string>
-
-    <!--LandingActivity-->
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="new_database_available">New version of taxonomic database is available online. You can update it now or later from the application Setup. Would you like to update your database?</string>
-
-    <!--Details-->
     <string name="gps_update"><b>Warning:</b> You are about to overwrite original location with your current location! Are you sure?</string>
-
-    <!-- navigation drawer -->
     <string name="logout_btn">Logout</string>
     <string name="setup">Setup</string>
     <string name="about">About Biologer</string>
@@ -49,21 +40,13 @@
     <string name="nav_open_drawer">Open navigation drawer</string>
     <string name="nav_close_drawer">Close navigation drawer</string>
     <string name="help">Help</string>
-
-    <!--About-->
     <string name="textAbout">Biologer is an Open Source application issued under MIT license and designed to collect data on biodiversity in Eastern Europe.</string>
     <string name="textAbout1">Biologer was developed with funds from Rufford Small Grants (project Nos. 20507-B and 24652-B) and MAVA (project No. 15097).</string>
     <string name="version">Version: </string>
     <string name="textAbout2">To find out more details about Biologer, visit our web page: </string>
-
-    <!--Logout-->
     <string name="currently_logged_data">You are currently logged into a database:</string>
     <string name="logout_from_biologer">Do you want to logout from this Biologer database?</string>
-
-    <!--Setup-->
     <string name="database_connect_error">Application was unable to connect with database!</string>
-
-    <!--First time run-->
     <string name="Slide1_title">Database options</string>
     <string name="first_slide">Biologer application can connect to multiple databases. You should start by choosing your preferred database and registering online.</string>
     <string name="Slide2_title">Navigation is easy</string>
@@ -119,7 +102,7 @@
     <string name="gallery">Gallery</string>
     <string name="map">Map</string>
     <string name="advanced_entry">Advanced observation entry</string>
-    <string name="advanced_entry_desc">Enables advanced options that could be entered with your occurrence (i.e. number of individuals, stage, sex).</string>
+    <string name="advanced_entry_desc">Enables advanced options that could be entered with your occurrence (date, time, coordinates, etc.).</string>
     <string name="stage_egg">Egg</string>
     <string name="stage_larva">Larva</string>
     <string name="stage_pupa">Pupa</string>
@@ -538,7 +521,7 @@
     <string name="other_data">Other data</string>
     <string name="other_data_desc">Here you can enter the habitat type and additional comments about the count.</string>
     <string name="weather_data">Weather data</string>
-    <string name="weather_data_desc">Weather data is taken from OpenWeather. You can review them here and make corrections if necesary.</string>
+    <string name="weather_data_desc">Weather data is taken from OpenWeather. You can review them here and make corrections if necessary.</string>
     <string name="empty">empty</string>
     <string name="fill_additional_data">Tap to fill the data</string>
     <string name="can_not_edit_species_with_custom_names">Can not edit species with custom names! Try to use species from the list.</string>
@@ -552,9 +535,10 @@
     <string name="location_not_available">Location is not available!</string>
     <string name="permission_denied">Permission denied!</string>
     <string name="upload_failed">Upload failed!</string>
-    <string name="maximum_retries">upload reached maximum number of retries</string>
-    <string name="photo">Photo</string>
-    <string name="observation">Observation</string>
-    <string name="upload_response_invalid">upload response invalid</string>
-
+    <string name="observation_upload_response_invalid">Invalid response on observation upload</string>
+    <string name="photo_upload_response_invalid">Invalid response on photo upload</string>
+    <string name="timed_count_upload_response_invalid">Invalid response on timed count upload</string>
+    <string name="timed_count_maximum_retries">Timed count upload reached maximum number of retries</string>
+    <string name="photo_maximum_retries">Photo upload reached maximum number of retries</string>
+    <string name="observation_maximum_retries">Observation upload reached maximum number of retries</string>
 </resources>

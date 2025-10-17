@@ -291,8 +291,7 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Timed Count upload failed after max retries!");
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.timed_count) + " "
-                                            + getString(R.string.maximum_retries) + ".");
+                                    getString(R.string.timed_count_maximum_retries) + ".");
                             if (onFinished != null) onFinished.run();
                         }
                     }
@@ -305,8 +304,7 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Timed Count upload failed after max retries: " + t.getMessage());
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.timed_count) + " "
-                                    + getString(R.string.upload_response_invalid) + ": "
+                                    getString(R.string.timed_count_upload_response_invalid) + ": "
                                             + t.getMessage());
                             if (onFinished != null) onFinished.run();
                         }
@@ -398,8 +396,7 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Photo upload failed after max retries: " + path);
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.photo) + " "
-                                            + getString(R.string.maximum_retries) + ".");
+                                    getString(R.string.photo_maximum_retries) + ".");
                         }
 
                         // Check if all photos are done
@@ -418,9 +415,8 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Photo upload failed after max retries: " + t.getMessage());
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.photo) + " "
-                                            + getString(R.string.upload_response_invalid) + ": "
-                                            + t.getMessage());
+                                    getString(R.string.photo_upload_response_invalid) + ": "
+                                    + t.getMessage());
                         }
 
                         if (photosLeft.decrementAndGet() == 0) {
@@ -475,8 +471,7 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Entry upload failed after max retries!");
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.observation) + " "
-                                            + getString(R.string.maximum_retries) + ".");
+                                    getString(R.string.observation_maximum_retries) + ".");
                             if (onFinished != null) onFinished.run();
                         }
                     }
@@ -490,8 +485,7 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Entry upload failed after max retries: " + t.getMessage());
                             cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.observation) + " "
-                                            + getString(R.string.upload_response_invalid) + ": "
+                                    getString(R.string.observation_upload_response_invalid) + ": "
                                             + t.getMessage());
                             if (onFinished != null) onFinished.run();
                         }

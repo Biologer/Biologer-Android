@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Biologer</string>
 
@@ -119,7 +120,7 @@
     <string name="gallery">Galerija</string>
     <string name="map">Karta</string>
     <string name="advanced_entry">Detaljniji unos nalaza</string>
-    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što su broj jedinki, razvojni stadijum ili pol.</string>
+    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što su datum, vreme, koordinate…</string>
     <string name="stage_egg">Jaje</string>
     <string name="stage_larva">Larva</string>
     <string name="stage_pupa">Lutka</string>
@@ -540,7 +541,7 @@
     <string name="weather_data">Vremenske prilike</string>
     <string name="weather_data_desc">Podaci o vremenu su preuzeti sa stranice OpenWeather. Ovde ih možete proveriti i korigovati ukoliko je potrebno.</string>
     <string name="empty">prazno</string>
-    <string name="fill_additional_data">Dodirnite da popunite podatke</string>
+    <string name="fill_additional_data">Dodirnite za izmenu</string>
     <string name="can_not_edit_species_with_custom_names">Ne mogu da uredim vrste sa proizvoljnim imenima! Probajte da izaberete vrstu sa spiska.</string>
     <string name="at_time">u</string>
     <string name="save_on_exit_time_count">Neke promene u vašem vremenskom brojanju nisu sačuvane. Da li želite da sačuvate promene ili da iz zanemarite?</string>
@@ -551,5 +552,12 @@
     <string name="my_location">Moja lokacija</string>
     <string name="location_not_available">Lokacija nije dostupna!</string>
     <string name="permission_denied">Nije dobijena dozvola!</string>
+    <string name="upload_failed">Slanje nije uspelo!</string>
+    <string name="observation_upload_response_invalid">Neispravan odgovor prilikom slanja nalaza</string>
+    <string name="photo_upload_response_invalid">Neispravan odgovor prilikom slanja fotografije</string>
+    <string name="timed_count_upload_response_invalid">Neispravan odgovor prilikom slanja vremenskog brojanja</string>
+    <string name="timed_count_maximum_retries">Slanje vremenskog brojanja je dostiglo najveći broj pokušaja</string>
+    <string name="photo_maximum_retries">Slanje fotografije je dostiglo najveći broj pokušaja</string>
+    <string name="observation_maximum_retries">Slanje nalaza je dostiglo najveći broj pokušaja</string>
 
 </resources>
