@@ -31,35 +31,26 @@ public class StageAndSexLocalization {
     }
 
     public static String getStageLocale(Context context, String stageName) {
-        if (stageName.equals("egg")) {
-            return context.getString(R.string.stage_egg);
-        }
-        if (stageName.equals("larva")) {
-            return context.getString(R.string.stage_larva);
-        }
-        if (stageName.equals("pupa")) {
-            return context.getString(R.string.stage_pupa);
-        }
-        if (stageName.equals("adult")) {
-            return context.getString(R.string.stage_adult);
-        }
-        if (stageName.equals("juvenile")) {
-            return context.getString(R.string.stage_juvenile);
-        }
-        else {
-            return null;
-        }
+        return switch (stageName) {
+            case "egg" -> context.getString(R.string.stage_egg);
+            case "larva" -> context.getString(R.string.stage_larva);
+            case "pupa" -> context.getString(R.string.stage_pupa);
+            case "adult" -> context.getString(R.string.stage_adult);
+            case "juvenile" -> context.getString(R.string.stage_juvenile);
+            default -> null;
+        };
     }
 
     public static String getSexLocale(Context context, String sexName) {
-        if (sexName.equals("male")) {
-            return context.getString(R.string.male_text);
+        if (sexName == null) {
+            return "";
         }
-        if (sexName.equals("female")) {
-            return context.getString(R.string.female_text);
-        }
-        else {
-            return null;
-        }
+
+        return switch (sexName) {
+            case "male" -> context.getString(R.string.male_text);
+            case "female" -> context.getString(R.string.female_text);
+            default -> "";
+        };
     }
+
 }
