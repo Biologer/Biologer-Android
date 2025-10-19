@@ -11,8 +11,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 23
         targetSdk 36
-        versionCode 199
-        versionName '5.0.6'
+        versionCode 200
+        versionName '5.0.7'
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
