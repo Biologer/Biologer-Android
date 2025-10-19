@@ -2,11 +2,9 @@ package org.biologer.biologer.gui;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.Supplier;
 import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -33,17 +32,12 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
-import com.opencsv.exceptions.CsvException;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityLandingBinding;
-import org.biologer.biologer.services.FileManipulation;
-import org.biologer.biologer.services.StageAndSexLocalization;
+import org.biologer.biologer.services.AuthHelper;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
@@ -52,30 +46,15 @@ import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
-import org.biologer.biologer.network.json.RefreshTokenResponse;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
+import org.biologer.biologer.services.CsvExporter;
+import org.biologer.biologer.services.CsvTaxaLoader;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.SynonymsDb;
-import org.biologer.biologer.sql.TaxaTranslationDb;
-import org.biologer.biologer.sql.TaxonDb;
-import org.biologer.biologer.sql.TaxonGroupsDb;
-import org.biologer.biologer.sql.TaxonGroupsTranslationDb;
 import org.biologer.biologer.sql.UserDb;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -113,49 +92,50 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         binding.navView.setNavigationItemSelectedListener(this);
 
         updateNavHeader();
-        showLandingFragment();
+        showFragment("LANDING_FRAGMENT", FragmentLanding::new);
 
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
             Log.d(TAG, getString(R.string.no_login_token_falling_back_to_login_screen));
             Toast.makeText(this, getString(R.string.no_login_token_falling_back_to_login_screen), Toast.LENGTH_LONG).show();
             showUserLoginScreen(false);
+            return;
+        }
+
+        // On the first run (after the user came from the login screen) show some help
+        if (SettingsManager.isFirstRun()) {
+            Log.d(TAG, "This is first run of the program.");
+            SettingsManager.setFirstRun(false);
+            Intent intent = new Intent(ActivityLanding.this, ActivityIntro.class);
+            intent.putExtra("firstRun", true);
+            startActivity(intent);
         } else {
-            // On the first run (after the user came from the login screen) show some help
-            if (SettingsManager.isFirstRun()) {
-                Log.d(TAG, "This is first run of the program.");
-                SettingsManager.setFirstRun(false);
-                Intent intent = new Intent(ActivityLanding.this, ActivityIntro.class);
-                intent.putExtra("firstRun", true);
-                startActivity(intent);
+            // If Landing activity is started for the first time in the session run all the online services
+            if (savedInstanceState == null) {
+                Log.d(TAG, "LandingActivity started for the first time (savedInstanceState is null).");
+                if (database_url != null) {
+                    runServices(database_url);
+                } else {
+                    Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
+                    fallbackToLoginScreen();
+                }
+
+                // If the user did not start the EntryActivity show a short help
+                if (!SettingsManager.getEntryOpen()) {
+                    binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
+                    binding.listEntriesInfoText.setVisibility(View.VISIBLE);
+                }
+
             } else {
-                // If Landing activity is started for the first time in the session run all the online services
-                if (savedInstanceState == null) {
-                    Log.d(TAG, "LandingActivity started for the first time (savedInstanceState is null).");
+                // If the LandingActivity is restarted, just update GUI
+                Log.d(TAG, "LandingActivity is already running (savedInstanceState is not null)");
+                if (!SettingsManager.isMailConfirmed()) {
+                    database_url = SettingsManager.getDatabaseName();
                     if (database_url != null) {
-                        runServices(database_url);
+                        checkMailConfirmed(database_url);
                     } else {
                         Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
                         fallbackToLoginScreen();
-                    }
-
-                    // If the user did not start the EntryActivity show a short help
-                    if (!SettingsManager.getEntryOpen()) {
-                        binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
-                        binding.listEntriesInfoText.setVisibility(View.VISIBLE);
-                    }
-
-                } else {
-                    // If the LandingActivity is restarted, just update GUI
-                    Log.d(TAG, "LandingActivity is already running (savedInstanceState is not null)");
-                    if (!SettingsManager.isMailConfirmed()) {
-                        database_url = SettingsManager.getDatabaseName();
-                        if (database_url != null) {
-                            checkMailConfirmed(database_url);
-                        } else {
-                            Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
-                            fallbackToLoginScreen();
-                        }
                     }
                 }
             }
@@ -221,8 +201,8 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         View header = binding.navView.getHeaderView(0);
         TextView tv_username = header.findViewById(R.id.tv_username);
         TextView tv_email = header.findViewById(R.id.tv_email);
-        tv_username.setText(getUserName());
-        tv_email.setText(getUserEmail());
+        tv_username.setText(ObjectBoxHelper.getUserName());
+        tv_email.setText(ObjectBoxHelper.getUserEmail());
 
         super.onResume();
     }
@@ -248,8 +228,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             return true;
         }
         if (item.getItemId() == R.id.export_csv) {
-            Log.d(TAG, "CSV export button clicked.");
-            exportCSV();
+            CsvExporter.exportEntriesToCsv(this);
             return true;
         }
 
@@ -270,256 +249,101 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     private void runServices(String database_url) {
         Log.d(TAG, "Running online services");
 
+        updateTaxaDatabase(database_url);
+        updateToken(database_url);
+        startNetworkServices(database_url);
+    }
+
+    private void startNetworkServices(String databaseUrl) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        how_to_use_network = prefs.getString("auto_download", "wifi");
+
+        String networkType = InternetConnection.networkType(this);
+        if (networkType == null) {
+            Log.d(TAG, "No network available. Skipping network operations.");
+            return;
+        }
+
+        updateLicenses();
+        UpdateObservationTypes.updateObservationTypes(databaseUrl);
+
+        if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) {
+            checkNotificationPermission();
+            return;
+        }
+
+        Log.d(TAG, "Notifications are enabled.");
+        if (!shouldDownload(this)) return;
+
+        uploadRecords();
+        updateAnnouncements();
+        updateNotifications();
+    }
+
+    private void updateNotifications() {
+        Intent update = new Intent(this, UpdateUnreadNotifications.class);
+        update.putExtra("download", true);
+        startService(update);
+    }
+
+    private void updateAnnouncements() {
+        long now = System.currentTimeMillis() / 1000;
+        long lastCheck = Long.parseLong(SettingsManager.getLastInternetCheckout());
+        if (lastCheck == 0 || now > lastCheck + 36000) { // 10 hours
+            Log.d(TAG, "10 hours elapsed; updating announcements.");
+            Intent intent = new Intent(this, UpdateAnnouncements.class);
+            intent.putExtra("show_notification", true);
+            startService(intent);
+            SettingsManager.setLastInternetCheckout(String.valueOf(now));
+        }
+    }
+
+    private void updateToken(String databaseUrl) {
+        if (!SettingsManager.isMailConfirmed()) {
+            Log.d(TAG, "Email not confirmed, verifying.");
+            checkMailConfirmed(databaseUrl);
+            return;
+        }
+
+        String expireValue = SettingsManager.getTokenExpire();
+        if (expireValue == null || expireValue.isEmpty()) {
+            Log.w(TAG, "Token expiration value missing, forcing log in.");
+            showUserLoginScreen(true);
+            return;
+        }
+        long expireIn = Long.parseLong(expireValue);
+        long now = System.currentTimeMillis() / 1000;
+        long refreshThreshold = 15778800; // ~6 months
+
+        if (expireIn < now) {
+            Log.d(TAG, "Token expired. Refreshing login token.");
+            if (InternetConnection.isConnected(this)) {
+                refreshToken(databaseUrl, true);
+            } else {
+                alertWarnAndExit(getString(R.string.refresh_token_no_internet));
+            }
+        } else if (expireIn - now <= refreshThreshold) {
+            Log.d(TAG, "Token will expire soon. Refreshing in advance.");
+            if (InternetConnection.isConnected(this)) {
+                refreshToken(databaseUrl, false);
+            }
+        } else {
+            Log.d(TAG, "Token still valid until " + expireIn);
+        }
+    }
+
+
+    private void updateTaxaDatabase(String databaseUrl) {
         // Load database from local assets folder if newer
         int updatedAt = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
-        String assets_timestamp = "1752595284";
-        if (updatedAt < Integer.parseInt(assets_timestamp)) {
-            Log.i(TAG, "Loading taxa database from Android assets folder. Version: " +
-                    updatedAt + "; Available version: " + assets_timestamp);
-            loadInternalTaxaDataset(database_url, assets_timestamp);
+        String assetsTimestamp = "1752595284";
+        if (updatedAt < Integer.parseInt(assetsTimestamp)) {
+            Log.i(TAG, "Loading taxa database from Android assets (local newer).");
+            new CsvTaxaLoader(this).loadInternalTaxaDataset(databaseUrl, assetsTimestamp);
         } else {
-            Log.i(TAG, "Loading taxa from online API. Version: " + updatedAt);
+            Log.i(TAG, "Taxa DB is up to date, checking online.");
             updateTaxa();
         }
-
-        // Check if token is still valid and refresh if needed
-        if (SettingsManager.isMailConfirmed()) {
-            Log.d(TAG, "Email is confirmed.");
-
-            long expire_in = Long.parseLong(SettingsManager.getTokenExpire());
-
-            // Refresh the token if it expired
-            if (expire_in >= System.currentTimeMillis() / 1000) {
-                Log.d(TAG, "Token is OK. It will expire on " + SettingsManager.getTokenExpire());
-                // Refresh token 6 months before the expiration
-                if (expire_in > ((System.currentTimeMillis() / 1000) + 15778800)) {
-                    Log.d(TAG, "There is no need to refresh token now.");
-                } else {
-                    Log.d(TAG, "Trying to refresh login token.");
-                    if (InternetConnection.isConnected(ActivityLanding.this)) {
-                        RefreshToken(database_url, false);
-                    }
-                }
-            } else {
-                Log.d(TAG, "Token expired. Refreshing login token.");
-                if (InternetConnection.isConnected(ActivityLanding.this)) {
-                    RefreshToken(database_url, true);
-                } else {
-                    alertWarnAndExit(getString(R.string.refresh_token_no_internet));
-                }
-            }
-        } else {
-            Log.d(TAG, "Email is not confirmed.");
-            if (database_url != null) {
-                checkMailConfirmed(database_url);
-            }
-        }
-
-        // Get the user settings from preferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityLanding.this);
-        how_to_use_network = preferences.getString("auto_download", "wifi");
-
-        // Check if there is network available and run the commands...
-        String network_type = InternetConnection.networkType(this);
-        if (network_type != null) {
-            updateLicenses();
-            UpdateObservationTypes.updateObservationTypes(database_url);
-
-            // Check if notifications are enabled and download/upload data
-            if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-                Log.d(TAG, "Notifications are enabled.");
-                if (shouldDownload(this)) {
-                    uploadRecords();
-
-                    // Update announcements
-                    long current_time = System.currentTimeMillis() / 1000; // in seconds
-                    long last_check = Long.parseLong(SettingsManager.getLastInternetCheckout());
-                    if (last_check == 0 || current_time > (last_check + 36000) ) { // don’t get data from veb in the next 10 hours
-                        Log.d(TAG, "Announcements should be updated since 10 hours elapsed.");
-                        final Intent getAnnouncements = new Intent(ActivityLanding.this, UpdateAnnouncements.class);
-                        getAnnouncements.putExtra("show_notification", true);
-                        startService(getAnnouncements);
-                        SettingsManager.setLastInternetCheckout(String.valueOf(current_time));
-                    }
-
-                    // Update notifications
-                    final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
-                    update_notifications.putExtra("download", true);
-                    startService(update_notifications);
-                }
-
-            } else {
-                checkNotificationPermission();
-            }
-
-        } else {
-            Log.d(TAG, "There is no network available. Application will not be able to get new data from the server.");
-        }
-    }
-
-    private void loadInternalTaxaDataset(String databaseUrl, String timestamp) {
-        Log.i(TAG, "Updating ObjectBox taxa database using local copy from assets.");
-
-        List<String[]> taxa_csv = null;
-        List<String[]> taxa_groups_csv = null;
-        List<String[]> stages_csv = null;
-
-        if (Objects.equals(databaseUrl, "https://biologer.rs")) {
-            Log.d(TAG, "Loading assets file for Serbian Biologer");
-            taxa_csv = readCSV("taxa/rs_taxa.csv");
-            taxa_groups_csv = readCSV("taxa/rs_groups.csv");
-            stages_csv = readCSV("taxa/rs_stages.csv");
-        } if (Objects.equals(databaseUrl, "https://biologer.hr")) {
-            Log.d(TAG, "Loading assets file for Croatian Biologer");
-            taxa_csv = readCSV("taxa/hr_taxa.csv");
-            taxa_groups_csv = readCSV("taxa/hr_groups.csv");
-            stages_csv = readCSV("taxa/hr_stages.csv");
-        } if (Objects.equals(databaseUrl, "https://biologer.ba")) {
-            Log.d(TAG, "Loading assets file for Bosnian Biologer");
-            taxa_csv = readCSV("taxa/ba_taxa.csv");
-            taxa_groups_csv = readCSV("taxa/ba_groups.csv");
-            stages_csv = readCSV("taxa/ba_stages.csv");
-        } if (Objects.equals(databaseUrl, "https://biologer.me")) {
-            Log.d(TAG, "Loading assets file for Montenegrin Biologer");
-            taxa_csv = readCSV("taxa/me_taxa.csv");
-            taxa_groups_csv = readCSV("taxa/me_groups.csv");
-            stages_csv = readCSV("taxa/me_stages.csv");
-        } if (Objects.equals(databaseUrl, "https://dev.biologer.org")) {
-            Log.d(TAG, "Loading assets file for developmental Biologer");
-            taxa_csv = readCSV("taxa/dev_taxa.csv");
-            taxa_groups_csv = readCSV("taxa/dev_groups.csv");
-            stages_csv = readCSV("taxa/dev_stages.csv");
-        }
-
-        if (taxa_csv != null) {
-            // Delete old database
-            App.get().getBoxStore().boxFor(TaxonDb.class).removeAll();
-            App.get().getBoxStore().boxFor(TaxaTranslationDb.class).removeAll();
-            App.get().getBoxStore().boxFor(SynonymsDb.class).removeAll();
-            App.get().getBoxStore().boxFor(TaxonGroupsDb.class).removeAll();
-            App.get().getBoxStore().boxFor(StageDb.class).removeAll();
-
-            TaxonDb[] final_taxa = new TaxonDb[taxa_csv.size() - 1];
-            List<TaxaTranslationDb> taxa_translations = new ArrayList<>();
-            List<SynonymsDb> taxa_synonyms = new ArrayList<>();
-
-            // NOTE: Skip the first row containing column names (i = 0)!
-            for (int i = 1; i < taxa_csv.size(); i++) {
-                String[] taxon = taxa_csv.get(i);
-                long id = Long.parseLong(taxon[0]);
-                String rank = taxon[1];
-                String name = taxon[2];
-                String author = taxon[3];
-                boolean uses_atlas_codes;
-                uses_atlas_codes = Objects.equals(taxon[4], "1");
-                String translations = taxon[5];
-                String stages = taxon[6];
-                String groups = taxon[7];
-                String synonyms = taxon[8];
-
-                final_taxa[i - 1] = new TaxonDb(id, 0, name, rank, 0, author,
-                        false, uses_atlas_codes, null, groups, stages);
-                //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " with ID: " + final_taxa[i - 1].getId());
-
-                if (!Objects.equals(translations, "")) {
-                    //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has translations: " + translations);
-                    String[] split_translations = translations.split(";");
-                    for (int t = 0; t < split_translations.length; t++) {
-                        String locale = "en";
-                        if (t == 1) {
-                            locale = "sr";
-                        } else if (t == 2) {
-                            locale = "sr-Latn";
-                        } else if (t == 3) {
-                            locale = "hr";
-                        } else if (t == 4) {
-                            locale = "ba";
-                        } else if (t == 5 ) {
-                            locale = "me";
-                        }
-                        if (!Objects.equals(split_translations[t], "")) {
-                            TaxaTranslationDb translation = new TaxaTranslationDb(0, id, locale, split_translations[t], name, "");
-                            taxa_translations.add(translation);
-                        }
-                    }
-                }
-
-                if (!Objects.equals(synonyms, "")) {
-                    //Log.d(TAG, "Taxon " + final_taxa[i - 1].getLatinName() + " has synonyms: " + synonyms);
-                    String[] split_synonyms = synonyms.split(";");
-                    for (String splitSynonym : split_synonyms) {
-                        SynonymsDb synonym = new SynonymsDb(0, id, splitSynonym);
-                        taxa_synonyms.add(synonym);
-                    }
-                }
-            }
-            App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
-            TaxaTranslationDb[] final_taxa_translations = new TaxaTranslationDb[taxa_translations.size()];
-            taxa_translations.toArray(final_taxa_translations);
-            App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_taxa_translations);
-            SynonymsDb[] final_taxa_synonyms = new SynonymsDb[taxa_synonyms.size()];
-            taxa_synonyms.toArray(final_taxa_synonyms);
-            App.get().getBoxStore().boxFor(SynonymsDb.class).put(final_taxa_synonyms);
-
-            TaxonGroupsDb[] final_taxa_groups = new TaxonGroupsDb[taxa_groups_csv.size() - 1];
-            List<TaxonGroupsTranslationDb> taxa_groups_translations = new ArrayList<>();
-            for (int i = 1; i < taxa_groups_csv.size(); i++) {
-                String[] group = taxa_groups_csv.get(i);
-                long id = Long.parseLong(group[0]);
-                long parentId = Long.parseLong(group[1]);
-                String ba = group[2];
-                String en = group[3];
-                String hr = group[4];
-                String me = group[5];
-                String sr = group[6];
-                String sr_latin = group[7];
-
-                final_taxa_groups[i - 1] = new TaxonGroupsDb(id, parentId, en, "");
-
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "en", en, ""));
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr", sr, ""));
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "sr-Latn", sr_latin, ""));
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "hr", hr, ""));
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "ba", ba, ""));
-                taxa_groups_translations.add(new TaxonGroupsTranslationDb(0, id, "me", me, ""));
-            }
-            App.get().getBoxStore().boxFor(TaxonGroupsDb.class).put(final_taxa_groups);
-            TaxonGroupsTranslationDb[] final_taxa_groups_translations = new TaxonGroupsTranslationDb[taxa_groups_translations.size()];
-            taxa_groups_translations.toArray(final_taxa_groups_translations);
-            App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class).put(final_taxa_groups_translations);
-
-            StageDb[] final_stages = new StageDb[stages_csv.size() - 1];
-            for (int i = 1; i < stages_csv.size(); i++) {
-                String[] stage = stages_csv.get(i);
-                long id = Long.parseLong(stage[0]);
-                String name = stage[1];
-
-                final_stages[i - 1] = new StageDb(id, name);
-            }
-            App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
-
-            Log.d(TAG, "Database loaded from assets file. Checking if there is new version online.");
-            SettingsManager.setTaxaUpdatedAt(timestamp);
-
-            updateTaxa();
-        }
-    }
-
-    private List<String[]> readCSV(String filename) {
-        InputStream inputStream;
-        try {
-            inputStream = getAssets().open(filename);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-        List<String[]> csv;
-        try {
-            csv = new CSVReader(reader).readAll();
-        } catch (IOException | CsvException e) {
-            throw new RuntimeException(e);
-        }
-        return csv;
     }
 
     private void checkMailConfirmed(String database_url) {
@@ -575,81 +399,25 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
     private void updateNavHeader() {
         View header = binding.navView.getHeaderView(0);
-        ((TextView) header.findViewById(R.id.tv_username)).setText(getUserName());
-        ((TextView) header.findViewById(R.id.tv_email)).setText(getUserEmail());
+        ((TextView) header.findViewById(R.id.tv_username)).setText(ObjectBoxHelper.getUserName());
+        ((TextView) header.findViewById(R.id.tv_email)).setText(ObjectBoxHelper.getUserEmail());
     }
 
+    private void refreshToken(String databaseUrl, boolean warnUser) {
+        AuthHelper auth = new AuthHelper(this);
+        auth.refreshToken(databaseUrl, warnUser, new AuthHelper.RefreshCallbacks() {
+            @Override public void onSuccess() {
+                Log.d(TAG, "Token refreshed successfully.");
+            }
 
-    private void RefreshToken(String database_name, boolean warn_user) {
-        String refreshToken = SettingsManager.getRefreshToken();
-        String rsKey = BuildConfig.BiologerRS_Key;
-        String hrKey = BuildConfig.BiologerHR_Key;
-        String baKey = BuildConfig.BiologerBA_Key;
-        String meKey = BuildConfig.BiologerME_Key;
-        String devKey = BuildConfig.BiologerDEV_Key;
+            @Override public void onExpired() {
+                showUserLoginScreen(true);
+            }
 
-        Call<RefreshTokenResponse> refresh_call = null;
-
-        if (database_name.equals("https://biologer.rs")) {
-            Log.d(TAG, "Serbian database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", rsKey, refreshToken, "*");
-        }
-        if (database_name.equals("https://biologer.hr")) {
-            Log.d(TAG, "Croatian database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", hrKey, refreshToken, "*");
-        }
-        if (database_name.equals("https://biologer.ba")) {
-            Log.d(TAG, "Bosnian database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", baKey, refreshToken, "*");
-        }
-        if (database_name.equals("https://biologer.me")) {
-            Log.d(TAG, "Montenegrin database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "2", meKey, refreshToken, "*");
-        }
-        if (database_name.equals("https://dev.biologer.org")) {
-            Log.d(TAG, "Developmental database selected.");
-            refresh_call = RetrofitClient.getService(database_name).refresh("refresh_token", "6", devKey, refreshToken, "*");
-        }
-
-        Log.d(TAG, "Logging into " + database_name + " using refresh token.");
-
-        if (refresh_call != null) {
-            refresh_call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<RefreshTokenResponse> call, @NonNull Response<RefreshTokenResponse> response) {
-                    if (response.code() == 401) {
-                        Log.e(TAG, "Error 401: It looks like the refresh token has expired.");
-                        Toast.makeText(ActivityLanding.this, getString(R.string.both_login_and_refresh_tokens_expired), Toast.LENGTH_LONG).show();
-                        showUserLoginScreen(true);
-                    }
-                    if (response.isSuccessful()) {
-                        if (response.body() != null) {
-                            String token1 = response.body().getAccessToken();
-                            String refresh_token = response.body().getRefreshToken();
-                            Log.d(TAG, "New access token received.");
-                            SettingsManager.setAccessToken(token1);
-                            SettingsManager.setRefreshToken(refresh_token);
-                            long expire = response.body().getExpiresIn();
-                            long expire_date = (System.currentTimeMillis() / 1000) + expire;
-                            SettingsManager.setTokenExpire(String.valueOf(expire_date));
-                            Log.d(TAG, "Token will expire on timestamp: " + expire_date);
-                        }
-                    } else {
-                        if (warn_user) {
-                            alertTokenExpired();
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<RefreshTokenResponse> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Cannot get response from the server (refresh token)" + t);
-                    if (warn_user) {
-                        alertTokenExpired();
-                    }
-                }
-            });
-        }
+            @Override public void onError() {
+                alertTokenExpired();
+            }
+        });
     }
 
     private void checkNotificationPermission() {
@@ -667,7 +435,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                     builder.setMessage(R.string.notificationPermit)
                             .setCancelable(false)
                             .setPositiveButton(R.string.enable, (dialog, id) -> requestNotificationPermissions.launch(Manifest.permission.POST_NOTIFICATIONS))
-                            .setNegativeButton(R.string.ignore, (DialogInterface dialog, int id) -> dialog.cancel());
+                            .setNegativeButton(R.string.ignore, (dialog, id) -> dialog.cancel());
                     final AlertDialog alert = builder.create();
                     alert.show();
                 }
@@ -807,241 +575,38 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             if (!SettingsManager.isMailConfirmed()) {
                 binding.listEntriesEmailNotConfirmed.setVisibility(View.VISIBLE);
             }
-            showLandingFragment();
+            showFragment("LANDING_FRAGMENT", FragmentLanding::new);
         }
         if (id == R.id.nav_help) {
             startActivity(new Intent(ActivityLanding.this, ActivityIntro.class));
         }
         if (id == R.id.nav_setup) {
-            showSetupFragment();
+            showFragment("PREFERENCES_FRAGMENT", FragmentPreferences::new);
         }
         if (id == R.id.nav_logout) {
-            showLogoutFragment();
+            showFragment("LOGOUT_FRAGMENT", FragmentLogout::new);
         }
         if (id == R.id.nav_about) {
-            showAboutFragment();
+            showFragment("ABOUT_FRAGMENT", FragmentAbout::new);
         }
         if (id == R.id.nav_notifications) {
             startActivity(new Intent(ActivityLanding.this, ActivityNotifications.class));
         }
         if (id == R.id.nav_announcements) {
-            showAnnouncementsFragment();
+            showFragment("ANNOUNCEMENTS_FRAGMENT", FragmentAnnouncements::new);
         }
 
         binding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    private void showLandingFragment() {
-        Log.d(TAG, "Showing LandingFragment");
-        Fragment landingFragment;
-        landingFragment = getSupportFragmentManager().findFragmentByTag("LANDING_FRAGMENT");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if (landingFragment != null) {
-            fragmentTransaction.replace(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
-        } else {
-            landingFragment = new FragmentLanding();
-            fragmentTransaction.add(R.id.content_frame, landingFragment, "LANDING_FRAGMENT");
-        }
-        fragmentTransaction.addToBackStack("Landing fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void showAboutFragment() {
-        Log.d(TAG, "User clicked about icon.");
-        Fragment aboutFragment;
-        aboutFragment = getSupportFragmentManager().findFragmentByTag("ABOUT_FRAGMENT");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if (aboutFragment != null) {
-            fragmentTransaction.replace(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
-        } else {
-            aboutFragment = new FragmentAbout();
-            fragmentTransaction.add(R.id.content_frame, aboutFragment, "ABOUT_FRAGMENT");
-        }
-        fragmentTransaction.addToBackStack("About fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void showAnnouncementsFragment() {
-        Log.d(TAG, "User clicked announcements icon.");
-        Fragment announcementsFragment;
-        announcementsFragment = getSupportFragmentManager().findFragmentByTag("ANNOUNCEMENTS_FRAGMENT");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if (announcementsFragment != null) {
-            fragmentTransaction.replace(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
-        } else {
-            announcementsFragment = new FragmentAnnouncements();
-            fragmentTransaction.add(R.id.content_frame, announcementsFragment, "ANNOUNCEMENTS_FRAGMENT");
-        }
-        fragmentTransaction.addToBackStack("Announcements fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void showLogoutFragment() {
-        Log.d(TAG, "User clicked logout icon.");
-        Fragment logoutFragment;
-        logoutFragment = getSupportFragmentManager().findFragmentByTag("LOGOUT_FRAGMENT");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if (logoutFragment != null) {
-            fragmentTransaction.replace(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
-        } else {
-            logoutFragment = new FragmentLogout();
-            fragmentTransaction.add(R.id.content_frame, logoutFragment, "LOGOUT_FRAGMENT");
-        }
-        fragmentTransaction.addToBackStack("Logout fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void showSetupFragment() {
-        Log.d(TAG, "User clicked preferences icon.");
-        Fragment preferencesFragment;
-        preferencesFragment = getSupportFragmentManager().findFragmentByTag("PREFERENCES_FRAGMENT");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if (preferencesFragment != null) {
-            fragmentTransaction.replace(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
-        } else {
-            preferencesFragment = new FragmentPreferences();
-            fragmentTransaction.add(R.id.content_frame, preferencesFragment, "PREFERENCES_FRAGMENT");
-        }
-        fragmentTransaction.addToBackStack("Preferences fragment");
-        fragmentTransaction.commit();
-    }
-
-    private void exportCSV() {
-
-        String filename = "Export_" + new SimpleDateFormat("yyMMddss", Locale.getDefault()).format(new Date());
-
-        Uri uri = FileManipulation.newExternalDocumentFile(this, filename, ".csv");
-        OutputStream output = null;
-        try {
-            if (uri != null) {
-                output = getContentResolver().openOutputStream(uri);
-            }
-            else {
-                Log.d(TAG, "URI is null!");
-            }
-        } catch (FileNotFoundException e) {
-            Toast.makeText(ActivityLanding.this, getString(R.string.file_not_found) + e, Toast.LENGTH_LONG).show();
-            Log.e(TAG, "File not found: " + e);
-        }
-
-        CSVWriter writer;
-        writer = new CSVWriter(
-                new OutputStreamWriter(output),
-                CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.DEFAULT_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END
-        );
-
-        String[] title = {
-                getString(R.string.taxon),
-                getString(R.string.year),
-                getString(R.string.month),
-                getString(R.string.day),
-                getString(R.string.latitude),
-                getString(R.string.longitude),
-                getString(R.string.elevation),
-                getString(R.string.csv_accuracy),
-                getString(R.string.location),
-                getString(R.string.time),
-                getString(R.string.csv_note),
-                getString(R.string.found_dead),
-                getString(R.string.note_on_dead),
-                getString(R.string.observer),
-                getString(R.string.identifier),
-                getString(R.string.sex),
-                getString(R.string.number),
-                getString(R.string.project),
-                getString(R.string.habitat),
-                getString(R.string.found_on),
-                getString(R.string.stage),
-                getString(R.string.original_observation),
-                getString(R.string.dataset),
-                getString(R.string.data_license),
-                getString(R.string.image_license),
-                getString(R.string.atlas_code)
-        };
-        writer.writeNext(title);
-
-        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
-        String u = getUserName();
-
-        for (int i = 0; i < entries.size(); i++) {
-            EntryDb entryDb = entries.get(i);
-            String[] row = {
-                    entryDb.getTaxonSuggestion(),
-                    entryDb.getYear(),
-                    entryDb.getMonth(),
-                    entryDb.getDay(),
-                    String.format(Locale.ENGLISH, "%.6f", entryDb.getLattitude()),
-                    String.format(Locale.ENGLISH, "%.6f", entryDb.getLongitude()),
-                    String.format(Locale.ENGLISH, "%.0f", entryDb.getElevation()),
-                    String.format(Locale.ENGLISH, "%.0f", entryDb.getAccuracy()),
-                    entryDb.getLocation(),
-                    entryDb.getTime(),
-                    entryDb.getComment(),
-                    translateFoundDead(entryDb.getDeadOrAlive()),
-                    entryDb.getCauseOfDeath(),
-                    u,
-                    u,
-                    StageAndSexLocalization.getSexLocale(this, entryDb.getSex()),
-                    removeNullInteger(entryDb.getNoSpecimens()),
-                    entryDb.getProjectId(),
-                    entryDb.getHabitat(),
-                    entryDb.getFoundOn(),
-                    StageAndSexLocalization.getStageLocaleFromID(this, entryDb.getStage()),
-                    entryDb.getTaxonSuggestion(),
-                    getString(R.string.dataset),
-                    translateLicence(entryDb.getDataLicence()),
-                    translateLicence(String.valueOf(entryDb.getImageLicence())),
-                    removeNullLong(entryDb.getAtlasCode())
-            };
-            writer.writeNext(row);
-        }
-
-        try {
-            writer.close();
-            Toast.makeText(ActivityLanding.this, getString(R.string.export_to_csv_success) + filename, Toast.LENGTH_LONG).show();
-        } catch (IOException e) {
-            Toast.makeText(ActivityLanding.this, getString(R.string.io_error) + e, Toast.LENGTH_LONG).show();
-            Log.e(TAG, "IO Error: " + e);
-        }
-    }
-
-    private String removeNullInteger(Integer integer) {
-        if (integer != null) {
-            return String.valueOf(integer);
-        } else {
-            return "";
-        }
-    }
-
-    private String removeNullLong(Long l) {
-        if (l != null) {
-            return String.valueOf(l);
-        } else {
-            return "";
-        }
-    }
-
-    private String translateLicence(String data_license) {
-        return switch (data_license) {
-            case "10" -> getString(R.string.export_licence_10);
-            case "11" -> getString(R.string.export_licence_11);
-            case "20" -> getString(R.string.export_licence_20);
-            case "30" -> getString(R.string.export_licence_30);
-            case "40" -> getString(R.string.export_licence_40);
-            default -> "";
-        };
-    }
-
-    private String translateFoundDead(String alive) {
-        if (alive.equals("true")) {
-            return getString(R.string.no);
-        } else {
-            return getString(R.string.yes);
-        }
+    private void showFragment(String tag, Supplier<Fragment> fragmentSupplier) {
+        FragmentTransaction tx = getSupportFragmentManager().beginTransaction();
+        Fragment existing = getSupportFragmentManager().findFragmentByTag(tag);
+        if (existing != null) tx.replace(R.id.content_frame, existing, tag);
+        else tx.add(R.id.content_frame, fragmentSupplier.get(), tag);
+        tx.addToBackStack(tag + "_stack");
+        tx.commit();
     }
 
     private void uploadRecords() {
@@ -1130,24 +695,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             return null;
         } else {
             return userdata_list.get(0);
-        }
-    }
-
-    private String getUserName() {
-        UserDb userdata = getLoggedUser();
-        if (userdata != null) {
-            return userdata.getUsername();
-        } else {
-            return getString(R.string.not_logged_in);
-        }
-    }
-
-    private String getUserEmail() {
-        UserDb userdata = getLoggedUser();
-        if (userdata != null) {
-            return userdata.getEmail();
-        } else {
-            return getString(R.string.not_logged_in);
         }
     }
 

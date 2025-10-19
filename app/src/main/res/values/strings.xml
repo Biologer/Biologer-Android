@@ -547,4 +547,6 @@
     <string name="locale_montenegro_cyrillic">Montenegrin (cyrillic)</string>
     <string name="sort_observations">Sort observations</string>
     <string name="sort_observations_desc">Enables various sorting of species observations in the list of findings.</string>
+    <string name="no_internet_connection">You are not connected to the internet.</string>
+    <string name="file_creation_failed">Error in creating file for exporting CSV data.</string>
 </resources>

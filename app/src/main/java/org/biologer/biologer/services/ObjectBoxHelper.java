@@ -10,10 +10,13 @@ import org.biologer.biologer.sql.ObservationTypesDb;
 import org.biologer.biologer.sql.ObservationTypesDb_;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
+import org.biologer.biologer.sql.SynonymsDb;
 import org.biologer.biologer.sql.TaxaTranslationDb;
 import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
+import org.biologer.biologer.sql.TaxonGroupsDb;
+import org.biologer.biologer.sql.TaxonGroupsTranslationDb;
 import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.sql.TimedCountDb_;
 import org.biologer.biologer.sql.UserDb;
@@ -244,6 +247,22 @@ public class ObjectBoxHelper {
         return 0;
     }
 
+    public static String getUserName() {
+        List<UserDb> list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        if (list.isEmpty()) {
+            return null;
+        }
+        return list.get(0).getUsername();
+    }
+
+    public static String getUserEmail() {
+        List<UserDb> list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        if (list.isEmpty()) {
+            return null;
+        }
+        return list.get(0).getEmail();
+    }
+
     public static Long getIdForPhotographedTag() {
         Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("photographed")).build();
@@ -295,6 +314,15 @@ public class ObjectBoxHelper {
     public static void removeAllEntries() {
         removeAllObservations();
         removeAllTimedCounts();
+    }
+
+    public static void removeTaxaDatabase() {
+        App.get().getBoxStore().boxFor(TaxonDb.class).removeAll();
+        App.get().getBoxStore().boxFor(TaxaTranslationDb.class).removeAll();
+        App.get().getBoxStore().boxFor(SynonymsDb.class).removeAll();
+        App.get().getBoxStore().boxFor(TaxonGroupsDb.class).removeAll();
+        App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class).removeAll();
+        App.get().getBoxStore().boxFor(StageDb.class).removeAll();
     }
 
     public static Boolean hasAtlasCode(long taxonId) {
