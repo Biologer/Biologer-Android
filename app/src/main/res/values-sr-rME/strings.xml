@@ -580,4 +580,10 @@
     <string name="timed_count_maximum_retries">Слање временског бројања је достигло највећи број покушаја</string>
     <string name="photo_maximum_retries">Слање фотографије је достигло највећи број покушаја</string>
     <string name="observation_maximum_retries">Слање налаза је достигло највећи број покушаја</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">босански (ћирилица)</string>
+    <string name="locale_macedonia">македонски</string>
+    <string name="locale_montenegro_latin">црногорски (латиница)</string>
+    <string name="locale_montenegro_cyrillic">црногорски (ћирилица)</string>
+    <string name="sort_observations">Редосљед налаза</string>
+    <string name="sort_observations_desc">Омогућава да другачије поређате налазе врста унутар списка налаза.</string>
 </resources>

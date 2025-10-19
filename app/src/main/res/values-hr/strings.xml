@@ -559,4 +559,10 @@
     <string name="timed_count_maximum_retries">Dosegnut je najveći broj pokušaja slanja brojanja</string>
     <string name="photo_maximum_retries">Dosegnut je najveći broj pokušaja slanja fotografije</string>
     <string name="observation_maximum_retries">Dosegnut je najveći broj pokušaja slanja opažanja</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">bosanski (ćirilica)</string>
+    <string name="locale_macedonia">makedonski</string>
+    <string name="locale_montenegro_latin">crnogorski (latinica)</string>
+    <string name="locale_montenegro_cyrillic">crnogorski (ćirilica)</string>
+    <string name="sort_observations">Redoslijed opažanja</string>
+    <string name="sort_observations_desc">Omogućuje da drugačije poredite opažanja vrsta unutar popisa opažanja.</string>
 </resources>

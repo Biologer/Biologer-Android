@@ -559,5 +559,10 @@
     <string name="timed_count_maximum_retries">Slanje vremenskog brojanja je dostiglo najveći broj pokušaja</string>
     <string name="photo_maximum_retries">Slanje fotografije je dostiglo najveći broj pokušaja</string>
     <string name="observation_maximum_retries">Slanje nalaza je dostiglo najveći broj pokušaja</string>
-
+    <string name="locale_bosnia_and_herzegovina_cyrillic">bosanski (ćirilica)</string>
+    <string name="locale_macedonia">makedonski</string>
+    <string name="locale_montenegro_latin">crnogorski (latinica)</string>
+    <string name="locale_montenegro_cyrillic">crnogorski (ćirilica)</string>
+    <string name="sort_observations">Redosled nalaza</string>
+    <string name="sort_observations_desc">Omogućava da drugačije poređate nalaze vrsta unutar spiska nalaza.</string>
 </resources>

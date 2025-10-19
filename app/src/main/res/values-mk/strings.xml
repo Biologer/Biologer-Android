@@ -550,4 +550,10 @@
     <string name="timed_count_maximum_retries">Прикачувањето на временско броење го достигна максималниот број на обиди</string>
     <string name="photo_maximum_retries">Прикачувањето на фотографија го достигна максималниот број на обиди</string>
     <string name="observation_maximum_retries">Прикачувањето на набљудување го достигна максималниот број на обиди</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">босански (кирилица)</string>
+    <string name="locale_macedonia">македонски</string>
+    <string name="locale_montenegro_latin">црногорски (латиница)</string>
+    <string name="locale_montenegro_cyrillic">црногорски (кирилица)</string>
+    <string name="sort_observations">Редослед на наоди</string>
+    <string name="sort_observations_desc">Овозможува да ги подредите наодите на видовите во списокот со наоди на друг начин.</string>
 </resources>

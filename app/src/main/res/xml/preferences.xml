@@ -47,8 +47,8 @@
             android:defaultValue="false"/>
         <ListPreference
             android:key="sort_observations"
-            android:title="Sort observations"
-            android:summary="Enables various sorting of species observations in the list of findings."
+            android:title="@string/sort_observations"
+            android:summary="@string/sort_observations_desc"
             app:iconSpaceReserved="false"
             android:defaultValue="0"/>
     </PreferenceCategory>

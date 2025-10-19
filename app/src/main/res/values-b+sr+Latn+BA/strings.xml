@@ -299,4 +299,10 @@
     <string name="email_not_confirmed">Adresa vaše e-pošte još uvijek nije potvrđena! Uspješno ste se registrirali na Biologer i neke od osnovnih radnji će vam biti dostupne, ali ćete za slanje zabilježenih vrsta morati otvoriti e-poruku koju ste dobili i potvrditi vašu adresu.</string>
     <string name="not_logged_in">Niste prijavljeni!</string>
     <string name="license_title_1">Otvorena licenca za podatke</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">bosanski (ćirilica)</string>
+    <string name="locale_macedonia">makedonski</string>
+    <string name="locale_montenegro_latin">crnogorski (latinica)</string>
+    <string name="locale_montenegro_cyrillic">crnogorski (ćirilica)</string>
+    <string name="sort_observations">Redoslijed opažanja</string>
+    <string name="sort_observations_desc">Omogućava da drugačije poredite opažanja vrsta unutar spiska opažanja.</string>
 </resources>

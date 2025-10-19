@@ -299,4 +299,10 @@
     <string name="email_not_confirmed">Адреса ваше е-поште још увијек није потврђена! Успјешно сте се регистрирали на Биологер и неке од основних радњи ће вам бити доступне, али ћете за слање забиљежених врста морати отворити е-поруку коју сте добили и потврдити вашу адресу.</string>
     <string name="not_logged_in">Нисте пријављени!</string>
     <string name="license_title_1">Отворена лиценца за податке</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">босански (ћирилица)</string>
+    <string name="locale_macedonia">македонски</string>
+    <string name="locale_montenegro_latin">црногорски (латиница)</string>
+    <string name="locale_montenegro_cyrillic">црногорски (ћирилица)</string>
+    <string name="sort_observations">Редослијед опажања</string>
+    <string name="sort_observations_desc">Омогућава да другачије поредите опажања врста унутар списка опажања.</string>
 </resources>

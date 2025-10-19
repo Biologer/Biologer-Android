@@ -541,4 +541,10 @@
     <string name="timed_count_maximum_retries">Timed count upload reached maximum number of retries</string>
     <string name="photo_maximum_retries">Photo upload reached maximum number of retries</string>
     <string name="observation_maximum_retries">Observation upload reached maximum number of retries</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">Bosnian (cyrillic)</string>
+    <string name="locale_macedonia">Macedonian</string>
+    <string name="locale_montenegro_latin">Montenegrin (latin)</string>
+    <string name="locale_montenegro_cyrillic">Montenegrin (cyrillic)</string>
+    <string name="sort_observations">Sort observations</string>
+    <string name="sort_observations_desc">Enables various sorting of species observations in the list of findings.</string>
 </resources>

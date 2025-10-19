@@ -27,7 +27,6 @@ import org.biologer.biologer.sql.TaxonGroupsDb_;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -51,6 +50,7 @@ public class UpdateTaxa extends Service {
     int[] taxa_groups_int;
     String timestamp;
     String updated_after;
+    private int totalPagesExpected = -1;
 
     @Override
     public void onCreate() {
@@ -111,9 +111,6 @@ public class UpdateTaxa extends Service {
                         int last_page_fetched = Integer.parseInt(SettingsManager.getTaxaLastPageFetched());
                         getTaxa(last_page_fetched);
                         break;
-                    case ACTION_STOP:
-                        stopSelf();
-                        break;
                 }
             }
 
@@ -125,124 +122,155 @@ public class UpdateTaxa extends Service {
     private void getTaxa(int page) {
 
         Call<TaxaResponse> call = RetrofitClient.getService(
-                SettingsManager.getDatabaseName()).getTaxa(page, 300,
-                Integer.parseInt(updated_after), true, taxa_groups_int, false);
+                SettingsManager.getDatabaseName()).getTaxa(
+                page,
+                300,
+                Integer.parseInt(updated_after),
+                true,
+                taxa_groups_int,
+                false
+        );
 
         call.enqueue(new Callback<>() {
-
             @Override
             public void onResponse(@NonNull Call<TaxaResponse> call, @NonNull Response<TaxaResponse> response) {
-                if (response.isSuccessful()) {
-                    TaxaResponse taxaResponse = response.body();
-                    if (taxaResponse != null) {
-                        saveFetchedPage(taxaResponse, page);
-                    }
+                if (response.isSuccessful() && response.body() != null) {
+                    saveFetchedPage(response.body(), page);
                 } else if (response.code() == 429) {
-                    String retryAfter = response.headers().get("retry-after");
-                    long sec = Long.parseLong(Objects.requireNonNull(retryAfter, "Header did not return number of seconds."));
-                    Log.d(TAG, "Server resource limitation reached, retry after " + sec + " seconds.");
-                    // Add handler to delay fetching
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    Runnable runnable = () -> getTaxa(page);
-                    handler.postDelayed(runnable, sec * 1000);
+                    // Handle rate limiting with exponential backoff
+                    long retryAfter = 5000; // default 5s
+                    String retryAfterHeader = response.headers().get("retry-after");
+                    if (retryAfterHeader != null) {
+                        try {
+                            retryAfter = Math.min(Long.parseLong(retryAfterHeader) * 1000, 60000);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    Log.w(TAG, "Rate limit hit, retrying in " + retryAfter / 1000 + "s");
+
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> getTaxa(page), retryAfter);
                 } else if (response.code() == 508) {
-                    Log.d(TAG, "Server detected a loop, retrying in 5 sec.");
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    Runnable runnable = () -> getTaxa(page);
-                    handler.postDelayed(runnable, 5000);
+                    Log.w(TAG, "Server detected a loop, retrying in 5s.");
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> getTaxa(page), 5000);
+                } else {
+                    Log.e(TAG, "Unexpected response code: " + response.code());
+                    broadcastResult("failed");
+                    stopSelf();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<TaxaResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Application could not get data from a server: " + t.getLocalizedMessage());
+                Log.e(TAG, "Network error while fetching taxa: " + t.getLocalizedMessage());
                 broadcastResult("failed");
                 stopSelf();
             }
         });
     }
 
+    private void saveFetchedPage(@NonNull TaxaResponse taxaResponse, int page) {
+        // Get data from server response
+        int lastPage = taxaResponse.getMeta().getLastPage();
+        int total = taxaResponse.getMeta().getTotal();
+        int perPage = taxaResponse.getMeta().getPerPage();
 
-    private void saveFetchedPage(TaxaResponse taxaResponse, int page) {
-        int last_page = taxaResponse.getMeta().getLastPage();
-        int percent = (page * 100 ) / last_page;
-        broadcastPercent(percent);
-        Log.i(TAG, "Page " + page + " downloaded, total " + last_page + " pages (" + percent + "%).");
+        if (totalPagesExpected < 0 && total > 0 && perPage > 0) {
+            totalPagesExpected = (int) Math.ceil((double) total / perPage);
+            Log.d(TAG, "Expected total pages: " + totalPagesExpected);
+        }
 
         List<TaxaData> taxaData = taxaResponse.getData();
 
-        TaxonDb[] final_taxa = new TaxonDb[taxaData.size()];
-        for (int i = 0; i < taxaData.size(); i++) {
-            TaxaData taxon = taxaData.get(i);
-            long taxon_id = taxon.getId();
-            String taxon_latin_name = taxon.getName();
-            //Log.d(TAG, "Adding taxon " + taxon_latin_name + " with ID: " + taxon_id);
-
-            List<TaxaStages> stages = taxon.getStages();
-            StageDb[] final_stages = new StageDb[stages.size()];
-            StringBuilder stagesString = new StringBuilder();
-            for (int j = 0; j < stages.size(); j++) {
-                TaxaStages stage = stages.get(j);
-                final_stages[j] = new StageDb(stage.getId(), stage.getName());
-                stagesString.append(stage.getId()).append(";");
-            }
-            App.get().getBoxStore().boxFor(StageDb.class).put(final_stages);
-
-            List<TaxaTranslations> taxaTranslations = taxon.getTaxaTranslations();
-
-            StringBuilder groupString = new StringBuilder();
-            for (String string: taxon.getGroups()) {
-                groupString.append(string).append(";");
-            }
-
-            // Write taxon data in SQL database
-            final_taxa[i] = new TaxonDb(
-                    taxon_id,
-                    taxon.getParentId(),
-                    taxon_latin_name,
-                    taxon.getRank(),
-                    taxon.getRankLevel(),
-                    taxon.getAuthor(),
-                    taxon.isRestricted(),
-                    taxon.isUses_atlas_codes(),
-                    taxon.getAncestors_names(),
-                    groupString.toString(),
-                    stagesString.toString());
-
-            // If there are translations save them in different table
-            if (!taxaTranslations.isEmpty()) {
-                TaxaTranslationDb[] final_translations = new TaxaTranslationDb[taxaTranslations.size()];
-                for (int k = 0; k < taxaTranslations.size(); k++) {
-                    TaxaTranslations taxaTranslation = taxaTranslations.get(k);
-                    final_translations[k] = new TaxaTranslationDb(
-                            taxaTranslation.getId(),
-                            taxon_id,
-                            taxaTranslation.getLocale(),
-                            taxaTranslation.getNativeName(),
-                            taxon_latin_name,
-                            taxaTranslation.getDescription());
-                }
-                App.get().getBoxStore().boxFor(TaxaTranslationDb.class).put(final_translations);
-            }
+        // Save if there is some data
+        if (taxaData != null && !taxaData.isEmpty()) {
+            saveTaxaToDatabase(taxaData);
         }
-        App.get().getBoxStore().boxFor(TaxonDb.class).put(final_taxa);
 
-        // If we just finished fetching taxa data for the last page, we can stop showing
-        // loader. Otherwise we continue fetching taxa from the API on the next page.
-        if (page == last_page) {
-            Log.i(TAG, "All taxa were successfully updated from the server!");
+        // Compute and report progress
+        int denominator = totalPagesExpected > 0 ? totalPagesExpected : lastPage;
+        if (denominator <= 0) denominator = Math.max(page, 1);
+        int percent = Math.min((page * 100) / denominator, 100);
+        broadcastPercent(percent);
+        Log.i(TAG, "Page " + page + " downloaded, progress " + percent + "%");
+
+        boolean noMoreData = (taxaData == null || taxaData.isEmpty());
+        boolean lastPageReached = (page >= lastPage && lastPage > 0);
+
+        if (noMoreData || lastPageReached) {
+            Log.i(TAG, "All taxa successfully updated from server.");
             broadcastResult("success");
-            // Set the preference to know when the taxonomic data was updates
             SettingsManager.setTaxaUpdatedAt(timestamp);
             SettingsManager.setTaxaLastPageFetched("1");
             stopSelf();
         } else {
-            SettingsManager.setTaxaLastPageFetched(String.valueOf(page));
-            page++;
-            Log.d(TAG, "Downloading taxa from page " + page);
-            getTaxa(page);
+            int nextPage = page + 1;
+            SettingsManager.setTaxaLastPageFetched(String.valueOf(nextPage));
+            Log.d(TAG, "Downloading taxa from page " + nextPage);
+            getTaxa(nextPage);
         }
     }
+
+    private void saveTaxaToDatabase(@NonNull List<TaxaData> taxaData) {
+        Box<TaxonDb> taxonBox = App.get().getBoxStore().boxFor(TaxonDb.class);
+        Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
+        Box<TaxaTranslationDb> translationBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+
+        for (TaxaData taxon : taxaData) {
+            List<TaxaStages> stages = taxon.getStages();
+            if (stages != null && !stages.isEmpty()) {
+                StageDb[] stageArray = new StageDb[stages.size()];
+                StringBuilder stageString = new StringBuilder();
+                for (int i = 0; i < stages.size(); i++) {
+                    TaxaStages stage = stages.get(i);
+                    stageArray[i] = new StageDb(stage.getId(), stage.getName());
+                    stageString.append(stage.getId()).append(";");
+                }
+                stageBox.put(stageArray);
+            }
+
+            TaxonDb taxonDb = getTaxonDb(taxon);
+            taxonBox.put(taxonDb);
+
+            List<TaxaTranslations> translations = taxon.getTaxaTranslations();
+            if (translations != null && !translations.isEmpty()) {
+                TaxaTranslationDb[] translationArray = new TaxaTranslationDb[translations.size()];
+                for (int i = 0; i < translations.size(); i++) {
+                    TaxaTranslations tr = translations.get(i);
+                    translationArray[i] = new TaxaTranslationDb(
+                            tr.getId(),
+                            taxon.getId(),
+                            tr.getLocale(),
+                            tr.getNativeName(),
+                            taxon.getName(),
+                            tr.getDescription()
+                    );
+                }
+                translationBox.put(translationArray);
+            }
+        }
+    }
+
+    @NonNull
+    private static TaxonDb getTaxonDb(TaxaData taxon) {
+        StringBuilder groupString = new StringBuilder();
+        for (String group : taxon.getGroups()) {
+            groupString.append(group).append(";");
+        }
+
+        return new TaxonDb(
+                taxon.getId(),
+                taxon.getParentId(),
+                taxon.getName(),
+                taxon.getRank(),
+                taxon.getRankLevel(),
+                taxon.getAuthor(),
+                taxon.isRestricted(),
+                taxon.isUses_atlas_codes(),
+                taxon.getAncestors_names(),
+                groupString.toString(),
+                ""
+        );
+    }
+
 
     public static boolean isInstanceCreated() {
         return instance != null;

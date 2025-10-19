@@ -549,5 +549,10 @@
     <string name="timed_count_maximum_retries">Az időzített számlálás feltöltése elérte a maximális újrapróbálkozások számát</string>
     <string name="photo_maximum_retries">A fotó feltöltése elérte a maximális újrapróbálkozások számát</string>
     <string name="observation_maximum_retries">A megfigyelés feltöltése elérte a maximális újrapróbálkozások számát</string>
-
+    <string name="locale_bosnia_and_herzegovina_cyrillic">bosnyák (cirill betűs)</string>
+    <string name="locale_macedonia">macedón</string>
+    <string name="locale_montenegro_latin">montenegrói (latin betűs)</string>
+    <string name="locale_montenegro_cyrillic">montenegrói (cirill betűs)</string>
+    <string name="sort_observations">Megfigyelések sorrendje</string>
+    <string name="sort_observations_desc">Lehetővé teszi a fajmegfigyelések eltérő sorrendbe rendezését a megfigyelési listán belül.</string>
 </resources>

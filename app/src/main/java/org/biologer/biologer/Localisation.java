@@ -13,7 +13,9 @@ public class Localisation {
         Locale locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             locale = App.get().getResources().getConfiguration().getLocales().get(0);
-            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage() + " (" + locale.getLanguage() + "-" + locale.getScript() + ").");
+            Log.d(TAG, "Current System locale is set to " + locale.getDisplayLanguage()
+                    + " (" + locale.getLanguage() + "-" + locale.getScript()
+                    + " - " + locale.getCountry() + ").");
         } else {
             locale = App.get().getResources().getConfiguration().locale;
             Log.d(TAG, "Current System locale is set to " + locale.getLanguage());

@@ -550,4 +550,10 @@
     <string name="timed_count_maximum_retries">Otpremanje brojanja u vremenskom intervalu dostiglo je maksimalan broj ponovnih pokušaja</string>
     <string name="photo_maximum_retries">Otpremanje fotografije dostiglo je maksimalan broj ponovnih pokušaja</string>
     <string name="observation_maximum_retries">Otpremanje opažanja dostiglo je maksimalan broj ponovnih pokušaja</string>
+    <string name="locale_bosnia_and_herzegovina_cyrillic">bosanski (ćirilica)</string>
+    <string name="locale_macedonia">makedonski</string>
+    <string name="locale_montenegro_latin">crnogorski (latinica)</string>
+    <string name="locale_montenegro_cyrillic">crnogorski (ćirilica)</string>
+    <string name="sort_observations">Redoslijed opažanja</string>
+    <string name="sort_observations_desc">Omogućava da drugačije poredite opažanja vrsta unutar spiska opažanja.</string>
 </resources>

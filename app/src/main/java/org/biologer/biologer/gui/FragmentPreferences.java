@@ -22,13 +22,16 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateTaxa;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class FragmentPreferences extends PreferenceFragmentCompat {
@@ -293,56 +296,46 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
     }
 
     private void getLanguages(ListPreference listPreference) {
-        CharSequence[] default_entry = {getString(R.string.defaults)};
-        CharSequence[] other_entries = {
-                getString(R.string.locale_bosnia_and_herzegovina_latin),
-                getString(R.string.locale_croatia),
-                getString(R.string.locale_english),
-                getString(R.string.locale_hungarian),
-                //getString(R.string.locale_montenegro_latin),
-                getString(R.string.locale_serbia_cyrilic),
-                getString(R.string.locale_serbia_latin)};
-        Arrays.sort(other_entries);
-        CharSequence[] entries = ArrayUtils.addAll(default_entry, other_entries);
 
-        CharSequence[] entryValues = new CharSequence[entries.length];
-        entryValues[0] = ""; // First, empty line for default value
-        for (int i = 0; i < entries.length; i++) {
-            CharSequence entry = entries[i];
-            if (entry.equals(getString(R.string.locale_croatia))) {
-                CharSequence toAdd = "hr";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
-            if (entry.equals(getString(R.string.locale_english))) {
-                CharSequence toAdd = "en";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
-            if (entry.equals(getString(R.string.locale_hungarian))) {
-                CharSequence toAdd = "hu";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
-            if (entry.equals(getString(R.string.locale_serbia_cyrilic))) {
-                CharSequence toAdd = "sr";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
-            if (entry.equals(getString(R.string.locale_serbia_latin))) {
-                CharSequence toAdd = "sr-Latn";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
-            if (entry.equals(getString(R.string.locale_bosnia_and_herzegovina_latin))) {
-                CharSequence toAdd = "bs";
-                entryValues[i] = toAdd;
-                Log.i(TAG, "Adding locale: " + toAdd);
-            }
+        // Define the Locales (Display Name: Value)
+        Map<String, String> localeMap = new HashMap<>();
+
+        // Add all user-defined locales
+        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_latin), "bs");
+        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_cyrillic), "sr-BA");
+        localeMap.put(getString(R.string.locale_croatia), "hr");
+        localeMap.put(getString(R.string.locale_english), "en");
+        localeMap.put(getString(R.string.locale_hungarian), "hu");
+        localeMap.put(getString(R.string.locale_macedonia), "mk");
+        localeMap.put(getString(R.string.locale_montenegro_latin), "sr-Latn-ME");
+        localeMap.put(getString(R.string.locale_montenegro_cyrillic), "sr-ME");
+        localeMap.put(getString(R.string.locale_serbia_cyrilic), "sr");
+        localeMap.put(getString(R.string.locale_serbia_latin), "sr-Latn");
+
+        // Prepare and Sort the Display Names (Entries)
+        List<String> sortedEntriesList = new ArrayList<>(localeMap.keySet());
+        Collections.sort(sortedEntriesList, String.CASE_INSENSITIVE_ORDER); // Sort the display names alphabetically
+
+        // Build the final CharSequence arrays, ensuring the "Default" option is first.
+        List<CharSequence> finalEntries = new ArrayList<>();
+        List<CharSequence> finalEntryValues = new ArrayList<>();
+
+        // Add Default option first
+        finalEntries.add(getString(R.string.defaults));
+        finalEntryValues.add("");
+
+        // Add all sorted entries and their corresponding values
+        for (String entry : sortedEntriesList) {
+            String value = localeMap.get(entry);
+
+            finalEntries.add(entry);
+            finalEntryValues.add(value);
+            Log.i(TAG, "Added locale option: '" + entry + "' with value: '" + value + "'");
         }
-        listPreference.setEntries(entries);
-        listPreference.setDefaultValue("2");
-        listPreference.setEntryValues(entryValues);
+
+        // Set the ListPreference
+        listPreference.setEntries(finalEntries.toArray(new CharSequence[0]));
+        listPreference.setEntryValues(finalEntryValues.toArray(new CharSequence[0]));
     }
 
     @Override
