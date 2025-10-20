@@ -139,7 +139,7 @@ public class UploadRecords extends Service {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(pendingIntent)
-                .setAutoCancel(false);
+                .setAutoCancel(true);
 
         Notification notification = builder.build();
 
