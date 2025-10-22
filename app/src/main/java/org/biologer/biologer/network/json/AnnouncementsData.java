@@ -45,7 +45,7 @@ public class AnnouncementsData {
     private boolean isRead;
 
     @JsonProperty("translations")
-    private AnnouncementsDataTranslations translations[];
+    private AnnouncementsDataTranslations[] translations;
 
     public String getTitle() {
         return title;

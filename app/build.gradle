@@ -11,8 +11,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 23
         targetSdk 36
-        versionCode 200
-        versionName '5.0.7'
+        versionCode 202
+        versionName '5.0.9'
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -119,6 +119,7 @@ dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.core:core:1.17.0'
     annotationProcessor 'androidx.annotation:annotation:1.9.1'
+    implementation "androidx.work:work-runtime:2.10.5"
 
     // Non Google
     // GIS

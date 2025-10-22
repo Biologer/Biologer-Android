@@ -4,6 +4,10 @@ import android.util.Log;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
+import org.biologer.biologer.sql.AnnouncementTranslationsDb;
+import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
+import org.biologer.biologer.sql.AnnouncementsDb;
+import org.biologer.biologer.sql.AnnouncementsDb_;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationTypesDb;
@@ -276,6 +280,29 @@ public class ObjectBoxHelper {
         return observed_id;
     }
 
+    public static AnnouncementsDb getAnnouncementById(long id) {
+        Box<AnnouncementsDb> box = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
+        Query<AnnouncementsDb> query = box
+                .query(AnnouncementsDb_.id.equal(id))
+                .build();
+        AnnouncementsDb announcement = query.findFirst();
+        query.close();
+        return announcement;
+    }
+
+    public static AnnouncementTranslationsDb getTranslatedAnnouncementById(long announcementId) {
+        String locale = Localisation.getLocaleScript();
+
+        Box<AnnouncementTranslationsDb> transBox = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
+        Query<AnnouncementTranslationsDb> transQuery = transBox
+                .query(AnnouncementTranslationsDb_.announcementId.equal(announcementId)
+                        .and(AnnouncementTranslationsDb_.locale.equal(locale)))
+                .build();
+        AnnouncementTranslationsDb translation = transQuery.findFirst();
+        transQuery.close();
+        return translation;
+    }
+
     public static void removeObservationsForTimedCountId(int timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long removedCount;
@@ -323,6 +350,11 @@ public class ObjectBoxHelper {
         App.get().getBoxStore().boxFor(TaxonGroupsDb.class).removeAll();
         App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class).removeAll();
         App.get().getBoxStore().boxFor(StageDb.class).removeAll();
+    }
+
+    public static void removeAllData() {
+        App.get().getBoxStore().close();
+        App.get().getBoxStore().deleteAllFiles();
     }
 
     public static Boolean hasAtlasCode(long taxonId) {

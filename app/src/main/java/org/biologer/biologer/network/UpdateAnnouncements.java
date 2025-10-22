@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -18,6 +20,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.FragmentAnnouncements;
 import org.biologer.biologer.network.json.AnnouncementsData;
 import org.biologer.biologer.network.json.AnnouncementsResponse;
@@ -58,18 +61,25 @@ public class UpdateAnnouncements extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             notify = intent.getBooleanExtra("show_notification", true);
+
+            // Capture notification data from FCM (if available)
+            if (notify && intent.hasExtra("announcement_id")) {
+                // Save the data to pass to the helper method
+                getAnnouncements(intent);
+                return super.onStartCommand(intent, flags, startId);
+            }
         }
-        Log.d(TAG, "Should display announcement upon download? " + notify);
-        getAnnouncements();
+        // Existing logic for regular update schedule (where notify is likely true but no intent data)
+        getAnnouncements(null);
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void getAnnouncements() {
+    private void getAnnouncements(Intent intent) {
         String database_url = SettingsManager.getDatabaseName();
 
         if (database_url != null) {
             Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_url).getAnnouncements();
-            announcements.enqueue(new Callback<AnnouncementsResponse>() {
+            announcements.enqueue(new Callback<>() {
                 @SuppressLint("UnspecifiedImmutableFlag")
                 @Override
                 public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
@@ -110,8 +120,15 @@ public class UpdateAnnouncements extends Service {
                             Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
                                     App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).count() +
                                     " announcement translations.");
-
-                            if (notify) {
+                            if (notify && intent != null && intent.hasExtra("announcement_id")) {
+                                // Use the data passed from the FCM message
+                                showFCMNotification(
+                                        intent.getStringExtra("title"),
+                                        intent.getStringExtra("body"),
+                                        intent.getStringExtra("announcement_id")
+                                );
+                            } else if (notify) {
+                                // If the FCM fails, we'll still get notification, like in the old days :)
                                 displayNotification();
                             }
 
@@ -131,11 +148,7 @@ public class UpdateAnnouncements extends Service {
                         if (announcement != null) {
                             Intent intent = new Intent(getApplicationContext(), FragmentAnnouncements.class);
                             PendingIntent pendingIntent;
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                                pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-                            } else {
-                                pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-                            }
+                            pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
                             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "biologer_announcements")
                                     .setSmallIcon(R.mipmap.ic_notification)
@@ -160,6 +173,33 @@ public class UpdateAnnouncements extends Service {
                 }
             });
         }
+    }
+
+    private void showFCMNotification(String title, String body, String announcementId) {
+        Intent intent = new Intent(this, ActivityAnnouncement.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("announcement_id", announcementId);
+
+        // Use the ID as a request code for the PendingIntent
+        int requestCode = announcementId.hashCode();
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        String channelId = "biologer_announcements";
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.mipmap.ic_notification)
+                .setContentTitle(title != null ? title : getString(R.string.channel_announcements))
+                .setContentText(body != null ? body : getString(R.string.new_announcement_available))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setAutoCancel(true)
+                .setSound(soundUri)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.notify(announcementId.hashCode(), builder.build());
     }
 
     public void sendResult(String message) {

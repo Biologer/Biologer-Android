@@ -6,6 +6,8 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
+import org.biologer.biologer.services.ObjectBoxHelper;
+
 /**
  * Created by brjovanovic on 12/24/2017.
  */
@@ -29,18 +31,9 @@ public class User {
         return SettingsManager.getAccessToken() != null;
     }
 
-    public static void clearUserData(Context context) {
-        Log.d(TAG, "Deleting all user settings.");
-        deleteAllTables();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.apply();
-    }
-
     private static void deleteAllTables() {
         Log.d(TAG, "Deleting all SQL tables.");
-        App.get().deleteAllBoxes();
+        ObjectBoxHelper.removeAllData();
     }
 
     private static void resetPreferences(Context context) {

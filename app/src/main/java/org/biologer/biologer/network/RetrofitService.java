@@ -109,6 +109,10 @@ public interface RetrofitService {
     @GET("/api/my/profile")
     Call<UserDataResponse> getUserData();
 
+    @FormUrlEncoded
+    @POST("api/user/fcm-token")
+    Call<ResponseBody> updateFcmToken(@Field("fcm_token") String token);
+
     @Headers({"Accept: application/json"})
     @GET("/api/my/unread-notifications")
     Call<UnreadNotificationsResponse> getUnreadNotifications(

@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,7 +14,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -24,6 +22,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.FragmentLogoutBinding;
 import org.biologer.biologer.network.UpdateTaxa;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
@@ -125,8 +124,7 @@ public class FragmentLogout extends Fragment {
             case "https://biologer.ba" -> "Bosnia and Herzegovina Biologer Community";
             case "https://biologer.rs" -> "Serbian Biologer Community";
             case "https://biologer.me" -> "Montenegrin Biologer Community";
-            case "https://birdloger.biologer.org" -> "Birdloger Community";
-            case "https://dev.biologer.org" -> "Global Biologer Community";
+            case "https://dev.biologer.org" -> "Biologer Community for developers";
             case "https://biologer.hr" -> "Croatian Biologer Community";
             default -> "";
         };
@@ -135,11 +133,8 @@ public class FragmentLogout extends Fragment {
     private void deleteDataAndLogout(Activity activity) {
         Log.d(TAG, "Deleting all user data upon logout.");
 
-        App.get().deleteAllBoxes();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.apply();
+        ObjectBoxHelper.removeAllData();
+        SettingsManager.deleteSettings();
 
         Intent intent = new Intent(activity, ActivityLogin.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

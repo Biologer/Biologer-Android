@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -25,12 +24,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
@@ -559,11 +558,8 @@ public class PreferencesAccountSetup extends PreferenceFragmentCompat {
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
                     // Delete user preferences and database
-                    App.get().deleteAllBoxes();
-                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.clear();
-                    editor.apply();
+                    ObjectBoxHelper.removeAllData();
+                    SettingsManager.deleteSettings();
 
                     android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(requireContext());
                     builder.setTitle(R.string.account_deleted)

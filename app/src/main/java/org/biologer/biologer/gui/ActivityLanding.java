@@ -32,11 +32,13 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityLandingBinding;
+import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.services.AuthHelper;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
@@ -55,6 +57,7 @@ import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -92,7 +95,18 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         binding.navView.setNavigationItemSelectedListener(this);
 
         updateNavHeader();
+
         showFragment("LANDING_FRAGMENT", FragmentLanding::new);
+
+        handleIncomingIntent(getIntent());
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Log.i(TAG, "Back button is pressed!");
+                backPressed();
+            }
+        });
 
         // If there is no token, falling back to the login screen
         if (SettingsManager.getAccessToken() == null) {
@@ -141,13 +155,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             }
         }
 
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Log.i(TAG, "Back button is pressed!");
-                backPressed();
-            }
-        });
     }
 
     @Override
@@ -173,11 +180,35 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             }
         }
 
+        // Ensure FCM token is registered when app starts and user is logged in
+        if (SettingsManager.getAccessToken() != null) {
+            getFirebaseMessagingToken();
+        }
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingIntent(intent);
+    }
+
+    private void handleIncomingIntent(Intent intent) {
+        if (intent != null && intent.hasExtra(ActivityAnnouncement.EXTRA_DISPLAY_FRAGMENT)) {
+            String fragmentTag = intent.getStringExtra(ActivityAnnouncement.EXTRA_DISPLAY_FRAGMENT);
+
+            if (ActivityAnnouncement.FRAGMENT_ANNOUNCEMENTS_TAG.equals(fragmentTag)) {
+
+                showFragment(ActivityAnnouncement.FRAGMENT_ANNOUNCEMENTS_TAG, FragmentAnnouncements::new);
+            }
+            intent.removeExtra(ActivityAnnouncement.EXTRA_DISPLAY_FRAGMENT);
+        }
     }
 
     private void backPressed() {
@@ -216,6 +247,34 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         return super.onCreateOptionsMenu(menu);
     }
 
+    private void getFirebaseMessagingToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String token = task.getResult();
+                        Log.d(TAG, "Obtained FCM token: " + token);
+                        BiologerFirebaseMessagingService.sendRegistrationToServer(token);
+                    } else {
+                        Log.w(TAG, "Fetching FCM token failed", task.getException());
+                    }
+                });
+
+        String locale = Locale.getDefault().getLanguage(); // e.g. "sr", "bs", "en"
+        String topic = "announcements_" + locale;
+
+        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to topic: " + topic);
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to topic: " + topic, task.getException());
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("announcements");
+    }
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_upload) {
@@ -237,11 +296,8 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        App.get().deleteAllBoxes();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(App.get());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
-        editor.apply();
+        ObjectBoxHelper.removeAllData();
+        SettingsManager.deleteSettings();
         Toast.makeText(this, getString(R.string.something_is_wrong_falling_back_to_login_screen), Toast.LENGTH_LONG).show();
         showUserLoginScreen(false);
     }
@@ -392,6 +448,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         Intent intent = new Intent(ActivityLanding.this, ActivityLogin.class);
         if (tokenExpired) {
             SettingsManager.deleteAccessToken();
+            SettingsManager.deleteFcmToken();
             intent.putExtra("refreshToken", "yes");
         }
         startActivity(intent);

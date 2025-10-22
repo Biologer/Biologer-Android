@@ -15,7 +15,7 @@ public class SettingsManager {
         GOOGLE_MAP_TYPE, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
-        DISPLAY_LOCATION_NAME_INFO
+        DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN
     }
 
     public static void init(Context context) {
@@ -214,6 +214,28 @@ public class SettingsManager {
     public static void setDisplayLocationNameInfo(boolean b) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY.DISPLAY_LOCATION_NAME_INFO.toString(), b);
+        editor.apply();
+    }
+
+    public static void setLastFcmToken(String token) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.FCM_TOKEN.toString(), token);
+        editor.apply();
+    }
+
+    public static String getLastFcmToken() {
+        return sharedPreferences.getString(KEY.FCM_TOKEN.toString(), null);
+    }
+
+    public static void deleteFcmToken() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.FCM_TOKEN.toString(), null);
+        editor.apply();
+    }
+
+    public static void deleteSettings() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
         editor.apply();
     }
 

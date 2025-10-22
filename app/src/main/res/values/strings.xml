@@ -549,4 +549,6 @@
     <string name="sort_observations_desc">Enables various sorting of species observations in the list of findings.</string>
     <string name="no_internet_connection">You are not connected to the internet.</string>
     <string name="file_creation_failed">Error in creating file for exporting CSV data.</string>
+    <string name="new_announcement_available">New announcement is available to read</string>
+    <string name="no_announcement_localy">The announcement is not available in your local database.</string>
 </resources>
