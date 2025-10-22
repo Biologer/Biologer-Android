@@ -1,23 +1,29 @@
 package org.biologer.biologer.gui;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityAnnouncementBinding;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
@@ -42,6 +48,30 @@ public class ActivityAnnouncement extends AppCompatActivity {
     private ActivityAnnouncementBinding binding;
     public static final String EXTRA_DISPLAY_FRAGMENT = "org.biologer.biologer.gui.ActivityAnnouncement.DISPLAY_FRAGMENT";
     public static final String FRAGMENT_ANNOUNCEMENTS_TAG = "ANNOUNCEMENTS_FRAGMENT";
+    private long fcmAnnouncementId = -1;
+
+    private final BroadcastReceiver updateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String status = intent.getStringExtra(UpdateAnnouncements.TASK_COMPLETED);
+            if ("success".equals(status)) {
+                Log.d(TAG, "UpdateAnnouncements finished successfully.");
+                if (fcmAnnouncementId != -1) {
+                    // This will now find the announcement in ObjectBox and display it
+                    updateAnnouncementText(fcmAnnouncementId);
+                    fcmAnnouncementId = -1;
+                } else {
+                    hideLoading();
+                }
+            } else {
+                if (fcmAnnouncementId != -1) {
+                    Toast.makeText(context, R.string.failed_to_download_announcement, Toast.LENGTH_LONG).show();
+                    hideLoading();
+                    finishAndDisplayAnnouncements();
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +81,10 @@ public class ActivityAnnouncement extends AppCompatActivity {
 
         // Toolbar
         addToolbar();
+
+        // Register Broadcast receiver to wait before ObjectBox is populated
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                updateReceiver, new IntentFilter(UpdateAnnouncements.TASK_COMPLETED));
 
         // Get index or announcement_id from intent
         Bundle bundle = getIntent().getExtras();
@@ -65,8 +99,18 @@ public class ActivityAnnouncement extends AppCompatActivity {
             String remoteIdString = bundle.getString("announcement_id");
             try {
                 long announcementId = Long.parseLong(Objects.requireNonNull(remoteIdString));
+                fcmAnnouncementId = announcementId;
                 Log.d(TAG, "Launched from FCM. Attempting to display announcement with remote ID: " + announcementId);
-                updateAnnouncementText(announcementId);
+                if (ObjectBoxHelper.getAnnouncementById(announcementId) != null) {
+                    // Sometimes the announcement could already be there, so just display it
+                    Log.d(TAG, "FCM announcement found locally. Displaying immediately.");
+                    updateAnnouncementText(announcementId);
+                    fcmAnnouncementId = -1;
+                } else {
+                    Log.d(TAG, "FCM announcement missing. Starting update service.");
+                    showLoading();
+                    startAnnouncementsUpdateService();
+                }
             } catch (NumberFormatException e) {
                 Log.e(TAG, "Invalid announcement_id from Intent: " + remoteIdString);
                 finishAndDisplayAnnouncements();
@@ -100,6 +144,12 @@ public class ActivityAnnouncement extends AppCompatActivity {
         finishAndDisplayAnnouncements();
     }
 
+    private void startAnnouncementsUpdateService() {
+        Intent intent = new Intent(this, UpdateAnnouncements.class);
+        intent.putExtra("show_notification", false);
+        startService(intent);
+    }
+
     private void finishAndDisplayAnnouncements() {
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -115,6 +165,7 @@ public class ActivityAnnouncement extends AppCompatActivity {
         if (announcement == null) {
             Log.w(TAG, "Announcement with ID " + id + " not found locally. It might still be downloading.");
             Toast.makeText(this, getString(R.string.no_announcement_localy), Toast.LENGTH_LONG).show();
+            hideLoading();
             finishAndDisplayAnnouncements();
             return;
         }
@@ -141,6 +192,7 @@ public class ActivityAnnouncement extends AppCompatActivity {
         binding.announcementReadingDate.setText(dateString);
 
         markAnnouncementAsRead(id);
+        hideLoading();
     }
 
     private void addToolbar() {
@@ -189,5 +241,27 @@ public class ActivityAnnouncement extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showLoading() {
+        binding.announcementContentLayout.setVisibility(View.GONE);
+        binding.progressBar.setVisibility(View.VISIBLE);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(R.string.loading);
+        }
+    }
+
+    private void hideLoading() {
+        binding.progressBar.setVisibility(View.GONE);
+        binding.announcementContentLayout.setVisibility(View.VISIBLE);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(R.string.announcement);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(updateReceiver);
     }
 }

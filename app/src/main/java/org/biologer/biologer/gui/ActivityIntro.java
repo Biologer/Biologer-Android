@@ -11,7 +11,7 @@ import com.github.appintro.AppIntro2;
 import com.github.appintro.AppIntroFragment;
 
 import org.biologer.biologer.R;
-import org.biologer.biologer.User;
+import org.biologer.biologer.SettingsManager;
 import org.jetbrains.annotations.Nullable;
 
 public class ActivityIntro extends AppIntro2 {
@@ -44,7 +44,7 @@ public class ActivityIntro extends AppIntro2 {
     }
 
     private void launchNextActivity() {
-        if (User.getUser().tokenPresent()) {
+        if (SettingsManager.getAccessToken() != null) {
             Bundle bundle = getIntent().getExtras();
             if (bundle != null) {
                 if (bundle.getBoolean("firstRun", false)) {

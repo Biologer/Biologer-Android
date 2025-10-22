@@ -1,14 +1,11 @@
 package org.biologer.biologer.network;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -20,7 +17,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.FragmentAnnouncements;
 import org.biologer.biologer.network.json.AnnouncementsData;
 import org.biologer.biologer.network.json.AnnouncementsResponse;
@@ -59,28 +55,17 @@ public class UpdateAnnouncements extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            notify = intent.getBooleanExtra("show_notification", true);
-
-            // Capture notification data from FCM (if available)
-            if (notify && intent.hasExtra("announcement_id")) {
-                // Save the data to pass to the helper method
-                getAnnouncements(intent);
-                return super.onStartCommand(intent, flags, startId);
-            }
-        }
-        // Existing logic for regular update schedule (where notify is likely true but no intent data)
-        getAnnouncements(null);
-        return super.onStartCommand(intent, flags, startId);
+        if (intent != null) notify = intent.getBooleanExtra("show_notification", true);
+        getAnnouncements();
+        return START_NOT_STICKY;
     }
 
-    private void getAnnouncements(Intent intent) {
+    private void getAnnouncements() {
         String database_url = SettingsManager.getDatabaseName();
 
         if (database_url != null) {
             Call<AnnouncementsResponse> announcements = RetrofitClient.getService(database_url).getAnnouncements();
             announcements.enqueue(new Callback<>() {
-                @SuppressLint("UnspecifiedImmutableFlag")
                 @Override
                 public void onResponse(@NonNull Call<AnnouncementsResponse> call, @NonNull Response<AnnouncementsResponse> response) {
                     if (response.isSuccessful()) {
@@ -120,86 +105,57 @@ public class UpdateAnnouncements extends Service {
                             Log.d(TAG, "There are " + number_of_announcements + " announcements and " +
                                     App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).count() +
                                     " announcement translations.");
-                            if (notify && intent != null && intent.hasExtra("announcement_id")) {
-                                // Use the data passed from the FCM message
-                                showFCMNotification(
-                                        intent.getStringExtra("title"),
-                                        intent.getStringExtra("body"),
-                                        intent.getStringExtra("announcement_id")
-                                );
-                            } else if (notify) {
+                            if (notify) {
                                 // If the FCM fails, we'll still get notification, like in the old days :)
-                                displayNotification();
+                                showRegularNotification();
                             }
 
                             sendResult("success");
 
                         }
+                    } else {
+                        Log.d(TAG, "Could not retrieve and save announcements!");
+                        sendResult("failure");
                     }
-                }
-
-                @SuppressLint("UnspecifiedImmutableFlag")
-                private void displayNotification() {
-                    Box<AnnouncementsDb> announcementsDbBox = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
-                    Query<AnnouncementsDb> announcementsDbQuery = announcementsDbBox
-                            .query(AnnouncementsDb_.isRead.equal(false)).build();
-                    if (announcementsDbQuery.count() >= 1) {
-                        AnnouncementsDb announcement = announcementsDbQuery.findFirst();
-                        if (announcement != null) {
-                            Intent intent = new Intent(getApplicationContext(), FragmentAnnouncements.class);
-                            PendingIntent pendingIntent;
-                            pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-                            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "biologer_announcements")
-                                    .setSmallIcon(R.mipmap.ic_notification)
-                                    .setContentTitle(announcement.getTitle())
-                                    .setContentText(announcement.getMessage())
-                                    .setContentIntent(pendingIntent)
-                                    .setOnlyAlertOnce(true)
-                                    .setAutoCancel(true);
-                            Notification notification = mBuilder.build();
-                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                            assert mNotificationManager != null;
-                            mNotificationManager.notify(1, notification);
-                        }
-
-                    }
-                    announcementsDbQuery.close();
+                    stopSelf();
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<AnnouncementsResponse> call, @NonNull Throwable t) {
                     Log.d(TAG, "Could not get announcements: " + t.getLocalizedMessage());
+                    sendResult("failure");
+                    stopSelf();
                 }
             });
         }
     }
 
-    private void showFCMNotification(String title, String body, String announcementId) {
-        Intent intent = new Intent(this, ActivityAnnouncement.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra("announcement_id", announcementId);
+    private void showRegularNotification() {
+        Box<AnnouncementsDb> announcementsDbBox = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
+        Query<AnnouncementsDb> announcementsDbQuery = announcementsDbBox
+                .query(AnnouncementsDb_.isRead.equal(false)).build();
+        if (announcementsDbQuery.count() >= 1) {
+            AnnouncementsDb announcement = announcementsDbQuery.findFirst();
+            if (announcement != null) {
+                Intent intent = new Intent(getApplicationContext(), FragmentAnnouncements.class);
+                PendingIntent pendingIntent;
+                pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
-        // Use the ID as a request code for the PendingIntent
-        int requestCode = announcementId.hashCode();
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), "biologer_announcements")
+                        .setSmallIcon(R.mipmap.ic_notification)
+                        .setContentTitle(announcement.getTitle())
+                        .setContentText(announcement.getMessage())
+                        .setContentIntent(pendingIntent)
+                        .setOnlyAlertOnce(true)
+                        .setAutoCancel(true);
+                Notification notification = mBuilder.build();
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                assert mNotificationManager != null;
+                mNotificationManager.notify(1, notification);
+            }
 
-        String channelId = "biologer_announcements";
-        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_notification)
-                .setContentTitle(title != null ? title : getString(R.string.channel_announcements))
-                .setContentText(body != null ? body : getString(R.string.new_announcement_available))
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                .setAutoCancel(true)
-                .setSound(soundUri)
-                .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(announcementId.hashCode(), builder.build());
+        }
+        announcementsDbQuery.close();
     }
 
     public void sendResult(String message) {
