@@ -15,11 +15,15 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.ActivityLanding;
+import org.biologer.biologer.network.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -32,39 +36,62 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "Biologer.FCM";
 
-    /** Called when a message arrives **/
+    /**
+     * Called when a message arrives
+     **/
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
         Map<String, String> data = remoteMessage.getData();
         String type = data.get("type");
+        //Log.d(TAG, "Raw FCM data: " + data);
 
-        // Receive announcements
-        if ("announcement".equals(type)) {
-            showAnnouncement(remoteMessage);
+        // Receive notifications
+        if ("notification_created".equals(type)) {
+            Log.d(TAG, "Received: new notification_created event → trigger incremental sync");
+            showNotification(data);
+
+            // Download new notification
+            String timestamp = data.get("timestamp");
+            Log.d(TAG, "Server returned timestamp: " + timestamp);
+            if (timestamp == null || Long.parseLong(timestamp) == 0) { // If no data set to 0
+                NotificationSyncWorker.enqueueNow(getApplicationContext(), 0);
+            } else {
+                long timestampMinus = Long.parseLong(timestamp);
+                NotificationSyncWorker.enqueueNow(getApplicationContext(), Math.max(0L, timestampMinus - 1L));
+            }
             return;
         }
 
-        // Receive notifications
-        if (remoteMessage.getNotification() != null) {
-            showNotification(
-                    remoteMessage.getNotification().getTitle(),
-                    remoteMessage.getNotification().getBody(),
-                    remoteMessage.getData()
-            );
-        } else if (!remoteMessage.getData().isEmpty()) {
-            showNotification("Biologer", remoteMessage.getData().get("body"), remoteMessage.getData());
+        // Mark notification as read
+        if ("notification_read".equals(type)) {
+            Log.d(TAG, "Received: notification_read event → mark item as read locally");
+            String notificationId = data.get("notification_id");
+            if (notificationId != null) {
+                // e.g. mark in your local DB so UI updates immediately
+                //LocalNotificationStore.markAsRead(notificationId);
+            }
+            return;
+        }
+
+        // Receive announcements
+        if ("announcement".equals(type)) {
+            showAnnouncement(data);
         }
     }
 
-    /** Called whenever a new token is generated **/
+    /**
+     * Called whenever a new token is generated
+     **/
     @Override
     public void onNewToken(@NonNull String token) {
         Log.d(TAG, "Refreshed FCM token: " + token);
         sendRegistrationToServer(token);
     }
 
-    /** Make this STATIC helper method **/
+    /**
+     * Make this STATIC helper method
+     **/
     public static void sendRegistrationToServer(String token) {
         String databaseName = SettingsManager.getDatabaseName();
         if (databaseName == null || token == null) {
@@ -98,33 +125,14 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         });
     }
 
-    private void showAnnouncement(RemoteMessage remoteMessage) {
-        Map<String, String> data = remoteMessage.getData();
+    private void showAnnouncement(Map<String, String> data) {
+        Log.d(TAG, "Received: new announcement event → display notification");
+        JSONObject translation = getJsonTranslation(data);
+        if (translation == null) return;
 
-        String title;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            title = remoteMessage.getNotification() != null
-                    ? remoteMessage.getNotification().getTitle()
-                    : data.getOrDefault("title", getString(R.string.channel_announcements));
-        } else {
-            if (remoteMessage.getNotification() != null && remoteMessage.getNotification().getTitle() != null) {
-                title = remoteMessage.getNotification().getTitle();
-            } else {
-                title = data.containsKey("title") ? data.get("title") : getString(R.string.channel_announcements);
-            }
-        }
-        String body;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            body = remoteMessage.getNotification() != null
-                    ? remoteMessage.getNotification().getBody()
-                    : data.getOrDefault("body", getString(R.string.new_announcement_available));
-        } else {
-            if (remoteMessage.getNotification() != null && remoteMessage.getNotification().getBody() != null) {
-                body = remoteMessage.getNotification().getBody();
-            } else {
-                body = data.containsKey("body") ? data.get("body") : getString(R.string.new_announcement_available);
-            }
-        }
+        // Display notification
+        String title = translation.optString("title", getString(R.string.notification));
+        String body = translation.optString("message", getString(R.string.notification_text));
 
         // Setup Intent to launch ActivityAnnouncement with the remote ID
         Intent intent = new Intent(this, ActivityAnnouncement.class);
@@ -163,10 +171,17 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
-    private void showNotification(String title, String messageBody, java.util.Map<String, String> data) {
+    private void showNotification(java.util.Map<String, String> data) {
+        JSONObject translation = getJsonTranslation(data);
+        if (translation == null) return;
+
+        // Display notification
+        String title = translation.optString("title", getString(R.string.notification));
+        String body = translation.optString("message", getString(R.string.notification_text));
+
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        if (data != null && data.containsKey("field_observation_id")) {
+        if (data.containsKey("field_observation_id")) {
             intent.putExtra("field_observation_id", data.get("field_observation_id"));
         }
 
@@ -180,7 +195,7 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.mipmap.ic_notification)
                 .setContentTitle(title)
-                .setContentText(messageBody)
+                .setContentText(body)
                 .setAutoCancel(true)
                 .setSound(soundUri)
                 .setContentIntent(pendingIntent);
@@ -199,4 +214,25 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
 
         notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
     }
+
+    private JSONObject getJsonTranslation(Map<String, String> data ) {
+        try {
+            // Load all translations
+            String json = data.get("translations");
+            if (json == null) {
+                Log.w(TAG, "Missing translations field in FCM data");
+                return null;
+            }
+            JSONObject translations = new JSONObject(json);
+
+            // Get translation for current locale
+            JSONObject translation = translations.optJSONObject(Localisation.getLocaleScript());
+            if (translation == null) translation = translations.optJSONObject("en");
+            return translation;
+        } catch (JSONException e) {
+            Log.e(TAG, "Failed to parse translations JSON", e);
+            return null;
+        }
+    }
+
 }

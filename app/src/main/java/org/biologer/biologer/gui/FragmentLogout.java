@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
@@ -133,12 +134,19 @@ public class FragmentLogout extends Fragment {
     private void deleteDataAndLogout(Activity activity) {
         Log.d(TAG, "Deleting all user data upon logout.");
 
+        // Unsubscribe from FCM
+        String userTopic = "user_" + ObjectBoxHelper.getUserId();
+        FirebaseMessaging fm = FirebaseMessaging.getInstance();
+        fm.unsubscribeFromTopic(userTopic);
+        fm.unsubscribeFromTopic("announcements");
+
         ObjectBoxHelper.removeAllData();
         SettingsManager.deleteSettings();
 
         Intent intent = new Intent(activity, ActivityLogin.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        activity.startActivity(intent);
+        activity.finish();
     }
 
 }

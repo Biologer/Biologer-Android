@@ -46,10 +46,10 @@ import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateTaxa;
-import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
+import org.biologer.biologer.network.NotificationSyncWorker;
 import org.biologer.biologer.services.CsvExporter;
 import org.biologer.biologer.services.CsvTaxaLoader;
 import org.biologer.biologer.services.ObjectBoxHelper;
@@ -57,7 +57,6 @@ import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -259,21 +258,26 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                     }
                 });
 
-        String locale = Locale.getDefault().getLanguage(); // e.g. "sr", "bs", "en"
-        String topic = "announcements_" + locale;
-
-        FirebaseMessaging.getInstance().subscribeToTopic(topic)
+        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d("Biologer.FCM", "Subscribed to topic: " + topic);
+                        Log.d("Biologer.FCM", "Subscribed to topic announcements.");
                     } else {
-                        Log.e("Biologer.FCM", "Failed to subscribe to topic: " + topic, task.getException());
+                        Log.e("Biologer.FCM", "Failed to subscribe to topic announcements " + task.getException());
                     }
                 });
 
-        FirebaseMessaging.getInstance().subscribeToTopic("announcements");
-    }
+        String userTopic = "user_" + ObjectBoxHelper.getUserId();
+        FirebaseMessaging.getInstance().subscribeToTopic(userTopic)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to user topic: " + userTopic);
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to user topic: " + userTopic, task.getException());
+                    }
+                });
 
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -337,9 +341,8 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     private void updateNotifications() {
-        Intent update = new Intent(this, UpdateUnreadNotifications.class);
-        update.putExtra("download", true);
-        startService(update);
+        long timestamp = Long.parseLong(SettingsManager.getNotificationsUpdatedAt());
+        NotificationSyncWorker.enqueueNow(getApplicationContext(), timestamp);
     }
 
     private void updateAnnouncements() {
@@ -605,7 +608,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     private void updateLicenses() {
-        if (getLoggedUser() == null) {
+        if (ObjectBoxHelper.getUser() == null) {
             Toast.makeText(ActivityLanding.this, getString(R.string.missing_user_data), Toast.LENGTH_LONG).show();
             fallbackToLoginScreen();
         } else {
@@ -741,18 +744,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                 });
         final AlertDialog alert = builder.create();
         alert.show();
-    }
-
-    // Get the data from GreenDao database
-    private UserDb getLoggedUser() {
-        // Get the user data from a GreenDao database
-        List<UserDb> userdata_list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-        // If there is no user data we should logout the user
-        if (userdata_list == null || userdata_list.isEmpty()) {
-            return null;
-        } else {
-            return userdata_list.get(0);
-        }
     }
 
     private static Menu getMenu() {

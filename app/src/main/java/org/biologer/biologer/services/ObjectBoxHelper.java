@@ -252,19 +252,30 @@ public class ObjectBoxHelper {
     }
 
     public static String getUserName() {
-        List<UserDb> list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-        if (list.isEmpty()) {
-            return null;
-        }
-        return list.get(0).getUsername();
+        UserDb user = getUser();
+        return (user != null) ? user.getUsername() : null;
     }
 
     public static String getUserEmail() {
-        List<UserDb> list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-        if (list.isEmpty()) {
+        UserDb user = getUser();
+        return (user != null) ? user.getEmail() : null;
+    }
+
+    public static Integer getUserId() {
+        UserDb user = getUser();
+        return (user != null) ? user.getUserId() : null;
+    }
+
+    // Get the data from GreenDao database
+    public static UserDb getUser() {
+        // Get the user data from a GreenDao database
+        List<UserDb> userdata_list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        // If there is no user data we should logout the user
+        if (userdata_list == null || userdata_list.isEmpty()) {
             return null;
+        } else {
+            return userdata_list.get(0);
         }
-        return list.get(0).getEmail();
     }
 
     public static Long getIdForPhotographedTag() {

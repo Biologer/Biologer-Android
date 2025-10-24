@@ -15,7 +15,7 @@ public class SettingsManager {
         GOOGLE_MAP_TYPE, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
-        DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN
+        DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN, NOTIFICATION_UPDATED_AT
     }
 
     public static void init(Context context) {
@@ -145,6 +145,16 @@ public class SettingsManager {
 
     public static String getSkipTaxaDatabaseUpdate() {
         return sharedPreferences.getString(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString(),"0");
+    }
+
+    public static void setNotificationsUpdatedAt(String notificationsUpdatedAt) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.NOTIFICATION_UPDATED_AT.toString(), notificationsUpdatedAt);
+        editor.apply();
+    }
+
+    public static String getNotificationsUpdatedAt() {
+        return sharedPreferences.getString(KEY.NOTIFICATION_UPDATED_AT.toString(),"0");
     }
 
     public static void setObservationTypesUpdated(String observation_types_updated) {

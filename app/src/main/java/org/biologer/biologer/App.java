@@ -4,14 +4,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import androidx.multidex.MultiDexApplication;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
 
-import org.biologer.biologer.services.UnreadNotificationsWorker;
 import org.biologer.biologer.sql.MyObjectBox;
-
-import java.util.concurrent.TimeUnit;
 
 import io.objectbox.BoxStore;
 
@@ -40,14 +34,6 @@ public class App extends MultiDexApplication {
         createNotificationChannelUnreadNotifications();
         createNotificationChannelAnnouncements();
         createNotificationChannelLocationTracker();
-
-        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
-                UnreadNotificationsWorker.class,
-                3, TimeUnit.HOURS
-        ).build();
-
-        WorkManager.getInstance(getApplicationContext())
-                .enqueueUniquePeriodicWork("unread_notifications", ExistingPeriodicWorkPolicy.KEEP, request);
     }
 
     public BoxStore getBoxStore() {

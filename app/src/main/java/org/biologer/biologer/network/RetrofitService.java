@@ -116,7 +116,9 @@ public interface RetrofitService {
     @Headers({"Accept: application/json"})
     @GET("/api/my/unread-notifications")
     Call<UnreadNotificationsResponse> getUnreadNotifications(
-            @Query("page") long page);
+            @Query("page") int page,
+            @Query("per_page") int perPage,
+            @Query("updated_after") long updatedAfter);
 
     @Headers({"Accept: application/json"})
     @POST("/api/my/read-notifications/batch")

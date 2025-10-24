@@ -74,7 +74,8 @@ public class UpdateUnreadNotifications extends Service {
         String databaseName = SettingsManager.getDatabaseName();
         if (databaseName != null) {
             // Get new notifications from the API
-            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(1);
+            // TODO String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(1, 50, 0);
             unreadNotificationsResponseCall.enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<UnreadNotificationsResponse> call, @NonNull Response<UnreadNotificationsResponse> response) {
@@ -135,7 +136,9 @@ public class UpdateUnreadNotifications extends Service {
     private void getAndSaveNotificationsToObjectBox(int page) {
         String databaseName = SettingsManager.getDatabaseName();
         if (databaseName != null) {
-            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall = RetrofitClient.getService(databaseName).getUnreadNotifications(page);
+            Call<UnreadNotificationsResponse> unreadNotificationsResponseCall
+                    = RetrofitClient.getService(databaseName).getUnreadNotifications(
+                            page, 50, 0);
             unreadNotificationsResponseCall.enqueue(new Callback<>() {
 
                 @Override
