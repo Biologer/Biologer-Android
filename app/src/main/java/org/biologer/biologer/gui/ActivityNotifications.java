@@ -193,7 +193,7 @@ public class ActivityNotifications extends AppCompatActivity {
                                 notificationsAdapter.notifyItemRemoved((int) index);
                                 NotificationsHelper.setOnlineNotificationAsRead(realId);
                                 if (notificationId != 0) {
-                                    NotificationsHelper.deleteNotificationPhotos(ActivityNotifications.this, notificationId);
+                                    NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notificationId);
                                     NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
                                 }
                             }
@@ -341,7 +341,7 @@ public class ActivityNotifications extends AppCompatActivity {
             if (notifications.get(i).getMarked() == 1) {
                 Log.d(TAG, "Removing notification using item index " + i + ".");
                 NotificationsHelper.setOnlineNotificationAsRead(notifications.get(i).getRealId());
-                NotificationsHelper.deleteNotificationPhotos(ActivityNotifications.this, notifications.get(i).getId());
+                NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notifications.get(i).getId());
                 NotificationsHelper.deleteNotificationFromObjectBox(notifications.get(i).getId());
                 remove_indexes.add(i);
                 remove_list.add(notifications.get(i));

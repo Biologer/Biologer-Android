@@ -20,19 +20,16 @@ import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.ActivityAnnouncement;
-import org.biologer.biologer.gui.ActivityLanding;
 import org.biologer.biologer.gui.ActivityNotification;
 import org.biologer.biologer.network.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -65,12 +62,15 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
 
         // Mark notification as read
         if ("notification_read".equals(type)) {
-            Log.d(TAG, "Received: notification_read event → mark item as read locally");
+            Log.d(TAG, "Received: notification_read event → mark notification as online");
             String id = data.get("notification_id");
             if ("all".equals(id)) {
-                //LocalNotificationStore.markAllAsRead();
+                Log.d(TAG, "All notifications are now marked as read on the server side.");
+                NotificationsHelper.deleteAllNotificationsLocally(this);
             } else {
-                //LocalNotificationStore.markAsRead(id);
+                Log.d(TAG, "Notification " + id + " is now marked as read on the server side.");
+                NotificationsHelper.deletePhotosFromNotification(this, id);
+                NotificationsHelper.deleteNotificationFromObjectBox(id);
             }
         }
 

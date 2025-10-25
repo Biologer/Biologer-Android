@@ -56,7 +56,7 @@ public class NotificationsHelper {
         Call<ResponseBody> notificationRead = RetrofitClient
                 .getService(SettingsManager.getDatabaseName())
                 .setNotificationAsRead(notification);
-        notificationRead.enqueue(new Callback<ResponseBody>() {
+        notificationRead.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -66,8 +66,7 @@ public class NotificationsHelper {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.d(TAG, "Setting notification as read failed!");
-                t.printStackTrace();
+                Log.d(TAG, "Setting notification as read failed: " + t.getMessage());
             }
         });
     }
@@ -77,7 +76,7 @@ public class NotificationsHelper {
                 .getService(SettingsManager.getDatabaseName())
                 .setAllNotificationAsRead(true);
 
-        notificationRead.enqueue(new Callback<ResponseBody>() {
+        notificationRead.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
@@ -89,8 +88,7 @@ public class NotificationsHelper {
 
             @Override
             public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                Log.d(TAG, "Setting notification as read failed!");
-                t.printStackTrace();
+                Log.d(TAG, "Setting notification as read failed:" + t.getMessage());
             }
         });
     }
@@ -106,19 +104,46 @@ public class NotificationsHelper {
         Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
     }
 
-    public static void deleteNotificationPhotos(Context context, long notification_id) {
+    public static void deleteNotificationFromObjectBox(String notification_id) {
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.equal(notification_id))
+                .query(UnreadNotificationsDb_.realId.equal(notification_id))
+                .build();
+        query.remove();
+        query.close();
+        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+    }
+
+    public static void deletePhotosFromNotification(Context context, long notificationId) {
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
+        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+                .query(UnreadNotificationsDb_.id.equal(notificationId))
                 .build();
         UnreadNotificationsDb notification = query.findFirst();
         query.close();
+        deletePhotos(context, notification);
+    }
 
+    public static void deletePhotosFromNotification(Context context, String realNotificationId) {
+        Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
+        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+                .query(UnreadNotificationsDb_.realId.equal(realNotificationId))
+                .build();
+        UnreadNotificationsDb notification = query.findFirst();
+        query.close();
+        deletePhotos(context, notification);
+    }
+
+    private static void deletePhotos(Context context, UnreadNotificationsDb notification) {
         // Get the number of observations for the same field observation ID. It there are more
         // notifications for the same field observation, don’t delete the image.
         if (notification != null) {
             long observations;
+            Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
+                    .boxFor(UnreadNotificationsDb.class);
             try (Query<UnreadNotificationsDb> queryFieldObservations = unreadNotificationsDbBox
                     .query(UnreadNotificationsDb_.fieldObservationId.equal(notification.getFieldObservationId()))
                     .build()) {
