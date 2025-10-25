@@ -2,6 +2,7 @@ package org.biologer.biologer.services;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
@@ -32,6 +33,8 @@ public class TaxonSearchHelper {
     public TaxonSearchHelper(Context context) {
         this.context = context;
     }
+    private static final String TAG = "Biologer.TaxaSearch";
+
 
     public List<TaxonDb> searchTaxa(String searchText) {
         if (searchText == null || searchText.trim().isEmpty()) {
@@ -65,9 +68,13 @@ public class TaxonSearchHelper {
             // Don’t add taxa if already on the list
             if (!allTaxaIds.contains(taxonTranslation.getId())) {
                 TaxonDb taxon = getTaxonById(taxonTranslation.getTaxonId());
-                taxon.setLatinName(getLocalisedLatinName(taxon));
-                allTaxaLists.add(taxon);
-                allTaxaIds.add(taxon.getId());
+                if (taxon != null) {
+                    taxon.setLatinName(getLocalisedLatinName(taxon));
+                    allTaxaLists.add(taxon);
+                    allTaxaIds.add(taxon.getId());
+                } else {
+                    Log.e(TAG, "Taxon is null for native name " + taxonTranslation.getNativeName() + "!");
+                }
             }
         }
 
@@ -80,9 +87,13 @@ public class TaxonSearchHelper {
             // Don’t add taxa if already on the list
             if (!allTaxaIds.contains(synonym.getTaxonId())) {
                 TaxonDb taxon = getTaxonById(synonym.getTaxonId());
-                taxon.setLatinName(getLocalisedLatinName(synonym));
-                allTaxaLists.add(taxon);
-                allTaxaIds.add(taxon.getId());
+                if (taxon != null) {
+                    taxon.setLatinName(getLocalisedLatinName(synonym));
+                    allTaxaLists.add(taxon);
+                    allTaxaIds.add(taxon.getId());
+                } else {
+                    Log.e(TAG, "Taxon is null for synonym  " + synonym.getName() + "!");
+                }
             }
         }
 
@@ -122,7 +133,7 @@ public class TaxonSearchHelper {
             if (!allTaxaIds.contains(taxonTranslation.getId())) {
                 // Check if the taxon belongs to the group and add it
                 TaxonDb taxon = getTaxonById(taxonTranslation.getTaxonId());
-                if (taxon.getGroups().contains(String.valueOf(group))) {
+                if (taxon != null && taxon.getGroups().contains(String.valueOf(group))) {
                     taxon.setLatinName(getLocalisedLatinName(taxon));
                     allTaxaLists.add(taxon);
                     allTaxaIds.add(taxon.getId());
@@ -139,7 +150,7 @@ public class TaxonSearchHelper {
             if (!allTaxaIds.contains(synonym.getTaxonId())) {
                 TaxonDb taxon = getTaxonById(synonym.getTaxonId());
                 // Check if the taxon belongs to the group and add it
-                if (taxon.getGroups().contains(String.valueOf(group))) {
+                if (taxon != null && taxon.getGroups().contains(String.valueOf(group))) {
                     taxon.setLatinName(getLocalisedLatinName(synonym));
                     allTaxaLists.add(taxon);
                     allTaxaIds.add(taxon.getId());

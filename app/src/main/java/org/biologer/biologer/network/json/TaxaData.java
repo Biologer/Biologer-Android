@@ -53,6 +53,8 @@ public class TaxaData {
     private List<Object> activity = null;
     @JsonProperty("groups")
     private List<String> groups;
+    @JsonProperty("synonyms")
+    private List<TaxaSynonym> synonyms = null;
 
     @JsonProperty("id")
     public long getId() {
@@ -274,5 +276,15 @@ public class TaxaData {
     @JsonProperty("groups")
     public void setGroups(List<String> groups) {
         this.groups = groups;
+    }
+
+    @JsonProperty("synonyms")
+    public List<TaxaSynonym> getSynonyms() {
+        return synonyms;
+    }
+
+    @JsonProperty("synonyms")
+    public void setSynonyms(List<TaxaSynonym> synonyms) {
+        this.synonyms = synonyms;
     }
 }

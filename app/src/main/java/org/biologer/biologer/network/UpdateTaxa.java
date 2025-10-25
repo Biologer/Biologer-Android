@@ -18,9 +18,13 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.json.TaxaData;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.TaxaStages;
+import org.biologer.biologer.network.json.TaxaSynonym;
 import org.biologer.biologer.network.json.TaxaTranslations;
 import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.SynonymsDb;
+import org.biologer.biologer.sql.SynonymsDb_;
 import org.biologer.biologer.sql.TaxaTranslationDb;
+import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonGroupsDb;
 import org.biologer.biologer.sql.TaxonGroupsDb_;
@@ -213,6 +217,7 @@ public class UpdateTaxa extends Service {
         Box<TaxonDb> taxonBox = App.get().getBoxStore().boxFor(TaxonDb.class);
         Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
         Box<TaxaTranslationDb> translationBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
+        Box<SynonymsDb> synonymBox = App.get().getBoxStore().boxFor(SynonymsDb.class);
 
         for (TaxaData taxon : taxaData) {
             List<TaxaStages> stages = taxon.getStages();
@@ -232,6 +237,13 @@ public class UpdateTaxa extends Service {
 
             List<TaxaTranslations> translations = taxon.getTaxaTranslations();
             if (translations != null && !translations.isEmpty()) {
+                // Remove old translation for this ID if already exists
+                translationBox.query()
+                        .equal(TaxaTranslationDb_.taxonId, taxon.getId())
+                        .build()
+                        .remove();
+
+                // Add the translation to the ObjectBox
                 TaxaTranslationDb[] translationArray = new TaxaTranslationDb[translations.size()];
                 for (int i = 0; i < translations.size(); i++) {
                     TaxaTranslations tr = translations.get(i);
@@ -246,6 +258,23 @@ public class UpdateTaxa extends Service {
                 }
                 translationBox.put(translationArray);
             }
+
+            List<TaxaSynonym> synonyms = taxon.getSynonyms();
+            if (synonyms != null && !synonyms.isEmpty()) {
+                // Remove old synonym for this ID if already exists
+                synonymBox.query()
+                        .equal(SynonymsDb_.taxonId, taxon.getId())
+                        .build()
+                        .remove();
+
+                // Add synonym to ObjectBox
+                List<SynonymsDb> synonymDbList = new ArrayList<>(synonyms.size());
+                for (TaxaSynonym syn : synonyms) {
+                    synonymDbList.add(new SynonymsDb(0, taxon.getId(), syn.getName()));
+                }
+                synonymBox.put(synonymDbList);
+            }
+
         }
     }
 
