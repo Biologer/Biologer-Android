@@ -140,7 +140,7 @@ public class FragmentLogout extends Fragment {
         fm.unsubscribeFromTopic(userTopic);
         fm.unsubscribeFromTopic("announcements");
 
-        ObjectBoxHelper.removeAllData();
+        ObjectBoxHelper.removeAllData(getContext());
         SettingsManager.deleteSettings();
 
         Intent intent = new Intent(activity, ActivityLogin.class);

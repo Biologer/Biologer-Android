@@ -300,7 +300,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
     private void fallbackToLoginScreen() {
         Log.e(TAG, "Something is wrong, the settings are lost...");
-        ObjectBoxHelper.removeAllData();
+        ObjectBoxHelper.removeAllData(ActivityLanding.this);
         SettingsManager.deleteSettings();
         Toast.makeText(this, getString(R.string.something_is_wrong_falling_back_to_login_screen), Toast.LENGTH_LONG).show();
         showUserLoginScreen(false);

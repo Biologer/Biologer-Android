@@ -1,5 +1,6 @@
 package org.biologer.biologer.services;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.biologer.biologer.App;
@@ -361,11 +362,23 @@ public class ObjectBoxHelper {
         App.get().getBoxStore().boxFor(TaxonGroupsDb.class).removeAll();
         App.get().getBoxStore().boxFor(TaxonGroupsTranslationDb.class).removeAll();
         App.get().getBoxStore().boxFor(StageDb.class).removeAll();
+        App.get().getBoxStore().boxFor(ObservationTypesDb.class).removeAll();
     }
 
-    public static void removeAllData() {
-        App.get().getBoxStore().close();
-        App.get().getBoxStore().deleteAllFiles();
+    public static void removeAllData(Context context) {
+        // 1. Remove user data
+        App.get().getBoxStore().boxFor(UserDb.class).removeAll();
+
+        removeAnnouncements();
+        NotificationsHelper.deleteAllNotificationsLocally(context);
+
+        removeAllEntries();
+        removeTaxaDatabase();
+    }
+
+    private static void removeAnnouncements() {
+        App.get().getBoxStore().boxFor(AnnouncementsDb.class).removeAll();
+        App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class).removeAll();
     }
 
     public static Boolean hasAtlasCode(long taxonId) {
