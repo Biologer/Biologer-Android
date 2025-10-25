@@ -65,12 +65,13 @@ public class FragmentLogout extends Fragment {
                 binding.textViewUser.setText(database_text);
 
                 binding.buttonLogout.setOnClickListener(v -> {
+                    long entryCount = App.get().getBoxStore().boxFor(EntryDb.class).count();
                     // If there are entries warn the user that the data will be lost!
-                    Log.d(TAG, "There are " + App.get().getBoxStore().boxFor(EntryDb.class).count() + " entries in the list.");
-                    if (!App.get().getBoxStore().boxFor(EntryDb.class).isEmpty()) {
+                    Log.d(TAG, "There are " + entryCount + " entries in the list.");
+                    if (entryCount > 0) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                         builder.setMessage(getString(R.string.there_are) + " " +
-                                App.get().getBoxStore().boxFor(EntryDb.class).count() + " " +
+                                entryCount + " " +
                                 getString(R.string.there_are2));
                         builder.setPositiveButton(getString(R.string.yes), (dialog, id) -> deleteDataAndLogout(activity));
                         builder.setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
@@ -140,13 +141,18 @@ public class FragmentLogout extends Fragment {
         fm.unsubscribeFromTopic(userTopic);
         fm.unsubscribeFromTopic("announcements");
 
-        ObjectBoxHelper.removeAllData(getContext());
-        SettingsManager.deleteSettings();
+        new Thread(() -> {
+            ObjectBoxHelper.removeAllData(activity.getApplicationContext());
+            SettingsManager.deleteSettings();
 
-        Intent intent = new Intent(activity, ActivityLogin.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        activity.startActivity(intent);
-        activity.finish();
+            new Handler(Looper.getMainLooper()).post(() -> {
+                Log.d(TAG, "Data deletion finished. Navigating to login.");
+                Intent intent = new Intent(activity, ActivityLogin.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                activity.startActivity(intent);
+                activity.finish();
+            });
+        }).start();
     }
 
 }
