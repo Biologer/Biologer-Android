@@ -211,9 +211,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
                         List<TaxonDb> allTaxaLists;
                         if (viewModel.getTaxonGroupId() == 0) {
-                            allTaxaLists = taxonSearchHelper.searchTaxa(s.toString());
+                            allTaxaLists = taxonSearchHelper.searchTaxa(s.toString(), 0);
                         } else {
-                            allTaxaLists = taxonSearchHelper.searchTaxaByGroup(s.toString(), viewModel.getTaxonGroupId());
+                            allTaxaLists = taxonSearchHelper.searchTaxa(s.toString(), viewModel.getTaxonGroupId());
                         }
 
                         // Add the Query to the drop down list (adapter)
@@ -242,7 +242,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 TaxonDb taxon;
                 if (species.getSpeciesID() != null) {
                     taxon = ObjectBoxHelper.getTaxonById(species.getSpeciesID());
-                    taxon.setLatinName(TaxonSearchHelper.getLocalisedLatinName(taxon.getId()));
+                    taxon.setLatinName(TaxonSearchHelper.getLocalisedLatinName(taxon));
                 } else {
                     taxon = new TaxonDb(0, 0, species.getSpeciesName(),
                             "", 0, "", false, false, "", "", "");

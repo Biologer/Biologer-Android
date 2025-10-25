@@ -17,7 +17,6 @@ import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
 import org.biologer.biologer.sql.SynonymsDb;
 import org.biologer.biologer.sql.TaxaTranslationDb;
-import org.biologer.biologer.sql.TaxaTranslationDb_;
 import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 import org.biologer.biologer.sql.TaxonGroupsDb;
@@ -35,25 +34,32 @@ import io.objectbox.query.Query;
 
 public class ObjectBoxHelper {
 
+    private static final String TAG = "Biologer.ObjectBoxHelper";
+
     public static ArrayList<EntryDb> getObservations() {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.timedCoundId.isNull()).build();
-        ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
-        query.close();
-        Log.i("Biologer.ObjectBox", "There are " + observations.size() + " observations in the database.");
-        return observations;
+        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.isNull()).build()) {
+            ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
+            Log.i(TAG, "There are " + observations.size() + " observations in the database.");
+            return observations;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving observations from database!", e);
+            return new ArrayList<>();
+        }
     }
 
     public static EntryDb getObservationById(long entryId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.id.equal(entryId)).build();
-        EntryDb entry = query.findFirst();
-        query.close();
-        if (entry != null) {
-            Log.i("Biologer.ObjectBox", "Observation with ID " + entryId + " found in the database");
+        try (Query<EntryDb> query = box.query(EntryDb_.id.equal(entryId)).build()) {
+            EntryDb entry = query.findFirst();
+            if (entry != null) {
+                Log.i(TAG, "Observation with ID " + entryId + " found in the database");
+            } else {
+                Log.i(TAG, "There is no observation with ID " + entryId + " in the database");
+            }
             return entry;
-        } else {
-            Log.i("Biologer.ObjectBox", "There is no observation with ID " + entryId + " in the database");
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving observation by ID: " + entryId, e);
             return null;
         }
     }
@@ -61,124 +67,134 @@ public class ObjectBoxHelper {
     public static long setObservation(EntryDb entry) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long id = box.put(entry);
-        Log.d("Biologer.ObjectBox", "Observation will be saved in EntryDb under ID " + id);
+        Log.d(TAG, "Observation will be saved in EntryDb under ID " + id);
         return id;
     }
 
     public static ArrayList<TimedCountDb> getTimedCounts() {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        Query<TimedCountDb> query = box.query().build();
-        ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find();
-        query.close();
-        Log.i("Biologer.ObjectBox", "There are " + timedCounts.size() + " timed counts in the database.");
-        return timedCounts;
+        try (Query<TimedCountDb> query = box.query().build()) {
+            ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find();
+            Log.i(TAG, "There are " + timedCounts.size() + " timed counts in the database.");
+            return timedCounts;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving timed counts from database!", e);
+            return new ArrayList<>();
+        }
     }
 
     public static TimedCountDb getTimedCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build();
-        TimedCountDb timedCount = query.findFirst();
-        query.close();
-        if (timedCount != null) {
-            Log.i("Biologer.ObjectBox", "Timed count with ID " + timedCountId + " found in the database");
-        } else {
-            Log.i("Biologer.ObjectBox", "There is no timed cound with ID " + timedCountId + " in the database");
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
+            TimedCountDb timedCount = query.findFirst();
+            if (timedCount != null) {
+                Log.i(TAG, "Timed count with ID " + timedCountId + " found in the database");
+            } else {
+                Log.i(TAG, "There is no timed cound with ID " + timedCountId + " in the database");
+            }
+            return timedCount;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving timed count by ID: " + timedCountId, e);
+            return null;
         }
-        return timedCount;
     }
 
     public static TaxonDb getTaxonById(long taxonId) {
         Box<TaxonDb> box = App.get().getBoxStore().boxFor(TaxonDb.class);
-        Query<TaxonDb> query = box.query(TaxonDb_.id.equal(taxonId)).build();
-        TaxonDb taxon = query.findFirst();
-        query.close();
-        if (taxon != null) {
-            Log.i("Biologer.ObjectBox", "Taxon with ID " + taxonId + " found in the database");
-        } else {
-            Log.i("Biologer.ObjectBox", "There is no taxon with ID " + taxonId + " in the database");
-        }
-        return taxon;
-    }
-
-    public static TaxaTranslationDb getTaxonTranslationByTaxonId(long taxonId) {
-        Box<TaxaTranslationDb> box = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-        Query<TaxaTranslationDb> query = box.query(TaxaTranslationDb_.taxonId.equal(taxonId)
-                        .and(TaxaTranslationDb_.locale.equal(Localisation.getLocaleScript())))
-                .build();
-        TaxaTranslationDb translation = query.findFirst();
-        query.close();
-        if (translation != null) {
-            Log.i("Biologer.ObjectBox", "There is translation of the selected taxon.");
-            return translation;
-        } else {
-            Log.i("Biologer.ObjectBox", "There is no translation of the selected taxon.");
+        try (Query<TaxonDb> query = box.query(TaxonDb_.id.equal(taxonId)).build()) {
+            TaxonDb taxon = query.findFirst();
+            if (taxon != null) {
+                Log.i(TAG, "Taxon with ID " + taxonId + " found in the database");
+            } else {
+                Log.i(TAG, "There is no taxon with ID " + taxonId + " in the database");
+            }
+            return taxon;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving taxon by ID: " + taxonId, e);
             return null;
         }
     }
 
     public static long getIdFromTimeCountId(int timeCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timeCountId)).build();
-        TimedCountDb timedCount = query.findFirst();
-        query.close();
-        if (timedCount != null) {
-            Log.i("Biologer.ObjectBox",
-                    "ObjectBox ID of the timed count is " + timedCount.getId()
-                            + " (Timed count ID (" + timeCountId + ")).");
-            return timedCount.getId();
-        } else {
-            Log.i("Biologer.ObjectBox", "Could not find ObjectBox id for time cound ID " + timeCountId + ".");
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timeCountId)).build()) {
+            TimedCountDb timedCount = query.findFirst();
+            if (timedCount != null) {
+                Log.i(TAG,
+                        "ObjectBox ID of the timed count is " + timedCount.getId()
+                                + " (Timed count ID (" + timeCountId + ")).");
+                return timedCount.getId();
+            } else {
+                Log.i(TAG, "Could not find ObjectBox id for time cound ID " + timeCountId + ".");
+                return 0;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving ObjectBox ID from time count ID: " + timeCountId, e);
             return 0;
         }
     }
 
     public static int getUniqueTimedCountID() {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        Query<TimedCountDb> query = box.query().build();
-        if (query.count() == 0) {
-            Log.i("Biologer.ObjectBox", "Timed counts database is empty, returning ID 1.");
-            query.close();
-            return 1;
-        } else {
-            int maxId = (int) query.property(TimedCountDb_.timedCountId).max();
-            query.close();
-            Log.i("Biologer.ObjectBox", "The last timed count in the database has ID " + maxId + ".");
-            return ++maxId;
+        try (Query<TimedCountDb> query = box.query().build()) {
+            if (query.count() == 0) {
+                Log.i(TAG, "Timed counts database is empty, returning ID 1.");
+                return 1;
+            } else {
+                // Note: property().max() internally handles query closing correctly, but having
+                // the query declared in try-with-resources is safer overall.
+                int maxId = (int) query.property(TimedCountDb_.timedCountId).max();
+                Log.i(TAG, "The last timed count in the database has ID " + maxId + ".");
+                return ++maxId;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting unique timed count ID!", e);
+            return 1; // Default to 1 on failure
         }
     }
 
     public static ArrayList<EntryDb> getTimedCountObservations(int timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build();
-        ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
-        query.close();
-        Log.i("Biologer.ObjectBox", "There are " + observations.size() + " observations in the database.");
-        return observations;
+        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
+            ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
+            Log.i(TAG, "There are " + observations.size() + " observations in the database.");
+            return observations;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving timed count observations by ID: " + timedCountId, e);
+            return new ArrayList<>();
+        }
     }
 
     public static StageDb getStageById(long stageId) {
         Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
-        Query<StageDb> query = box.query(StageDb_.id.equal(stageId)).build();
-        StageDb stage = query.findFirst();
-        query.close();
-        if (stage != null) {
-            Log.i("Biologer.ObjectBox", "Stage with ID " + stageId + " found in the database");
-        } else {
-            Log.i("Biologer.ObjectBox", "There is no stage with ID " + stageId + " in the database");
+        try (Query<StageDb> query = box.query(StageDb_.id.equal(stageId)).build()) {
+            StageDb stage = query.findFirst();
+            if (stage != null) {
+                Log.i(TAG, "Stage with ID " + stageId + " found in the database");
+            } else {
+                Log.i(TAG, "There is no stage with ID " + stageId + " in the database");
+            }
+            return stage;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving stage by ID: " + stageId, e);
+            return null;
         }
-        return stage;
     }
 
     public static ArrayList<StageDb> getStagesForTaxonId(long taxonId) {
         Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
-        Query<StageDb> query = box.query(StageDb_.id.equal(taxonId)).build();
-        ArrayList<StageDb> stages = (ArrayList<StageDb>) query.find();
-        query.close();
-        Log.i("Biologer.ObjectBox", "There are " + stages.size() + " stages for taxon ID " + taxonId + ".");
-        return stages;
+        try (Query<StageDb> query = box.query(StageDb_.id.equal(taxonId)).build()) {
+            ArrayList<StageDb> stages = (ArrayList<StageDb>) query.find();
+            Log.i(TAG, "There are " + stages.size() + " stages for taxon ID " + taxonId + ".");
+            return stages;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving stages for taxon ID: " + taxonId, e);
+            return new ArrayList<>();
+        }
     }
 
     public static int getStagesForTaxonIdCount(long taxonId) {
+        // This method relies on getStagesForTaxonId, which is now safe, so no change needed here.
         ArrayList<StageDb> stages = getStagesForTaxonId(taxonId);
         return stages.size();
     }
@@ -186,22 +202,24 @@ public class ObjectBoxHelper {
     public static Long getAdultStageIdForTaxon(TaxonDb taxon) {
         String stages = taxon.getStages();
         Long stageId = null;
-        if (stages != null) {
-            if (!stages.isEmpty()) {
-                Log.i("Biologer.ObjectBox", "Taxon contains stages.");
-                String[] all_stages = stages.split(";");
+        if (stages != null && !stages.isEmpty()) {
+            Log.i(TAG, "Taxon contains stages.");
+            String[] all_stages = stages.split(";");
 
-                Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
-                Query<StageDb> query = box.query(StageDb_.name.equal("adult")).build();
+            Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
+
+            try (Query<StageDb> query = box.query(StageDb_.name.equal("adult")).build()) {
                 StageDb stage = query.findFirst();
-                query.close();
                 if (stage != null) {
                     String s = String.valueOf(stage.getId());
                     if (Arrays.asList(all_stages).contains(s)) {
                         stageId = stage.getId();
-                        Log.i("Biologer.ObjectBox", "Taxon contains adult stage (ID: " + stageId + ").");
+                        Log.i(TAG, "Taxon contains adult stage (ID: " + stageId + ").");
                     }
                 }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting adult stage ID for taxon!", e);
+                return null;
             }
         }
         return stageId;
@@ -209,25 +227,70 @@ public class ObjectBoxHelper {
 
     public static List<ObservationTypesDb> getObservationTypes() {
         Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-        Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.locale.equal(Localisation.getLocaleScript())).build();
-        List<ObservationTypesDb> list = query.find();
-        Log.i("Biologer.ObjectBox", "There are " + list.size() + " observation types for locale " + Localisation.getLocaleScript() + ".");
-        query.close();
-        return list;
+        try (Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.locale.equal(Localisation.getLocaleScript())).build()) {
+            List<ObservationTypesDb> list = query.find();
+            Log.i(TAG, "There are " + list.size() + " observation types for locale " + Localisation.getLocaleScript() + ".");
+            return list;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving observation types!", e);
+            return new ArrayList<>();
+        }
     }
 
     public static Long getIdForObservedTag() {
         Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-        Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("observed")).build();
-        ObservationTypesDb observationTypes = query.findFirst();
-        query.close();
+        try (Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("observed")).build()) {
+            ObservationTypesDb observationTypes = query.findFirst();
 
-        Long observed_id = null;
-        if (observationTypes != null) {
-            observed_id = observationTypes.getObservationId();
-            Log.i("Biologer.ObjectBox", "Observed tag has ID " + observed_id + ".");
+            Long observed_id = null;
+            if (observationTypes != null) {
+                observed_id = observationTypes.getObservationId();
+                Log.i(TAG, "Observed tag has ID " + observed_id + ".");
+            }
+            return observed_id;
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting ID for observed tag!", e);
+            return null;
         }
-        return observed_id;
+    }
+
+    // ... (getDataLicense, getImageLicense, getUserName, getUserEmail, getUserId, getUser are fine as they don't build queries)
+
+    public static Long getIdForPhotographedTag() {
+        Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
+        try (Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("photographed")).build()) {
+            ObservationTypesDb observationTypes = query.findFirst();
+            return (observationTypes != null) ? observationTypes.getObservationId() : null;
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting ID for photographed tag!", e);
+            return null;
+        }
+    }
+
+    public static AnnouncementsDb getAnnouncementById(long id) {
+        Box<AnnouncementsDb> box = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
+        try (Query<AnnouncementsDb> query = box
+                .query(AnnouncementsDb_.id.equal(id))
+                .build()) {
+            return query.findFirst();
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving announcement by ID: " + id, e);
+            return null;
+        }
+    }
+
+    public static AnnouncementTranslationsDb getTranslatedAnnouncementById(long announcementId) {
+        String locale = Localisation.getLocaleScript();
+        Box<AnnouncementTranslationsDb> transBox = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
+        try (Query<AnnouncementTranslationsDb> transQuery = transBox
+                .query(AnnouncementTranslationsDb_.announcementId.equal(announcementId)
+                        .and(AnnouncementTranslationsDb_.locale.equal(locale)))
+                .build()) {
+            return transQuery.findFirst();
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving translated announcement by ID: " + announcementId, e);
+            return null;
+        }
     }
 
     public static int getDataLicense() {
@@ -279,49 +342,13 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static Long getIdForPhotographedTag() {
-        Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
-        Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("photographed")).build();
-        ObservationTypesDb observationTypes = query.findFirst();
-        query.close();
-
-        Long observed_id = null;
-        if (observationTypes != null) {
-            observed_id = observationTypes.getObservationId();
-        }
-        return observed_id;
-    }
-
-    public static AnnouncementsDb getAnnouncementById(long id) {
-        Box<AnnouncementsDb> box = App.get().getBoxStore().boxFor(AnnouncementsDb.class);
-        Query<AnnouncementsDb> query = box
-                .query(AnnouncementsDb_.id.equal(id))
-                .build();
-        AnnouncementsDb announcement = query.findFirst();
-        query.close();
-        return announcement;
-    }
-
-    public static AnnouncementTranslationsDb getTranslatedAnnouncementById(long announcementId) {
-        String locale = Localisation.getLocaleScript();
-
-        Box<AnnouncementTranslationsDb> transBox = App.get().getBoxStore().boxFor(AnnouncementTranslationsDb.class);
-        Query<AnnouncementTranslationsDb> transQuery = transBox
-                .query(AnnouncementTranslationsDb_.announcementId.equal(announcementId)
-                        .and(AnnouncementTranslationsDb_.locale.equal(locale)))
-                .build();
-        AnnouncementTranslationsDb translation = transQuery.findFirst();
-        transQuery.close();
-        return translation;
-    }
-
     public static void removeObservationsForTimedCountId(int timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long removedCount;
         try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
             removedCount = query.remove();
         }
-        Log.i("Biologer.ObjectBox", "Removed " + removedCount + " objects for time count ID " + timedCountId + ".");
+        Log.i(TAG, "Removed " + removedCount + " objects for time count ID " + timedCountId + ".");
     }
 
     public static void removeObservationById(long observationId) {
@@ -330,7 +357,7 @@ public class ObjectBoxHelper {
         try (Query<EntryDb> query = box.query(EntryDb_.id.equal(observationId)).build()) {
             removedCount = query.remove();
         }
-        Log.i("Biologer.ObjectBox", "Removed " + removedCount + " observation with ID " + observationId + ".");
+        Log.i(TAG, "Removed " + removedCount + " observation with ID " + observationId + ".");
     }
 
     public static void removeTimedCountById(int timedCountId) {
@@ -339,7 +366,7 @@ public class ObjectBoxHelper {
         try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
             removedCount = query.remove();
         }
-        Log.i("Biologer.ObjectBox", "Removed " + removedCount + " time count with ID " + timedCountId + ".");
+        Log.i(TAG, "Removed " + removedCount + " time count with ID " + timedCountId + ".");
     }
 
     public static void removeAllObservations() {
@@ -369,9 +396,11 @@ public class ObjectBoxHelper {
         // 1. Remove user data
         App.get().getBoxStore().boxFor(UserDb.class).removeAll();
 
+        // 2. Remove announcements and notifications
         removeAnnouncements();
         NotificationsHelper.deleteAllNotificationsLocally(context);
 
+        // Remove taxa and observations
         removeAllEntries();
         removeTaxaDatabase();
     }
@@ -385,10 +414,10 @@ public class ObjectBoxHelper {
         TaxonDb taxon = getTaxonById(taxonId);
         if (taxon != null) {
             if (taxon.isUseAtlasCode()) {
-                Log.d("Biologer.ObjectBox", "There is atlas code for taxon ID: " + taxonId);
+                Log.d(TAG, "There is atlas code for taxon ID: " + taxonId);
                 return true;
             } else {
-                Log.d("Biologer.ObjectBox", "There is no atlas code for taxon ID: " + taxonId);
+                Log.d(TAG, "There is no atlas code for taxon ID: " + taxonId);
                 return false;
             }
         } else {

@@ -16,7 +16,6 @@ import org.biologer.biologer.sql.TaxonDb;
 import org.biologer.biologer.sql.TaxonDb_;
 
 import io.objectbox.Box;
-import io.objectbox.BoxStore;
 import io.objectbox.query.Query;
 import io.objectbox.query.QueryBuilder;
 import io.objectbox.query.QueryCondition;
@@ -35,173 +34,97 @@ public class TaxonSearchHelper {
     }
     private static final String TAG = "Biologer.TaxaSearch";
 
-
-    public List<TaxonDb> searchTaxa(String searchText) {
-        if (searchText == null || searchText.trim().isEmpty()) {
-            return new ArrayList<>();
-        }
-
+    public List<TaxonDb> searchTaxa(String searchText, long group) {
         List<TaxonDb> allTaxaLists = new ArrayList<>();
-        Set<Long> allTaxaIds = new HashSet<>(); // For more efficient duplicate search
+        Set<Long> allTaxaIds = new HashSet<>();
         String changedEnteredName = searchText.trim();
 
         // Part 1: Query latin names
-        //
         List<TaxonDb> latinNames = getTaxaFromLatinName(changedEnteredName);
-        // Get the latin (native) name for the output
-        for (int i = 0; i < latinNames.size(); i++) {
-            TaxonDb taxon = latinNames.get(i);
-            String name = getLocalisedLatinName(taxon);
-            taxon.setLatinName(name);
-            allTaxaLists.add(taxon);
-            allTaxaIds.add(taxon.getId());
+        for (TaxonDb taxon : latinNames) {
+            addTaxonToListSafely(taxon, allTaxaLists, allTaxaIds, group);
         }
 
         // Part 2: Query native names
-        //
         List<TaxaTranslationDb> nativeNames = getTaxaFromNativeName(changedEnteredName);
-
-        // Check all taxon translations and add only those with IDs that were not
-        // already queried by latin name
-        for (int i = 0; i < nativeNames.size(); i++) {
-            TaxaTranslationDb taxonTranslation = nativeNames.get(i);
-            // Don’t add taxa if already on the list
-            if (!allTaxaIds.contains(taxonTranslation.getId())) {
-                TaxonDb taxon = getTaxonById(taxonTranslation.getTaxonId());
-                if (taxon != null) {
-                    taxon.setLatinName(getLocalisedLatinName(taxon));
-                    allTaxaLists.add(taxon);
-                    allTaxaIds.add(taxon.getId());
-                } else {
-                    Log.e(TAG, "Taxon is null for native name " + taxonTranslation.getNativeName() + "!");
-                }
+        for (TaxaTranslationDb taxonTranslation : nativeNames) {
+            TaxonDb taxon = getTaxonById(taxonTranslation.getTaxonId());
+            if (taxon != null) {
+                addTaxonToListSafely(taxon, allTaxaLists, allTaxaIds, group);
+            } else {
+                Log.e(TAG, "Taxon is null for native name " + taxonTranslation.getNativeName() + "!");
             }
         }
 
         // Part 3: Query synonyms
-        //
         List<SynonymsDb> synonymsList = getTaxaFromSynonymName(changedEnteredName);
-
-        for (int i = 0; i < synonymsList.size(); i++) {
-            SynonymsDb synonym = synonymsList.get(i);
-            // Don’t add taxa if already on the list
-            if (!allTaxaIds.contains(synonym.getTaxonId())) {
-                TaxonDb taxon = getTaxonById(synonym.getTaxonId());
-                if (taxon != null) {
-                    taxon.setLatinName(getLocalisedLatinName(synonym));
-                    allTaxaLists.add(taxon);
-                    allTaxaIds.add(taxon.getId());
-                } else {
-                    Log.e(TAG, "Taxon is null for synonym  " + synonym.getName() + "!");
-                }
+        for (SynonymsDb synonym : synonymsList) {
+            TaxonDb taxon = getTaxonById(synonym.getTaxonId());
+            if (taxon != null) {
+                taxon.setLatinName(synonym.getName());
+                addTaxonToListSafely(taxon, allTaxaLists, allTaxaIds, group);
+            } else {
+                Log.e(TAG, "Taxon is null for synonym  " + synonym.getName() + "!");
             }
         }
 
         return allTaxaLists;
     }
 
-    public List<TaxonDb> searchTaxaByGroup(String searchText, long group) {
-
-        if (searchText == null || searchText.trim().isEmpty()) {
-            return new ArrayList<>();
+    /**
+     * Safely adds a TaxonDb object to the results list if it meets all criteria.
+     * @param taxon Taxon object to add (must not be null).
+     * @param allTaxaLists The list to add the taxon to.
+     * @param allTaxaIds The Set for duplicate checking.
+     * @param requiredGroup The group ID to filter by, or 0 if no group filtering is required.
+     */
+    private void addTaxonToListSafely(TaxonDb taxon, List<TaxonDb> allTaxaLists,
+                                      Set<Long> allTaxaIds, long requiredGroup) {
+        // Exit if there is no taxon
+        if (taxon == null) {
+            return;
         }
 
-        List<TaxonDb> allTaxaLists = new ArrayList<>();
-        Set<Long> allTaxaIds = new HashSet<>(); // For more efficient duplicate search
-        String changedEnteredName = searchText.trim();
-
-        // Part 1: Query latin names
-        //
-        List<TaxonDb> latinNames = getTaxaFromLatinName(changedEnteredName, group);
-        // Get the latin (native) name for the output
-        for (int i = 0; i < latinNames.size(); i++) {
-            TaxonDb taxon = latinNames.get(i);
-            String name = getLocalisedLatinName(taxon);
-            taxon.setLatinName(name);
-            allTaxaLists.add(taxon);
-            allTaxaIds.add(taxon.getId());
+        // Exit on duplicated taxon ID
+        if (allTaxaIds.contains(taxon.getId())) {
+            return;
         }
 
-        // Part 2: Query native names
-        //
-        List<TaxaTranslationDb> nativeNames = getTaxaFromNativeName(changedEnteredName);
-        // Check all taxon translations and add only those with IDs that were not
-        // already queried by latin name
-        for (int i = 0; i < nativeNames.size(); i++) {
-            TaxaTranslationDb taxonTranslation = nativeNames.get(i);
-            // Don’t add taxa if already on the list
-            if (!allTaxaIds.contains(taxonTranslation.getId())) {
-                // Check if the taxon belongs to the group and add it
-                TaxonDb taxon = getTaxonById(taxonTranslation.getTaxonId());
-                if (taxon != null && taxon.getGroups().contains(String.valueOf(group))) {
-                    taxon.setLatinName(getLocalisedLatinName(taxon));
-                    allTaxaLists.add(taxon);
-                    allTaxaIds.add(taxon.getId());
-                } else {
-                    Log.e(TAG, "Trying to add null taxon for native name " + taxonTranslation.getNativeName() + "!");
-                }
+        // Check for group if required – 0 returns without checking
+        if (requiredGroup > 0) {
+            if (!taxon.getGroups().contains(String.valueOf(requiredGroup))) {
+                return;
             }
         }
 
-        // Part 3: Query synonyms
-        //
-        List<SynonymsDb> synonymsList = getTaxaFromSynonymName(changedEnteredName);
-        for (int i = 0; i < synonymsList.size(); i++) {
-            SynonymsDb synonym = synonymsList.get(i);
-            // Don’t add taxa if already on the list
-            if (!allTaxaIds.contains(synonym.getTaxonId())) {
-                TaxonDb taxon = getTaxonById(synonym.getTaxonId());
-                // Check if the taxon belongs to the group and add it
-                if (taxon != null && taxon.getGroups().contains(String.valueOf(group))) {
-                    taxon.setLatinName(getLocalisedLatinName(synonym));
-                    allTaxaLists.add(taxon);
-                    allTaxaIds.add(taxon.getId());
-                } else {
-                    Log.e(TAG, "Trying to add null taxon for synonym " + synonym.getName() + "!");
-                }
-            }
-        }
+        // Localize the name
+        String localizedName = getLocalisedLatinName(taxon);
+        taxon.setLatinName(localizedName);
 
-        return allTaxaLists;
-
+        // 4. Add to results
+        allTaxaLists.add(taxon);
+        allTaxaIds.add(taxon.getId());
     }
 
     private List<SynonymsDb> getTaxaFromSynonymName(String name) {
         Box<SynonymsDb> synonymsDbBox = App.get().getBoxStore().boxFor(SynonymsDb.class);
-        List<SynonymsDb> synonymsList;
 
-        Query<SynonymsDb> synonymsQuery = synonymsDbBox
+        try (Query<SynonymsDb> synonymsQuery = synonymsDbBox
                 .query(SynonymsDb_.name.contains(name,
                         QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                .build();
-        synonymsList = synonymsQuery.find(0, 10);
-        synonymsQuery.close();
-        return synonymsList;
+                .build()) {
+            return synonymsQuery.find(0, 10);
+        }
     }
 
     private List<TaxonDb> getTaxaFromLatinName(String name) {
-        BoxStore boxStore = App.get().getBoxStore();
-        Box<TaxonDb> taxonDataBox = boxStore.boxFor(TaxonDb.class);
-        Query<TaxonDb> queryLatinName = taxonDataBox
+        Box<TaxonDb> taxonDataBox = App.get().getBoxStore().boxFor(TaxonDb.class);
+        try (Query<TaxonDb> queryLatinName = taxonDataBox
                 .query(TaxonDb_.latinName.contains(name,
                         QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                .build();
-        List<TaxonDb> latinNames = queryLatinName.find(0, 10);
-        queryLatinName.close();
-        return latinNames;
-    }
-
-    private List<TaxonDb> getTaxaFromLatinName(String name, long group) {
-        BoxStore boxStore = App.get().getBoxStore();
-        Box<TaxonDb> taxonDataBox = boxStore.boxFor(TaxonDb.class);
-        Query<TaxonDb> queryLatinName = taxonDataBox
-                .query(TaxonDb_.latinName.contains(name,
-                                QueryBuilder.StringOrder.CASE_INSENSITIVE)
-                        .and(TaxonDb_.groups.contains(String.valueOf(group))))
-                .build();
-        List<TaxonDb> latinNames = queryLatinName.find(0, 10);
-        queryLatinName.close();
-        return latinNames;
+                .build()) {
+            return queryLatinName.find(0, 10);
+        }
     }
 
     private List<TaxaTranslationDb> getTaxaFromNativeName(String changedEnteredName) {
@@ -255,85 +178,57 @@ public class TaxonSearchHelper {
 
     private static TaxonDb getTaxonById(long taxon_id) {
         Box<TaxonDb> taxonDbBox = App.get().getBoxStore().boxFor(TaxonDb.class);
-        Query<TaxonDb> taxonDbQuery = taxonDbBox
+        try (Query<TaxonDb> taxonDbQuery = taxonDbBox
                 .query(TaxonDb_.id.equal(taxon_id))
-                .build();
-        TaxonDb taxon = taxonDbQuery.findFirst();
-        taxonDbQuery.close();
-        return taxon;
+                .build()) {
+            return taxonDbQuery.findFirst();
+        }
     }
 
-    public static String getLocalisedLatinName(long taxon_id) {
-
-        String localeScript = Localisation.getLocaleScript();
-        BoxStore boxStore = App.get().getBoxStore();
-
-        // Query taxon
-        Box<TaxonDb> taxonDataBox = boxStore.boxFor(TaxonDb.class);
-        Query<TaxonDb> queryId = taxonDataBox
-                .query(TaxonDb_.id.equal(taxon_id))
-                .build();
-        TaxonDb taxon = queryId.findFirst();
-        queryId.close();
-
+    public static String getLocalisedLatinName(TaxonDb taxon) {
         // Query native name
-        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-        Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
-                .query(TaxaTranslationDb_.taxonId.equal(taxon_id)
-                        .and(TaxaTranslationDb_.locale.equal(localeScript)))
-                .build();
-        TaxaTranslationDb nativeName = query_taxon_translation.findFirst();
-        query_taxon_translation.close();
+        String nativeName = getTaxonTranslationStringById(taxon.getId());
 
         // Return the value
+        return formatLatinAndNativeName(taxon.getLatinName(), nativeName);
+    }
+
+    public static String getLocalisedLatinName(long taxonId) {
+        // Query taxon
+        TaxonDb taxon = getTaxonById(taxonId);
+        // Query native name
+        String nativeName = getTaxonTranslationStringById(taxonId);
+        // Return the value
         if (taxon != null) {
-            if (nativeName != null) {
-                return taxon.getLatinName() + " (" + nativeName.getNativeName() + ")";
-            } else {
-                return taxon.getLatinName();
-            }
+            return formatLatinAndNativeName(taxon.getLatinName(), nativeName);
         } else {
             return null;
         }
     }
 
-    public static String getLocalisedLatinName(TaxonDb taxon) {
+    private static String getTaxonTranslationStringById(long taxonId) {
+        TaxaTranslationDb nativeName = getTaxonTranslationById(taxonId);
+        String nativeNameString = (nativeName != null) ? nativeName.getNativeName() : null;
+        return (nativeNameString == null || nativeNameString.isEmpty()) ? null : nativeNameString;
+    }
+
+    private static TaxaTranslationDb getTaxonTranslationById(long taxonId) {
         String localeScript = Localisation.getLocaleScript();
 
-        // Query native name
         Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-        Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
-                .query(TaxaTranslationDb_.taxonId.equal(taxon.getId())
+        try (Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
+                .query(TaxaTranslationDb_.taxonId.equal(taxonId)
                         .and(TaxaTranslationDb_.locale.equal(localeScript)))
-                .build();
-        TaxaTranslationDb nativeName = query_taxon_translation.findFirst();
-        query_taxon_translation.close();
-
-        // Return the value
-        if (nativeName != null) {
-            return taxon.getLatinName() + " (" + nativeName.getNativeName() + ")";
-        } else {
-            return taxon.getLatinName();
+                .build()) {
+            return query_taxon_translation.findFirst();
         }
     }
 
-    public static String getLocalisedLatinName(SynonymsDb synonym) {
-        String localeScript = Localisation.getLocaleScript();
-
-        // Query native name
-        Box<TaxaTranslationDb> taxaTranslationDataBox = App.get().getBoxStore().boxFor(TaxaTranslationDb.class);
-        Query<TaxaTranslationDb> query_taxon_translation = taxaTranslationDataBox
-                .query(TaxaTranslationDb_.taxonId.equal(synonym.getTaxonId())
-                        .and(TaxaTranslationDb_.locale.equal(localeScript)))
-                .build();
-        TaxaTranslationDb nativeName = query_taxon_translation.findFirst();
-        query_taxon_translation.close();
-
-        // Return the value
+    private static String formatLatinAndNativeName(String latinName, String nativeName) {
         if (nativeName != null) {
-            return synonym.getName() + " (" + nativeName.getNativeName() + ")";
+            return latinName + " (" + nativeName + ")";
         } else {
-            return synonym.getName();
+            return latinName;
         }
     }
 }
