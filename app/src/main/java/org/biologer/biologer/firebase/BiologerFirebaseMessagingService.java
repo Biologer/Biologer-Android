@@ -15,18 +15,27 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.ActivityLanding;
+import org.biologer.biologer.gui.ActivityNotification;
 import org.biologer.biologer.network.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.sql.UnreadNotificationsDb;
+import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,39 +53,60 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
         Map<String, String> data = remoteMessage.getData();
         String type = data.get("type");
-        //Log.d(TAG, "Raw FCM data: " + data);
+        Log.d(TAG, "Raw FCM data: " + data);
 
         // Receive notifications
         if ("notification_created".equals(type)) {
             Log.d(TAG, "Received: new notification_created event → trigger incremental sync");
             showNotification(data);
-
-            // Download new notification
-            String timestamp = data.get("timestamp");
-            Log.d(TAG, "Server returned timestamp: " + timestamp);
-            if (timestamp == null || Long.parseLong(timestamp) == 0) { // If no data set to 0
-                NotificationSyncWorker.enqueueNow(getApplicationContext(), 0);
-            } else {
-                long timestampMinus = Long.parseLong(timestamp);
-                NotificationSyncWorker.enqueueNow(getApplicationContext(), Math.max(0L, timestampMinus - 1L));
-            }
+            downloadNewNotification(data);
             return;
         }
 
         // Mark notification as read
         if ("notification_read".equals(type)) {
             Log.d(TAG, "Received: notification_read event → mark item as read locally");
-            String notificationId = data.get("notification_id");
-            if (notificationId != null) {
-                // e.g. mark in your local DB so UI updates immediately
-                //LocalNotificationStore.markAsRead(notificationId);
+            String id = data.get("notification_id");
+            if ("all".equals(id)) {
+                //LocalNotificationStore.markAllAsRead();
+            } else {
+                //LocalNotificationStore.markAsRead(id);
             }
-            return;
         }
 
         // Receive announcements
         if ("announcement".equals(type)) {
+            Log.d(TAG, "Received: announcement event → display notification");
             showAnnouncement(data);
+        }
+    }
+
+    /**
+     * Inspect if notification exist in ObjectBox and download it through Worker
+     **/
+    private void downloadNewNotification(Map<String, String> data) {
+        String timestamp = data.get("timestamp");
+        String notification_id = data.get("notification_id");
+        Log.d(TAG, "Server returned timestamp: " + timestamp + " (Notification ID: " + notification_id + ").");
+
+        if (notification_id != null) {
+            Box<UnreadNotificationsDb> box = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
+            Query<UnreadNotificationsDb> query = box.query(
+                            UnreadNotificationsDb_.realId.equal(notification_id))
+                    .build();
+            boolean notificationNotFound = query.find().isEmpty();
+            query.close();
+
+            if (notificationNotFound) {
+                if (timestamp != null) {
+                    NotificationSyncWorker.enqueueNow(getApplicationContext(), Long.parseLong(timestamp));
+                } else {
+                    Log.d(TAG, "Notification timestamp empty, redownloading all.");
+                    NotificationSyncWorker.enqueueNow(getApplicationContext(), 0L);
+                }
+            } else {
+                Log.d(TAG, "Notification already in ObjectBox or no timestamp");
+            }
         }
     }
 
@@ -171,7 +201,7 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         manager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
-    private void showNotification(java.util.Map<String, String> data) {
+    private void showNotification(Map<String, String> data) {
         JSONObject translation = getJsonTranslation(data);
         if (translation == null) return;
 
@@ -179,10 +209,11 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         String title = translation.optString("title", getString(R.string.notification));
         String body = translation.optString("message", getString(R.string.notification_text));
 
-        Intent intent = new Intent(this, ActivityLanding.class);
+        Intent intent = new Intent(this, ActivityNotification.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        if (data.containsKey("field_observation_id")) {
-            intent.putExtra("field_observation_id", data.get("field_observation_id"));
+        if (data.containsKey("notification_id")) {
+            intent.putExtra("real_notification_id", data.get("notification_id"));
+            Log.d(TAG, "Putting real notification ID to the bundle: " + data.get("notification_id"));
         }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(

@@ -421,6 +421,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         // Update the item in the RecycleView
         if (entryDb != null) {
+            // TODO next line fails on save button clicked in EntryActivity
             items.set(entry_id, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
             entriesAdapter.notifyItemChanged(entry_id);
         }
@@ -435,6 +436,8 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                 return i; // found, return immediately
             }
         }
+        // TODO This is triggered when app crashes so recycler view does not find new entry
+        // when the duplicate entry function is called
         Log.d(TAG, "Entry " + entry_id + " not found in items.");
         return -1; // Not found
     }

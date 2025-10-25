@@ -61,18 +61,36 @@ public class ActivityNotification extends AppCompatActivity {
 
         // If opening from Activity use index of taped list, else use bundle received from other Fragment
         Bundle bundle = getIntent().getExtras();
-        notificationId = Objects.requireNonNull(bundle).getLong("notification_id");
-        indexId = Objects.requireNonNull(bundle).getInt("index_id");
-        Log.d(TAG, "Displaying notification with ID: " + notificationId + ".");
+        String realId = null;
+        if (bundle != null) {
+            if (bundle.containsKey("notification_id")) {
+                notificationId = bundle.getLong("notification_id");
+                indexId = Objects.requireNonNull(bundle).getInt("index_id");
+                Log.d(TAG, "Displaying notification with ID: " + notificationId + ".");
+            } else if (bundle.containsKey("real_notification_id")) {
+                realId = bundle.getString("real_notification_id");
+            }
+        } else {
+            Log.e(TAG, "No Bundle. This activity can not live on its own :)");
+            return;
+        }
 
-        // Get the notification from its ID
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> queryNotification = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.equal(notificationId))
-                .build();
-        notification = queryNotification.find().get(0);
-        queryNotification.close();
+        Query<UnreadNotificationsDb> query;
+        if (realId != null && !realId.isEmpty()) {
+            // Get notification from its Real ID
+            query = unreadNotificationsDbBox
+                    .query(UnreadNotificationsDb_.realId.equal(realId))
+                    .build();
+        } else {
+            // Get the notification from its ObjectBox ID
+            query = unreadNotificationsDbBox
+                    .query(UnreadNotificationsDb_.id.equal(notificationId))
+                    .build();
+        }
+        notification = query.find().get(0);
+        query.close();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             binding.textViewNotificationText.setText(Html.fromHtml(getFormattedMessage(),

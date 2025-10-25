@@ -1,7 +1,6 @@
 package org.biologer.biologer.network;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -21,11 +20,16 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
+import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -48,7 +52,7 @@ public class NotificationSyncWorker extends ListenableWorker {
         page = 1;
 
         downloadNotifications(page);
-        return future; // Placeholder for async operation
+        return future;
     }
 
     public static void enqueueNow(Context context, long updatedAfter) {
@@ -76,8 +80,10 @@ public class NotificationSyncWorker extends ListenableWorker {
 
     private void downloadNotifications(int page) {
         long timestamp = Long.parseLong(SettingsManager.getNotificationsUpdatedAt());
-        long notificationTimestamp = getInputData().getLong(KEY_UPDATED_AFTER, 0L);
-        if (timestamp >= notificationTimestamp) {
+        long timestampNotification = getInputData().getLong(KEY_UPDATED_AFTER, 0L);
+        if (timestamp >= timestampNotification) {
+            Log.i(TAG, "Worker skipped — timestamp " + timestampNotification
+                    + " <= than already updated timestamp " + timestamp + ".");
             completeWorker(Result.success());
         }
         String databaseName = SettingsManager.getDatabaseName();
@@ -92,6 +98,11 @@ public class NotificationSyncWorker extends ListenableWorker {
                 @Override
                 public void onResponse(@NonNull Call<UnreadNotificationsResponse> call,
                                        @NonNull Response<UnreadNotificationsResponse> response) {
+                    if (isStopped()) {
+                        Log.w(TAG, "Worker stopped while waiting for network response. Aborting processing.");
+                        return;
+                    }
+
                     if (response.isSuccessful() && response.body() != null) {
                         saveNotificationsAngGetNext(response.body());
                     } else if (response.code() == 429) {
@@ -136,23 +147,15 @@ public class NotificationSyncWorker extends ListenableWorker {
 
         if (noMoreData || lastPageReached) {
             Log.i(TAG, "All notifications successfully updated from server.");
-            long timestampValue = getInputData().getLong(KEY_UPDATED_AFTER, 0L);
-            long newest;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                newest = notifications.stream()
-                        .mapToLong(n -> parseIsoToEpochSeconds(n.getUpdatedAt()))
-                        .max()
-                        .orElse(getInputData().getLong(KEY_UPDATED_AFTER, 0L));
-            } else {
-                newest = timestampValue;
-            }
+            long timestampNotification = getInputData().getLong(KEY_UPDATED_AFTER, 0L);
 
-            if (timestampValue == 0) {
+            if (timestampNotification == 0) {
                 long newTimestamp = System.currentTimeMillis() / 1000L;
                 SettingsManager.setNotificationsUpdatedAt(String.valueOf(newTimestamp));
                 Log.i(TAG, "Full sync successful. Saved new timestamp: " + newTimestamp);
             } else {
-                SettingsManager.setNotificationsUpdatedAt(String.valueOf(newest));
+                SettingsManager.setNotificationsUpdatedAt(String.valueOf(timestampNotification));
+                Log.i(TAG, "Partial sync successful. Saved new timestamp: " + timestampNotification);
             }
             completeWorker(Result.success());
         } else {
@@ -166,12 +169,35 @@ public class NotificationSyncWorker extends ListenableWorker {
     @NonNull
     private static List<UnreadNotificationsDb> getUnreadNotificationsDbs(UnreadNotificationsResponse response) {
         List<UnreadNotificationsDb> notifications = new ArrayList<>();
-        if (response.getData() != null) {
-            for (UnreadNotification unreadNotification : response.getData()) {
 
-                // Create the new entity and add it directly to the list
+        // Exit on empty response
+        if (response.getData() == null || response.getData().isEmpty()) {
+            Log.d(TAG, "Empty UnreadNotifications response from server.");
+            return notifications;
+        }
+
+        // 1. Collect all server IDs from the current response batch
+        List<String> currentNotificationsId = new ArrayList<>();
+        for (UnreadNotification unreadNotification : response.getData()) {
+            currentNotificationsId.add(unreadNotification.getId());
+        }
+        Box<UnreadNotificationsDb> box = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
+        Query<UnreadNotificationsDb> query = box.query(
+                        UnreadNotificationsDb_.realId.oneOf(currentNotificationsId.toArray(new String[0])))
+                .build();
+        Set<String> existingIds = new HashSet<>(Arrays.asList(
+                query.property(UnreadNotificationsDb_.realId).findStrings()
+        ));
+        query.close();
+
+        // 2. Save only notifications that were not already in the ObjectBox
+        for (UnreadNotification unreadNotification : response.getData()) {
+            String serverId = unreadNotification.getId();
+
+            if (!existingIds.contains(serverId)) {
                 UnreadNotificationsDb notificationDb = new UnreadNotificationsDb(
-                        0, unreadNotification.getId(),
+                        0,
+                        unreadNotification.getId(),
                         unreadNotification.getType(),
                         unreadNotification.getNotifiable_type(),
                         unreadNotification.getData().getField_observation_id(),
@@ -180,33 +206,22 @@ public class NotificationSyncWorker extends ListenableWorker {
                         unreadNotification.getData().getTaxon_name(),
                         null,
                         unreadNotification.getUpdated_at(),
-                        null,null, null, null,
+                        null, null, null, null,
                         null, null, null, 0);
 
                 notifications.add(notificationDb);
+                Log.d(TAG, "Saving notification with ID: " + serverId);
+            } else {
+                Log.d(TAG, "Skipping duplicate notification ID: " + serverId);
             }
         }
+
         return notifications;
     }
 
     private void completeWorker(Result result) {
         if (future != null) {
             future.set(result);
-        }
-    }
-
-    private static long parseIsoToEpochSeconds(String isoTime) {
-        if (isoTime == null || isoTime.isEmpty()) return 0L;
-        try {
-            // java.time.Instant automatically handles the trailing 'Z' (UTC)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                return Instant.parse(isoTime).getEpochSecond();
-            } else {
-                return 0L;
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Could not parse ISO time: " + isoTime + " (" + e.getMessage() + ")");
-            return 0L;
         }
     }
 

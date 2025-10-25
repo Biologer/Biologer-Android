@@ -284,11 +284,10 @@ public class ActivityNotifications extends AppCompatActivity {
 
     private void openNotification(int index) {
         UnreadNotificationsDb notification = notifications.get(index);
-        long notificationId = notification.getId();
-        Log.d(TAG, "Opening notification with index: " + index + "; ID: " + notificationId + "; Real ID: " + notification.getRealId());
+        Log.d(TAG, "Opening notification with index: " + index + "; ID: " + notification.getId() + "; Real ID: " + notification.getRealId());
 
         Intent intent = new Intent(ActivityNotifications.this, ActivityNotification.class);
-        intent.putExtra("notification_id", notificationId);
+        intent.putExtra("notification_id", notification.getRealId());
         intent.putExtra("index_id", index);
         notificationLauncher.launch(intent);
     }
