@@ -188,8 +188,8 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     // Opens ActivityEntry to add new species observation
     private void newObservation() {
         Intent intent = new Intent(getActivity(), ActivityObservation.class);
-        intent.putExtra("IS_NEW_ENTRY", "YES");
-        entryLauncher.launch(intent);
+        intent.putExtra("IS_NEW_ENTRY", true);
+        observationLauncher.launch(intent);
     }
 
     // Opens ActivityEntry to update existing species observation
@@ -197,17 +197,25 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
-            intent.putExtra("IS_NEW_ENTRY", "NO");
+            intent.putExtra("IS_NEW_ENTRY", false);
             intent.putExtra("ENTRY_ID", entryId);
-            entryLauncher.launch(intent);
+            observationLauncher.launch(intent);
         }
     }
 
     // Opens ActivityTimedCount to add new timed count
     private void newTimedCount() {
         Intent intent = new Intent(getActivity(), ActivityTimedCount.class);
-        intent.putExtra("IS_NEW_ENTRY", "YES");
+        intent.putExtra("IS_NEW_ENTRY", true);
         timedCountLauncher.launch(intent);
+    }
+
+    private void newDuplicateObservation(long new_entry_id) {
+        Intent intent = new Intent(getActivity(), ActivityObservation.class);
+        intent.putExtra("IS_NEW_ENTRY", false);
+        intent.putExtra("ENTRY_ID", new_entry_id);
+        intent.putExtra("IS_DUPLICATED_ENTRY", true);
+        observationLauncher.launch(intent);
     }
 
     // Opens ActivityTimedCount to update existing timed count
@@ -215,31 +223,33 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = new Intent(activity.getApplicationContext(), ActivityTimedCount.class);
-            intent.putExtra("IS_NEW_ENTRY", "NO");
+            intent.putExtra("IS_NEW_ENTRY", false);
             intent.putExtra("TIMED_COUNT_ID", timedCountId);
             timedCountLauncher.launch(intent);
         }
     }
 
     // Launch new Entry Activity
-    private final ActivityResultLauncher<Intent> entryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+    private final ActivityResultLauncher<Intent> observationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                // If we need to do something with the result after EntryActivity...
-                Log.d(TAG, "We got a result from the Entry Activity!");
+                Log.d(TAG, "We got a result from the ActivityObservation!");
 
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "We got RESULT_OK code from the EntryActivity.");
+                    Log.d(TAG, "We got RESULT_OK code from the ActivityObservation.");
 
-                    if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
-                        long new_entry_id = result.getData().getLongExtra("ENTRY_ID", 0);
-                        Log.d(TAG, "This is a new entry with id: " + new_entry_id);
-                        addObservationItem(new_entry_id);
+                    boolean isNewEntry = result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false);
+                    boolean isDuplicatedEntry = result.getData() != null && result.getData().getBooleanExtra("IS_DUPLICATED_ENTRY", false);
+
+                    if (isNewEntry || isDuplicatedEntry) {
+                        long entry_id = result.getData().getLongExtra("ENTRY_ID", 0);
+                        Log.d(TAG, "This is a new/duplicated entry with id: " + entry_id);
+                        addObservationItem(entry_id);
                     } else {
                         long old_data_id = 0;
                         if (result.getData() != null) {
                             old_data_id = result.getData().getLongExtra("ENTRY_ID", 0);
                         }
-                        Log.d(TAG, "This was an existing entry with id: " + old_data_id);
+                        Log.d(TAG, "This was an existing entry edit with id: " + old_data_id);
                         updateEntry(old_data_id);
                     }
                 }
@@ -265,9 +275,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                         }
                     });
 
-    private void addObservationItem(long newEntryId) {
+    private void addObservationItem(long entryId) {
         // Load the entry from ObjectBox
-        EntryDb entryDb = ObjectBoxHelper.getObservationById(newEntryId);
+        EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
 
         // Add the entry to the entry list (RecycleView)
         if (entryDb != null) {
@@ -486,23 +496,12 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     entry_from.getTime(),
                     entry_from.getHabitat(),
                     "");
-            items.add(0, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
 
             // Update ObjectBox
             long new_entry_id = ObjectBoxHelper.setObservation(entry);
 
-            // Update the list in RecycleView
-            entriesAdapter.notifyItemInserted(0);
-            binding.recycledViewEntries.smoothScrollToPosition(0);
-
             // Open EntryActivity to edit the new record
-            Activity activity = getActivity();
-            if (activity != null) {
-                Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
-                intent.putExtra("IS_NEW_ENTRY", "NO");
-                intent.putExtra("ENTRY_ID", new_entry_id);
-                entryLauncher.launch(intent);
-            }
+            newDuplicateObservation(new_entry_id);
         }
     }
 

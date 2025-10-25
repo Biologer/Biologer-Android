@@ -2,7 +2,6 @@ package org.biologer.biologer.gui;
 
 import android.app.Dialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
@@ -13,7 +12,7 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.ObservationViewModel;
+import org.biologer.biologer.viewmodels.ObservationViewModel;
 
 import java.util.Calendar;
 

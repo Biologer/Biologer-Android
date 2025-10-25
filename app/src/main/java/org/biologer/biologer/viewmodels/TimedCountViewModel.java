@@ -1,4 +1,4 @@
-package org.biologer.biologer.adapters;
+package org.biologer.biologer.viewmodels;
 
 import android.os.Handler;
 import android.os.Looper;

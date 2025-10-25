@@ -11,7 +11,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.ObservationViewModel;
+import org.biologer.biologer.viewmodels.ObservationViewModel;
 
 import java.util.Calendar;
 

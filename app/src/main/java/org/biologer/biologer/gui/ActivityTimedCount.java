@@ -62,7 +62,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.SpeciesCount;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.adapters.TimedCountAdapter;
-import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.ActivityTimedCountBinding;
 import org.biologer.biologer.network.RetrofitWeatherClient;
 import org.biologer.biologer.network.json.WeatherResponse;

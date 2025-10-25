@@ -36,6 +36,10 @@ public class LandingFragmentAdapter
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
 
+    public List<LandingFragmentItems> getData() {
+        return myEntries;
+    }
+
     public LandingFragmentAdapter(ArrayList<LandingFragmentItems> entries) {
         myEntries = entries;
     }

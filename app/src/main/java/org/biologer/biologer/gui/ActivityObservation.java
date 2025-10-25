@@ -58,7 +58,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
-import org.biologer.biologer.adapters.ObservationViewModel;
+import org.biologer.biologer.viewmodels.ObservationViewModel;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.databinding.ActivityObservationBinding;
 import org.biologer.biologer.services.DateHelper;
@@ -515,9 +515,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private Boolean isNewEntry() {
-        String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
-        assert is_new_entry != null;
-        return is_new_entry.equals("YES");
+        return getIntent().getBooleanExtra("IS_NEW_ENTRY", true);
     }
 
     private void fillExistingEntry() {
@@ -921,6 +919,8 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         Intent intent = new Intent();
         intent.putExtra("IS_NEW_ENTRY", isNewEntry());
         intent.putExtra("ENTRY_ID", entry_id);
+        boolean isDuplicate = getIntent().getBooleanExtra("IS_DUPLICATED_ENTRY", false);
+        intent.putExtra("IS_DUPLICATED_ENTRY", isDuplicate);
         setResult(RESULT_OK, intent);
         finish();
         Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show();

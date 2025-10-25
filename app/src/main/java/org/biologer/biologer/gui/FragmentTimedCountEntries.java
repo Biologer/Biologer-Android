@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
-import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.FragmentTimedCountEntriesBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;

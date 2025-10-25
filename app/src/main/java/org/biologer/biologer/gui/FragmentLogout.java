@@ -141,6 +141,7 @@ public class FragmentLogout extends Fragment {
         fm.unsubscribeFromTopic(userTopic);
         fm.unsubscribeFromTopic("announcements");
 
+        // Delete data and logout from a new thread
         new Thread(() -> {
             ObjectBoxHelper.removeAllData(activity.getApplicationContext());
             SettingsManager.deleteSettings();

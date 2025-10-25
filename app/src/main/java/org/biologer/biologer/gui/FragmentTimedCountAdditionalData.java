@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import org.biologer.biologer.adapters.TimedCountViewModel;
+import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.FragmentTimedCountAdditionalDataBinding;
 
 public class FragmentTimedCountAdditionalData extends Fragment {
