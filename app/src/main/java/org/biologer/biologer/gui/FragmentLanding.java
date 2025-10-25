@@ -469,7 +469,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             }
         }
         Log.d(TAG, "Entry " + tc_id + " not found in items.");
-        return -1; // Not found
+        return -1;
     }
 
     public void duplicateEntry(int position) {

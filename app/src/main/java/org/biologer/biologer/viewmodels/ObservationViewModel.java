@@ -480,11 +480,7 @@ public class ObservationViewModel extends ViewModel {
     }
 
     public Boolean isCallTagSelected() {
-        if (callTagSelected != null) {
-            return callTagSelected;
-        } else {
-            return false;
-        }
+        return (callTagSelected != null) ? callTagSelected : false;
     }
 
     public void setCallTagSelected(Boolean callTagSelected) {

@@ -117,7 +117,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         addToolbar();
         setupBackPressedHandler();
         setupRecyclerView();
-        if (Boolean.TRUE.equals(isNewEntry())) {
+        if (isNewEntry()) {
             addNewViewModel();
             checkLocationPermission(); // This also starts setupNewTimedCount()
         } else {
@@ -242,6 +242,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 TaxonDb taxon;
                 if (species.getSpeciesID() != null) {
                     taxon = ObjectBoxHelper.getTaxonById(species.getSpeciesID());
+                    if (taxon == null) {
+                        Log.e(TAG, "There is no taxon for species ID " + species.getSpeciesID());
+                        return;
+                    }
                     taxon.setLatinName(TaxonSearchHelper.getLocalisedLatinName(taxon));
                 } else {
                     taxon = new TaxonDb(0, 0, species.getSpeciesName(),
@@ -307,6 +311,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         if (id != null) {
             viewModel.setTimedCountId(id);
             TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
+            if (timedCount == null) {
+                Log.e(TAG, "There is no timed count with ID: " + id);
+                return;
+            }
             viewModel.getFromObjectBox(timedCount);
 
             addWeatherObserverToViewModel();
@@ -605,7 +613,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private long getObjectBoxID() {
-        if (Boolean.TRUE.equals(isNewEntry())) {
+        if (isNewEntry()) {
             return 0;
         } else {
             Integer id = viewModel.getTimedCountId();
@@ -1006,12 +1014,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private Boolean isNewEntry() {
-        String is_new_entry = getIntent().getStringExtra("IS_NEW_ENTRY");
-        if (is_new_entry != null) {
-            return is_new_entry.equals("YES");
-        } else {
-            return null;
-        }
+        return getIntent().getBooleanExtra("IS_NEW_ENTRY", true);
     }
 
     private Integer getTimedCountIdFromBundle() {

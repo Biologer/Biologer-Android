@@ -455,53 +455,60 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
-        // Enable stage entry
         // Check if the taxon has stages. If not hide the stages dialog.
-        if (viewModel.getTaxonId() != null) {
-            TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
-            String stages = taxon.getStages();
-            Log.i(TAG, "This are the stages for " + taxon.getLatinName() + ": " + stages);
-            if (stages != null) {
-                if (!stages.isEmpty()) {
-                    Log.d(TAG, "Enabling Stages for this taxon.");
-                    binding.textInputLayoutStages.setVisibility(View.VISIBLE);
+        if (viewModel.getTaxonId() == null) {
+            Log.e(TAG, "There is no taxon ID. Skipping stages and atlas code.");
+            return;
+        }
+        TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
+        if (taxon == null) {
+            Log.e(TAG, "There is no taxon for ID: "+ viewModel.getTaxonId()
+                    + ". Skipping stages and atlas code.");
+            return;
+        }
 
-                    String[] all_stages = stages.split(";");
+        String stages = taxon.getStages();
+        Log.i(TAG, "This are the stages for " + taxon.getLatinName() + ": " + stages);
+        if (stages != null) {
+            if (!stages.isEmpty()) {
+                Log.d(TAG, "Enabling Stages for this taxon.");
+                binding.textInputLayoutStages.setVisibility(View.VISIBLE);
 
-                    // If the user changed the taxon in the mean time, we'll try to get the previous stage
-                    if (viewModel.getStage().getValue() != null) {
-                        Log.d(TAG, "There is a stage already selected. ID: " + viewModel.getStage().getValue() + "; ");
-                        StageDb stage = ObjectBoxHelper.getStageById(viewModel.getStage().getValue());
-                        if (stage != null) {
-                            if (Arrays.asList(all_stages).contains(String.valueOf(viewModel.getStage().getValue()))) {
-                                String stageName = StageAndSexLocalization
-                                        .getStageLocaleFromID(this, viewModel.getStage().getValue());
-                                binding.textInputEditTextStages.setText(stageName);
-                                binding.textInputEditTextStages.setTag(viewModel.getStage().getValue());
-                            }
-                        }
-                    }
+                String[] all_stages = stages.split(";");
 
-                    // If user preferences are selected, the stage for taxa will be set to adult by default.
-                    // Step 1: Get the preferences
-                    if (preferences.getBoolean("adult_by_default", false)) {
-                        Log.d(TAG, "Should set adult by default.");
-                        // If stage is already selected ignore this...
-                        if (binding.textInputEditTextStages.getText() != null
-                                && binding.textInputEditTextStages.getText().toString().isEmpty()) {
-                            Log.d(TAG, "Should fill in the textViewStage.");
-                            Long adultId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
-                            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, adultId);
-                            binding.textInputEditTextStages.setTag(adultId);
+                // If the user changed the taxon in the mean time, we'll try to get the previous stage
+                if (viewModel.getStage().getValue() != null) {
+                    Log.d(TAG, "There is a stage already selected. ID: " + viewModel.getStage().getValue() + "; ");
+                    StageDb stage = ObjectBoxHelper.getStageById(viewModel.getStage().getValue());
+                    if (stage != null) {
+                        if (Arrays.asList(all_stages).contains(String.valueOf(viewModel.getStage().getValue()))) {
+                            String stageName = StageAndSexLocalization
+                                    .getStageLocaleFromID(this, viewModel.getStage().getValue());
                             binding.textInputEditTextStages.setText(stageName);
+                            binding.textInputEditTextStages.setTag(viewModel.getStage().getValue());
                         }
                     }
                 }
+
+                // If user preferences are selected, the stage for taxa will be set to adult by default.
+                // Step 1: Get the preferences
+                if (preferences.getBoolean("adult_by_default", false)) {
+                    Log.d(TAG, "Should set adult by default.");
+                    // If stage is already selected ignore this...
+                    if (binding.textInputEditTextStages.getText() != null
+                            && binding.textInputEditTextStages.getText().toString().isEmpty()) {
+                        Log.d(TAG, "Should fill in the textViewStage.");
+                        Long adultId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
+                        String stageName = StageAndSexLocalization.getStageLocaleFromID(this, adultId);
+                        binding.textInputEditTextStages.setTag(adultId);
+                        binding.textInputEditTextStages.setText(stageName);
+                    }
+                }
             }
-            if (taxon.isUseAtlasCode()) {
-                Log.d(TAG, "Enabling Atlas code for this taxon.");
-                binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
-            }
+        }
+        if (taxon.isUseAtlasCode()) {
+            Log.d(TAG, "Enabling Atlas code for this taxon.");
+            binding.textInputLayoutAtlasCode.setVisibility(View.VISIBLE);
         }
     }
 
@@ -545,9 +552,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         // Get the name of the stage for the entry from the database
         if (viewModel.getStage().getValue() != null) {
             Log.d(TAG, "There is a stage already selected for this entry!");
-            long stage_id = ObjectBoxHelper.getStageById(viewModel.getStage().getValue()).getId();
-            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stage_id);
-            binding.textInputEditTextStages.setTag(stage_id);
+            long stageId = (viewModel.getStage().getValue() != null)
+                    ? viewModel.getStage().getValue() : 0L;
+            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stageId);
+            binding.textInputEditTextStages.setTag(stageId);
             binding.textInputEditTextStages.setText(stageName);
             binding.textInputLayoutStages.setVisibility(View.VISIBLE);
         } else {
@@ -759,6 +767,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             buildAlertMessageInvalidTaxon();
         } else {
             TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
+            if (taxon == null) {
+                Log.e(TAG, "Taxon is null, could not save it!");
+                return;
+            }
             Log.d(TAG, "The taxon with ID " + viewModel.getTaxonId()
                     + " selected. Checking coordinates and saving the entry!");
             viewModel.setTaxonId(taxon.getId());
@@ -979,6 +991,10 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     private void getStageForTaxon() {
         if (viewModel.getTaxonId() != null) {
             TaxonDb taxon = ObjectBoxHelper.getTaxonById(viewModel.getTaxonId());
+            if (taxon == null) {
+                Log.e(TAG, "Taxon is null, could not save it!");
+                return;
+            }
             String stages = taxon.getStages();
             if (stages == null || stages.trim().isEmpty()) {
                 binding.textInputEditTextStages.setEnabled(false);

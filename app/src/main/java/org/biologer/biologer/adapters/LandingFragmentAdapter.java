@@ -43,6 +43,7 @@ public class LandingFragmentAdapter
         public ImageView imageView;
         public TextView textTitle;
         public TextView textSubtitle;
+        private boolean isTimedCount = false;
 
         public ViewHolder(View view) {
             super(view);
@@ -56,11 +57,17 @@ public class LandingFragmentAdapter
             view.setOnCreateContextMenuListener(this);
         }
 
+        public void setIsTimedCount(boolean isTimedCount) {
+            this.isTimedCount = isTimedCount;
+        }
+
         @Override
         public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
             Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
-            menu.add(Menu.NONE, R.id.duplicate,
-                    Menu.NONE, R.string.duplicate_entry);
+            if (!this.isTimedCount) {
+                menu.add(Menu.NONE, R.id.duplicate,
+                        Menu.NONE, R.string.duplicate_entry);
+            }
             menu.add(Menu.NONE, R.id.delete,
                     Menu.NONE, R.string.delete_entry);
             menu.add(Menu.NONE, R.id.delete_all,
@@ -84,6 +91,7 @@ public class LandingFragmentAdapter
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
         LandingFragmentItems entry = myEntries.get(position);
+        viewHolder.setIsTimedCount(entry.getTimedCountId() != null);
 
         // Get the title
         TextView titleText = viewHolder.textTitle;
