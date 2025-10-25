@@ -276,14 +276,23 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     });
 
     private void addObservationItem(long entryId) {
-        // Load the entry from ObjectBox
+        // Load observation entry
         EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
-
-        // Add the entry to the entry list (RecycleView)
-        if (entryDb != null) {
-            LandingFragmentItems item = LandingFragmentItems.getItemFromEntry(requireContext(), entryDb);
-            addItemToRecyclerView(item);
+        if (entryDb == null) {
+            Log.e(TAG, "New entry ID " + entryId + " not found in database.");
+            return;
         }
+
+        // Display observation in the RecyclerView
+        LandingFragmentItems newItem = LandingFragmentItems.getItemFromEntry(requireContext(), entryDb);
+        int insertionIndex = LandingFragmentItems.findSortedInsertionIndex(
+                requireContext(), items, newItem);
+        items.add(insertionIndex, newItem);
+        entriesAdapter.notifyItemInserted(insertionIndex);
+        binding.recycledViewEntries.smoothScrollToPosition(insertionIndex);
+
+        // Update UI element
+        ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
     }
 
     private void addTimedCountItem(Intent data) {
@@ -431,7 +440,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         // Update the item in the RecycleView
         if (entryDb != null) {
-            // TODO next line fails on save button clicked in EntryActivity
             items.set(entry_id, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
             entriesAdapter.notifyItemChanged(entry_id);
         }
@@ -443,13 +451,11 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             Long entryId = items.get(i).getObservationId();
             if (entryId != null && entryId == entry_id) {
                 Log.d(TAG, "Entry " + entry_id + " index ID is " + i);
-                return i; // found, return immediately
+                return i;
             }
         }
-        // TODO This is triggered when app crashes so recycler view does not find new entry
-        // when the duplicate entry function is called
         Log.d(TAG, "Entry " + entry_id + " not found in items.");
-        return -1; // Not found
+        return -1;
     }
 
 

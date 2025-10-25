@@ -16,18 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.StageAndSexLocalization;
-import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.StageDb_;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 
 public class LandingFragmentAdapter
         extends RecyclerView.Adapter<LandingFragmentAdapter.ViewHolder> {

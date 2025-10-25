@@ -153,6 +153,44 @@ public class LandingFragmentItems {
                 title, subtitle, image, calendar.getTime());
     }
 
+    /**
+     * Finds the correct index to insert a new item into an already sorted list,
+     * based on the user's current sorting preference ("time" or "name").
+     *
+     * @param context The application context to access SharedPreferences.
+     * @param items The existing, sorted list of LandingFragmentItems.
+     * @param newItem The new item to be inserted.
+     * @return The index where the newItem should be inserted.
+     */
+    public static int findSortedInsertionIndex(Context context, ArrayList<LandingFragmentItems> items, LandingFragmentItems newItem) {
+
+        if (items.isEmpty()) {
+            return 0;
+        }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String sortBy = prefs.getString("sort_observations", "time");
+
+        if ("name".equals(sortBy)) {
+            // Sort by name
+            for (int i = 0; i < items.size(); i++) {
+                // Check if the new item's title comes before the current item's title
+                if (newItem.getTitle().compareToIgnoreCase(items.get(i).getTitle()) < 0) {
+                    return i;
+                }
+            }
+        } else {
+            // Sort by date descending
+            for (int i = 0; i < items.size(); i++) {
+                if (newItem.getDate().compareTo(items.get(i).getDate()) > 0) {
+                    return i;
+                }
+            }
+        }
+
+        return items.size();
+    }
+
     public static LandingFragmentItems getItemFromTimedCount(Context context, TimedCountDb timed_count) {
         String title = context.getString(R.string.timed_count);
         String image = "timed_count";
