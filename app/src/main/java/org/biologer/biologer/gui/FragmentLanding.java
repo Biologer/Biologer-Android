@@ -588,11 +588,18 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if ("sort_observations".equals(key)) {
-            reloadRecyclerView(); // force reload when preference changes
+            if (isAdded()) {
+                reloadRecyclerView();
+            }
         }
     }
 
     private void reloadRecyclerView() {
+        if (!isAdded() || getContext() == null) {
+            Log.w(TAG, "Skipping reloadRecyclerView: Fragment is detached or has no context.");
+            return;
+        }
+
         items = LandingFragmentItems.loadAllEntries(requireContext());
         entriesAdapter = new LandingFragmentAdapter(items);
         binding.recycledViewEntries.setAdapter(entriesAdapter);

@@ -137,6 +137,8 @@ public class TaxonSearchHelper {
                     taxon.setLatinName(getLocalisedLatinName(taxon));
                     allTaxaLists.add(taxon);
                     allTaxaIds.add(taxon.getId());
+                } else {
+                    Log.e(TAG, "Trying to add null taxon for native name " + taxonTranslation.getNativeName() + "!");
                 }
             }
         }
@@ -154,6 +156,8 @@ public class TaxonSearchHelper {
                     taxon.setLatinName(getLocalisedLatinName(synonym));
                     allTaxaLists.add(taxon);
                     allTaxaIds.add(taxon.getId());
+                } else {
+                    Log.e(TAG, "Trying to add null taxon for synonym " + synonym.getName() + "!");
                 }
             }
         }
