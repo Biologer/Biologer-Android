@@ -380,10 +380,10 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         Bundle bundle = getIntent().getExtras();
 
         if (bundle != null) {
-            double inLat = bundle.getDouble("LATITUDE", 0);
-            double inLon = bundle.getDouble("LONGITUDE", 0);
+            double inLat = bundle.getDouble("LATITUDE", 0.0);
+            double inLon = bundle.getDouble("LONGITUDE", 0.0);
 
-            if (inLat == 0 || inLon == 0) {
+            if (inLat == 0.0 || inLon == 0.0) {
                 String database = SettingsManager.getDatabaseName();
                 if (database.equals("https://biologer.rs")
                         || database.equals("https://dev.biologer.org")) {

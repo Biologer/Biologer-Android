@@ -124,6 +124,41 @@ public class DateHelper {
         return sdf.format(currentTime);
     }
 
+    /**
+     * Calculates the average time between a start time string and an end time string.
+     * Assumes both times are within the same day.
+     *
+     * @param startTimeString Time in "HH:mm" format (e.g., "10:30").
+     * @param endTimeString Time in "HH:mm" format (e.g., "11:45").
+     * @return The average time in "HH:mm" format, or null if parsing fails.
+     */
+    public static String getAverageTime(String startTimeString, String endTimeString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        try {
+            Date startTime = sdf.parse(startTimeString);
+            Date endTime = sdf.parse(endTimeString);
+
+            if (startTime == null || endTime == null) {
+                return null;
+            }
+
+            // Get time in milliseconds (Epoch time)
+            long startMillis = startTime.getTime();
+            long endMillis = endTime.getTime();
+
+            // Calculate the average time in milliseconds
+            long averageMillis = (startMillis + endMillis) / 2;
+
+            // Format the result back into "HH:mm"
+            return sdf.format(new Date(averageMillis));
+
+        } catch (ParseException e) {
+            Log.e(TAG, "The date is in invalid format for averaging: " + e.getMessage());
+            return null;
+        }
+    }
+
     public static String getPlainTime(Calendar calendar) {
         return String.format(Locale.US, "%02d:%02d",
                 calendar.get(Calendar.HOUR_OF_DAY),

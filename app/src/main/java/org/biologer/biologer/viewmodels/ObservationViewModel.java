@@ -106,8 +106,8 @@ public class ObservationViewModel extends ViewModel {
                     getAtlasCode().getValue(),
                     isAlive,
                     getCauseOfDeath(),
-                    getLatitude(),
-                    getLongitude(),
+                    getLatitudeNotnull(),
+                    getLongitudeNotnull(),
                     getRoundedAccuracy(),
                     getRoundedElevation(),
                     getLocation().getValue(),
@@ -130,6 +130,14 @@ public class ObservationViewModel extends ViewModel {
             return coordinates.getValue().latitude;
         } else {
             return null;
+        }
+    }
+
+    public Double getLatitudeNotnull() {
+        if (coordinates.getValue() != null) {
+            return coordinates.getValue().latitude;
+        } else {
+            return 0.0;
         }
     }
 
@@ -156,6 +164,14 @@ public class ObservationViewModel extends ViewModel {
             return coordinates.getValue().longitude;
         } else {
             return null;
+        }
+    }
+
+    public Double getLongitudeNotnull() {
+        if (coordinates.getValue() != null) {
+            return coordinates.getValue().longitude;
+        } else {
+            return 0.0;
         }
     }
 

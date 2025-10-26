@@ -1,6 +1,7 @@
 package org.biologer.biologer.services;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
 
 import org.biologer.biologer.App;
@@ -163,6 +164,47 @@ public class ObjectBoxHelper {
             Log.e(TAG, "Error retrieving timed count observations by ID: " + timedCountId, e);
             return new ArrayList<>();
         }
+    }
+
+    public static Location calculateCentroidLocation(Integer timedCountId) {
+        List<EntryDb> observations = getTimedCountObservations(timedCountId);
+
+        if (observations.isEmpty()) {
+            return null;
+        }
+
+        double sumLat = 0.0;
+        double sumLon = 0.0;
+        double sumAlt = 0.0;
+        int count = 0;
+
+        // Get all the data from timed count entries
+        for (EntryDb entry : observations) {
+            if (entry.getLattitude() != 0 && entry.getLongitude() != 0) {
+                sumLat += entry.getLattitude();
+                sumLon += entry.getLongitude();
+                if (entry.getElevation() != 0) {
+                    sumAlt += entry.getElevation();
+                }
+                count++;
+            }
+        }
+
+        // Create average value
+        if (count > 0) {
+            Location centralLocation = new Location("TimedCountCentroid");
+            centralLocation.setLatitude(sumLat / count);
+            centralLocation.setLongitude(sumLon / count);
+            if (sumAlt > 0) {
+                centralLocation.setAltitude(sumAlt / count);
+            } else {
+                // If no altitude data, perhaps set it to 0 or null depending on your model
+                centralLocation.setAltitude(0.0);
+            }
+            return centralLocation;
+        }
+
+        return null;
     }
 
     public static StageDb getStageById(long stageId) {

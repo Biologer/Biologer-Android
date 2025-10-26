@@ -553,4 +553,7 @@
     <string name="no_announcement_localy">The announcement is not available in your local database.</string>
     <string name="failed_to_download_announcement">Could not download announcements.</string>
     <string name="loading">Loading…</string>
+    <string name="error_loading_timed_count_id">Timed count ID is null!</string>
+    <string name="error_original_count_data_missing">Timed count data is missing!</string>
+    <string name="error_no_location_data">Timed count is missing location data!</string>
 </resources>

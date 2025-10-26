@@ -99,6 +99,13 @@ public class TimedCountViewModel extends ViewModel {
     }
 
     public void getFromObjectBox(TimedCountDb timedCount) {
+        setTimedCountId(timedCount.getTimedCountId());
+        setStartTimeString(timedCount.getStartTime());
+        setEndTimeString(timedCount.getEndTime());
+        setCountDuration(timedCount.getCountDurationMinutes());
+        setArea(timedCount.getWalkedArea());
+        setDistance(timedCount.getWalkedDistance());
+        setTaxonGroupId(Long.parseLong(timedCount.getTaxonGroup()));
         setTemperatureData(timedCount.getTemperatureCelsius());
         setCloudinessData(timedCount.getCloudCoverPercentage());
         setWindSpeedData(timedCount.getWindSpeed());
@@ -107,10 +114,6 @@ public class TimedCountViewModel extends ViewModel {
         setHumidityData(timedCount.getHumidityPercentage());
         setHabitatData(timedCount.getHabitat());
         setCommentData(timedCount.getComment());
-        setTimedCountId(timedCount.getTimedCountId());
-        setStartTimeString(timedCount.getStartTime());
-        setEndTimeString(timedCount.getEndTime());
-        setTaxonGroupId(Long.parseLong(timedCount.getTaxonGroup()));
         setIsRunning(false);
         setNewEntry(false);
         setModified(false);

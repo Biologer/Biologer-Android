@@ -119,7 +119,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         setupRecyclerView();
         if (isNewEntry()) {
             addNewViewModel();
-            checkLocationPermission(); // This also starts setupNewTimedCount()
+            checkLocationPermission(); // Also starts setupNewTimedCount()
         } else {
             loadExistingViewModel();
             loadSpeciesData();
@@ -278,7 +278,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private void addNewViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
         viewModel.setTimedCountId(ObjectBoxHelper.getUniqueTimedCountID());
-        viewModel.setNewEntry(true); // Used to inform if this is a new entry
+        viewModel.setNewEntry(true);
         addWeatherObserverToViewModel();
 
         viewModel.getElapsedTime().observe(this, elapsed -> {
@@ -306,7 +306,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void loadExistingViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        viewModel.setNewEntry(false); // Used to inform if this is a new entry
+        viewModel.setNewEntry(false);
         Integer id = getTimedCountIdFromBundle();
         if (id != null) {
             viewModel.setTimedCountId(id);
@@ -386,65 +386,121 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void addNewObjectBoxEntry(TaxonDb taxon) {
-        fetchLatestLocation(new LocationResultCallback() {
-            @Override
-            public void onLocationSuccess(Location location) {
-                Log.d(TAG, "Location for the entry data is: " + location.getLatitude() + ", " + location.getLongitude());
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityTimedCount.this);
 
-                // Always add Observation Type for observed specimen
-                String observed_id = "[" + ObjectBoxHelper.getIdForObservedTag() + "]";
-                // Always set the stage to adult
-                Long stageId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
-
-                List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-                String data_license = "0";
-                int image_license = 0;
-                if (userData != null) {
-                    if (!userData.isEmpty()) {
-                        data_license = String.valueOf(userData.get(0).getDataLicense());
-                        image_license = userData.get(0).getImageLicense();
-                    }
+        // Case 1: NEW ENTRY - Timed Count is currently running. Use live data.
+        if (viewModel.isNewEntry()) {
+            fetchLatestLocation(new LocationResultCallback() {
+                @Override
+                public void onLocationSuccess(Location location) {
+                    createAndSaveNewEntry(taxon, location,
+                            DateHelper.getCurrentYear(),
+                            DateHelper.getCurrentMonth(),
+                            DateHelper.getCurrentDay(),
+                            DateHelper.getCurrentTime());
                 }
 
-                EntryDb entryDb = new EntryDb(0,
-                        taxon.getId(),
-                        viewModel.getTimedCountId(),
-                        taxon.getLatinName(),
-                        DateHelper.getCurrentYear(),
-                        DateHelper.getCurrentMonth(),
-                        DateHelper.getCurrentDay(),
-                        "",
-                        1,
-                        "",
-                        stageId,
-                        null,
-                        "true",
-                        "",
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        (double) location.getAccuracy(),
-                        location.getAltitude(),
-                        preferences.getString("location_name", ""),
-                        null,
-                        null,
-                        null,
-                        preferences.getString("project_name", ""),
-                        "",
-                        data_license,
-                        image_license,
-                        DateHelper.getCurrentTime(),
-                        "",
-                        observed_id);
-                long newEntryId = ObjectBoxHelper.setObservation(entryDb);
-                viewModel.addNewEntryId(newEntryId);
+                @Override
+                public void onLocationFailure(String errorMessage) {
+                    Toast.makeText(ActivityTimedCount.this, "Location not available. " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        // Case 2: EXISTING ENTRY - Timed Count is reopened. Use stored data.
+        } else {
+            Integer timedCountId = viewModel.getTimedCountId();
+            if (timedCountId == null) {
+                Log.e(TAG, "Cannot add entry, Timed Count ID is missing for existing entry.");
+                Toast.makeText(this, R.string.error_loading_timed_count_id, Toast.LENGTH_LONG).show();
+                return;
             }
 
-            @Override
-            public void onLocationFailure(String errorMessage) {
-                Toast.makeText(ActivityTimedCount.this, "Location not available. " + errorMessage, Toast.LENGTH_SHORT).show();
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+            if (timedCount == null) {
+                Toast.makeText(this, R.string.error_original_count_data_missing, Toast.LENGTH_LONG).show();
+                return;
             }
-        });
+
+            // Get the average location (centroid) of all observations in this count
+            Location centralLocation = ObjectBoxHelper.calculateCentroidLocation(timedCountId);
+            if (centralLocation == null) {
+                Toast.makeText(this, R.string.error_no_location_data, Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // Get average time
+            String averageTime = DateHelper.getAverageTime(
+                    timedCount.getStartTime(),
+                    timedCount.getEndTime()
+            );
+
+            // Derive Accuracy as half of the walked distance
+            double accuracy = (double) viewModel.getDistance() / 2.0;
+            centralLocation.setAccuracy((float) accuracy);
+            createAndSaveNewEntry(taxon,
+                    centralLocation,
+                    timedCount.getYear(),
+                    timedCount.getMonth(),
+                    timedCount.getDay(),
+                    averageTime);
+        }
+    }
+
+    /**
+     * Creates and saves a new EntryDb record using the provided data, instead of
+     * relying on current location/time.
+     */
+    private void createAndSaveNewEntry(TaxonDb taxon, Location location,
+                                       String year, String month, String day, String time) {
+        Log.d(TAG, "Saving observation data with location: Lat = " + location.getLatitude() + ", Lng = " + location.getLongitude() + ", Acc = " + location.getAccuracy());
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityTimedCount.this);
+
+        // Always add Observation Type for observed specimen
+        String observed_id = "[" + ObjectBoxHelper.getIdForObservedTag() + "]";
+        // Always set the stage to adult
+        Long stageId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
+
+        List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
+        String data_license = "0";
+        int image_license = 0;
+        if (userData != null) {
+            if (!userData.isEmpty()) {
+                data_license = String.valueOf(userData.get(0).getDataLicense());
+                image_license = userData.get(0).getImageLicense();
+            }
+        }
+
+        EntryDb entryDb = new EntryDb(0,
+                taxon.getId(),
+                viewModel.getTimedCountId(),
+                taxon.getLatinName(),
+                year,
+                month,
+                day,
+                "",
+                1,
+                "",
+                stageId,
+                null,
+                "true",
+                "",
+                location.getLatitude(),
+                location.getLongitude(),
+                (double) location.getAccuracy(),
+                location.getAltitude(),
+                preferences.getString("location_name", ""),
+                null,
+                null,
+                null,
+                preferences.getString("project_name", ""),
+                "",
+                data_license,
+                image_license,
+                time,
+                "",
+                observed_id);
+        long newEntryId = ObjectBoxHelper.setObservation(entryDb);
+        viewModel.addNewEntryId(newEntryId);
     }
 
     private void displayAdditionalDetailsFragment() {
