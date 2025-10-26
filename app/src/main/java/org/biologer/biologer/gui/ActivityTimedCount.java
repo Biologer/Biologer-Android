@@ -59,7 +59,7 @@ import com.google.android.gms.location.Priority;
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
-import org.biologer.biologer.adapters.SpeciesCount;
+import org.biologer.biologer.adapters.SpeciesCountItems;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.adapters.TimedCountAdapter;
 import org.biologer.biologer.viewmodels.TimedCountViewModel;
@@ -100,7 +100,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     boolean taxonSelectedFromTheList = false;
     private FusedLocationProviderClient fusedLocationClient;
     private TimedCountAdapter timedCountAdapter;
-    private final ArrayList<SpeciesCount> speciesCounts = new ArrayList<>();
+    private final ArrayList<SpeciesCountItems> speciesCountItems = new ArrayList<>();
     boolean save_enabled = false;
     private boolean is_fragment_visible = false;
     private TimedCountViewModel viewModel;
@@ -138,10 +138,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 if (timedCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
                     timedCountAdapter.addToSpeciesCount(entry.getTaxonId());
                 } else {
-                    SpeciesCount new_species = new SpeciesCount(entry.getTaxonSuggestion(),
+                    SpeciesCountItems new_species = new SpeciesCountItems(entry.getTaxonSuggestion(),
                             entry.getTaxonId(), 1);
-                    speciesCounts.add(new_species);
-                    timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+                    speciesCountItems.add(new_species);
+                    timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
                 }
             }
         }
@@ -167,10 +167,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             if (timedCountAdapter.hasSpeciesWithID(selectedTaxon.getId())) {
                 timedCountAdapter.addToSpeciesCount(selectedTaxon.getId());
             } else {
-                SpeciesCount new_species = new SpeciesCount(selectedTaxon.getLatinName(),
+                SpeciesCountItems new_species = new SpeciesCountItems(selectedTaxon.getLatinName(),
                         selectedTaxon.getId(), 1);
-                speciesCounts.add(new_species);
-                timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+                speciesCountItems.add(new_species);
+                timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
             }
             binding.autoCompleteTextViewSpecies.setText("");
 
@@ -235,10 +235,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void setupRecyclerView() {
         binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(this));
-        timedCountAdapter = new TimedCountAdapter(speciesCounts);
+        timedCountAdapter = new TimedCountAdapter(speciesCountItems);
         timedCountAdapter.setOnItemClickListener(new TimedCountAdapter.OnItemClickListener() {
             @Override
-            public void onPlusClick(SpeciesCount species) {
+            public void onPlusClick(SpeciesCountItems species) {
                 TaxonDb taxon;
                 if (species.getSpeciesID() != null) {
                     taxon = ObjectBoxHelper.getTaxonById(species.getSpeciesID());
@@ -256,7 +256,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             }
 
             @Override
-            public void onSpeciesClick(SpeciesCount species) {
+            public void onSpeciesClick(SpeciesCountItems species) {
                 Long species_id = species.getSpeciesID();
                 if (species_id != null) {
                     Log.d(TAG, "Species with ID " + species_id + " is clicked.");
@@ -315,6 +315,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 Log.e(TAG, "There is no timed count with ID: " + id);
                 return;
             }
+
+            // Load existing data into the View Model
             viewModel.getFromObjectBox(timedCount);
 
             addWeatherObserverToViewModel();
@@ -999,16 +1001,16 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             } else {
                 // If the species in not on the list we need to add new entry
                 String latin_name = TaxonSearchHelper.getLocalisedLatinName(new_id);
-                SpeciesCount new_species;
+                SpeciesCountItems new_species;
                 if (latin_name != null) {
-                    new_species = new SpeciesCount(latin_name,
+                    new_species = new SpeciesCountItems(latin_name,
                             new_id, 1);
                 } else {
-                    new_species = new SpeciesCount(taxonNameSuggestion,
+                    new_species = new SpeciesCountItems(taxonNameSuggestion,
                             null, 1);
                 }
-                speciesCounts.add(new_species);
-                timedCountAdapter.notifyItemInserted(speciesCounts.size() - 1);
+                speciesCountItems.add(new_species);
+                timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
             }
         }
     }

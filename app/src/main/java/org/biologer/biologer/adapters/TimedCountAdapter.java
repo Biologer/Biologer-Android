@@ -22,17 +22,17 @@ import java.util.List;
 
 public class TimedCountAdapter
         extends RecyclerView.Adapter<TimedCountAdapter.ViewHolder> {
-    private final List<SpeciesCount> observedSpecies;
+    private final List<SpeciesCountItems> observedSpecies;
     private int position;
     private static final String TAG = "Biologer.TCEntryAdapter";
     View view;
-    public TimedCountAdapter(ArrayList<SpeciesCount> entries) {
+    public TimedCountAdapter(ArrayList<SpeciesCountItems> entries) {
         observedSpecies = entries;
     }
 
     public interface OnItemClickListener {
-        void onPlusClick(SpeciesCount position);
-        void onSpeciesClick(SpeciesCount position);
+        void onPlusClick(SpeciesCountItems position);
+        void onSpeciesClick(SpeciesCountItems position);
     }
 
     private OnItemClickListener listener;
@@ -87,7 +87,7 @@ public class TimedCountAdapter
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
-        SpeciesCount species = observedSpecies.get(position);
+        SpeciesCountItems species = observedSpecies.get(position);
         viewHolder.speciesName.setText(species.getSpeciesName());
         viewHolder.speciesCount.setText(String.valueOf(species.getNumberOfIndividuals()));
 
@@ -163,7 +163,7 @@ public class TimedCountAdapter
         if (observedSpecies == null) {
             return false;
         }
-        for (SpeciesCount species : observedSpecies) {
+        for (SpeciesCountItems species : observedSpecies) {
             if (species.getSpeciesID() == speciesID) {
                 return true;
             }
@@ -176,7 +176,7 @@ public class TimedCountAdapter
             return;
         }
         for (int i = 0; i < observedSpecies.size(); i++) {
-            SpeciesCount species = observedSpecies.get(i);
+            SpeciesCountItems species = observedSpecies.get(i);
             if (species.getSpeciesID() == speciesID) {
                 int individuals = species.getNumberOfIndividuals() + 1;
                 species.setNumberOfIndividuals(individuals);
@@ -191,7 +191,7 @@ public class TimedCountAdapter
             return;
         }
         for (int i = 0; i < observedSpecies.size(); i++) {
-            SpeciesCount species = observedSpecies.get(i);
+            SpeciesCountItems species = observedSpecies.get(i);
             if (species.getSpeciesID() == speciesID) {
                 int individuals = species.getNumberOfIndividuals() - 1;
                 if (individuals == 0) {

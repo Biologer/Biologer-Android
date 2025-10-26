@@ -110,6 +110,7 @@ public class TimedCountViewModel extends ViewModel {
         setTimedCountId(timedCount.getTimedCountId());
         setStartTimeString(timedCount.getStartTime());
         setEndTimeString(timedCount.getEndTime());
+        setTaxonGroupId(Long.parseLong(timedCount.getTaxonGroup()));
         setIsRunning(false);
         setNewEntry(false);
         setModified(false);

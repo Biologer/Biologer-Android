@@ -5,12 +5,12 @@ package org.biologer.biologer.adapters;
  * RecyclerView. It is currently used for Timed Count data.
  */
 
-public class SpeciesCount {
+public class SpeciesCountItems {
     private String speciesName;
     private Long speciesID;
     private int numberOfIndividuals;
 
-    public SpeciesCount(String speciesName, Long speciesID, int numberOfIndividuals) {
+    public SpeciesCountItems(String speciesName, Long speciesID, int numberOfIndividuals) {
         this.speciesName = speciesName;
         this.speciesID = speciesID;
         this.numberOfIndividuals = numberOfIndividuals;
