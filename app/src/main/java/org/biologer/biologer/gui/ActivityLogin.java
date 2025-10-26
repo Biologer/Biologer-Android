@@ -36,6 +36,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
@@ -43,10 +45,12 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityLoginBinding;
 import org.biologer.biologer.databinding.DatabasesAndIconsBinding;
 import org.biologer.biologer.databinding.DialogResetEmailBinding;
+import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.network.json.LoginResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.json.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.Arrays;
@@ -516,6 +520,9 @@ public class ActivityLogin extends AppCompatActivity {
                             Box<UserDb> userDataBox = App.get().getBoxStore().boxFor(UserDb.class);
                             userDataBox.removeAll();
                             userDataBox.put(user);
+
+                            // Get the Firebase Messages Token (FCM) and subscribe
+                            getFirebaseMessagingToken();
                         }
 
                         startLandingActivity();
@@ -672,6 +679,39 @@ public class ActivityLogin extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
             }
         });
+    }
+
+    public static void getFirebaseMessagingToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String token = task.getResult();
+                        Log.d(TAG, "Obtained FCM token: " + token);
+                        BiologerFirebaseMessagingService.sendRegistrationToServer(token);
+                    } else {
+                        Log.w(TAG, "Fetching FCM token failed", task.getException());
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to topic announcements.");
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to topic announcements " + task.getException());
+                    }
+                });
+
+        String userTopic = "user_" + ObjectBoxHelper.getUserId();
+        FirebaseMessaging.getInstance().subscribeToTopic(userTopic)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to user topic: " + userTopic);
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to user topic: " + userTopic, task.getException());
+                    }
+                });
+
     }
 
     /*

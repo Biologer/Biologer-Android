@@ -49,36 +49,47 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
         Map<String, String> data = remoteMessage.getData();
-        String type = data.get("type");
         Log.d(TAG, "Raw FCM data: " + data);
 
-        // Receive notifications
-        if ("notification_created".equals(type)) {
-            Log.d(TAG, "Received: new notification_created event → trigger incremental sync");
-            showNotification(data);
-            downloadNewNotification(data);
+        if (data.containsKey("silent")) {
+            Log.d(TAG, "Received silent background message: " + data);
             return;
         }
 
-        // Mark notification as read
-        if ("notification_read".equals(type)) {
-            Log.d(TAG, "Received: notification_read event → mark notification as online");
-            String id = data.get("notification_id");
-            if ("all".equals(id)) {
-                Log.d(TAG, "All notifications are now marked as read on the server side.");
-                NotificationsHelper.deleteAllNotificationsLocally(this);
-            } else {
-                Log.d(TAG, "Notification " + id + " is now marked as read on the server side.");
-                NotificationsHelper.deletePhotosFromNotification(this, id);
-                NotificationsHelper.deleteNotificationFromObjectBox(id);
+        if (data.containsKey("type")) {
+            // Receive notifications
+            if ("notification_created".equals(data.get("type"))) {
+                Log.d(TAG, "Received: new notification_created event → trigger incremental sync");
+                showNotification(data);
+                downloadNewNotification(data);
+                return;
             }
+
+            // Mark notification as read
+            if ("notification_read".equals(data.get("type"))) {
+                Log.d(TAG, "Received: notification_read event → mark notification as online");
+                String id = data.get("notification_id");
+                if ("all".equals(id)) {
+                    Log.d(TAG, "All notifications are now marked as read on the server side.");
+                    NotificationsHelper.deleteAllNotificationsLocally(this);
+                } else {
+                    Log.d(TAG, "Notification " + id + " is now marked as read on the server side.");
+                    NotificationsHelper.deletePhotosFromNotification(this, id);
+                    NotificationsHelper.deleteNotificationFromObjectBox(id);
+                }
+            }
+
+            // Receive announcements
+            if ("announcement".equals(data.get("type"))) {
+                Log.d(TAG, "Received: announcement event → display notification");
+                showAnnouncement(data);
+                return;
+            }
+
+            return;
         }
 
-        // Receive announcements
-        if ("announcement".equals(type)) {
-            Log.d(TAG, "Received: announcement event → display notification");
-            showAnnouncement(data);
-        }
+        Log.d(TAG, "Received unhandled data message: " + data);
     }
 
     /**

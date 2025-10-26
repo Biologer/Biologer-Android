@@ -27,8 +27,6 @@ import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
-import java.util.List;
-
 public class FragmentLogout extends Fragment {
 
     private static final String TAG = "Biologer.Logout";
@@ -49,19 +47,20 @@ public class FragmentLogout extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
 
-                List<UserDb> userDataList = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-                UserDb userData = userDataList.get(0);
-                String username = userData.getUsername();
+                UserDb user = ObjectBoxHelper.getUser();
+                if (user == null) {
+                    return;
+                }
                 String database_url = SettingsManager.getDatabaseName();
                 String community_name = getBiologerCommunity(database_url);
 
-                Log.i(TAG, "Current user: " + username);
+                Log.i(TAG, "Current user: " + user.getUsername());
                 String database_text = getString(R.string.currently_logged) +
                         " " + community_name + " " +
                         getString(R.string.at) + " " +
                         database_url + " " + getString(R.string.as_user) + " " +
-                        username + " (" +
-                        userData.getEmail() + ").";
+                        user.getUsername() + " (" +
+                        user.getEmail() + ").";
                 binding.textViewUser.setText(database_text);
 
                 binding.buttonLogout.setOnClickListener(v -> {
@@ -138,13 +137,30 @@ public class FragmentLogout extends Fragment {
         // Unsubscribe from FCM
         String userTopic = "user_" + ObjectBoxHelper.getUserId();
         FirebaseMessaging fm = FirebaseMessaging.getInstance();
-        fm.unsubscribeFromTopic(userTopic);
-        fm.unsubscribeFromTopic("announcements");
+        fm.unsubscribeFromTopic(userTopic)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "FCM unsubscribed from user topic: " + userTopic);
+                    } else {
+                        Log.e(TAG, "FCM failed to unsubscribe from user topic: " + userTopic, task.getException());
+                    }
+                });
+        fm.unsubscribeFromTopic("announcements")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "FCM unsubscribed from announcements.");
+                    } else {
+                        Log.e(TAG, "FCM failed to unsubscribe from announcements.");
+                    }
+                });
 
         // Delete data and logout from a new thread
         new Thread(() -> {
             ObjectBoxHelper.removeAllData(activity.getApplicationContext());
             SettingsManager.deleteSettings();
+
+            // FIX: Explicitly close all ObjectBox resources for this thread
+            App.get().getBoxStore().closeThreadResources();
 
             new Handler(Looper.getMainLooper()).post(() -> {
                 Log.d(TAG, "Data deletion finished. Navigating to login.");

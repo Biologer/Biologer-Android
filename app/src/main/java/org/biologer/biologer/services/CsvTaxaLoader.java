@@ -128,10 +128,14 @@ public class CsvTaxaLoader {
             }
 
             // Synonyms
-            if (!synonyms.isEmpty()) {
-                String[] splitSynonyms = synonyms.split(";");
+            String trimmedSynonyms = synonyms.trim();
+            if (!trimmedSynonyms.isEmpty()) {
+                String[] splitSynonyms = trimmedSynonyms.split(";");
                 for (String s : splitSynonyms) {
-                    if (!s.isEmpty()) synonymList.add(new SynonymsDb(0, id, s));
+                    String trimmedS = s.trim();
+                    if (!trimmedS.isEmpty()) {
+                        synonymList.add(new SynonymsDb(0, id, trimmedS));
+                    }
                 }
             }
         }

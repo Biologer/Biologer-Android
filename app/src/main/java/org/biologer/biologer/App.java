@@ -3,11 +3,14 @@ package org.biologer.biologer;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.util.Log;
+
 import androidx.multidex.MultiDexApplication;
 
 import org.biologer.biologer.sql.MyObjectBox;
 
 import io.objectbox.BoxStore;
+import io.objectbox.android.Admin;
 
 /**
  * Created by brjovanovic on 12/24/2017.
@@ -45,6 +48,12 @@ public class App extends MultiDexApplication {
 
     private void initializeBoxStore() {
         boxStore = MyObjectBox.builder().androidContext(this).build();
+
+        // Debug versions should include ObjectBox Admin so that I can browse the database
+        if (BuildConfig.DEBUG) {
+            boolean started = new Admin(boxStore).start(this);
+            Log.i("Biologer", "Started: " + started);
+        }
     }
 
     public void createNotificationChannelEntries() {

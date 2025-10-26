@@ -296,8 +296,6 @@ public class ObjectBoxHelper {
         }
     }
 
-    // ... (getDataLicense, getImageLicense, getUserName, getUserEmail, getUserId, getUser are fine as they don't build queries)
-
     public static Long getIdForPhotographedTag() {
         Box<ObservationTypesDb> box = App.get().getBoxStore().boxFor(ObservationTypesDb.class);
         try (Query<ObservationTypesDb> query = box.query(ObservationTypesDb_.slug.equal("photographed")).build()) {
@@ -372,15 +370,14 @@ public class ObjectBoxHelper {
         return (user != null) ? user.getUserId() : null;
     }
 
-    // Get the data from GreenDao database
+    // Get the data from ObjectBox database
     public static UserDb getUser() {
-        // Get the user data from a GreenDao database
-        List<UserDb> userdata_list = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-        // If there is no user data we should logout the user
-        if (userdata_list == null || userdata_list.isEmpty()) {
+        Box<UserDb> box = App.get().getBoxStore().boxFor(UserDb.class);
+        try (Query<UserDb> query = box.query().build()) {
+            return query.findFirst();
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Error retrieving user from database!", e);
             return null;
-        } else {
-            return userdata_list.get(0);
         }
     }
 

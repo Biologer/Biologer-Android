@@ -32,13 +32,11 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityLandingBinding;
-import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.services.AuthHelper;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
@@ -115,6 +113,11 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             return;
         }
 
+        // If Biologer is updated to 5.1, the user should get FCM here (no need to logout)
+        if (SettingsManager.getLastFcmToken() == null) {
+            ActivityLogin.getFirebaseMessagingToken();
+        }
+
         // On the first run (after the user came from the login screen) show some help
         if (SettingsManager.isFirstRun()) {
             Log.d(TAG, "This is first run of the program.");
@@ -179,11 +182,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             }
         }
 
-        // Ensure FCM token is registered when app starts and user is logged in
-        if (SettingsManager.getAccessToken() != null) {
-            getFirebaseMessagingToken();
-        }
-
     }
 
     @Override
@@ -244,39 +242,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         uploadMenu = menu;
         updateMenuIconVisibility();
         return super.onCreateOptionsMenu(menu);
-    }
-
-    private void getFirebaseMessagingToken() {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String token = task.getResult();
-                        Log.d(TAG, "Obtained FCM token: " + token);
-                        BiologerFirebaseMessagingService.sendRegistrationToServer(token);
-                    } else {
-                        Log.w(TAG, "Fetching FCM token failed", task.getException());
-                    }
-                });
-
-        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("Biologer.FCM", "Subscribed to topic announcements.");
-                    } else {
-                        Log.e("Biologer.FCM", "Failed to subscribe to topic announcements " + task.getException());
-                    }
-                });
-
-        String userTopic = "user_" + ObjectBoxHelper.getUserId();
-        FirebaseMessaging.getInstance().subscribeToTopic(userTopic)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("Biologer.FCM", "Subscribed to user topic: " + userTopic);
-                    } else {
-                        Log.e("Biologer.FCM", "Failed to subscribe to user topic: " + userTopic, task.getException());
-                    }
-                });
-
     }
 
     @Override

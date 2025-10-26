@@ -11,8 +11,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdkVersion 23
         targetSdk 36
-        versionCode 208
-        versionName '5.0.15'
+        versionCode 211
+        versionName '5.1.1'
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -136,6 +136,14 @@ dependencies {
     implementation 'com.github.MikeOrtiz:TouchImageView:3.1.1'
     implementation ('com.github.bumptech.glide:glide:5.0.5')
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.5'
+
+    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.0.1")
+    releaseImplementation("io.objectbox:objectbox-android:5.0.1")
+    configurations {
+        debugImplementation {
+            exclude group: 'io.objectbox', module: 'objectbox-android'
+        }
+    }
 
 }
 
