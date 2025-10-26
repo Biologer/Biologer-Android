@@ -27,13 +27,15 @@ public class LandingFragmentAdapter
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
+    private final boolean isTimedCountObservation;
 
     public List<LandingFragmentItems> getData() {
         return myEntries;
     }
 
-    public LandingFragmentAdapter(ArrayList<LandingFragmentItems> entries) {
+    public LandingFragmentAdapter(ArrayList<LandingFragmentItems> entries, boolean isTimedCountObservation) {
         myEntries = entries;
+        this.isTimedCountObservation = isTimedCountObservation;
     }
 
     public static class ViewHolder
@@ -44,8 +46,9 @@ public class LandingFragmentAdapter
         public TextView textTitle;
         public TextView textSubtitle;
         private boolean isTimedCount = false;
+        private final boolean isTimedCountObservation;
 
-        public ViewHolder(View view) {
+        public ViewHolder(View view, boolean isTimedCountObservation) {
             super(view);
 
             // Define click listener for the ViewHolder's View
@@ -55,6 +58,7 @@ public class LandingFragmentAdapter
 
             // Add the entry items menu
             view.setOnCreateContextMenuListener(this);
+            this.isTimedCountObservation = isTimedCountObservation;
         }
 
         public void setIsTimedCount(boolean isTimedCount) {
@@ -64,14 +68,16 @@ public class LandingFragmentAdapter
         @Override
         public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
             Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
-            if (!this.isTimedCount) {
+            if (!this.isTimedCount && !this.isTimedCountObservation) {
                 menu.add(Menu.NONE, R.id.duplicate,
                         Menu.NONE, R.string.duplicate_entry);
             }
             menu.add(Menu.NONE, R.id.delete,
                     Menu.NONE, R.string.delete_entry);
-            menu.add(Menu.NONE, R.id.delete_all,
-                    Menu.NONE, R.string.delete_all_entries);
+            if (!this.isTimedCountObservation) {
+                menu.add(Menu.NONE, R.id.delete_all,
+                        Menu.NONE, R.string.delete_all_entries);
+            }
         }
     }
 
@@ -83,7 +89,7 @@ public class LandingFragmentAdapter
         view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.entries_list, viewGroup, false);
 
-        return new ViewHolder(view);
+        return new ViewHolder(view, isTimedCountObservation);
 
     }
 

@@ -158,7 +158,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     private void setupRecyclerView() {
-        entriesAdapter = new LandingFragmentAdapter(items);
+        entriesAdapter = new LandingFragmentAdapter(items, false);
         binding.recycledViewEntries.setAdapter(entriesAdapter);
         binding.recycledViewEntries.setClickable(true);
         binding.recycledViewEntries.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -368,7 +368,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
             items = LandingFragmentItems.loadAllEntries(context);
-            entriesAdapter = new LandingFragmentAdapter(items);
+            entriesAdapter = new LandingFragmentAdapter(items, false);
             binding.recycledViewEntries.setAdapter(entriesAdapter);
         }
     }
@@ -606,7 +606,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
 
         items = LandingFragmentItems.loadAllEntries(requireContext());
-        entriesAdapter = new LandingFragmentAdapter(items);
+        entriesAdapter = new LandingFragmentAdapter(items, false);
         binding.recycledViewEntries.setAdapter(entriesAdapter);
     }
 

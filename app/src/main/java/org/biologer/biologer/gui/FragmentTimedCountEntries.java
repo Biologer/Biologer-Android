@@ -80,7 +80,7 @@ public class FragmentTimedCountEntries extends Fragment {
         loadEntries();
 
         // If there are entries display the list with taxa
-        entriesAdapter = new LandingFragmentAdapter(items);
+        entriesAdapter = new LandingFragmentAdapter(items, true);
         binding.recyclerViewTimedCounts.setAdapter(entriesAdapter);
         binding.recyclerViewTimedCounts.setClickable(true);
         binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -104,7 +104,7 @@ public class FragmentTimedCountEntries extends Fragment {
                         if (activity != null) {
                             Log.d(TAG, "Species entry at position " + position + " clicked.");
                             Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
-                            intent.putExtra("IS_NEW_ENTRY", "NO");
+                            intent.putExtra("IS_NEW_ENTRY", false);
                             intent.putExtra("ENTRY_ID", entry_id);
                             openEntry.launch(intent);
                         }
