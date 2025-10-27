@@ -9,7 +9,7 @@ android {
     compileSdk = 36
     defaultConfig {
         applicationId "org.biologer.biologer"
-        minSdkVersion 23
+        minSdk 23
         targetSdk 36
         versionCode 211
         versionName '5.1.1'

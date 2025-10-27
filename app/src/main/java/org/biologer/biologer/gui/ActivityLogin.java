@@ -682,36 +682,10 @@ public class ActivityLogin extends AppCompatActivity {
     }
 
     public static void getFirebaseMessagingToken() {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        String token = task.getResult();
-                        Log.d(TAG, "Obtained FCM token: " + token);
-                        BiologerFirebaseMessagingService.sendRegistrationToServer(token);
-                    } else {
-                        Log.w(TAG, "Fetching FCM token failed", task.getException());
-                    }
-                });
-
-        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("Biologer.FCM", "Subscribed to topic announcements.");
-                    } else {
-                        Log.e("Biologer.FCM", "Failed to subscribe to topic announcements " + task.getException());
-                    }
-                });
-
-        String userTopic = "user_" + ObjectBoxHelper.getUserId();
-        FirebaseMessaging.getInstance().subscribeToTopic(userTopic)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("Biologer.FCM", "Subscribed to user topic: " + userTopic);
-                    } else {
-                        Log.e("Biologer.FCM", "Failed to subscribe to user topic: " + userTopic, task.getException());
-                    }
-                });
-
+        // Get the token
+        BiologerFirebaseMessagingService.getFirebaseToken();
+        // Subscribe to topics to receive messages
+        BiologerFirebaseMessagingService.subscribeToTopics();
     }
 
     /*

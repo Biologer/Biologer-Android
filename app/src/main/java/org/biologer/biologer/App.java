@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.multidex.MultiDexApplication;
 
+import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.sql.MyObjectBox;
 
 import io.objectbox.BoxStore;
@@ -37,6 +38,14 @@ public class App extends MultiDexApplication {
         createNotificationChannelUnreadNotifications();
         createNotificationChannelAnnouncements();
         createNotificationChannelLocationTracker();
+
+        // Initialize FCM token and subscribe
+        initializeFCM();
+    }
+
+    private void initializeFCM() {
+        BiologerFirebaseMessagingService.getFirebaseToken();
+        BiologerFirebaseMessagingService.subscribeToTopics();
     }
 
     public BoxStore getBoxStore() {

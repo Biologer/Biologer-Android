@@ -12,6 +12,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -24,6 +25,7 @@ import org.biologer.biologer.gui.ActivityNotification;
 import org.biologer.biologer.network.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.NotificationsHelper;
+import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.json.JSONException;
@@ -128,6 +130,20 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
     public void onNewToken(@NonNull String token) {
         Log.d(TAG, "Refreshed FCM token: " + token);
         sendRegistrationToServer(token);
+        subscribeToTopics();
+    }
+
+    public static void getFirebaseToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String token = task.getResult();
+                        Log.d(TAG, "Obtained FCM token: " + token);
+                        sendRegistrationToServer(token);
+                    } else {
+                        Log.w(TAG, "Fetching FCM token failed", task.getException());
+                    }
+                });
     }
 
     /**
@@ -164,6 +180,27 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                 Log.e(TAG, "Error sending token: " + t.getMessage());
             }
         });
+    }
+
+    public static void subscribeToTopics() {
+        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to topic announcements.");
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to topic announcements " + task.getException());
+                    }
+                });
+
+        String userTopic = "user_" + ObjectBoxHelper.getUserId();
+        FirebaseMessaging.getInstance().subscribeToTopic(userTopic)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("Biologer.FCM", "Subscribed to user topic: " + userTopic);
+                    } else {
+                        Log.e("Biologer.FCM", "Failed to subscribe to user topic: " + userTopic, task.getException());
+                    }
+                });
     }
 
     private void showAnnouncement(Map<String, String> data) {

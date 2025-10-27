@@ -113,11 +113,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             return;
         }
 
-        // If Biologer is updated to 5.1, the user should get FCM here (no need to logout)
-        if (SettingsManager.getLastFcmToken() == null) {
-            ActivityLogin.getFirebaseMessagingToken();
-        }
-
         // On the first run (after the user came from the login screen) show some help
         if (SettingsManager.isFirstRun()) {
             Log.d(TAG, "This is first run of the program.");
