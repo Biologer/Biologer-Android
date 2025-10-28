@@ -39,11 +39,14 @@ public class App extends MultiDexApplication {
         createNotificationChannelAnnouncements();
         createNotificationChannelLocationTracker();
 
-        // Initialize FCM token and subscribe
-        initializeFCM();
+        // Initialize FCM token and subscribe only if user is logged in
+        if (SettingsManager.getAccessToken() != null) {
+            initializeFCM();
+        }
     }
 
     private void initializeFCM() {
+        Log.d("Biologer", "Syncing FCM service token and subscribing to the channels.");
         BiologerFirebaseMessagingService.getFirebaseToken();
         BiologerFirebaseMessagingService.subscribeToTopics();
     }

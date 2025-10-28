@@ -10,6 +10,7 @@ import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -23,6 +24,8 @@ import org.biologer.biologer.databinding.ActivityNotificationBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.services.NotificationFetchCallback;
+import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.PhotoUtils;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
@@ -41,14 +44,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ActivityNotification extends AppCompatActivity {
+public class ActivityNotification extends AppCompatActivity implements NotificationFetchCallback {
     private static final String TAG = "Biologer.NotyActivity";
     private ActivityNotificationBinding binding;
     String downloaded;
     boolean image1, image2, image3, image1_ok, image2_ok, image3_ok;
     UnreadNotificationsDb notification;
     int indexId;
-    long notificationId;
+    boolean isFromRecyclerView = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,35 +64,41 @@ public class ActivityNotification extends AppCompatActivity {
 
         // If opening from Activity use index of taped list, else use bundle received from other Fragment
         Bundle bundle = getIntent().getExtras();
-        String realId = null;
+        String realNotificationId = null;
         if (bundle != null) {
-            if (bundle.containsKey("notification_id")) {
-                notificationId = bundle.getLong("notification_id");
+            if (bundle.containsKey("real_notification_id")) {
+                realNotificationId = bundle.getString("real_notification_id");
+                isFromRecyclerView = bundle.getBoolean("from_recycler_view", false);
                 indexId = Objects.requireNonNull(bundle).getInt("index_id");
-                Log.d(TAG, "Displaying notification with ID: " + notificationId + ".");
-            } else if (bundle.containsKey("real_notification_id")) {
-                realId = bundle.getString("real_notification_id");
+                Log.d(TAG, "Displaying notification with ID: " + realNotificationId + ".");
             }
         } else {
             Log.e(TAG, "No Bundle. This activity can not live on its own :)");
+            finish();
             return;
         }
 
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
         Query<UnreadNotificationsDb> query;
-        if (realId != null && !realId.isEmpty()) {
-            // Get notification from its Real ID
-            query = unreadNotificationsDbBox
-                    .query(UnreadNotificationsDb_.realId.equal(realId))
-                    .build();
-        } else {
-            // Get the notification from its ObjectBox ID
-            query = unreadNotificationsDbBox
-                    .query(UnreadNotificationsDb_.id.equal(notificationId))
-                    .build();
+
+        // Get the notification from its ObjectBox ID
+        if (realNotificationId == null) {
+            Toast.makeText(this, R.string.notification_id_id_not_present, Toast.LENGTH_LONG).show();
+            finish();
+            return;
         }
-        notification = query.find().get(0);
+        query = unreadNotificationsDbBox
+                .query(UnreadNotificationsDb_.realId.equal(realNotificationId))
+                .build();
+        List<UnreadNotificationsDb> notifications = query.find();
+        if (notifications.isEmpty()) {
+            Toast.makeText(this, R.string.notification_not_found, Toast.LENGTH_LONG).show();
+            query.close();
+            finish();
+            return;
+        }
+        notification = notifications.get(0);
         query.close();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -100,9 +109,11 @@ public class ActivityNotification extends AppCompatActivity {
         }
         downloaded = "no";
 
+        loadNotificationData();
+
         // Check if there is notification with larger ID
         Query<UnreadNotificationsDb> queryLargerId = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.greater(notificationId))
+                .query(UnreadNotificationsDb_.id.greater(notification.getId()))
                 .build();
         boolean is_last = queryLargerId.find().isEmpty();
         Log.d(TAG, "There are " + queryLargerId.find().size() + " IDs that are larger than the selected one! Reporting " + is_last);
@@ -140,6 +151,57 @@ public class ActivityNotification extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onNotificationUpdated(UnreadNotificationsDb updatedNotification) {
+        // Data is ready (metadata and thumbnail saved). Now update the UI.
+        Log.i(TAG, "Notification metadata and thumbnail updated. Displaying UI.");
+        this.notification = updatedNotification; // Update the local object
+        updateUI();
+    }
+
+    @Override
+    public void onRetryScheduled(UnreadNotificationsDb notification, long delayMillis) {
+        // Inform the user that a retry is scheduled
+        Log.w(TAG, "Retry scheduled for notification fetch in " + delayMillis / 1000 + " seconds.");
+        //Toast.makeText(this, getString(R.string.retry_scheduled_for_data), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onFailure(UnreadNotificationsDb notification, Throwable t) {
+        // Show an error message and display what data is available
+        Log.e(TAG, "Failed to fetch field observation data.", t);
+        //Toast.makeText(ActivityNotification.this, getString(R.string.failed_to_load_data), Toast.LENGTH_LONG).show();
+        updateUI(); // Display any available data and placeholders
+    }
+
+    private void loadNotificationData() {
+        // Check if the essential metadata is missing (e.g., date is set during the first download)
+        if (notification.getDate() == null || notification.getDate().isEmpty() || notification.getImage1() == null) {
+            Log.d(TAG, "Missing field observation data or photos. Initiating download...");
+
+            // Show loading state (You should add a ProgressBar to your XML for this)
+            // TODO Toast.makeText(this, getString(R.string.loading_observation_data), Toast.LENGTH_LONG).show();
+
+            // Use the external service to fetch all metadata and the thumbnail
+            NotificationsHelper.fetchFieldObservationAndPhotos(
+                    this,
+                    notification,
+                    this
+            );
+        } else {
+            Log.d(TAG, "Field observation data is already present. Displaying UI.");
+            updateUI();
+        }
+    }
+
+    private void updateUI() {
+        // TODO Hide loading state if it was visible
+        // (Assuming you handle loading visibility in your XML/logic)
+
+        getFieldObservationData(); // Displays metadata
+        displayPhotos();         // Displays/downloads photos
     }
 
     private void addToolbar() {
@@ -219,39 +281,40 @@ public class ActivityNotification extends AppCompatActivity {
 
         // Add observation date
         String date = notification.getDate();
-        Date dateReal = DateHelper.getDate(date);
-        String dateText = getString(R.string.observation_date) + " " +
-                DateHelper.getLocalizedDate(dateReal, ActivityNotification.this);
-        binding.textViewDate.setText(dateText);
+        if (date != null && !date.isEmpty()) {
+            Date dateReal = DateHelper.getDate(date);
+            String dateText = getString(R.string.observation_date) + " " +
+                    DateHelper.getLocalizedDate(dateReal, ActivityNotification.this);
+            binding.textViewDate.setText(dateText);
+        }
 
         // Add the place of observation
         String location = notification.getLocation();
-        String locationText = getString(R.string.notification_location) + " " + location;
-        binding.textViewLocation.setText(locationText);
+        if (location != null && !location.isEmpty()) {
+            String locationText = getString(R.string.notification_location) + " " + location;
+            binding.textViewLocation.setText(locationText);
+        }
 
         // Get the name of the project if it exist
         String project = notification.getProject();
-        if (project != null) {
-            if (!project.isEmpty()) {
-                String projectText = getString(R.string.notification_project_name) + " " +  project;
-                binding.textViewProject.setText(projectText);
-            }
+        if (project != null && !project.isEmpty()) {
+            String projectText = getString(R.string.notification_project_name) + " " +  project;
+            binding.textViewProject.setText(projectText);
         }
     }
 
     private void displayPhotos() {
-
         // Image 1
         if (notification.getImage1() != null) {
             if (notification.getImage1().equals("No photo")) {
                 Log.i(TAG, "No photo 1 for this notification.");
                 image1_ok = true;
+                binding.imageView1.setImageResource(R.drawable.ic_photo_camera); // TODO
             } else {
                 String type = FileManipulation.uriType(notification.getImage1());
                 Log.i(TAG, "Image 1 exist, loading " + notification.getImage1() + "; Type: " + type);
                 if (type != null) {
                     if (type.equals("file")) {
-                        // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage1());
                         binding.imageView1.setImageURI(uri);
                         binding.frameLayoutImage1.setVisibility(View.VISIBLE);
@@ -276,12 +339,12 @@ public class ActivityNotification extends AppCompatActivity {
             if (notification.getImage2().equals("No photo")) {
                 Log.i(TAG, "No photo 2 for this notification.");
                 image2_ok = true;
+                binding.imageView2.setImageResource(R.drawable.ic_photo_camera); // TODO
             } else {
                 String type = FileManipulation.uriType(notification.getImage2());
                 Log.i(TAG, "Image 2 exist, loading " + notification.getImage2() + "; Type: " + type);
                 if (type != null) {
                     if (type.equals("file")) {
-                        // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage2());
                         binding.imageView2.setImageURI(uri);
                         binding.frameLayoutImage2.setVisibility(View.VISIBLE);
@@ -294,7 +357,7 @@ public class ActivityNotification extends AppCompatActivity {
                         });
                         image2_ok = true;
                     } else {
-                        // There is https uri written to the Image 1, download it...
+                        // There is https uri written to the Image 2, download it...
                         downloadPhoto(notification.getImage2(), 1, notification.getRealId());
                     }
                 }
@@ -306,12 +369,12 @@ public class ActivityNotification extends AppCompatActivity {
             if (notification.getImage3().equals("No photo")) {
                 Log.i(TAG, "No photo 3 for this notification.");
                 image3_ok = true;
+                binding.imageView3.setImageResource(R.drawable.ic_photo_camera); // TODO
             } else {
                 String type = FileManipulation.uriType(notification.getImage3());
                 Log.i(TAG, "Image 3 exist, loading " + notification.getImage3() + "; Type: " + type);
                 if (type != null) {
                     if (type.equals("file")) {
-                        // There is a file already downloaded with an uri to the storage
                         Uri uri = Uri.parse(notification.getImage3());
                         binding.imageView3.setImageURI(uri);
                         binding.frameLayoutImage3.setVisibility(View.VISIBLE);
@@ -324,7 +387,7 @@ public class ActivityNotification extends AppCompatActivity {
                         });
                         image3_ok = true;
                     } else {
-                        // There is https uri written to the Image 1, download it...
+                        // There is https uri written to the Image 3, download it...
                         downloadPhoto(notification.getImage3(), 2, notification.getRealId());
                     }
                 }
@@ -472,12 +535,21 @@ public class ActivityNotification extends AppCompatActivity {
     }
 
     private void sendResult(int resultCode) {
+        // Only set 'downloaded' to 'yes' if all three images are confirmed either as OK or 'No photo'
         if (image1_ok && image2_ok && image3_ok) {
             downloaded = "yes";
+            if (!isFromRecyclerView) {
+                Log.d(TAG, "External flow detected. Performing local cleanup now.");
+                if (notification.getId() != 0) {
+                    NotificationsHelper.setOnlineNotificationAsRead(notification.getRealId());
+                    NotificationsHelper.deletePhotosFromNotification(ActivityNotification.this, notification.getId());
+                    NotificationsHelper.deleteNotificationFromObjectBox(notification.getId());
+                }
+            }
         }
         Intent intent = new Intent();
         intent.putExtra("downloaded", downloaded);
-        intent.putExtra("notification_id", notificationId);
+        intent.putExtra("notification_id", notification.getId());
         intent.putExtra("real_notification_id", notification.getRealId());
         intent.putExtra("index_id", indexId);
         setResult(resultCode, intent);

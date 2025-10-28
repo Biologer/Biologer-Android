@@ -22,7 +22,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.ActivityNotification;
-import org.biologer.biologer.network.NotificationSyncWorker;
+import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.ObjectBoxHelper;
@@ -261,6 +261,7 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         if (data.containsKey("notification_id")) {
             intent.putExtra("real_notification_id", data.get("notification_id"));
+            intent.putExtra("from_recycler_view", false);
             Log.d(TAG, "Putting real notification ID to the bundle: " + data.get("notification_id"));
         }
 

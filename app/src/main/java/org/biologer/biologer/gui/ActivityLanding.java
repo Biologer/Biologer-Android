@@ -47,7 +47,7 @@ import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
-import org.biologer.biologer.network.NotificationSyncWorker;
+import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.services.CsvExporter;
 import org.biologer.biologer.services.CsvTaxaLoader;
 import org.biologer.biologer.services.ObjectBoxHelper;

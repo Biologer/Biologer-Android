@@ -556,4 +556,6 @@
     <string name="error_loading_timed_count_id">Timed count ID is null!</string>
     <string name="error_original_count_data_missing">Timed count data is missing!</string>
     <string name="error_no_location_data">Timed count is missing location data!</string>
+    <string name="notification_id_id_not_present">Notification ID id not present!</string>
+    <string name="notification_not_found">Notification not found!</string>
 </resources>

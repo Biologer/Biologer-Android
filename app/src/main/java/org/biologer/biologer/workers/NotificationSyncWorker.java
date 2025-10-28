@@ -1,4 +1,4 @@
-package org.biologer.biologer.network;
+package org.biologer.biologer.workers;
 
 import android.content.Context;
 import android.util.Log;
@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.UnreadNotification;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.sql.UnreadNotificationsDb;

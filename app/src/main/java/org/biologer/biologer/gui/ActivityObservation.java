@@ -64,7 +64,7 @@ import org.biologer.biologer.databinding.ActivityObservationBinding;
 import org.biologer.biologer.services.DateHelper;
 import org.biologer.biologer.services.FileManipulation;
 import org.biologer.biologer.services.ObjectBoxHelper;
-import org.biologer.biologer.services.PreparePhotosWorker;
+import org.biologer.biologer.workers.PreparePhotosWorker;
 import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.services.TaxonSearchHelper;
 import org.biologer.biologer.sql.EntryDb;

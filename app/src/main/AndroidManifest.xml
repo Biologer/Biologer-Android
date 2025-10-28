@@ -133,7 +133,6 @@
             android:exported="false"
             android:stopWithTask="false"/>
         <service android:name="org.biologer.biologer.network.UpdateLicenses"/>
-        <service android:name="org.biologer.biologer.network.UpdateUnreadNotifications"/>
         <service android:name="org.biologer.biologer.network.UpdateAnnouncements"/>
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

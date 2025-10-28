@@ -1,10 +1,8 @@
 package org.biologer.biologer.gui;
 
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -32,11 +30,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
+import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.databinding.ActivityNotificationsBinding;
+import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
-import org.biologer.biologer.network.UpdateUnreadNotifications;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.ArrayList;
@@ -69,7 +68,7 @@ public class ActivityNotifications extends AppCompatActivity {
 
         make_selection = false;
 
-        registerDownloadNotificationsReceiver();
+        updateNotifications();
 
         // If downloading is disables, we should ask user to download notifications
         if (!ActivityLanding.shouldDownload(this)) {
@@ -77,11 +76,7 @@ public class ActivityNotifications extends AppCompatActivity {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(R.string.downloading_notifications_disabled)
                     .setCancelable(true)
-                    .setPositiveButton(getString(R.string.download), (dialog, id) -> {
-                        final Intent update_notifications = new Intent(this, UpdateUnreadNotifications.class);
-                        update_notifications.putExtra("download", true);
-                        startService(update_notifications);
-                    })
+                    .setPositiveButton(getString(R.string.download), (dialog, id) -> updateNotifications())
                     .setNegativeButton(getString(R.string.ignore), (dialog, id) -> {
                         binding.textViewNotifications.setVisibility(View.VISIBLE);
                         dialog.cancel();
@@ -114,19 +109,9 @@ public class ActivityNotifications extends AppCompatActivity {
         }
     }
 
-    private void registerDownloadNotificationsReceiver() {
-        downloadNotifications = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String received = intent.getStringExtra(UpdateUnreadNotifications.NOTIFICATIONS_DOWNLOADED);
-                if (received != null) {
-                    if (received.equals("downloaded")) {
-                        Toast.makeText(ActivityNotifications.this, getString(R.string.notifications_downloaded), Toast.LENGTH_SHORT).show();
-                        binding.recyclerViewNotifications.setVisibility(View.VISIBLE);
-                    }
-                }
-            }
-        };
+    private void updateNotifications() {
+        long timestamp = Long.parseLong(SettingsManager.getNotificationsUpdatedAt());
+        NotificationSyncWorker.enqueueNow(getApplicationContext(), timestamp);
     }
 
     private void selectedNotificationsMenuItemsEnabled(boolean selected) {
@@ -137,9 +122,7 @@ public class ActivityNotifications extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((downloadNotifications),
-                new IntentFilter(UpdateUnreadNotifications.NOTIFICATIONS_DOWNLOADED)
-        );
+        updateNotifications();
     }
 
     @Override
@@ -181,6 +164,7 @@ public class ActivityNotifications extends AppCompatActivity {
                     if (result.getData() != null) {
                         long index = result.getData().getIntExtra("index_id", 0);
                         String downloaded = result.getData().getStringExtra("downloaded");
+                        Log.d(TAG, "Notification ID is " + result.getData().getLongExtra("notification_id", 0));
                         String realId = result.getData().getStringExtra("real_notification_id");
                         long notificationId = result.getData().getLongExtra("notification_id", 0);
 
@@ -191,11 +175,10 @@ public class ActivityNotifications extends AppCompatActivity {
                                 Log.i(TAG, "Removing notification no. " + index + " from RecyclerView.");
                                 notifications.remove((int) index);
                                 notificationsAdapter.notifyItemRemoved((int) index);
+
                                 NotificationsHelper.setOnlineNotificationAsRead(realId);
-                                if (notificationId != 0) {
-                                    NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notificationId);
-                                    NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
-                                }
+                                NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notificationId);
+                                NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
                             }
                         }
 
@@ -217,7 +200,7 @@ public class ActivityNotifications extends AppCompatActivity {
             });
 
     private void initiateRecycleView(List<UnreadNotificationsDb> notifications) {
-        notificationsAdapter = new NotificationsAdapter(notifications);
+        notificationsAdapter = new NotificationsAdapter(this, notifications);
         binding.recyclerViewNotifications.setAdapter(notificationsAdapter);
         binding.recyclerViewNotifications.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerViewNotifications.setItemAnimator(new DefaultItemAnimator());
@@ -287,7 +270,8 @@ public class ActivityNotifications extends AppCompatActivity {
         Log.d(TAG, "Opening notification with index: " + index + "; ID: " + notification.getId() + "; Real ID: " + notification.getRealId());
 
         Intent intent = new Intent(ActivityNotifications.this, ActivityNotification.class);
-        intent.putExtra("notification_id", notification.getRealId());
+        intent.putExtra("real_notification_id", notification.getRealId());
+        intent.putExtra("from_recycler_view", true);
         intent.putExtra("index_id", index);
         notificationLauncher.launch(intent);
     }

@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.workers;
 
 import android.content.Context;
 import android.net.Uri;
@@ -9,6 +9,8 @@ import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+
+import org.biologer.biologer.services.PhotoUtils;
 
 public class PreparePhotosWorker extends Worker {
 

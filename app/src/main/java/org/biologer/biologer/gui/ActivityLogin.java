@@ -36,8 +36,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.google.firebase.messaging.FirebaseMessaging;
-
 import org.biologer.biologer.App;
 import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
@@ -50,7 +48,6 @@ import org.biologer.biologer.network.json.LoginResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.network.json.UserDataSer;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.services.ObjectBoxHelper;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.Arrays;
