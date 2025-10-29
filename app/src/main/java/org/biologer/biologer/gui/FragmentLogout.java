@@ -23,7 +23,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.FragmentLogoutBinding;
 import org.biologer.biologer.network.UpdateTaxa;
-import org.biologer.biologer.services.ObjectBoxHelper;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 

@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,11 +12,13 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 
 import org.biologer.biologer.App;
+import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationResponse;
+import org.biologer.biologer.services.NotificationFetchCallback;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 
@@ -37,12 +39,13 @@ public class NotificationsHelper {
     private static final String TAG = "Biologer.NotyHelper";
 
     public static void deleteAllNotificationsLocally(Context context) {
+        // First delete photos from internal storage
         deleteAllNotificationsPhotos(context);
+        // Delete notifications
         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).removeAll();
     }
 
     public static void deleteAllNotificationsPhotos(Context context) {
-        // First delete photos from internal storage
         List<UnreadNotificationsDb> notifications = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).getAll();
         for (int j = 0; j < notifications.size(); j++) {
             if (notifications.get(j).getThumbnail() != null && Objects.equals(FileManipulation.uriType(notifications.get(j).getThumbnail()), "file")) {
@@ -103,48 +106,60 @@ public class NotificationsHelper {
         });
     }
 
-    public static void deleteNotificationFromObjectBox(long notification_id) {
+    public static void deleteNotificationFromObjectBox(long notificationId) {
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.equal(notification_id))
-                .build();
-        query.remove();
-        query.close();
-        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        try (Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+                .query(UnreadNotificationsDb_.id.equal(notificationId))
+                .build()) {
+            query.remove();
+            Log.d(TAG, "Notification " + notificationId + " removed from ObjectBox, "
+                    + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        } catch (Exception e) {
+            Log.e(TAG, "Could not delete notification " + notificationId + " from ObjectBox: " + e.getMessage());
+        }
     }
 
-    public static void deleteNotificationFromObjectBox(String notification_id) {
+    public static void deleteNotificationFromObjectBox(String realNotificationId) {
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.realId.equal(notification_id))
-                .build();
-        query.remove();
-        query.close();
-        Log.d(TAG, "Notification " + notification_id + " removed from local database, " + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        try (Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+                .query(UnreadNotificationsDb_.realId.equal(realNotificationId))
+                .build()) {
+            query.remove();
+            Log.d(TAG, "Notification " + realNotificationId + " removed from ObjectBox, "
+                    + App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).count() + " notifications remain.");
+        } catch (Exception e) {
+            Log.e(TAG, "Could not delete notification " + realNotificationId + " from ObjectBox: " + e.getMessage());
+        }
     }
 
     public static void deletePhotosFromNotification(Context context, long notificationId) {
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+        try (Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.id.equal(notificationId))
-                .build();
-        UnreadNotificationsDb notification = query.findFirst();
-        query.close();
-        deletePhotos(context, notification);
+                .build()) {
+            UnreadNotificationsDb notification = query.findFirst();
+            deletePhotos(context, notification);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not delete notification " + notificationId
+                    + " photos from ObjectBox: " + e.getMessage());
+        }
     }
 
     public static void deletePhotosFromNotification(Context context, String realNotificationId) {
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
+        try (Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.realId.equal(realNotificationId))
-                .build();
-        UnreadNotificationsDb notification = query.findFirst();
-        query.close();
-        deletePhotos(context, notification);
+                .build()) {
+            UnreadNotificationsDb notification = query.findFirst();
+            deletePhotos(context, notification);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not delete notification " + realNotificationId
+                    + " photos from ObjectBox: " + e.getMessage());
+        }
     }
 
     private static void deletePhotos(Context context, UnreadNotificationsDb notification) {
@@ -182,7 +197,6 @@ public class NotificationsHelper {
         }
     }
 
-    // You'll need the Context (to save the bitmap) and the Callback
     public static void fetchFieldObservationAndPhotos(
             Context context,
             UnreadNotificationsDb notification,
@@ -209,22 +223,20 @@ public class NotificationsHelper {
                     FieldObservationData data = response.body().getData()[0];
                     List<FieldObservationDataPhotos> photos = data.getPhotos();
 
-                    // --- STEP 2a: Update Notification Metadata (Date, Location, Taxon, Project) ---
-                    updateNotificationMetadata(notification, data, context);
+                    // 2a. Update Notification Metadata (Date, Location, Taxon, Project)
+                    updateNotificationMetadata(notification, data);
 
-                    // --- STEP 2b: Process Photos (Image 1, 2, 3 URLs) ---
-
+                    // 2b. Process Photos (Image 1, 2, 3 URLs)
                     if (photos != null && !photos.isEmpty()) {
-                        String url1 = photos.get(0).getUrl();
-                        notification.setImage1(url1);
+                        notification.setImage1(photos.get(0).getUrl());
                         notification.setImage2(photos.size() > 1 ? photos.get(1).getUrl() : "No photo");
                         notification.setImage3(photos.size() > 2 ? photos.get(2).getUrl() : "No photo");
 
                         // Save these URLs to ObjectBox immediately
                         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notification);
 
-                        // --- STEP 2c: Download Thumbnail (Only the first image) ---
-                        downloadAndSavePhoto(context, notification, url1, callback);
+                        // 2c. Download Thumbnail (Only the first image)
+                        downloadAndSavePhoto(context, notification, photos.get(0).getUrl(), callback);
 
                     } else {
                         // Case: No photos found
@@ -264,13 +276,13 @@ public class NotificationsHelper {
         });
     }
 
-    private static void updateNotificationMetadata(UnreadNotificationsDb notification, FieldObservationData data, Context context) {
+    private static void updateNotificationMetadata(UnreadNotificationsDb notification, FieldObservationData data) {
         String date = data.getDay() + "-" + data.getMonth() + "-" + data.getYear();
         String location = data.getLocation();
 
         if (location == null || location.isEmpty()) {
             DecimalFormat f = new DecimalFormat("##.0000");
-            location = f.format(data.getLongitude()) + "° E; " + f.format(data.getLatitude()) + "° N";
+            location = f.format(data.getLongitude()) + R.string.east + "; " + f.format(data.getLatitude()) + R.string.north;
         }
 
         // Update all fields that were previously saved in the large loop
@@ -337,10 +349,10 @@ public class NotificationsHelper {
             try {
                 return Long.parseLong(retryAfter) * 1000;
             } catch (NumberFormatException e) {
-                // Ignore and use a default
+                return 10000;
             }
         }
-        return 60000; // Default to 60 seconds if header is missing or malformed
+        return 10000;
     }
 
     // Helper method to crop a square thumbnail
@@ -348,20 +360,13 @@ public class NotificationsHelper {
         int w = original.getWidth();
         int h = original.getHeight();
 
-        // Cropping logic from your original code: center a square of size (min(w,h) - 200)
+        // Cropping logic: center a square of size (min(w,h) - 200)
         int size = Math.min(w, h) - 200;
         if (size <= 0) {
             // Fallback: if the image is too small, just return a scaled version
             return Bitmap.createScaledBitmap(original, 100, 100, true);
         }
 
-        int x = (w - size) / 2;
-        int y = (h - size) / 2;
-
-        // The original code uses a fixed margin of 100 on one side and calculates the crop size
-        // The logic is slightly complex, let's simplify based on the goal: a centered square thumbnail.
-
-        // Simpler, correct centered square crop:
         int smallest = Math.min(w, h);
         int offset_x = (w - smallest) / 2;
         int offset_y = (h - smallest) / 2;
@@ -369,7 +374,7 @@ public class NotificationsHelper {
         // This creates a square from the center of the image, then you can scale it down if needed.
         Bitmap square = Bitmap.createBitmap(original, offset_x, offset_y, smallest, smallest);
 
-        // Since you want a thumbnail, scale it down (e.g., to 100x100 for efficiency)
+        // Scale it down to 100x100 for efficiency
         return Bitmap.createScaledBitmap(square, 100, 100, true);
     }
 

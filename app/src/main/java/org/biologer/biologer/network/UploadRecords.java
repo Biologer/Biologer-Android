@@ -28,7 +28,7 @@ import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
 import org.biologer.biologer.network.json.UploadFileResponse;
-import org.biologer.biologer.services.ObjectBoxHelper;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
 

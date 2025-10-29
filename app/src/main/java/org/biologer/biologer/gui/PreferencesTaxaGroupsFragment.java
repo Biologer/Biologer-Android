@@ -21,9 +21,9 @@ import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.Localisation;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.ArrayHelper;
+import org.biologer.biologer.helpers.ArrayHelper;
 import org.biologer.biologer.network.GetTaxaGroups;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.UpdateTaxa;

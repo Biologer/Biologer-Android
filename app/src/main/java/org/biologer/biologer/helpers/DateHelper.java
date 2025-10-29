@@ -1,9 +1,8 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.util.Log;
 
-import org.biologer.biologer.Localisation;
 import org.biologer.biologer.R;
 
 import java.text.DateFormat;

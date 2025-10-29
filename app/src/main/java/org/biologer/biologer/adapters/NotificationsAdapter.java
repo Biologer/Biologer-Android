@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,10 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.DateHelper;
-import org.biologer.biologer.services.FileManipulation;
+import org.biologer.biologer.helpers.DateHelper;
+import org.biologer.biologer.helpers.FileManipulation;
 import org.biologer.biologer.services.NotificationFetchCallback;
-import org.biologer.biologer.services.NotificationsHelper;
+import org.biologer.biologer.helpers.NotificationsHelper;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
 import java.util.Date;
@@ -42,6 +43,7 @@ public class NotificationsAdapter
 
         public TextView textNotification;
         public ImageView observationPhoto;
+        public ProgressBar progressBarThumbnail;
 
         public ViewHolder(View view) {
             super(view);
@@ -49,6 +51,7 @@ public class NotificationsAdapter
             // Define click listener for the ViewHolder's View
             textNotification = view.findViewById(R.id.notification_list_text);
             observationPhoto = view.findViewById(R.id.image_view_notification);
+            progressBarThumbnail = view.findViewById(R.id.progressBar_thumbnail);
         }
     }
 
@@ -79,7 +82,7 @@ public class NotificationsAdapter
 
         ImageView imageView = viewHolder.observationPhoto;
         imageView.setImageDrawable(null); // Clear the previous image
-        imageView.setImageResource(R.mipmap.ic_kornjaca); // Set the icon before the real image is loaded
+        imageView.setImageResource(R.mipmap.ic_kornjaca_kocka); // Set the icon before the real image is loaded
         setPhoto(notification, viewHolder, position); // Download and display image
         if (notification.getMarked() == 1) {
             viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryLight));
@@ -155,6 +158,8 @@ public class NotificationsAdapter
 
         // Get the ImageView once
         final ImageView imageView = holder.observationPhoto;
+        final ProgressBar progressBar = holder.progressBarThumbnail;
+        progressBar.setVisibility(View.GONE);
         String thumbnail = notification.getThumbnail();
 
         // 1. Check if the thumbnail exists locally
@@ -177,7 +182,8 @@ public class NotificationsAdapter
         if (notification.getThumbnail() == null) {
 
             // State 3: Needs Download - Show the loading indicator
-            imageView.setImageResource(R.drawable.ic_gps_turtle); // TODO
+            progressBar.setVisibility(View.VISIBLE);
+            imageView.setImageResource(R.drawable.ic_image_file);
 
             NotificationsHelper.fetchFieldObservationAndPhotos(
                     context,
@@ -187,36 +193,35 @@ public class NotificationsAdapter
                         public void onNotificationUpdated(UnreadNotificationsDb updatedNotification) {
                             // Check if the ViewHolder is still bound to the correct item
                             if (holder.getBindingAdapterPosition() == position) {
+                                progressBar.setVisibility(View.GONE);
                                 String updatedThumbnail = updatedNotification.getThumbnail();
                                 if (updatedThumbnail != null && !updatedThumbnail.equals("No photo")) {
                                     // Success: Display downloaded image
                                     imageView.setImageURI(Uri.parse(updatedThumbnail));
                                 } else {
                                     // Success: Data fetched, but no photo URL was found
-                                    imageView.setImageResource(R.drawable.ic_photo_camera); // TODO
+                                    imageView.setImageResource(R.drawable.ic_image_file);
                                 }
-                                // Note: You may need to call notifyItemChanged(position) if this
-                                // fetch updates data used in other TextViews in the adapter.
                             }
                         }
 
                         @Override
                         public void onRetryScheduled(UnreadNotificationsDb updatedNotification, long delayMillis) {
-                            // State: Retry scheduled
-                            // You might want to update the loading icon/text here
+                            // Keep the progressBar visible
                         }
 
                         @Override
                         public void onFailure(UnreadNotificationsDb updatedNotification, Throwable t) {
                             // State: Complete failure (e.g., network error)
                             if (holder.getBindingAdapterPosition() == position) {
-                                imageView.setImageResource(R.drawable.ic_photo_camera); // TODO
+                                progressBar.setVisibility(View.GONE);
+                                imageView.setImageResource(R.drawable.ic_image_file_broken);
                             }
                         }
                     });
         } else if (notification.getThumbnail().equals("No photo")) {
             // State 4: Already marked "No photo"
-            imageView.setImageResource(R.drawable.ic_photo_camera); // TODO
+            imageView.setImageResource(R.drawable.ic_image_file);
         }
     }
 }

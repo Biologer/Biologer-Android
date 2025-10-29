@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -122,37 +122,8 @@ public class FileManipulation {
         return new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
     }
 
-    public static void createExternalDocumentsFolder(Context context, String dir_name) {
-        Log.i(TAG, "Creating new directory in Biologer Document " + dir_name);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, context.getString(R.string.biologer));
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_DOCUMENTS + "/" + context.getString(R.string.biologer));
-            context.getContentResolver().insert(MediaStore.Files.getContentUri("external"), contentValues);
-
-            contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, dir_name);
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_DOCUMENTS + "/" + context.getString(R.string.biologer) + "/" + dir_name);
-            context.getContentResolver().insert(MediaStore.Files.getContentUri("external"), contentValues);
-        } else {
-            File file = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES), context.getString(R.string.biologer));
-            file.mkdirs();
-            file = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES) + "/" + context.getString(R.string.biologer), dir_name);
-            file.mkdirs();
-        }
-    }
-
     public static String getFilenameFromUri(Uri uri) {
         return uri.getLastPathSegment();
-    }
-
-    public static File getInternalFileFromName(Context context, String filename) {
-        return new File(context.getFilesDir(),
-                Objects.requireNonNull(filename, "Filename of the thumbnail returned null!"));
     }
 
     public static File getInternalFileFromUri(Context context, Uri uri) {

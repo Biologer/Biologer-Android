@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.Localisation;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.adapters.AnnouncementsAdapter;
 import org.biologer.biologer.databinding.FragmentAnnouncementsBinding;
 import org.biologer.biologer.services.RecyclerOnClickListener;

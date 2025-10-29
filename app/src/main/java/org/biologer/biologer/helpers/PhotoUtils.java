@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.graphics.Bitmap;

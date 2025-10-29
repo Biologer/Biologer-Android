@@ -7,9 +7,9 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.R;
-import org.biologer.biologer.services.DateHelper;
-import org.biologer.biologer.services.ObjectBoxHelper;
-import org.biologer.biologer.services.StageAndSexLocalization;
+import org.biologer.biologer.helpers.DateHelper;
+import org.biologer.biologer.helpers.Localisation;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.TimedCountDb;
@@ -131,7 +131,7 @@ public class LandingFragmentItems {
         if (stage_id != null) {
             StageDb stage = ObjectBoxHelper.getStageById(stage_id);
             if (stage != null) {
-                subtitle = StageAndSexLocalization.getStageLocale(context, stage.getName());
+                subtitle = Localisation.getStageLocale(context, stage.getName());
             }
         }
 

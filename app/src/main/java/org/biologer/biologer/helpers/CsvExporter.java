@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.net.Uri;
@@ -101,12 +101,12 @@ public class CsvExporter {
                         e.getCauseOfDeath(),
                         observer,
                         observer,
-                        StageAndSexLocalization.getSexLocale(context, e.getSex()),
+                        Localisation.getSexLocale(context, e.getSex()),
                         safeToString(e.getNoSpecimens()),
                         e.getProjectId(),
                         e.getHabitat(),
                         e.getFoundOn(),
-                        StageAndSexLocalization.getStageLocaleFromID(context, e.getStage()),
+                        Localisation.getStageLocaleFromID(context, e.getStage()),
                         e.getTaxonSuggestion(),
                         context.getString(R.string.dataset),
                         translateLicence(context, e.getDataLicence()),

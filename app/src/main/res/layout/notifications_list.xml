@@ -10,15 +10,30 @@
     android:paddingTop="16dp"
     android:paddingBottom="16dp">
 
-        <ImageView
+        <FrameLayout
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:layout_marginStart="0dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="@string/species_photo"
-            android:id="@+id/image_view_notification"
-            android:src="@mipmap/ic_kornjaca">
-        </ImageView>
+            android:layout_marginEnd="16dp">
+
+                <ImageView
+                    android:id="@+id/image_view_notification"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/species_photo"
+                    android:src="@drawable/ic_image_file"
+                    android:scaleType="centerCrop"/>
+
+                <ProgressBar
+                    android:id="@+id/progressBar_thumbnail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:indeterminateTint="?attr/colorPrimary"/>
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/notification_list_text"

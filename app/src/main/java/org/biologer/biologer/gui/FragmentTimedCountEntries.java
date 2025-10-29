@@ -20,11 +20,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.FragmentTimedCountEntriesBinding;
-import org.biologer.biologer.services.DateHelper;
+import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
-import org.biologer.biologer.services.StageAndSexLocalization;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.StageDb;
@@ -219,7 +219,7 @@ public class FragmentTimedCountEntries extends Fragment {
             StageDb stage = queryStage.findFirst();
             queryStage.close();
             if (stage != null) {
-                subtitle = StageAndSexLocalization.getStageLocale(getContext(), stage.getName());
+                subtitle = Localisation.getStageLocale(getContext(), stage.getName());
             }
         }
 

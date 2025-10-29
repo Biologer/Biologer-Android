@@ -1,4 +1,4 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,7 +7,6 @@ import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.Localisation;
 import org.biologer.biologer.sql.SynonymsDb;
 import org.biologer.biologer.sql.SynonymsDb_;
 import org.biologer.biologer.sql.TaxaTranslationDb;

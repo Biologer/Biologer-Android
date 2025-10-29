@@ -29,7 +29,7 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.services.ObjectBoxHelper;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.UserDb;
 
 import java.util.List;

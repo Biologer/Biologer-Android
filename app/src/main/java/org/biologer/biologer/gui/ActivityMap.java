@@ -53,14 +53,14 @@ import com.google.maps.android.collections.CircleManager;
 import com.google.maps.android.collections.MarkerManager;
 import com.google.maps.android.ui.IconGenerator;
 
-import org.biologer.biologer.Localisation;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.ElevationResponse;
-import org.biologer.biologer.services.GeoJsonHelper;
-import org.biologer.biologer.services.KmlHelper;
+import org.biologer.biologer.helpers.GeoJsonHelper;
+import org.biologer.biologer.helpers.KmlHelper;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

@@ -21,12 +21,12 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityNotificationBinding;
-import org.biologer.biologer.services.DateHelper;
-import org.biologer.biologer.services.FileManipulation;
+import org.biologer.biologer.helpers.DateHelper;
+import org.biologer.biologer.helpers.FileManipulation;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.NotificationFetchCallback;
-import org.biologer.biologer.services.NotificationsHelper;
-import org.biologer.biologer.services.PhotoUtils;
+import org.biologer.biologer.helpers.NotificationsHelper;
+import org.biologer.biologer.helpers.PhotoUtils;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 

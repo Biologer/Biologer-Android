@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import org.biologer.biologer.Localisation;
-import org.biologer.biologer.services.DateHelper;
+import org.biologer.biologer.helpers.Localisation;
+import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.text.DecimalFormat;

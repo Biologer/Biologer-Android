@@ -55,18 +55,17 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.textfield.TextInputEditText;
 
-import org.biologer.biologer.Localisation;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.viewmodels.ObservationViewModel;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.databinding.ActivityObservationBinding;
-import org.biologer.biologer.services.DateHelper;
-import org.biologer.biologer.services.FileManipulation;
-import org.biologer.biologer.services.ObjectBoxHelper;
+import org.biologer.biologer.helpers.DateHelper;
+import org.biologer.biologer.helpers.FileManipulation;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.workers.PreparePhotosWorker;
-import org.biologer.biologer.services.StageAndSexLocalization;
-import org.biologer.biologer.services.TaxonSearchHelper;
+import org.biologer.biologer.helpers.TaxonSearchHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.ObservationTypesDb;
 import org.biologer.biologer.sql.StageDb;
@@ -482,8 +481,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     StageDb stage = ObjectBoxHelper.getStageById(viewModel.getStage().getValue());
                     if (stage != null) {
                         if (Arrays.asList(all_stages).contains(String.valueOf(viewModel.getStage().getValue()))) {
-                            String stageName = StageAndSexLocalization
-                                    .getStageLocaleFromID(this, viewModel.getStage().getValue());
+                            String stageName = Localisation.getStageLocaleFromID(this, viewModel.getStage().getValue());
                             binding.textInputEditTextStages.setText(stageName);
                             binding.textInputEditTextStages.setTag(viewModel.getStage().getValue());
                         }
@@ -499,7 +497,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             && binding.textInputEditTextStages.getText().toString().isEmpty()) {
                         Log.d(TAG, "Should fill in the textViewStage.");
                         Long adultId = ObjectBoxHelper.getAdultStageIdForTaxon(taxon);
-                        String stageName = StageAndSexLocalization.getStageLocaleFromID(this, adultId);
+                        String stageName = Localisation.getStageLocaleFromID(this, adultId);
                         binding.textInputEditTextStages.setTag(adultId);
                         binding.textInputEditTextStages.setText(stageName);
                     }
@@ -554,7 +552,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Log.d(TAG, "There is a stage already selected for this entry!");
             long stageId = (viewModel.getStage().getValue() != null)
                     ? viewModel.getStage().getValue() : 0L;
-            String stageName = StageAndSexLocalization.getStageLocaleFromID(this, stageId);
+            String stageName = Localisation.getStageLocaleFromID(this, stageId);
             binding.textInputEditTextStages.setTag(stageId);
             binding.textInputEditTextStages.setText(stageName);
             binding.textInputLayoutStages.setVisibility(View.VISIBLE);
@@ -1007,7 +1005,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                     for (int i = 0; i < all_stages_ids.length; i++) {
                         StageDb stage = ObjectBoxHelper.getStageById(Long.parseLong(all_stages_ids[i]));
                         if (stage != null) {
-                            all_stages_names[i + 1] = StageAndSexLocalization.getStageLocale(this, stage.getName());
+                            all_stages_names[i + 1] = Localisation.getStageLocale(this, stage.getName());
                         }
                     }
 

@@ -1,11 +1,10 @@
-package org.biologer.biologer.services;
+package org.biologer.biologer.helpers;
 
 import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.Localisation;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb;
 import org.biologer.biologer.sql.AnnouncementTranslationsDb_;
 import org.biologer.biologer.sql.AnnouncementsDb;

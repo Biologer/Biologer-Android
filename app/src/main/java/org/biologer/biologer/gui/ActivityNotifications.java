@@ -38,7 +38,7 @@ import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.databinding.ActivityNotificationsBinding;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.biologer.biologer.workers.NotificationSyncWorker;
-import org.biologer.biologer.services.NotificationsHelper;
+import org.biologer.biologer.helpers.NotificationsHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 
@@ -67,32 +67,14 @@ public class ActivityNotifications extends AppCompatActivity {
         binding = ActivityNotificationsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Add a toolbar to the Activity
         addToolbar();
 
-        notifications = getNotifications();
+        notifications = getNotificationsFromObjectBox();
         initiateRecycleView(notifications);
 
         make_selection = false;
 
         notificationsUpdateReceiver = new NotificationsUpdateReceiver();
-
-        updateNotifications();
-
-        // If downloading is disables, we should ask user to download notifications
-        if (!ActivityLanding.shouldDownload(this)) {
-            binding.recyclerViewNotifications.setVisibility(View.GONE);
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(R.string.downloading_notifications_disabled)
-                    .setCancelable(true)
-                    .setPositiveButton(getString(R.string.download), (dialog, id) -> updateNotifications())
-                    .setNegativeButton(getString(R.string.ignore), (dialog, id) -> {
-                        binding.textViewNotifications.setVisibility(View.VISIBLE);
-                        dialog.cancel();
-                    });
-            final AlertDialog alert = builder.create();
-            alert.show();
-        }
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -118,11 +100,6 @@ public class ActivityNotifications extends AppCompatActivity {
         }
     }
 
-    private void updateNotifications() {
-        long timestamp = Long.parseLong(SettingsManager.getNotificationsUpdatedAt());
-        NotificationSyncWorker.enqueueNow(getApplicationContext(), timestamp);
-    }
-
     private void selectedNotificationsMenuItemsEnabled(boolean selected) {
         updateMenuItemEnabled(0, selected);
         updateMenuItemEnabled(1, selected);
@@ -144,21 +121,22 @@ public class ActivityNotifications extends AppCompatActivity {
         super.onStop();
     }
 
+    private class NotificationsUpdateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (NotificationSyncWorker.ACTION_NOTIFICATIONS_UPDATED.equals(intent.getAction())) {
+                Log.d(TAG, "Local broadcast received. Refreshing RecyclerView.");
+                runOnUiThread(ActivityNotifications.this::refreshRecyclerView);
+            }
+        }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
-    private void refreshListView() {
-        // 1. Get the current list of notifications from the database
-        List<UnreadNotificationsDb> newNotifications = getNotifications();
-
-        // 2. Clear the adapter's existing list
+    private void refreshRecyclerView() {
+        List<UnreadNotificationsDb> newNotifications = getNotificationsFromObjectBox();
         notifications.clear();
-
-        // 3. Add all new items
         notifications.addAll(newNotifications);
-
-        // 4. Notify the adapter of a dataset change
         notificationsAdapter.notifyDataSetChanged();
-
-        // 5. Update UI state (e.g., enable/disable menu items based on list size)
         if (notifications.isEmpty()) {
             selectedNotificationsMenuItemsEnabled(false);
         }
@@ -166,14 +144,9 @@ public class ActivityNotifications extends AppCompatActivity {
         Log.d(TAG, "RecyclerView refreshed with " + notifications.size() + " items.");
     }
 
-    private class NotificationsUpdateReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (NotificationSyncWorker.ACTION_NOTIFICATIONS_UPDATED.equals(intent.getAction())) {
-                Log.d(TAG, "Local broadcast received. Refreshing RecyclerView.");
-                runOnUiThread(ActivityNotifications.this::refreshListView);
-            }
-        }
+    private void updateNotifications() {
+        long timestamp = Long.parseLong(SettingsManager.getNotificationsUpdatedAt());
+        NotificationSyncWorker.enqueueNow(getApplicationContext(), timestamp);
     }
 
     // Update visibility by menu index
@@ -321,16 +294,13 @@ public class ActivityNotifications extends AppCompatActivity {
         notificationLauncher.launch(intent);
     }
 
-    private List<UnreadNotificationsDb> getNotifications() {
-        // Get the Box for the entity
+    private List<UnreadNotificationsDb> getNotificationsFromObjectBox() {
         Box<UnreadNotificationsDb> box = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
         try (Query<UnreadNotificationsDb> query = box.query().orderDesc(UnreadNotificationsDb_.updatedAt).build()) {
             return query.find();
         } catch (Exception e) {
-            // Handle any exceptions during the ObjectBox operation (e.g., BoxStore closed or configuration error)
             Log.e(TAG, "Error fetching and sorting notifications from ObjectBox.", e);
-            // notifications will remain the empty list initialized at the start.
             return new ArrayList<>();
         }
     }

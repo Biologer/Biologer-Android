@@ -2,7 +2,7 @@ package org.biologer.biologer.network.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.biologer.biologer.services.ArrayHelper;
+import org.biologer.biologer.helpers.ArrayHelper;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.util.List;

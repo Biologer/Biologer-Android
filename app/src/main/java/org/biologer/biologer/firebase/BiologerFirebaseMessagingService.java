@@ -18,15 +18,15 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.biologer.biologer.App;
-import org.biologer.biologer.Localisation;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.gui.ActivityAnnouncement;
 import org.biologer.biologer.gui.ActivityNotification;
 import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.services.NotificationsHelper;
-import org.biologer.biologer.services.ObjectBoxHelper;
+import org.biologer.biologer.helpers.NotificationsHelper;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.UnreadNotificationsDb;
 import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.json.JSONException;

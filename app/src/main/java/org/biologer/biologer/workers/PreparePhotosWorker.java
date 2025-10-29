@@ -10,7 +10,7 @@ import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import org.biologer.biologer.services.PhotoUtils;
+import org.biologer.biologer.helpers.PhotoUtils;
 
 public class PreparePhotosWorker extends Worker {
 
