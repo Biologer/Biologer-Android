@@ -1,8 +1,11 @@
 package org.biologer.biologer.gui;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -33,6 +36,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.NotificationsAdapter;
 import org.biologer.biologer.databinding.ActivityNotificationsBinding;
+import org.biologer.biologer.sql.UnreadNotificationsDb_;
 import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.services.NotificationsHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
@@ -45,12 +49,15 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
+
 public class ActivityNotifications extends AppCompatActivity {
     private static final String TAG = "Biologer.NotySActivity";
     private ActivityNotificationsBinding binding;
-    BroadcastReceiver downloadNotifications;
     List<UnreadNotificationsDb> notifications;
     NotificationsAdapter notificationsAdapter;
+    private NotificationsUpdateReceiver notificationsUpdateReceiver;
     boolean make_selection;
     static Menu notyMenu;
 
@@ -67,6 +74,8 @@ public class ActivityNotifications extends AppCompatActivity {
         initiateRecycleView(notifications);
 
         make_selection = false;
+
+        notificationsUpdateReceiver = new NotificationsUpdateReceiver();
 
         updateNotifications();
 
@@ -122,13 +131,49 @@ public class ActivityNotifications extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                notificationsUpdateReceiver,
+                new IntentFilter(NotificationSyncWorker.ACTION_NOTIFICATIONS_UPDATED)
+        );
         updateNotifications();
     }
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(downloadNotifications);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationsUpdateReceiver);
         super.onStop();
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void refreshListView() {
+        // 1. Get the current list of notifications from the database
+        List<UnreadNotificationsDb> newNotifications = getNotifications();
+
+        // 2. Clear the adapter's existing list
+        notifications.clear();
+
+        // 3. Add all new items
+        notifications.addAll(newNotifications);
+
+        // 4. Notify the adapter of a dataset change
+        notificationsAdapter.notifyDataSetChanged();
+
+        // 5. Update UI state (e.g., enable/disable menu items based on list size)
+        if (notifications.isEmpty()) {
+            selectedNotificationsMenuItemsEnabled(false);
+        }
+
+        Log.d(TAG, "RecyclerView refreshed with " + notifications.size() + " items.");
+    }
+
+    private class NotificationsUpdateReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (NotificationSyncWorker.ACTION_NOTIFICATIONS_UPDATED.equals(intent.getAction())) {
+                Log.d(TAG, "Local broadcast received. Refreshing RecyclerView.");
+                runOnUiThread(ActivityNotifications.this::refreshListView);
+            }
+        }
     }
 
     // Update visibility by menu index
@@ -209,28 +254,28 @@ public class ActivityNotifications extends AppCompatActivity {
                 new RecyclerOnClickListener(this,
                         binding.recyclerViewNotifications,
                         new RecyclerOnClickListener.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, int position) {
-                        // Select the notifications
-                        if (make_selection) {
-                            selectDeselect(position);
-                            notificationsAdapter.notifyItemChanged(position);
-                        }
-                        // Or open it in normal way...
-                        else {
-                            binding.recyclerViewNotifications.setClickable(false);
-                            openNotification(position);
-                        }
-                    }
+                            @Override
+                            public void onItemClick(View view, int position) {
+                                // Select the notifications
+                                if (make_selection) {
+                                    selectDeselect(position);
+                                    notificationsAdapter.notifyItemChanged(position);
+                                }
+                                // Or open it in normal way...
+                                else {
+                                    binding.recyclerViewNotifications.setClickable(false);
+                                    openNotification(position);
+                                }
+                            }
 
-                    @Override
-                    public void onLongItemClick(View view, int position) {
-                        make_selection = true;
-                        selectedNotificationsMenuItemsEnabled(true);
-                        selectDeselect(position);
-                        notificationsAdapter.notifyItemChanged(position);
-                    }
-                }));
+                            @Override
+                            public void onLongItemClick(View view, int position) {
+                                make_selection = true;
+                                selectedNotificationsMenuItemsEnabled(true);
+                                selectDeselect(position);
+                                notificationsAdapter.notifyItemChanged(position);
+                            }
+                        }));
     }
 
     private void selectDeselect(int position) {
@@ -277,11 +322,17 @@ public class ActivityNotifications extends AppCompatActivity {
     }
 
     private List<UnreadNotificationsDb> getNotifications() {
-        List<UnreadNotificationsDb> notifications = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).getAll();
-        if (notifications == null) {
-            notifications = new ArrayList<>();
+        // Get the Box for the entity
+        Box<UnreadNotificationsDb> box = App.get().getBoxStore()
+                .boxFor(UnreadNotificationsDb.class);
+        try (Query<UnreadNotificationsDb> query = box.query().orderDesc(UnreadNotificationsDb_.updatedAt).build()) {
+            return query.find();
+        } catch (Exception e) {
+            // Handle any exceptions during the ObjectBox operation (e.g., BoxStore closed or configuration error)
+            Log.e(TAG, "Error fetching and sorting notifications from ObjectBox.", e);
+            // notifications will remain the empty list initialized at the start.
+            return new ArrayList<>();
         }
-        return notifications;
     }
 
     // Add Save button in the right part of the toolbar
@@ -345,51 +396,51 @@ public class ActivityNotifications extends AppCompatActivity {
     }
 
     protected void buildAlertOnReadAll() {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(getString(R.string.confirm_read_all))
-                    .setCancelable(true)
-                    .setPositiveButton(getString(R.string.yes_read_add), (dialog, id) -> {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(getString(R.string.confirm_read_all))
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.yes_read_add), (dialog, id) -> {
 
-                        Toast.makeText(this, getString(R.string.all_notifications_are_read), Toast.LENGTH_SHORT).show();
-                        NotificationsHelper.setAllOnlineNotificationsAsRead(this); // Remove notifications online
-                        int size = notifications.size();
-                        notifications.clear(); // Remove notifications from the list
-                        notificationsAdapter.notifyItemRangeRemoved(0, size); // Remove notifications from RecycleView
-                        selectedNotificationsMenuItemsEnabled(false);
+                    Toast.makeText(this, getString(R.string.all_notifications_are_read), Toast.LENGTH_SHORT).show();
+                    NotificationsHelper.setAllOnlineNotificationsAsRead(this); // Remove notifications online
+                    int size = notifications.size();
+                    notifications.clear(); // Remove notifications from the list
+                    notificationsAdapter.notifyItemRangeRemoved(0, size); // Remove notifications from RecycleView
+                    selectedNotificationsMenuItemsEnabled(false);
 
-                    })
-                    .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
-            final AlertDialog alert = builder.create();
+                })
+                .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
+        final AlertDialog alert = builder.create();
 
-            alert.setOnShowListener(new DialogInterface.OnShowListener() {
-                private static final int AUTO_DISMISS_MILLIS = 4000;
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
-                    defaultButton.setEnabled(false);
-                    final CharSequence negativeButtonText = defaultButton.getText();
-                    new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
-                        @Override
-                        public void onTick(long l) {
-                            defaultButton.setText(String.format(
-                                    Locale.getDefault(), "%s (%d)",
-                                    negativeButtonText,
-                                    TimeUnit.MILLISECONDS.toSeconds(l) + 1
-                            ));
+        alert.setOnShowListener(new DialogInterface.OnShowListener() {
+            private static final int AUTO_DISMISS_MILLIS = 4000;
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
+                defaultButton.setEnabled(false);
+                final CharSequence negativeButtonText = defaultButton.getText();
+                new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
+                    @Override
+                    public void onTick(long l) {
+                        defaultButton.setText(String.format(
+                                Locale.getDefault(), "%s (%d)",
+                                negativeButtonText,
+                                TimeUnit.MILLISECONDS.toSeconds(l) + 1
+                        ));
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        if (alert.isShowing()) {
+                            defaultButton.setEnabled(true);
+                            defaultButton.setText(negativeButtonText);
                         }
+                    }
+                }.start();
+            }
+        });
 
-                        @Override
-                        public void onFinish() {
-                            if (alert.isShowing()) {
-                                defaultButton.setEnabled(true);
-                                defaultButton.setText(negativeButtonText);
-                            }
-                        }
-                    }.start();
-                }
-            });
-
-            alert.show();
+        alert.show();
     }
 
 }

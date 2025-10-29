@@ -11,6 +11,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -79,6 +80,8 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                     NotificationsHelper.deletePhotosFromNotification(this, id);
                     NotificationsHelper.deleteNotificationFromObjectBox(id);
                 }
+                Intent intent = new Intent(NotificationSyncWorker.ACTION_NOTIFICATIONS_UPDATED);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             }
 
             // Receive announcements

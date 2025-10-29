@@ -1,9 +1,11 @@
 package org.biologer.biologer.workers;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.Constraints;
 import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
@@ -39,6 +41,7 @@ public class NotificationSyncWorker extends ListenableWorker {
     private SettableFuture<Result> future;
     public static final String KEY_UPDATED_AFTER = "updated_after";
     public static final String SYNC_TAG = "notification_sync_tag";
+    public static final String ACTION_NOTIFICATIONS_UPDATED = "org.biologer.biologer.NOTIFICATIONS_UPDATED";
     private static final String TAG = "Biologer.NotyUpdate";
     private int page = 1;
     private final int perPage = 10;
@@ -158,6 +161,8 @@ public class NotificationSyncWorker extends ListenableWorker {
                 SettingsManager.setNotificationsUpdatedAt(String.valueOf(timestampNotification));
                 Log.i(TAG, "Partial sync successful. Saved new timestamp: " + timestampNotification);
             }
+
+            sendUpdateBroadcast();
             completeWorker(Result.success());
         } else {
             page++;
@@ -165,6 +170,12 @@ public class NotificationSyncWorker extends ListenableWorker {
             downloadNotifications(page);
         }
 
+    }
+
+    private void sendUpdateBroadcast() {
+        Intent intent = new Intent(ACTION_NOTIFICATIONS_UPDATED);
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+        Log.d(TAG, "Sent local broadcast: " + ACTION_NOTIFICATIONS_UPDATED);
     }
 
     @NonNull
