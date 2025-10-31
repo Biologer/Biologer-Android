@@ -436,12 +436,17 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private void updateEntry(long oldDataId) {
         // Load the entry from the ObjectBox
         EntryDb entryDb = ObjectBoxHelper.getObservationById(oldDataId);
-        int entry_id = getIndexFromID(oldDataId);
+        int entry_index = getIndexFromID(oldDataId);
 
-        // Update the item in the RecycleView
-        if (entryDb != null) {
-            items.set(entry_id, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
-            entriesAdapter.notifyItemChanged(entry_id);
+        if (entry_index != -1 && entryDb != null) {
+            Log.d(TAG, "Updating existing entry with ID " + oldDataId + " at index " + entry_index);
+            items.set(entry_index, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
+            entriesAdapter.notifyItemChanged(entry_index);
+        } else {
+            Log.e(TAG, "Cannot update entry with ID " + oldDataId +
+                    ". It was not found in the fragment list (index: " + entry_index +
+                    ") or database entry is null. Reloading list.");
+            reloadRecyclerView();
         }
     }
 

@@ -115,12 +115,12 @@ public class UploadRecords extends Service {
     }
 
     private void stopForegroundAndNotify(String title, String description) {
+        handler.removeCallbacksAndMessages(null);
+        notificationUpdateText(title, description);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            notificationUpdateText(title, description);
             stopForeground(STOP_FOREGROUND_DETACH);
         } else {
             stopForeground(true);
-            notificationUpdateText(title, description);
         }
     }
 
@@ -453,5 +453,13 @@ public class UploadRecords extends Service {
         intent.putExtra(TASK_COMPLETED, message);
         intent.putExtra("EntryID", id);
         broadcaster.sendBroadcast(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        keepGoing = false;
+        handler.removeCallbacksAndMessages(null);
+        Log.d(TAG, "Running onDestroy() and clearing handler.");
+        super.onDestroy();
     }
 }
