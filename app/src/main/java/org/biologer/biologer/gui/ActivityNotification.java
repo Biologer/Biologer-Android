@@ -106,6 +106,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
                 return;
             }
             notification = notifications.get(0);
+            notification = notifications.get(0);
         } catch (Exception e) {
             Log.e(TAG, "Could not ge notification from ObjectBox: " + e);
         }
@@ -145,14 +146,18 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
 
     private void getReadNextButton(Box<UnreadNotificationsDb> box) {
         // Check if there is notification with larger ID
-        boolean isLast;
-        try(Query<UnreadNotificationsDb> queryLargerId = box
-                .query(UnreadNotificationsDb_.id.greater(notification.getId()))
+        boolean isLastToRead;
+
+        try (Query<UnreadNotificationsDb> query = box
+                .query(UnreadNotificationsDb_.updatedAt.less(notification.getUpdatedAt()))
                 .build()) {
-            isLast = queryLargerId.find().isEmpty();
-            Log.d(TAG, "There are " + queryLargerId.find().size()
-                    + " IDs that are larger than the selected one! Reporting "
-                    + isLast);
+            isLastToRead = query.find().isEmpty();
+            Log.d(TAG, "There are " + query.find().size()
+                    + " notifications that are older than the selected one! Reporting "
+                    + isLastToRead);
+        } catch (Exception e) {
+            Log.e(TAG, "Error querying for last notification status: " + e.getMessage());
+            isLastToRead = false;
         }
 
         binding.buttonReadNext.setOnClickListener(v -> {
@@ -160,7 +165,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
             openNextNotification();
         });
 
-        if (isLast) {
+        if (isLastToRead) {
             Log.d(TAG, "This is the last notification.");
             binding.buttonReadNext.setText(R.string.first_unread_notification);
         }
@@ -177,6 +182,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
         binding.buttonReadNext.setText(R.string.all_notifications);
         binding.buttonReadNext.setOnClickListener(v -> {
             binding.buttonReadNext.setEnabled(false);
+            sendResult(1);
             openActivityNotifications();
         });
     }
@@ -569,15 +575,21 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
         // Only set 'downloaded' to 'yes' if all three images are confirmed either as OK or 'No photo'
         if (image1_ok && image2_ok && image3_ok) {
             downloaded = "yes";
-            if (!isFromRecyclerView) {
-                Log.d(TAG, "External flow detected. Performing local cleanup now.");
-                if (notification.getId() != 0) {
-                    NotificationsHelper.setOnlineNotificationAsRead(notification.getRealId());
-                    NotificationsHelper.deletePhotosFromNotification(ActivityNotification.this, notification.getId());
-                    NotificationsHelper.deleteNotificationFromObjectBox(notification.getId());
-                }
+        } else {
+            downloaded = "no";
+        }
+
+        if (!isFromRecyclerView) {
+            Log.d(TAG, "External flow detected (FCM). Performing local cleanup now.");
+
+            if (notification != null && notification.getId() != 0) {
+                NotificationsHelper.setOnlineNotificationAsRead(notification.getRealId());
+                NotificationsHelper.deletePhotosFromNotification(ActivityNotification.this, notification.getId());
+                NotificationsHelper.deleteNotificationFromObjectBox(notification.getId());
+                Log.i(TAG, "Notification cleaned up locally/server-side for Real ID: " + notification.getRealId());
             }
         }
+
         Intent intent = new Intent();
         intent.putExtra("downloaded", downloaded);
         intent.putExtra("notification_id", notification.getId());

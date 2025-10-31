@@ -187,21 +187,31 @@ public class ActivityNotifications extends AppCompatActivity {
                         long notificationId = result.getData().getLongExtra("notification_id", 0);
 
                         // Remove notification from the Recycler View and mark it as read
-                        if (downloaded != null) {
-                            Log.i(TAG, "Activity returned result: " + downloaded);
-                            if (downloaded.equals("yes")) {
-                                Log.i(TAG, "Removing notification no. " + index + " from RecyclerView.");
+                        if (downloaded != null && downloaded.equals("yes")) {
+                            Log.i(TAG, "Activity returned result: " + downloaded + ". Removing notification no. " + index);
+
+                            if (index < notifications.size()) {
                                 notifications.remove((int) index);
                                 notificationsAdapter.notifyItemRemoved((int) index);
-
-                                NotificationsHelper.setOnlineNotificationAsRead(realId);
-                                NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notificationId);
-                                NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
+                            } else {
+                                // Safety fallback if index is out of bounds
+                                refreshRecyclerView();
                             }
+
+                            NotificationsHelper.setOnlineNotificationAsRead(realId);
+                            NotificationsHelper.deletePhotosFromNotification(ActivityNotifications.this, notificationId);
+                            NotificationsHelper.deleteNotificationFromObjectBox(notificationId);
+                        }
+
+                        int resultCode = result.getResultCode();
+
+                        // If comming from FCM message
+                        if (resultCode == 1) {
+                            Log.i(TAG, "Returned successfully from FCM -> ActivityNotification.");
                         }
 
                         // If result code is 2, we should open next notification
-                        if (result.getResultCode() == 2) {
+                        if (resultCode == 2) {
                             if (notifications.isEmpty()) {
                                 Log.i(TAG, "No more notifications");
                                 selectedNotificationsMenuItemsEnabled(false);
