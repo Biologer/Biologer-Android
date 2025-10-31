@@ -305,4 +305,16 @@
     <string name="locale_montenegro_cyrillic">црногорски (ћирилица)</string>
     <string name="sort_observations">Редослијед опажања</string>
     <string name="sort_observations_desc">Омогућава да другачије поредите опажања врста унутар списка опажања.</string>
+    <string name="no_internet_connection">Нисте повезани на интернет.</string>
+    <string name="file_creation_failed">Не могу да направим датотеку за извоз ЦСВ података.</string>
+    <string name="new_announcement_available">Доступна је новост за читање</string>
+    <string name="no_announcement_locally">Новост није доступна у вашој локалној бази података.</string>
+    <string name="failed_to_download_announcement">Не могу да преузмем новост.</string>
+    <string name="loading">Учитавам…</string>
+    <string name="error_loading_timed_count_id">ИД временског бројања је нула!</string>
+    <string name="error_original_count_data_missing">Недостају подаци о временском бројању!</string>
+    <string name="error_no_location_data">Недостају подаци о локацији временског бројања!</string>
+    <string name="notification_id_id_not_present">Није доступан ИД обавештења!</string>
+    <string name="notification_not_found">Није пронађено обавештење!</string>
+    <string name="all_notifications">Сва обавештења</string>
 </resources>

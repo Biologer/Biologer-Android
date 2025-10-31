@@ -164,7 +164,7 @@ public class ActivityAnnouncement extends AppCompatActivity {
 
         if (announcement == null) {
             Log.w(TAG, "Announcement with ID " + id + " not found locally. It might still be downloading.");
-            Toast.makeText(this, getString(R.string.no_announcement_localy), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.no_announcement_locally), Toast.LENGTH_LONG).show();
             hideLoading();
             finishAndDisplayAnnouncements();
             return;

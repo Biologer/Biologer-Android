@@ -586,4 +586,17 @@ Upotreba takvih fotografija je ograničena na Administratore baze podataka, taks
     <string name="locale_montenegro_cyrillic">crnogorski (ćirilica)</string>
     <string name="sort_observations">Redosljed nalaza</string>
     <string name="sort_observations_desc">Omogućava da drugačije poređate nalaze vrsta unutar spiska nalaza.</string>
+    <string name="no_internet_connection">Nijeste povezani na internet.</string>
+    <string name="file_creation_failed">Ne mogu da napravim datoteku za izvoz CSV podataka.</string>
+    <string name="new_announcement_available">Dostupna je novost za čitanje</string>
+    <string name="no_announcement_locally">Novost nije dostupna u vašoj lokalnoj bazi podataka.</string>
+    <string name="failed_to_download_announcement">Ne mogu da preuzmem novost.</string>
+    <string name="loading">Učitavam…</string>
+    <string name="error_loading_timed_count_id">ID vremenskog brojanja je nula!</string>
+    <string name="error_original_count_data_missing">Nedostaju podaci o vremenskom brojanju!</string>
+    <string name="error_no_location_data">Nedostaju podaci o lokaciji vremenskog brojanja!</string>
+    <string name="notification_id_id_not_present">Nije dostupan ID obavještenja!</string>
+    <string name="notification_not_found">Nije pronađeno obavještenje!</string>
+    <string name="all_notifications">Sva obavještenja</string>
+
 </resources>

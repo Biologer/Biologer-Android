@@ -556,4 +556,16 @@
     <string name="locale_montenegro_cyrillic">црногорски (кирилица)</string>
     <string name="sort_observations">Редослед на наоди</string>
     <string name="sort_observations_desc">Овозможува да ги подредите наодите на видовите во списокот со наоди на друг начин.</string>
+    <string name="no_internet_connection">Не сте поврзани на интернет.</string>
+    <string name="file_creation_failed">Не можам да креирам датотека за извоз на CSV податоци.</string>
+    <string name="new_announcement_available">Достапно е ново соопштение за читање</string>
+    <string name="no_announcement_locally">Соопштението не е достапно во вашата локална база на податоци.</string>
+    <string name="failed_to_download_announcement">Не можам да го преземам соопштението.</string>
+    <string name="loading">Вчитувам…</string>
+    <string name="error_loading_timed_count_id">ИД на временското броење е нула!</string>
+    <string name="error_original_count_data_missing">Недостасуваат податоци за временското броење!</string>
+    <string name="error_no_location_data">Недостасуваат податоци за локацијата на временското броење!</string>
+    <string name="notification_id_id_not_present">ИД на известувањето не е достапен!</string>
+    <string name="notification_not_found">Известувањето не е пронајдено!</string>
+    <string name="all_notifications">Сите известувања</string>
 </resources>

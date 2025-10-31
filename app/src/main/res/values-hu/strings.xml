@@ -555,4 +555,16 @@
     <string name="locale_montenegro_cyrillic">montenegrói (cirill betűs)</string>
     <string name="sort_observations">Megfigyelések sorrendje</string>
     <string name="sort_observations_desc">Lehetővé teszi a fajmegfigyelések eltérő sorrendbe rendezését a megfigyelési listán belül.</string>
+    <string name="no_internet_connection">Nincs internetkapcsolat.</string>
+    <string name="file_creation_failed">Hiba történt a CSV-adatok exportálásához szükséges fájl létrehozásakor.</string>
+    <string name="new_announcement_available">Új közlemény érhető el olvasásra</string>
+    <string name="no_announcement_locally">A közlemény nem érhető el a helyi adatbázisban.</string>
+    <string name="failed_to_download_announcement">Nem sikerült letölteni a közleményt.</string>
+    <string name="loading">Betöltés…</string>
+    <string name="error_loading_timed_count_id">Az időzített számláló azonosítója nulla!</string>
+    <string name="error_original_count_data_missing">Hiányoznak az időzített számlálás adatai!</string>
+    <string name="error_no_location_data">Hiányoznak az időzített számlálás helyadatai!</string>
+    <string name="notification_id_id_not_present">Az értesítés azonosítója hiányzik!</string>
+    <string name="notification_not_found">Az értesítés nem található!</string>
+    <string name="all_notifications">Összes értesítés</string>
 </resources>

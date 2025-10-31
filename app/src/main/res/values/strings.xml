@@ -550,7 +550,7 @@
     <string name="no_internet_connection">You are not connected to the internet.</string>
     <string name="file_creation_failed">Error in creating file for exporting CSV data.</string>
     <string name="new_announcement_available">New announcement is available to read</string>
-    <string name="no_announcement_localy">The announcement is not available in your local database.</string>
+    <string name="no_announcement_locally">The announcement is not available in your local database.</string>
     <string name="failed_to_download_announcement">Could not download announcements.</string>
     <string name="loading">Loading…</string>
     <string name="error_loading_timed_count_id">Timed count ID is null!</string>
