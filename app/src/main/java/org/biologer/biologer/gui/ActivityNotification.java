@@ -580,23 +580,32 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
         }
 
         if (!isFromRecyclerView) {
-            Log.d(TAG, "External flow detected (FCM). Performing local cleanup now.");
+            Log.i(TAG, "FCM flow detected. Navigating to ActivityNotifications instead of sending result.");
 
-            if (notification != null && notification.getId() != 0) {
+            // Finally remove read notification from ObjectBox if downloaded correctly
+            if (downloaded.equals("yes") && notification != null && notification.getId() != 0) {
                 NotificationsHelper.setOnlineNotificationAsRead(notification.getRealId());
                 NotificationsHelper.deletePhotosFromNotification(ActivityNotification.this, notification.getId());
                 NotificationsHelper.deleteNotificationFromObjectBox(notification.getId());
                 Log.i(TAG, "Notification cleaned up locally/server-side for Real ID: " + notification.getRealId());
             }
-        }
 
-        Intent intent = new Intent();
-        intent.putExtra("downloaded", downloaded);
-        intent.putExtra("notification_id", notification.getId());
-        intent.putExtra("real_notification_id", notification.getRealId());
-        intent.putExtra("index_id", indexId);
-        setResult(resultCode, intent);
-        finish();
+            // Launch Notifications Activity
+            Intent intent = new Intent(this, ActivityNotifications.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+
+        } else {
+            // If user came from Notifications Activity, send the result back
+            Intent intent = new Intent();
+            intent.putExtra("downloaded", downloaded);
+            intent.putExtra("notification_id", notification.getId());
+            intent.putExtra("real_notification_id", notification.getRealId());
+            intent.putExtra("index_id", indexId);
+            setResult(resultCode, intent);
+            finish();
+        }
     }
 
 }
