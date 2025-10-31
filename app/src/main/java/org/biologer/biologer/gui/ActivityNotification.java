@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -64,42 +63,52 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
 
         // If opening from Activity use index of taped list, else use bundle received from other Fragment
         Bundle bundle = getIntent().getExtras();
-        String realNotificationId = null;
-        if (bundle != null) {
-            if (bundle.containsKey("real_notification_id")) {
-                realNotificationId = bundle.getString("real_notification_id");
-                isFromRecyclerView = bundle.getBoolean("from_recycler_view", false);
-                indexId = Objects.requireNonNull(bundle).getInt("index_id");
-                Log.d(TAG, "Displaying notification with ID: " + realNotificationId + ".");
-            }
-        } else {
+
+        if (bundle == null) {
             Log.e(TAG, "No Bundle. This activity can not live on its own :)");
+            getBackToNotificationsButton();
             finish();
             return;
+        }
+
+        isFromRecyclerView = bundle.getBoolean("from_recycler_view", false);
+
+        // Get the real notification ID
+        String realNotificationId = null;
+        if (bundle.containsKey("real_notification_id")) {
+            realNotificationId = bundle.getString("real_notification_id");
+        }
+
+        if (realNotificationId == null) {
+            Toast.makeText(this, R.string.notification_id_id_not_present, Toast.LENGTH_LONG).show();
+            getBackToNotificationsButton();
+            finish();
+            return;
+        }
+
+        // Retrieve the index ID if launched from the recycler view
+        if (isFromRecyclerView) {
+            indexId = bundle.getInt("index_id", -1);
+            Log.d(TAG, "Launched from RecyclerView. Real ID: " + realNotificationId + ", Index ID: " + indexId);
+        } else {
+            indexId = -1;
+            Log.d(TAG, "Launched from FCM. Real ID: " + realNotificationId);
         }
 
         Box<UnreadNotificationsDb> unreadNotificationsDbBox = App.get().getBoxStore()
                 .boxFor(UnreadNotificationsDb.class);
-        Query<UnreadNotificationsDb> query;
-
-        // Get the notification from its ObjectBox ID
-        if (realNotificationId == null) {
-            Toast.makeText(this, R.string.notification_id_id_not_present, Toast.LENGTH_LONG).show();
-            finish();
-            return;
-        }
-        query = unreadNotificationsDbBox
+        try (Query<UnreadNotificationsDb> query = unreadNotificationsDbBox
                 .query(UnreadNotificationsDb_.realId.equal(realNotificationId))
-                .build();
-        List<UnreadNotificationsDb> notifications = query.find();
-        if (notifications.isEmpty()) {
-            Toast.makeText(this, R.string.notification_not_found, Toast.LENGTH_LONG).show();
-            query.close();
-            finish();
-            return;
+                .build()) {
+            List<UnreadNotificationsDb> notifications = query.find();
+            if (notifications.isEmpty()) {
+                Toast.makeText(this, R.string.notification_not_found, Toast.LENGTH_LONG).show();
+                return;
+            }
+            notification = notifications.get(0);
+        } catch (Exception e) {
+            Log.e(TAG, "Could not ge notification from ObjectBox: " + e);
         }
-        notification = notifications.get(0);
-        query.close();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             binding.textViewNotificationText.setText(Html.fromHtml(getFormattedMessage(),
@@ -111,29 +120,10 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
 
         loadNotificationData();
 
-        // Check if there is notification with larger ID
-        Query<UnreadNotificationsDb> queryLargerId = unreadNotificationsDbBox
-                .query(UnreadNotificationsDb_.id.greater(notification.getId()))
-                .build();
-        boolean is_last = queryLargerId.find().isEmpty();
-        Log.d(TAG, "There are " + queryLargerId.find().size() + " IDs that are larger than the selected one! Reporting " + is_last);
-        queryLargerId.close();
-
-        binding.buttonReadNext.setOnClickListener(v -> {
-            binding.buttonReadNext.setEnabled(false);
-            openNextNotification();
-        });
-
-        if (is_last) {
-            Log.d(TAG, "This is the last notification.");
-            binding.buttonReadNext.setText(R.string.first_unread_notification);
-        }
-
-        if (unreadNotificationsDbBox.count() == 1) {
-            Log.d(TAG, "There is only 1 notification, disabling buttons.");
-            binding.buttonReadNext.setEnabled(false);
-            binding.buttonReadNext.setVisibility(View.GONE);
-            binding.textViewAllRead.setVisibility(View.VISIBLE);
+        if (isFromRecyclerView) {
+            getReadNextButton(unreadNotificationsDbBox);
+        } else {
+            getBackToNotificationsButton();
         }
 
         getFieldObservationData();
@@ -151,6 +141,51 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
                 }
             }
         });
+    }
+
+    private void getReadNextButton(Box<UnreadNotificationsDb> box) {
+        // Check if there is notification with larger ID
+        boolean isLast;
+        try(Query<UnreadNotificationsDb> queryLargerId = box
+                .query(UnreadNotificationsDb_.id.greater(notification.getId()))
+                .build()) {
+            isLast = queryLargerId.find().isEmpty();
+            Log.d(TAG, "There are " + queryLargerId.find().size()
+                    + " IDs that are larger than the selected one! Reporting "
+                    + isLast);
+        }
+
+        binding.buttonReadNext.setOnClickListener(v -> {
+            binding.buttonReadNext.setEnabled(false);
+            openNextNotification();
+        });
+
+        if (isLast) {
+            Log.d(TAG, "This is the last notification.");
+            binding.buttonReadNext.setText(R.string.first_unread_notification);
+        }
+
+        if (box.count() == 1) {
+            Log.d(TAG, "There is only 1 notification, disabling buttons.");
+            getBackToNotificationsButton();
+            binding.buttonReadNext.setEnabled(true);
+            binding.textViewAllRead.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void getBackToNotificationsButton() {
+        binding.buttonReadNext.setText(R.string.all_notifications);
+        binding.buttonReadNext.setOnClickListener(v -> {
+            binding.buttonReadNext.setEnabled(false);
+            openActivityNotifications();
+        });
+    }
+
+    private void openActivityNotifications() {
+        Intent intent = new Intent(this, ActivityNotifications.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -180,11 +215,8 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
         // Check if the essential metadata is missing (e.g., date is set during the first download)
         if (notification.getDate() == null || notification.getDate().isEmpty() || notification.getImage1() == null) {
             Log.d(TAG, "Missing field observation data or photos. Initiating download...");
+            binding.progressBarLoading.setVisibility(View.VISIBLE);
 
-            // Show loading state (You should add a ProgressBar to your XML for this)
-            // TODO Toast.makeText(this, getString(R.string.loading_observation_data), Toast.LENGTH_LONG).show();
-
-            // Use the external service to fetch all metadata and the thumbnail
             NotificationsHelper.fetchFieldObservationAndPhotos(
                     this,
                     notification,
@@ -197,11 +229,9 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
     }
 
     private void updateUI() {
-        // TODO Hide loading state if it was visible
-        // (Assuming you handle loading visibility in your XML/logic)
-
-        getFieldObservationData(); // Displays metadata
-        displayPhotos();         // Displays/downloads photos
+        binding.progressBarLoading.setVisibility(View.GONE);
+        getFieldObservationData();
+        displayPhotos();
     }
 
     private void addToolbar() {
@@ -309,7 +339,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
             if (notification.getImage1().equals("No photo")) {
                 Log.i(TAG, "No photo 1 for this notification.");
                 image1_ok = true;
-                binding.imageView1.setImageResource(R.drawable.ic_photo_camera); // TODO
+                binding.imageView1.setImageResource(R.drawable.ic_image_file);
             } else {
                 String type = FileManipulation.uriType(notification.getImage1());
                 Log.i(TAG, "Image 1 exist, loading " + notification.getImage1() + "; Type: " + type);
@@ -339,7 +369,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
             if (notification.getImage2().equals("No photo")) {
                 Log.i(TAG, "No photo 2 for this notification.");
                 image2_ok = true;
-                binding.imageView2.setImageResource(R.drawable.ic_photo_camera); // TODO
+                binding.imageView2.setImageResource(R.drawable.ic_image_file);
             } else {
                 String type = FileManipulation.uriType(notification.getImage2());
                 Log.i(TAG, "Image 2 exist, loading " + notification.getImage2() + "; Type: " + type);
@@ -369,7 +399,7 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
             if (notification.getImage3().equals("No photo")) {
                 Log.i(TAG, "No photo 3 for this notification.");
                 image3_ok = true;
-                binding.imageView3.setImageResource(R.drawable.ic_photo_camera); // TODO
+                binding.imageView3.setImageResource(R.drawable.ic_image_file);
             } else {
                 String type = FileManipulation.uriType(notification.getImage3());
                 Log.i(TAG, "Image 3 exist, loading " + notification.getImage3() + "; Type: " + type);
@@ -469,28 +499,29 @@ public class ActivityNotification extends AppCompatActivity implements Notificat
 
             private void updateObjectBox(int position, String imageUri, String realNotificationID) {
                 Box<UnreadNotificationsDb> notificationsDbBox = App.get().getBoxStore().boxFor(UnreadNotificationsDb.class);
-                Query<UnreadNotificationsDb> notificationsDbQuery = notificationsDbBox
-                        .query(UnreadNotificationsDb_.realId.equal(realNotificationID))
-                        .build();
-                List<UnreadNotificationsDb> notifications = notificationsDbQuery.find();
-                notificationsDbQuery.close();
-                if (!notifications.isEmpty()) {
-                    for (int i = 0; i < notifications.size() - 1; i++) {
-                        UnreadNotificationsDb notification = notifications.get(i);
+                UnreadNotificationsDb notification;
+
+                try (Query<UnreadNotificationsDb> notificationsDbQuery = notificationsDbBox
+                        .query(UnreadNotificationsDb_.realId.equal(realNotificationID)).build()) {
+                    notification = notificationsDbQuery.findFirst();
+
+                    if (notification != null) {
                         if (position == 0) {
                             notification.setImage1(imageUri);
-                        }
-                        if (position == 1) {
+                        } else if (position == 1) {
                             notification.setImage2(imageUri);
-                        }
-                        if (position == 2) {
+                        } else if (position == 2) {
                             notification.setImage3(imageUri);
                         }
 
                         App.get().getBoxStore().boxFor(UnreadNotificationsDb.class).put(notification);
+                        Log.d(TAG, "Image URI saved to ObjectBox for position " + position + ".");
+
+                    } else {
+                        Log.e(TAG, "Image URI not saved to ObjectBox: Notification with realId " + realNotificationID + " not found.");
                     }
-                } else {
-                    Log.e(TAG, "Image URI not saved to ObjectBox.");
+                } catch (Exception e) {
+                    Log.e(TAG, "ObjectBox query or update failed for realId: " + realNotificationID, e);
                 }
             }
 

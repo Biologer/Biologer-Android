@@ -558,4 +558,5 @@
     <string name="error_no_location_data">Timed count is missing location data!</string>
     <string name="notification_id_id_not_present">Notification ID id not present!</string>
     <string name="notification_not_found">Notification not found!</string>
+    <string name="all_notifications">All notifications</string>
 </resources>

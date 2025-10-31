@@ -1,12 +1,10 @@
 package org.biologer.biologer.firebase;
 
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -52,7 +50,6 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         Log.d(TAG, "From: " + remoteMessage.getFrom());
         Map<String, String> data = remoteMessage.getData();
-        Log.d(TAG, "Raw FCM data: " + data);
 
         if (data.containsKey("silent")) {
             Log.d(TAG, "Received silent background message: " + data);
@@ -63,6 +60,7 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
             // Receive notifications
             if ("notification_created".equals(data.get("type"))) {
                 Log.d(TAG, "Received: new notification_created event → trigger incremental sync");
+                Log.d(TAG, "RAW data: " + data);
                 showNotification(data);
                 downloadNewNotification(data);
                 return;
@@ -215,16 +213,23 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         String title = translation.optString("title", getString(R.string.notification));
         String body = translation.optString("message", getString(R.string.notification_text));
 
+        // Default value if announcement ID does not exist
+        int notificationId = (int) (System.currentTimeMillis() % 100000);
+
         // Setup Intent to launch ActivityAnnouncement with the remote ID
         Intent intent = new Intent(this, ActivityAnnouncement.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (data.containsKey("announcement_id")) {
-            intent.putExtra("announcement_id", data.get("announcement_id"));
+            String announcementId = data.get("announcement_id");
+            if (announcementId != null) {
+                intent.putExtra("announcement_id", announcementId);
+                Log.d(TAG, "Putting announcement ID to the bundle: " + announcementId);
+                notificationId = announcementId.hashCode();
+            }
         }
 
-        int requestCode = (int) System.currentTimeMillis();
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+                this, notificationId, intent, PendingIntent.FLAG_IMMUTABLE);
 
         String channelId = "biologer_announcements";
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -240,16 +245,7 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                 .setPriority(NotificationCompat.PRIORITY_HIGH);
 
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel =
-                    new NotificationChannel(channelId,
-                            getString(R.string.channel_announcements),
-                            NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription(getString(R.string.channel_announcements_description));
-            manager.createNotificationChannel(channel);
-        }
-
-        manager.notify((int) System.currentTimeMillis(), builder.build());
+        manager.notify(notificationId, builder.build());
     }
 
     private void showNotification(Map<String, String> data) {
@@ -263,39 +259,37 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(this, ActivityNotification.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         if (data.containsKey("notification_id")) {
-            intent.putExtra("real_notification_id", data.get("notification_id"));
-            intent.putExtra("from_recycler_view", false);
-            Log.d(TAG, "Putting real notification ID to the bundle: " + data.get("notification_id"));
+            String realId = data.get("notification_id");
+
+            if (realId != null) {
+
+                intent.putExtra("real_notification_id", realId);
+                intent.putExtra("from_recycler_view", false);
+                Log.d(TAG, "Putting real notification ID to the bundle: " + realId);
+
+                int notificationId = realId.hashCode();
+                PendingIntent pendingIntent = PendingIntent.getActivity(
+                        this, notificationId, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
+
+                String channelId = "biologer_observations";
+                Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+                NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
+                        .setSmallIcon(R.mipmap.ic_notification)
+                        .setContentTitle(title)
+                        .setContentText(body)
+                        .setAutoCancel(true)
+                        .setSound(soundUri)
+                        .setContentIntent(pendingIntent);
+
+                NotificationManager notificationManager =
+                        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+                notificationManager.notify(notificationId, notificationBuilder.build());
+            }
         }
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_IMMUTABLE
-        );
-
-        String channelId = "biologer_observations";
-        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.mipmap.ic_notification)
-                .setContentTitle(title)
-                .setContentText(body)
-                .setAutoCancel(true)
-                .setSound(soundUri)
-                .setContentIntent(pendingIntent);
-
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    "Biologer Notifications",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
     }
 
     private JSONObject getJsonTranslation(Map<String, String> data ) {
