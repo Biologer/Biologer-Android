@@ -115,13 +115,16 @@ public class UploadRecords extends Service {
     }
 
     private void stopForegroundAndNotify(String title, String description) {
+
         handler.removeCallbacksAndMessages(null);
-        notificationUpdateText(title, description);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_DETACH);
         } else {
             stopForeground(true);
         }
+
+        notificationUpdateText(title, description);
+
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
