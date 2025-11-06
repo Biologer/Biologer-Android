@@ -7,6 +7,8 @@ import android.util.Log;
 
 import androidx.multidex.MultiDexApplication;
 
+import com.google.firebase.FirebaseApp;
+
 import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.sql.MyObjectBox;
 
@@ -29,6 +31,9 @@ public class App extends MultiDexApplication {
         app = this;
 
         initializeBoxStore();
+
+        // Initialize Firebase logging
+        FirebaseApp.initializeApp(this);
 
         // Initialize settings trying to fix an error with missing database name
         SettingsManager.init(getApplicationContext());

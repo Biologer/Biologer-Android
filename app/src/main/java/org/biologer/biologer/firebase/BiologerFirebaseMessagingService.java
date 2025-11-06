@@ -42,6 +42,7 @@ import retrofit2.Response;
 public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "Biologer.FCM";
+    private static final String NOTIFICATION_GROUP_KEY = "org.biologer.biologer.NOTIFICATION_GROUP";
 
     /**
      * Called when a message arrives
@@ -282,14 +283,47 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                         .setContentText(body)
                         .setAutoCancel(true)
                         .setSound(soundUri)
-                        .setContentIntent(pendingIntent);
+                        .setContentIntent(pendingIntent)
+                        .setGroup(NOTIFICATION_GROUP_KEY)
+                        .setGroupSummary(false);
 
                 NotificationManager notificationManager =
                         (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
                 notificationManager.notify(notificationId, notificationBuilder.build());
+
+                showNotificationGroupSummary();
             }
         }
+    }
+
+    // If the user taps the notification group it should go the the ActivityNotifications
+    private void showNotificationGroupSummary() {
+        Intent summaryIntent = new Intent(this, ActivityNotification.class);
+        summaryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        int summaryPendingIntentId = NOTIFICATION_GROUP_KEY.hashCode();
+        PendingIntent summaryPendingIntent = PendingIntent.getActivity(
+                this, summaryPendingIntentId, summaryIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        String channelId = "biologer_observations";
+        NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.mipmap.ic_notification)
+                .setContentTitle(getString(R.string.grouped_notifications_title))
+                .setContentText(getString(R.string.grouped_notifications_text))
+                .setGroup(NOTIFICATION_GROUP_KEY)
+                .setGroupSummary(true)
+                .setAutoCancel(true)
+                .setContentIntent(summaryPendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        final int SUMMARY_ID = 0;
+        notificationManager.notify(SUMMARY_ID, summaryBuilder.build());
     }
 
     private JSONObject getJsonTranslation(Map<String, String> data ) {

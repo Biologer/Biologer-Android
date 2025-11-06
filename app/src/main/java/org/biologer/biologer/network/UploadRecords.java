@@ -12,11 +12,14 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
@@ -88,6 +91,7 @@ public class UploadRecords extends Service {
                         totalEntries = entries.size();
                         remainingUploads = new AtomicInteger(entries.size());
                         Log.d(TAG, "There are " + totalEntries + " entries to upload.");
+                        FirebaseCrashlytics.getInstance().log("Upload service STARTING. Total entries to upload: " + totalEntries);
                         notificationInitiate();
                         break;
                     case ACTION_CANCEL:
@@ -155,12 +159,17 @@ public class UploadRecords extends Service {
     private void startUpload() {
         AtomicInteger index = new AtomicInteger(0);
 
+        FirebaseCrashlytics.getInstance().log("Upload loop initialized.");
+
         Runnable uploader = new Runnable() {
             @Override
             public void run() {
                 if (!keepGoing || index.get() >= entries.size()) return;
 
                 LandingFragmentItems item = entries.get(index.getAndIncrement());
+                FirebaseCrashlytics.getInstance().log("Processing Entry Index: " + (index.get() - 1) +
+                        ", Observation ID: " + item.getObservationId() +
+                        ", Timed Count ID: " + item.getTimedCountId());
                 incrementRemainingEntries();
 
                 Integer timedCountId = item.getTimedCountId();
@@ -201,14 +210,21 @@ public class UploadRecords extends Service {
 
     /** ---------------- TIMED COUNTS ---------------- */
     private void uploadTimedCount(Integer id, Runnable onFinished) {
+        Log.d(TAG, "Attempting to upload Timed Count with local ID: " + id);
+
         TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
         if (timedCount == null) {
+            FirebaseCrashlytics.getInstance().log("Timed Count ID " + id + " not found, skipping.");
+            Toast.makeText(getApplicationContext(), "Timed Count " + id + " not found!", Toast.LENGTH_LONG).show();
             onFinished.run();
             return;
         }
 
         APITimedCounts tc = new APITimedCounts();
         tc.getFromTimedCountDatabase(timedCount);
+
+        FirebaseCrashlytics.getInstance().log("Enqueuing Timed Count upload for local ID: " + id + "to" + SettingsManager.getDatabaseName());
+        Log.d(TAG, "Enqueuing Timed Count upload for ID: " + id + " to " + SettingsManager.getDatabaseName());
 
         RetrofitClient.getService(SettingsManager.getDatabaseName())
                 .uploadTimedCount(tc)
@@ -217,7 +233,13 @@ public class UploadRecords extends Service {
                     public void onResponse(@NonNull Call<APITimedCountsResponse> call,
                                            @NonNull Response<APITimedCountsResponse> response) {
 
-                        if (!keepGoing) return;
+                        FirebaseCrashlytics.getInstance().log("Response received for Timed Count ID " + id + ". Code: " + response.code());
+
+                        if (!keepGoing) {
+                            Log.i(TAG, "Timed Count ID " + id + " upload received response but keepGoing is false.");
+                            FirebaseCrashlytics.getInstance().log("Timed Count ID " + id + " upload received response but keepGoing is false.");
+                            return;
+                        }
 
                         if (handle429Retry(response, () -> uploadTimedCount(id, onFinished))) return;
 
@@ -257,18 +279,26 @@ public class UploadRecords extends Service {
                                 }), TIMED_COUNT_CHILD_DELAY_MS);
                             }
                         } else {
-                            Log.e(TAG, "Timed Count upload failed: HTTP " + response.code());
-                            cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.timed_count_upload_response_invalid));
+                            Log.e(TAG, "Timed Count upload failed: HTTP " + response.code()
+                                    + ", Message: " + response.message());
+                            FirebaseCrashlytics.getInstance().recordException(new Exception(
+                                    "Timed Count Upload FAILED (HTTP " + response.code() + ") for ID: " + id
+                                            + ", Message: " + response.message()));
+                            cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
+                                    getString(R.string.timed_count_upload_response_invalid)
+                                            + "(" + response.message() + ").");
                             onFinished.run();
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<APITimedCountsResponse> call, @NonNull Throwable t) {
-                        Log.e(TAG, "Timed Count upload failed: " + t.getMessage());
+                        Log.e(TAG, "Timed Count upload FAILED: Local ID " + id + ". Exception: " + t.getMessage());
+                        FirebaseCrashlytics.getInstance().recordException(new Exception(
+                                "Timed Count Upload Network FAILURE for ID " + id + ": " + t.getMessage(), t));
                         cancelUpload(getString(R.string.upload_failed),
-                                getString(R.string.timed_count_upload_response_invalid) + ": " + t.getMessage());
+                                getString(R.string.timed_count_upload_response_invalid) +
+                                        ": " + t.getLocalizedMessage());
                         onFinished.run();
                     }
                 });
@@ -276,8 +306,14 @@ public class UploadRecords extends Service {
 
     /** ---------------- SINGLE OBSERVATIONS ---------------- */
     private void uploadObservation(Long entryId, Runnable onFinished) {
+
+        Log.d(TAG, "Attempting to upload Observation with local ID: " + entryId);
+
         EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
         if (entryDb == null) {
+            Log.w(TAG, "Observation ID " + entryId + " not found in database. Finishing upload step.");
+            FirebaseCrashlytics.getInstance().log("Observation ID " + entryId + " not found, skipping.");
+            Toast.makeText(getApplicationContext(), "Observation " + entryId + " not found!", Toast.LENGTH_LONG).show();
             onFinished.run();
             return;
         }
@@ -288,8 +324,10 @@ public class UploadRecords extends Service {
         if (entryDb.getSlika3() != null) images.add(entryDb.getSlika3());
 
         if (images.isEmpty()) {
+            Log.d(TAG, "Observation ID " + entryId + " has no photos. Proceeding to Step 2 (Entry upload).");
             uploadObservationStep2(entryDb, onFinished, new ArrayList<>());
         } else {
+            Log.d(TAG, "Observation ID " + entryId + " has " + images.size() + " photos. Starting photo upload.");
             uploadPhotos(entryDb, images, onFinished);
         }
     }
@@ -320,7 +358,11 @@ public class UploadRecords extends Service {
                     public void onResponse(@NonNull Call<UploadFileResponse> call,
                                            @NonNull Response<UploadFileResponse> response) {
 
-                        if (!keepGoing) return;
+                        if (!keepGoing) {
+                            Log.i(TAG, "Photo in entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
+                            FirebaseCrashlytics.getInstance().log("Photo in entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
+                            return;
+                        }
 
                         if (handle429Retry(response, () -> uploadSinglePhoto(entryDb, path, uploadedPhotos, photosLeft, onFinished))) return;
 
@@ -331,8 +373,11 @@ public class UploadRecords extends Service {
                             uploadedPhotos.add(photo);
                         } else {
                             Log.e(TAG, "Photo upload failed: HTTP " + response.code());
-                            cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.photo_upload_response_invalid));
+                            FirebaseCrashlytics.getInstance().log("Photo upload failed: HTTP: " + response.code()
+                                    + " (" + response.message() + ").");
+                            cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
+                                    getString(R.string.photo_upload_response_invalid)
+                                            + ": " + response.message());
                         }
 
                         if (photosLeft.decrementAndGet() == 0) {
@@ -343,8 +388,9 @@ public class UploadRecords extends Service {
                     @Override
                     public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Photo upload failed: " + t.getMessage());
+                        FirebaseCrashlytics.getInstance().log("Photo upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
-                                getString(R.string.photo_upload_response_invalid) + ": " + t.getMessage());
+                                getString(R.string.photo_upload_response_invalid) + ": " + t.getLocalizedMessage());
                         if (photosLeft.decrementAndGet() == 0) {
                             uploadObservationStep2(entryDb, onFinished, uploadedPhotos);
                         }
@@ -357,6 +403,9 @@ public class UploadRecords extends Service {
         apiEntry.getFromEntryDb(entryDb);
         apiEntry.setPhotos(photos);
 
+        FirebaseCrashlytics.getInstance().log("Enqueuing Observation upload for local ID: " + entryDb.getId() + " to " + SettingsManager.getDatabaseName());
+
+
         RetrofitClient.getService(SettingsManager.getDatabaseName())
                 .uploadEntry(apiEntry)
                 .enqueue(new Callback<>() {
@@ -364,7 +413,11 @@ public class UploadRecords extends Service {
                     public void onResponse(@NonNull Call<APIEntryResponse> call,
                                            @NonNull Response<APIEntryResponse> response) {
 
-                        if (!keepGoing) return;
+                        if (!keepGoing) {
+                            Log.i(TAG, "Entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
+                            FirebaseCrashlytics.getInstance().log("Entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
+                            return;
+                        }
 
                         if (handle429Retry(response, () -> uploadObservationStep2(entryDb, onFinished, photos))) return;
 
@@ -377,17 +430,21 @@ public class UploadRecords extends Service {
                             onFinished.run();
                         } else {
                             Log.e(TAG, "Entry upload failed: HTTP " + response.code());
-                            cancelUpload(getString(R.string.upload_failed),
-                                    getString(R.string.observation_upload_response_invalid));
+                            FirebaseCrashlytics.getInstance().log("Observation upload failed: HTTP: " + response.code()
+                                    + " (" + response.message() + ").");
+                            cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
+                                    getString(R.string.observation_upload_response_invalid)
+                                            + "(" + response.message() + ").");
                             onFinished.run();
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
-                        Log.e(TAG, "Entry upload failed: " + t.getMessage());
+                        Log.e(TAG, "Observation upload failed: " + t.getMessage());
+                        FirebaseCrashlytics.getInstance().log("Observation upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
-                                getString(R.string.observation_upload_response_invalid) + ": " + t.getMessage());
+                                getString(R.string.observation_upload_response_invalid) + ": " + t.getLocalizedMessage());
                         onFinished.run();
                     }
                 });
@@ -400,6 +457,7 @@ public class UploadRecords extends Service {
             if (retryAfter != null) {
                 int wait = Integer.parseInt(retryAfter) * 1000;
                 Log.w(TAG, "Server throttled request. Retrying in " + wait + " ms");
+                FirebaseCrashlytics.getInstance().log("Too many requests to the server, waiting " + wait + " ms.");
                 handler.postDelayed(retryAction, wait);
                 return true;
             }

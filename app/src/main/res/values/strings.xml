@@ -559,4 +559,6 @@
     <string name="notification_id_id_not_present">Notification ID id not present!</string>
     <string name="notification_not_found">Notification not found!</string>
     <string name="all_notifications">All notifications</string>
+    <string name="grouped_notifications_title">New Biologer notifications</string>
+    <string name="grouped_notifications_text">Tap to view the summary of notifications</string>
 </resources>

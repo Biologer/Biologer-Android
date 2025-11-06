@@ -278,6 +278,35 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
             }
         });
+
+        binding.textInputEditTextAtlasCode.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Long atlas_code_id = getAtlasCode();
+                viewModel.setAtlasCode(atlas_code_id);
+                if (viewModel.getCallTagIndex() != null) {
+                    Chip chip = (Chip) binding.chipGroupObservationTypes.getChildAt(viewModel.getCallTagIndex());
+                    if (atlas_code_id != null && atlas_code_id == 2) {
+                        Log.d(TAG, "This atlas code assume that the bird was calling...");
+                        chip.setChecked(true);
+                        viewModel.setCallTagSelected(true);
+                    } else {
+                        if (viewModel.isCallTagSelected()) {
+                            chip.setChecked(false);
+                            viewModel.setCallTagSelected(false);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
     }
 
     private void setupLocationListenerAndManager() {
@@ -1047,39 +1076,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         builder.setItems(atlas_codes, (dialogInterface, i)
                 -> binding.textInputEditTextAtlasCode.setText(atlas_codes[i]));
         builder.show();
-
-        // If user select atlas code 2, the "call" tag should also be checked.
-        binding.textInputEditTextAtlasCode.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Long atlas_code_id = getAtlasCode();
-                viewModel.setAtlasCode(atlas_code_id);
-                if (viewModel.getCallTagIndex() != null) {
-                    Chip chip = (Chip) binding.chipGroupObservationTypes.getChildAt(viewModel.getCallTagIndex());
-                    if (atlas_code_id != null && atlas_code_id == 2) {
-                        Log.d(TAG, "This atlas code assume that the bird was calling...");
-                        chip.setChecked(true);
-                        viewModel.setCallTagSelected(true);
-                    } else {
-                        if (viewModel.isCallTagSelected()) {
-                            chip.setChecked(false);
-                            viewModel.setCallTagSelected(false);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
     }
 
     private String setAtlasCode(int index) {
