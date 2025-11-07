@@ -12,7 +12,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -127,7 +126,7 @@ public class UploadRecords extends Service {
             stopForeground(true);
         }
 
-        notificationUpdateText(title, description);
+        notificationUpdateFinalText(title, description);
 
     }
 
@@ -214,8 +213,8 @@ public class UploadRecords extends Service {
 
         TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
         if (timedCount == null) {
-            FirebaseCrashlytics.getInstance().log("Timed Count ID " + id + " not found, skipping.");
-            Toast.makeText(getApplicationContext(), "Timed Count " + id + " not found!", Toast.LENGTH_LONG).show();
+            String message = getString(R.string.timed_count) + " " + id + " " + getString(R.string.not_found) + "!";
+            cancelUpload(getString(R.string.error), message);
             onFinished.run();
             return;
         }
@@ -281,9 +280,6 @@ public class UploadRecords extends Service {
                         } else {
                             Log.e(TAG, "Timed Count upload failed: HTTP " + response.code()
                                     + ", Message: " + response.message());
-                            FirebaseCrashlytics.getInstance().recordException(new Exception(
-                                    "Timed Count Upload FAILED (HTTP " + response.code() + ") for ID: " + id
-                                            + ", Message: " + response.message()));
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.timed_count_upload_response_invalid)
                                             + "(" + response.message() + ").");
@@ -294,8 +290,6 @@ public class UploadRecords extends Service {
                     @Override
                     public void onFailure(@NonNull Call<APITimedCountsResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Timed Count upload FAILED: Local ID " + id + ". Exception: " + t.getMessage());
-                        FirebaseCrashlytics.getInstance().recordException(new Exception(
-                                "Timed Count Upload Network FAILURE for ID " + id + ": " + t.getMessage(), t));
                         cancelUpload(getString(R.string.upload_failed),
                                 getString(R.string.timed_count_upload_response_invalid) +
                                         ": " + t.getLocalizedMessage());
@@ -312,8 +306,8 @@ public class UploadRecords extends Service {
         EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
         if (entryDb == null) {
             Log.w(TAG, "Observation ID " + entryId + " not found in database. Finishing upload step.");
-            FirebaseCrashlytics.getInstance().log("Observation ID " + entryId + " not found, skipping.");
-            Toast.makeText(getApplicationContext(), "Observation " + entryId + " not found!", Toast.LENGTH_LONG).show();
+            String message = getString(R.string.observation) + " " + entryId + " " + getString(R.string.not_found) + "!";
+            cancelUpload(getString(R.string.error), message);
             onFinished.run();
             return;
         }
@@ -373,8 +367,6 @@ public class UploadRecords extends Service {
                             uploadedPhotos.add(photo);
                         } else {
                             Log.e(TAG, "Photo upload failed: HTTP " + response.code());
-                            FirebaseCrashlytics.getInstance().log("Photo upload failed: HTTP: " + response.code()
-                                    + " (" + response.message() + ").");
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.photo_upload_response_invalid)
                                             + ": " + response.message());
@@ -388,7 +380,6 @@ public class UploadRecords extends Service {
                     @Override
                     public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Photo upload failed: " + t.getMessage());
-                        FirebaseCrashlytics.getInstance().log("Photo upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
                                 getString(R.string.photo_upload_response_invalid) + ": " + t.getLocalizedMessage());
                         if (photosLeft.decrementAndGet() == 0) {
@@ -430,8 +421,6 @@ public class UploadRecords extends Service {
                             onFinished.run();
                         } else {
                             Log.e(TAG, "Entry upload failed: HTTP " + response.code());
-                            FirebaseCrashlytics.getInstance().log("Observation upload failed: HTTP: " + response.code()
-                                    + " (" + response.message() + ").");
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.observation_upload_response_invalid)
                                             + "(" + response.message() + ").");
@@ -442,7 +431,6 @@ public class UploadRecords extends Service {
                     @Override
                     public void onFailure(@NonNull Call<APIEntryResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Observation upload failed: " + t.getMessage());
-                        FirebaseCrashlytics.getInstance().log("Observation upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
                                 getString(R.string.observation_upload_response_invalid) + ": " + t.getLocalizedMessage());
                         onFinished.run();
@@ -489,7 +477,7 @@ public class UploadRecords extends Service {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private void notificationUpdateText(String title, String description) {
+    private void notificationUpdateFinalText(String title, String description) {
         Intent intent = new Intent(this, ActivityLanding.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);

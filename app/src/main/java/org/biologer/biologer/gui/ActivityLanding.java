@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -693,11 +694,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         final AlertDialog.Builder builder = new AlertDialog.Builder(ActivityLanding.this);
         builder.setMessage(getString(R.string.refresh_token_failed))
                 .setCancelable(false)
-                .setPositiveButton(getString(R.string.ignore), (dialog, id) -> {
-                    MenuItem item = findViewById(R.id.action_upload);
-                    item.setEnabled(false);
-                    Objects.requireNonNull(item.getIcon(), "The icon must not be null!").setAlpha(100);
-                })
+                .setPositiveButton(getString(R.string.ignore), (dialog, id) -> setMenuIconVisibility(false))
                 .setNegativeButton(getString(R.string.exit), (dialog, id) -> {
                     dialog.cancel();
                     ActivityLanding.this.finishAffinity();
@@ -713,19 +710,26 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     public void updateMenuIconVisibility() {
         long numberOfItems = App.get().getBoxStore().boxFor(EntryDb.class).count();
         Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
-
-        // Disable the upload button
-        // Enable the upload button
+        // Enable/disable the upload button
         setMenuIconVisibility(numberOfItems != 0);
     }
 
     public void setMenuIconVisibility (boolean visible) {
         if (getMenu() != null) {
             uploadMenu.getItem(0).setEnabled(visible);
+            Drawable icon = uploadMenu.getItem(0).getIcon();
             if (visible) {
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(255);
+                if (icon != null) {
+                    icon.setAlpha(255);
+                } else {
+                    Toast.makeText(this, R.string.could_not_access_icon, Toast.LENGTH_SHORT).show();
+                }
             } else {
-                Objects.requireNonNull(uploadMenu.getItem(0).getIcon()).setAlpha(100);
+                if (icon != null) {
+                    icon.setAlpha(100);
+                } else {
+                    Toast.makeText(this, "Could not access upload icon menu.", Toast.LENGTH_SHORT).show();
+                }
             }
             uploadMenu.getItem(1).setVisible(visible);
         }

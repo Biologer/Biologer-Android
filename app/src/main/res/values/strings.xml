@@ -561,4 +561,9 @@
     <string name="all_notifications">All notifications</string>
     <string name="grouped_notifications_title">New Biologer notifications</string>
     <string name="grouped_notifications_text">Tap to view the summary of notifications</string>
+    <string name="empty_database_url">Empty database URL!</string>
+    <string name="empty_coordinates">Empty coordinates!</string>
+    <string name="not_found">not found</string>
+    <string name="observation">Observation\n</string>
+    <string name="could_not_access_icon">Could not access upload icon menu.</string>
 </resources>

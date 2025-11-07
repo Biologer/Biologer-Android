@@ -921,7 +921,16 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 // Sometimes the coordinates are null. Don't know why!
                 if (coordinates == null) {
                     Log.w(TAG, "updateElevationAndSave called with null coordinates; skipping");
+                    Toast.makeText(this, R.string.empty_coordinates, Toast.LENGTH_LONG).show();
                     if (save) saveAndExit();
+                    return;
+                }
+
+                // Sometimes the database url is null.
+                String databaseUrl = SettingsManager.getDatabaseName();
+                if (databaseUrl == null || databaseUrl.isEmpty()) {
+                    Log.w(TAG, "updateElevationAndSave called with null database URL; skipping");
+                    Toast.makeText(this, R.string.empty_database_url, Toast.LENGTH_LONG).show();
                     return;
                 }
 
@@ -930,7 +939,7 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                 }
 
                 elevationCall = RetrofitClient
-                        .getService(SettingsManager.getDatabaseName())
+                        .getService(databaseUrl)
                         .getElevation(coordinates.latitude, coordinates.longitude);
 
                 Log.d(TAG, "Requesting altitude for Latitude: " + coordinates.latitude + "; Longitude: " + coordinates.longitude);
