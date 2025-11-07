@@ -285,7 +285,8 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                         .setSound(soundUri)
                         .setContentIntent(pendingIntent)
                         .setGroup(NOTIFICATION_GROUP_KEY)
-                        .setGroupSummary(false);
+                        .setGroupSummary(false)
+                        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
                 NotificationManager notificationManager =
                         (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -302,9 +303,9 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
         Intent summaryIntent = new Intent(this, ActivityNotification.class);
         summaryIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        int summaryPendingIntentId = NOTIFICATION_GROUP_KEY.hashCode();
+        int SUMMARY_PENDING_INTENT_ID = 999;
         PendingIntent summaryPendingIntent = PendingIntent.getActivity(
-                this, summaryPendingIntentId, summaryIntent,
+                this, SUMMARY_PENDING_INTENT_ID, summaryIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
@@ -317,7 +318,8 @@ public class BiologerFirebaseMessagingService extends FirebaseMessagingService {
                 .setGroupSummary(true)
                 .setAutoCancel(true)
                 .setContentIntent(summaryPendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
