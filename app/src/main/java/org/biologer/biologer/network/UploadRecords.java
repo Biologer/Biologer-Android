@@ -215,7 +215,6 @@ public class UploadRecords extends Service {
         if (timedCount == null) {
             String message = getString(R.string.timed_count) + " " + id + " " + getString(R.string.not_found) + "!";
             cancelUpload(getString(R.string.error), message);
-            onFinished.run();
             return;
         }
 
@@ -283,7 +282,6 @@ public class UploadRecords extends Service {
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.timed_count_upload_response_invalid)
                                             + "(" + response.message() + ").");
-                            onFinished.run();
                         }
                     }
 
@@ -293,7 +291,6 @@ public class UploadRecords extends Service {
                         cancelUpload(getString(R.string.upload_failed),
                                 getString(R.string.timed_count_upload_response_invalid) +
                                         ": " + t.getLocalizedMessage());
-                        onFinished.run();
                     }
                 });
     }
@@ -308,7 +305,6 @@ public class UploadRecords extends Service {
             Log.w(TAG, "Observation ID " + entryId + " not found in database. Finishing upload step.");
             String message = getString(R.string.observation) + " " + entryId + " " + getString(R.string.not_found) + "!";
             cancelUpload(getString(R.string.error), message);
-            onFinished.run();
             return;
         }
 
@@ -353,8 +349,10 @@ public class UploadRecords extends Service {
                                            @NonNull Response<UploadFileResponse> response) {
 
                         if (!keepGoing) {
-                            Log.i(TAG, "Photo in entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
-                            FirebaseCrashlytics.getInstance().log("Photo in entry ID " + entryDb.getId() + " upload received response but keepGoing is false.");
+                            Log.i(TAG, "Photo in entry ID " + entryDb.getId()
+                                    + " upload received response but keepGoing is false.");
+                            FirebaseCrashlytics.getInstance().log("Photo in entry ID "
+                                    + entryDb.getId() + " upload received response but keepGoing is false.");
                             return;
                         }
 
@@ -370,6 +368,7 @@ public class UploadRecords extends Service {
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.photo_upload_response_invalid)
                                             + ": " + response.message());
+                            return;
                         }
 
                         if (photosLeft.decrementAndGet() == 0) {
@@ -381,10 +380,8 @@ public class UploadRecords extends Service {
                     public void onFailure(@NonNull Call<UploadFileResponse> call, @NonNull Throwable t) {
                         Log.e(TAG, "Photo upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
-                                getString(R.string.photo_upload_response_invalid) + ": " + t.getLocalizedMessage());
-                        if (photosLeft.decrementAndGet() == 0) {
-                            uploadObservationStep2(entryDb, onFinished, uploadedPhotos);
-                        }
+                                getString(R.string.photo_upload_response_invalid)
+                                        + ": " + t.getLocalizedMessage());
                     }
                 });
     }
@@ -395,7 +392,6 @@ public class UploadRecords extends Service {
         apiEntry.setPhotos(photos);
 
         FirebaseCrashlytics.getInstance().log("Enqueuing Observation upload for local ID: " + entryDb.getId() + " to " + SettingsManager.getDatabaseName());
-
 
         RetrofitClient.getService(SettingsManager.getDatabaseName())
                 .uploadEntry(apiEntry)
@@ -424,7 +420,6 @@ public class UploadRecords extends Service {
                             cancelUpload(getString(R.string.upload_failed) + ": " + response.code(),
                                     getString(R.string.observation_upload_response_invalid)
                                             + "(" + response.message() + ").");
-                            onFinished.run();
                         }
                     }
 
@@ -433,7 +428,6 @@ public class UploadRecords extends Service {
                         Log.e(TAG, "Observation upload failed: " + t.getMessage());
                         cancelUpload(getString(R.string.upload_failed),
                                 getString(R.string.observation_upload_response_invalid) + ": " + t.getLocalizedMessage());
-                        onFinished.run();
                     }
                 });
     }
