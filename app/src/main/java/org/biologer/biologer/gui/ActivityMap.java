@@ -56,6 +56,7 @@ import com.google.maps.android.ui.IconGenerator;
 import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.helpers.NumbersHelper;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.ElevationResponse;
@@ -204,12 +205,12 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
         // Latitude
         editTextLatitude = binding.mapLatitudeText;
-        editTextLatitude.setText(formatCoordinate(latLong.latitude));
+        editTextLatitude.setText(NumbersHelper.formatValueLocalised(latLong.latitude, 6));
         setupCoordinateField(editTextLatitude, true);
 
         // Longitude
         editTextLongitude = binding.mapLongitudeText;
-        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+        editTextLongitude.setText(NumbersHelper.formatValueLocalised(latLong.longitude, 6));
         setupCoordinateField(editTextLongitude, false);
 
         editTextPrecision = binding.mapPrecisionText;
@@ -352,8 +353,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
                             circle.setCenter(latLong);
                         }
 
-                        editTextLatitude.setText(formatCoordinate(latLong.latitude));
-                        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+                        editTextLatitude.setText(NumbersHelper.formatValueLocalised(latLong.latitude, 6));
+                        editTextLongitude.setText(NumbersHelper.formatValueLocalised(latLong.longitude, 6));
 
                         updateElevationAndSave(latLong, true, false);
                     } else {
@@ -740,8 +741,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
         updateMarkerAndCircle(false);
 
-        editTextLatitude.setText(formatCoordinate(latLong.latitude));
-        editTextLongitude.setText(formatCoordinate(latLong.longitude));
+        editTextLatitude.setText(NumbersHelper.formatValueLocalised(latLong.latitude, 6));
+        editTextLongitude.setText(NumbersHelper.formatValueLocalised(latLong.longitude, 6));
 
         updateElevationAndSave(latLong, true, false);
     }
@@ -1043,12 +1044,6 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
         outState.putString("STATE_ACCURACY",  accuracy);
         outState.putString("STATE_ELEVATION", elevation);
         outState.putString("STATE_LOCATION_NAME", location_name);
-    }
-
-    private static String formatCoordinate(double value) {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag(Localisation.getLocaleScript()));
-        DecimalFormat df = new DecimalFormat("#,##0.000000", symbols);
-        return df.format(value);
     }
 
     @Override

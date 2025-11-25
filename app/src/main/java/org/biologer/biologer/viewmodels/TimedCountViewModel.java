@@ -39,6 +39,9 @@ public class TimedCountViewModel extends ViewModel {
     private int countDuration = 0;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Boolean newEntry = false;
+    private double centroidLongitude;
+    private double centroidLatitude;
+    private String geometry;
 
     private final Runnable ticker = new Runnable() {
         @Override
@@ -105,6 +108,9 @@ public class TimedCountViewModel extends ViewModel {
         setCountDuration(timedCount.getCountDurationMinutes());
         setArea(timedCount.getWalkedArea());
         setDistance(timedCount.getWalkedDistance());
+        setCentroidLongitude(timedCount.getLongitude());
+        setCentroidLatitude(timedCount.getLatitude());
+        setGeometry(timedCount.getGeometry());
         setTaxonGroupId(Long.parseLong(timedCount.getTaxonGroup()));
         setTemperatureData(timedCount.getTemperatureCelsius());
         setCloudinessData(timedCount.getCloudCoverPercentage());
@@ -287,5 +293,29 @@ public class TimedCountViewModel extends ViewModel {
 
     public void setTaxonGroupId(Long taxonGroupId) {
         this.taxonGroupId = taxonGroupId;
+    }
+
+    public double getCentroidLongitude() {
+        return centroidLongitude;
+    }
+
+    public void setCentroidLongitude(double centroidLongitude) {
+        this.centroidLongitude = centroidLongitude;
+    }
+
+    public double getCentroidLatitude() {
+        return centroidLatitude;
+    }
+
+    public void setCentroidLatitude(double centroidLatitude) {
+        this.centroidLatitude = centroidLatitude;
+    }
+
+    public String getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(String geometry) {
+        this.geometry = geometry;
     }
 }

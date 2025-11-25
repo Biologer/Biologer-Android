@@ -652,7 +652,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 String.valueOf(viewModel.getTaxonGroupId()),
                 DateHelper.getCurrentDay(),
                 DateHelper.getCurrentMonth(),
-                DateHelper.getCurrentYear());
+                DateHelper.getCurrentYear(),
+                viewModel.getCentroidLongitude(),
+                viewModel.getCentroidLatitude(),
+                viewModel.getGeometry());
 
         Box<TimedCountDb> timedCountDbBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
         timedCountDbBox.put(timedCountDb);
@@ -1035,11 +1038,18 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                     }
                 } else if (intent.getAction().equals(LocationTrackingService.ACTION_ROUTE_RESULT)) {
                     double totalArea = intent.getDoubleExtra(LocationTrackingService.WALKED_AREA, 0.0);
-                    Log.d(TAG, "Received total area: " + totalArea);
+
                     double totalDistance = intent.getDoubleExtra(LocationTrackingService.WALKED_DISTANCE, 0.0);
-                    Log.d(TAG, "Received total area: " + totalDistance);
+                    double centroidLongitude = intent.getDoubleExtra(LocationTrackingService.CENTROID_LONGITUDE, 0.0);
+                    double centroidLatitude = intent.getDoubleExtra(LocationTrackingService.CENTROID_LATITUDE, 0.0);
+                    Log.d(TAG, "Received area: " + totalArea + "; distance: " + totalDistance +
+                            "; Centroid: " + centroidLongitude + "; " + centroidLatitude);
+                    String geometry = intent.getStringExtra(LocationTrackingService.GEOMETRY_LINESTRING_WKT);
                     viewModel.setArea( (int) totalArea );
                     viewModel.setDistance( (int) totalDistance);
+                    viewModel.setCentroidLongitude(centroidLongitude);
+                    viewModel.setCentroidLatitude(centroidLatitude);
+                    viewModel.setGeometry(geometry);
                 }
             }
         }

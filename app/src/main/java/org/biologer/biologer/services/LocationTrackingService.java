@@ -22,6 +22,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import org.biologer.biologer.helpers.NumbersHelper;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
@@ -49,6 +50,12 @@ public class LocationTrackingService extends Service {
     public static final String ACTION_ROUTE_RESULT = "org.biologer.biologer.action.ROUTE_RESULT";
     public static final String WALKED_AREA = "walked_area";
     public static final String WALKED_DISTANCE = "walked_distance";
+    public static final String CENTROID_LATITUDE = "centroid_latitude";
+    public static final String CENTROID_LONGITUDE = "centroid_longitude";
+    public static final String GEOMETRY_LINESTRING_WKT = "geometry_linestring_wkt";
+    private static final float MIN_DISTANCE_METERS = 2.5f; // Only record if moved at least 2.5m
+    private static final float MAX_ACCURACY_METERS = 25.0f; // Discard points with precision worse than 25m
+    private Location lastAcceptedLocation = null;
     private boolean isTracking = true;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
@@ -70,7 +77,25 @@ public class LocationTrackingService extends Service {
                 if (!isTracking) return;
 
                 for (Location location : locationResult.getLocations()) {
-                    //Log.d(TAG, "Location: " + location.getLatitude() + ", " + location.getLongitude());
+                    if (location.hasAccuracy() && location.getAccuracy() > MAX_ACCURACY_METERS) {
+                        Log.w(TAG, "Location discarded: Accuracy (" + location.getAccuracy() +
+                                "m) is worse than " + MAX_ACCURACY_METERS + "m.");
+                        continue;
+                    }
+
+                    if (lastAcceptedLocation != null) {
+                        float distance = location.distanceTo(lastAcceptedLocation);
+
+                        if (distance < MIN_DISTANCE_METERS) {
+                            Log.d(TAG, "Location discarded: Moved only " + distance +
+                                    "m. Waiting for " + MIN_DISTANCE_METERS + "m.");
+                            continue;
+                        }
+                    }
+
+                    Log.d(TAG, "Location accepted. Accuracy: " + location.getAccuracy() + "m.");
+
+                    lastAcceptedLocation = location;
 
                     // Save location to route list
                     UTMPoint utmPoint = convertToUtm(location);
@@ -112,8 +137,8 @@ public class LocationTrackingService extends Service {
     }
 
     private void requestLocationUpdates() {
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2500)
-                .setMinUpdateIntervalMillis(1000)
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+                .setMinUpdateIntervalMillis(2500)
                 .build();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -244,17 +269,160 @@ public class LocationTrackingService extends Service {
         return totalDistance;
     }
 
+    /**
+     * Transforms a coordinate from UTM back to WGS-84 (Longitude, Latitude).
+     * @param utmCoordinate The ProjCoordinate (x=Easting, y=Northing) in UTM.
+     * @param utmZone The UTM zone the coordinate belongs to.
+     * @return An Android Location object with WGS-84 coordinates, or null on failure.
+     */
+    private Location transformUtmToWgs84(ProjCoordinate utmCoordinate, int utmZone) {
+        if (utmZone == -1) {
+            Log.e(TAG, "UTM zone not set. Cannot perform transformation.");
+            return null;
+        }
+
+        CoordinateReferenceSystem utm_crs;
+        CoordinateReferenceSystem wgs84_crs;
+        CoordinateTransform utmToLonLatTransform;
+
+        try {
+            // 1. Define the UTM Coordinate Reference System (CRS)
+            String[] utmParams = {
+                    "+proj=utm",
+                    "+zone=" + utmZone,
+                    "+ellps=WGS84",
+                    "+datum=WGS84",
+                    "+units=m",
+                    "+no_defs"
+            };
+            utm_crs = crsFactory.createFromParameters("utm_out", utmParams);
+
+            // 2. Define the target WGS-84 CRS
+            String[] wgs84Params = {
+                    "+proj=longlat",
+                    "+ellps=WGS84",
+                    "+datum=WGS84",
+                    "+no_defs"
+            };
+            wgs84_crs = crsFactory.createFromParameters("WGS84_out", wgs84Params);
+
+            // 3. Create the transformation object (FROM UTM TO WGS84)
+            utmToLonLatTransform = ctFactory.createTransform(utm_crs, wgs84_crs);
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating coordinate transformation: " + e.getMessage());
+            return null;
+        }
+
+        // 4. Perform the transformation
+        ProjCoordinate lonLatCoordinates = new ProjCoordinate();
+        utmToLonLatTransform.transform(utmCoordinate, lonLatCoordinates);
+
+        // 5. Package and return the result
+        Location centroidLocation = new Location("Transformed_Coordinate");
+        // Proj4j uses x=longitude, y=latitude for longlat CRS
+        centroidLocation.setLatitude(lonLatCoordinates.y);
+        centroidLocation.setLongitude(lonLatCoordinates.x);
+        return centroidLocation;
+    }
+
+    // The values is returned in WGS-84 coordinates
+    private Location calculateCentroid() {
+        int numPoints = routeUtmPoints.size();
+        if (numPoints == 0) {
+            return null;
+        }
+
+        int utmZone = currentUtmZone;
+
+        // If there are less than 3 points calculate arithmetic mean
+        double sumEasting = 0.0;
+        double sumNorthing = 0.0;
+
+        for (UTMPoint utmPoint : routeUtmPoints) {
+            sumEasting += utmPoint.easting;
+            sumNorthing += utmPoint.northing;
+        }
+
+        double centroidEasting = sumEasting / numPoints;
+        double centroidNorthing = sumNorthing / numPoints;
+
+        // If there are more than 3 points use JTS polygon centroid
+        if (numPoints >= 3) {
+            GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 0);
+
+            Coordinate[] coordinates = new Coordinate[numPoints + 1];
+            for (int i = 0; i < numPoints; i++) {
+                UTMPoint utmPoint = routeUtmPoints.get(i);
+                coordinates[i] = new Coordinate(utmPoint.easting, utmPoint.northing);
+            }
+            coordinates[numPoints] = new Coordinate(routeUtmPoints.get(0).easting, routeUtmPoints.get(0).northing);
+
+            LinearRing shell = geometryFactory.createLinearRing(coordinates);
+            Polygon polygon = geometryFactory.createPolygon(shell);
+
+            org.locationtech.jts.geom.Point centroidUtm = polygon.getCentroid();
+
+            centroidEasting = centroidUtm.getX();
+            centroidNorthing = centroidUtm.getY();
+        }
+
+        ProjCoordinate utmCoordinates = new ProjCoordinate(centroidEasting, centroidNorthing);
+        return transformUtmToWgs84(utmCoordinates, utmZone);
+    }
+
+    /**
+     * Converts the entire list of UTM points back to WGS-84 using the existing
+     * transformUtmToWgs84 helper, and formats them into a Well-Known Text (WKT) LINESTRING string.
+     * @return The WKT LINESTRING string, or an empty string if no points exist.
+     */
+    private String createGeometryLinestringWkt() {
+        if (routeUtmPoints.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
+        int utmZone = currentUtmZone; // Use the zone from the last accepted point
+
+        for (int i = 0; i < routeUtmPoints.size(); i++) {
+            UTMPoint utmPoint = routeUtmPoints.get(i);
+            ProjCoordinate utmCoordinates = new ProjCoordinate(utmPoint.easting, utmPoint.northing);
+            Location wgs84Location = transformUtmToWgs84(utmCoordinates, utmZone);
+            if (wgs84Location != null) {
+                String formattedLon = NumbersHelper.formatValueEnglish(wgs84Location.getLongitude(), 6);
+                String formattedLat = NumbersHelper.formatValueEnglish(wgs84Location.getLatitude(), 6);
+                wktBuilder.append(formattedLon).append(" ").append(formattedLat);
+                if (i < routeUtmPoints.size() - 1) {
+                    wktBuilder.append(",");
+                }
+            }
+        }
+
+        wktBuilder.append(")");
+        return wktBuilder.toString();
+    }
+
     private void stopTrackingAndCalculate() {
         fusedLocationClient.removeLocationUpdates(locationCallback);
 
         double totalArea = calculateArea();
         double totalDistance = calculateDistance();
+        Location centroid = calculateCentroid();
+        String geometry = createGeometryLinestringWkt();
         Log.d(TAG, "Total area walked: " + totalArea + " m2 (distance = " + totalDistance + " m).");
 
         // Broadcast the result back to the Activity
         Intent resultIntent = new Intent(ACTION_ROUTE_RESULT);
         resultIntent.putExtra(WALKED_AREA, totalArea);
         resultIntent.putExtra(WALKED_DISTANCE, totalDistance);
+        if (centroid != null) {
+            double longitude = centroid.getLongitude();
+            double latitude = centroid.getLatitude();
+            resultIntent.putExtra(CENTROID_LONGITUDE, longitude);
+            resultIntent.putExtra(CENTROID_LATITUDE, latitude);
+            Log.d(TAG, "Centroid (WGS84): " + centroid.getLongitude() + ", " + centroid.getLatitude());
+        }
+        resultIntent.putExtra(GEOMETRY_LINESTRING_WKT, geometry);
+        Log.d(TAG, "Geometry of the line: " + geometry);
         LocalBroadcastManager.getInstance(this).sendBroadcast(resultIntent);
 
         stopSelf();

@@ -26,6 +26,9 @@ public class TimedCountDb {
     private String day;
     private String month;
     private String year;
+    private double longitude;
+    private double latitude;
+    private String geometry;
 
     public TimedCountDb() {
     }
@@ -33,7 +36,8 @@ public class TimedCountDb {
                         Integer walkedArea, Integer walkedDistance, Integer cloudCoverPercentage,
                         Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
-                        String comment, String taxonGroup, String day, String month, String year) {
+                        String comment, String taxonGroup, String day, String month, String year,
+                        double longitude, double latitude, String geometry) {
         this.id = id;
         this.timedCountId = timedCountId;
         this.startTime = startTime;
@@ -53,6 +57,9 @@ public class TimedCountDb {
         this.day = day;
         this.month = month;
         this.year = year;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.geometry = geometry;
     }
 
     public long getId() {
@@ -200,5 +207,29 @@ public class TimedCountDb {
 
     public void setWalkedDistance(Integer walkedDistance) {
         this.walkedDistance = walkedDistance;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(String geometry) {
+        this.geometry = geometry;
     }
 }

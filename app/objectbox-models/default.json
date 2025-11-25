@@ -628,7 +628,7 @@
     },
     {
       "id": "22:5077654541060987432",
-      "lastPropertyId": "19:452295637882575111",
+      "lastPropertyId": "22:4823756202052739700",
       "name": "TimedCountDb",
       "properties": [
         {
@@ -726,6 +726,21 @@
           "id": "19:452295637882575111",
           "name": "walkedDistance",
           "type": 5
+        },
+        {
+          "id": "20:6974509379142880864",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "21:4888221569726838557",
+          "name": "latitude",
+          "type": 8
+        },
+        {
+          "id": "22:4823756202052739700",
+          "name": "geometry",
+          "type": 9
         }
       ],
       "relations": []

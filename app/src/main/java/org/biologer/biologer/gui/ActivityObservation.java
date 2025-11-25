@@ -211,7 +211,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         }
                         viewModel.setTaxonSelectedFromTheList(false);
 
-                        // TODO The list could contain only species names ind IDs to be mode memory efficient
+                        // TODO The list could contain only species names and IDs to be mode memory efficient
                         List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString(), 0);
 
                         // Add the Query to the drop down list (adapter)

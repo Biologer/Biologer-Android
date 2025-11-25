@@ -16,6 +16,12 @@ public class APITimedCounts {
     private Integer walkedArea;
     @JsonProperty("distance")
     private Integer walkedDistance;
+    @JsonProperty("longitude")
+    private double longitude;
+    @JsonProperty("latitude")
+    private double latitude;
+    @JsonProperty("geometry")
+    private String geometry;
     @JsonProperty("cloud_cover")
     private Integer cloudCoverPercentage;
     @JsonProperty("atmospheric_pressure")
@@ -196,5 +202,32 @@ public class APITimedCounts {
         int real_month = Integer.parseInt(db.getMonth()) + 1; // Add 1 since months range from 0 to 11
         setMonth(String.valueOf(real_month));
         setYear(db.getYear());
+        setLongitude(db.getLongitude());
+        setLatitude(db.getLatitude());
+        setGeometry(db.getGeometry());
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(String geometry) {
+        this.geometry = geometry;
     }
 }
