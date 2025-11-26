@@ -713,8 +713,13 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 viewModel.setImage1(null);
                 break;
             case R.id.imageViewPicture1:
-                Log.i(TAG, "Image 1 clicked. URL: " + viewModel.getImage1().getValue());
-                viewImage(viewModel.getImage1().getValue());
+                String image1 = viewModel.getImage1().getValue();
+                if (image1 != null) {
+                    Log.i(TAG, "Image 1 clicked. URL: " + image1);
+                    viewImage(image1);
+                } else {
+                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.imageViewDeletePicture2:
                 Log.i(TAG, "Deleting image 2.");
@@ -724,8 +729,13 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 viewModel.setImage2(null);
                 break;
             case R.id.imageViewPicture2:
-                Log.i(TAG, "Image 2 clicked. URL: " + viewModel.getImage2().getValue());
-                viewImage(viewModel.getImage2().getValue());
+                String image2 = viewModel.getImage2().getValue();
+                if (image2 != null) {
+                    Log.i(TAG, "Image 2 clicked. URL: " + image2);
+                    viewImage(image2);
+                } else {
+                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.imageViewDeletePicture3:
                 Log.i(TAG, "Deleting image 3.");
@@ -735,8 +745,13 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 viewModel.setImage3(null);
                 break;
             case R.id.imageViewPicture3:
-                Log.i(TAG, "Image 3 clicked. URL: " + viewModel.getImage3().getValue());
-                viewImage(viewModel.getImage3().getValue());
+                String image3 = viewModel.getImage3().getValue();
+                if (image3 != null) {
+                    Log.i(TAG, "Image 3 clicked. URL: " + image3);
+                    viewImage(image3);
+                } else {
+                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.materialCheckBoxDead:
                 viewModel.checkDead();

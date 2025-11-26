@@ -120,13 +120,14 @@ public class UploadRecords extends Service {
     private void stopForegroundAndNotify(String title, String description) {
 
         handler.removeCallbacksAndMessages(null);
+
+        notificationUpdateFinalText(title, description);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_DETACH);
+            stopForeground(STOP_FOREGROUND_REMOVE);
         } else {
             stopForeground(true);
         }
-
-        notificationUpdateFinalText(title, description);
 
     }
 

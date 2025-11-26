@@ -31,6 +31,8 @@ import org.biologer.biologer.sql.TaxonGroupsDb_;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -55,6 +57,7 @@ public class UpdateTaxa extends Service {
     String timestamp;
     String updated_after;
     private int totalPagesExpected = -1;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(); // Use a single thread to serialize DB updates.
 
     @Override
     public void onCreate() {
@@ -173,7 +176,6 @@ public class UpdateTaxa extends Service {
 
     private void saveFetchedPage(@NonNull TaxaResponse taxaResponse, int page) {
         // Get data from server response
-        int lastPage = taxaResponse.getMeta().getLastPage();
         int total = taxaResponse.getMeta().getTotal();
         int perPage = taxaResponse.getMeta().getPerPage();
 
@@ -186,8 +188,21 @@ public class UpdateTaxa extends Service {
 
         // Save if there is some data
         if (taxaData != null && !taxaData.isEmpty()) {
-            saveTaxaToDatabase(taxaData);
+            // Offload the database work to a background thread.
+            executor.execute(() -> {
+                saveTaxaToDatabase(taxaData);
+
+                // Continue when the work is done.
+                new Handler(Looper.getMainLooper()).post(() -> continueTaxaDownload(taxaResponse, page));
+            });
+
+        } else {
+            continueTaxaDownload(taxaResponse, page);
         }
+    }
+
+    private void continueTaxaDownload(@NonNull TaxaResponse taxaResponse, int page) {
+        int lastPage = taxaResponse.getMeta().getLastPage();
 
         // Compute and report progress
         int denominator = totalPagesExpected > 0 ? totalPagesExpected : lastPage;
@@ -196,7 +211,10 @@ public class UpdateTaxa extends Service {
         broadcastPercent(percent);
         Log.i(TAG, "Page " + page + " downloaded, progress " + percent + "%");
 
-        boolean noMoreData = (taxaData == null || taxaData.isEmpty());
+        broadcastPercent(percent);
+        Log.i(TAG, "Page " + page + " downloaded, progress " + percent + "%");
+
+        boolean noMoreData = (taxaResponse.getData() == null || taxaResponse.getData().isEmpty());
         boolean lastPageReached = (page >= lastPage && lastPage > 0);
 
         if (noMoreData || lastPageReached) {
@@ -238,10 +256,11 @@ public class UpdateTaxa extends Service {
             List<TaxaTranslations> translations = taxon.getTaxaTranslations();
             if (translations != null && !translations.isEmpty()) {
                 // Remove old translation for this ID if already exists
-                translationBox.query()
+                try (Query<TaxaTranslationDb> query = translationBox.query()
                         .equal(TaxaTranslationDb_.taxonId, taxon.getId())
-                        .build()
-                        .remove();
+                        .build()) {
+                    query.remove();
+                }
 
                 // Add the translation to the ObjectBox
                 TaxaTranslationDb[] translationArray = new TaxaTranslationDb[translations.size()];
@@ -262,10 +281,11 @@ public class UpdateTaxa extends Service {
             List<TaxaSynonym> synonyms = taxon.getSynonyms();
             if (synonyms != null && !synonyms.isEmpty()) {
                 // Remove old synonym for this ID if already exists
-                synonymBox.query()
+                try (Query<SynonymsDb> query = synonymBox.query()
                         .equal(SynonymsDb_.taxonId, taxon.getId())
-                        .build()
-                        .remove();
+                        .build()) {
+                    query.remove();
+                }
 
                 // Add synonym to ObjectBox
                 List<SynonymsDb> synonymDbList = new ArrayList<>(synonyms.size());
