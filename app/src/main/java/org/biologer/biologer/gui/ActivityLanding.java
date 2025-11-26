@@ -352,11 +352,10 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         }
     }
 
-
     private void updateTaxaDatabase(String databaseUrl) {
         // Load database from local assets folder if newer
         int updatedAt = Integer.parseInt(SettingsManager.getTaxaUpdatedAt());
-        String assetsTimestamp = "1752595284";
+        String assetsTimestamp = "1764117736";
         if (updatedAt < Integer.parseInt(assetsTimestamp)) {
             Log.i(TAG, "Loading taxa database from Android assets (local newer).");
             new CsvTaxaLoader(this).loadInternalTaxaDataset(databaseUrl, assetsTimestamp);
