@@ -1,11 +1,10 @@
 package org.biologer.biologer;
 
+import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import android.util.Log;
-
-import androidx.multidex.MultiDexApplication;
 
 import com.google.firebase.FirebaseApp;
 
@@ -19,7 +18,7 @@ import io.objectbox.android.Admin;
  * Created by brjovanovic on 12/24/2017.
  */
 
-public class App extends MultiDexApplication {
+public class App extends Application {
 
     private BoxStore boxStore;
     private static App app;

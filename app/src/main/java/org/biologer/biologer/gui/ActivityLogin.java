@@ -463,7 +463,7 @@ public class ActivityLogin extends AppCompatActivity {
                         }
                     } else {
                         retry_login++;
-                        if (retry_login >= 4) {
+                        if (retry_login > 1) {
                             binding.textViewForgotPassword.setVisibility(View.VISIBLE);
                         }
                         binding.textInputLayoutPassword.setError(getString(R.string.wrong_creds));

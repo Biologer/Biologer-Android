@@ -11,46 +11,30 @@ android {
         applicationId "org.biologer.biologer"
         minSdk 23
         targetSdk 36
-        versionCode 221
-        versionName '5.1.11'
-        multiDexEnabled true
+        versionCode 223
+        versionName '5.1.13'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        // Get secret values stored in ~/.gradle/gradle.properties
+        // Part 1. Keys to be accessed from .java files
+        buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
+        buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
+        buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
+        buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
+        buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
+        buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
+        buildConfigField 'String', "OpenWeather_KEY", OpenWeather_KEY
+        // Part 2. Keys to be accessed from XML files
+        resValue 'string', "MAP_KEY", GoogleMAP_KEY
     }
 
     androidResources {
         generateLocaleConfig true
     }
 
-    // Notify on deprecated api
-    allprojects {
-        gradle.projectsEvaluated {
-            tasks.withType(JavaCompile).tap {
-                configureEach {
-                    options.compilerArgs.add("-Xlint:deprecation")
-                }
-            }
-        }
-    }
-
-    applicationVariants.configureEach { variant ->
-        variant.resValue "string", "versionName", variant.versionName
-    }
-
     buildTypes {
         debug {
-            // Add the key here if it needs to be access from .java files
-            // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
-            buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
-            buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
-            buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
-            buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
-            buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
-            buildConfigField 'String', "OpenWeather_KEY", OpenWeather_KEY
-            // Add the key here if you need to access it from XML files
-            // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            resValue 'string', "MAP_KEY", GoogleMAP_KEY
         }
         release {
             // Set if code shrinking should be enabled
@@ -62,20 +46,6 @@ android {
             ndk {
                 debugSymbolLevel 'FULL'
             }
-
-            // Add the key here if it needs to be access from .java files
-            // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            buildConfigField 'String', "BiologerRS_Key", Biologer_BiologerRS_client_secret
-            buildConfigField 'String', "BiologerHR_Key", Biologer_BiologerHR_client_secret
-            buildConfigField 'String', "BiologerBA_Key", Biologer_BiologerBA_client_secret
-            buildConfigField 'String', "BiologerME_Key", Biologer_BiologerME_client_secret
-            buildConfigField 'String', "BiologerDEV_Key", Biologer_BiologerDEV_client_secret
-            buildConfigField 'String', "Birdloger_Key", Biologer_Birdloger_client_secret
-            buildConfigField 'String', "OpenWeather_KEY", OpenWeather_KEY
-            // Add the key here if you need to access it from XML files
-            // Rightmost value is retrieved from ~/.gradle/gradle.properties
-            resValue 'string', "MAP_KEY", GoogleMAP_KEY
-
         }
     }
     packagingOptions {
@@ -92,31 +62,31 @@ android {
     buildFeatures {
         buildConfig true
         viewBinding true
+        resValues true
     }
     buildToolsVersion '36.0.0'
 }
 
 dependencies {
-    implementation 'androidx.work:work-runtime:2.11.0'
+    implementation 'androidx.work:work-runtime:2.11.1'
     androidTestImplementation('androidx.test.espresso:espresso-core:3.6.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.drawerlayout:drawerlayout:1.2.0"
-    implementation "androidx.exifinterface:exifinterface:1.4.1"
-    implementation "androidx.activity:activity-ktx:1.11.0"
+    implementation "androidx.exifinterface:exifinterface:1.4.2"
+    implementation "androidx.activity:activity-ktx:1.12.4"
     implementation "androidx.core:core-ktx:1.17.0"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.core:core:1.17.0'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
-    implementation 'com.google.android.gms:play-services-maps:19.2.0'
-    implementation 'com.google.maps.android:android-maps-utils:3.19.0'
-    implementation 'com.google.firebase:firebase-crashlytics:20.0.3'
+    implementation 'com.google.android.gms:play-services-maps:20.0.0'
+    implementation 'com.google.maps.android:android-maps-utils:4.1.0'
+    implementation 'com.google.firebase:firebase-crashlytics:20.0.4'
     implementation 'com.google.firebase:firebase-analytics:23.0.0'
     implementation 'com.google.firebase:firebase-messaging:25.0.1'
-    implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.core:core:1.17.0'
     annotationProcessor 'androidx.annotation:annotation:1.9.1'
 
@@ -129,7 +99,7 @@ dependencies {
     implementation 'com.github.AppIntro:AppIntro:6.1.0'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
     implementation 'com.squareup.retrofit2:converter-jackson:3.0.0'
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.3.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.3.2'
     implementation ('com.opencsv:opencsv:5.12.0') {
         exclude group: 'commons-logging'
     }
@@ -137,8 +107,8 @@ dependencies {
     implementation ('com.github.bumptech.glide:glide:5.0.5')
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.5'
 
-    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.0.1")
-    releaseImplementation("io.objectbox:objectbox-android:5.0.1")
+    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.3.0")
+    releaseImplementation("io.objectbox:objectbox-android:5.3.0")
     configurations {
         debugImplementation {
             exclude group: 'io.objectbox', module: 'objectbox-android'
@@ -151,4 +121,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add("-Xlint:deprecation")
 }

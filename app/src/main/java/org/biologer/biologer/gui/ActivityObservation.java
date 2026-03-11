@@ -690,85 +690,79 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     // On click
     @SuppressLint("NonConstantResourceId")
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.textInputEditTextAtlasCode:
-                getAtlasCodeForList();
-                break;
-            case R.id.textInputEditTextStages:
-                getStageForTaxon();
-                break;
-            case R.id.checkBoxMale:
-                Log.d(TAG, "Males checkbox selected!");
-                updateSexViewModel("male");
-                break;
-            case R.id.checkBoxFemale:
-                Log.d(TAG, "Females checkbox selected!");
-                updateSexViewModel("female");
-                break;
-            case R.id.imageViewDeletePicture1:
-                Log.i(TAG, "Deleting image 1.");
-                binding.frameLayoutPicture1.setVisibility(View.GONE);
-                disablePhotoButtons(false);
-                deleteImageFile(viewModel.getImage1().getValue());
-                viewModel.setImage1(null);
-                break;
-            case R.id.imageViewPicture1:
-                String image1 = viewModel.getImage1().getValue();
-                if (image1 != null) {
-                    Log.i(TAG, "Image 1 clicked. URL: " + image1);
-                    viewImage(image1);
-                } else {
-                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.imageViewDeletePicture2:
-                Log.i(TAG, "Deleting image 2.");
-                binding.frameLayoutPicture2.setVisibility(View.GONE);
-                disablePhotoButtons(false);
-                deleteImageFile(viewModel.getImage2().getValue());
-                viewModel.setImage2(null);
-                break;
-            case R.id.imageViewPicture2:
-                String image2 = viewModel.getImage2().getValue();
-                if (image2 != null) {
-                    Log.i(TAG, "Image 2 clicked. URL: " + image2);
-                    viewImage(image2);
-                } else {
-                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.imageViewDeletePicture3:
-                Log.i(TAG, "Deleting image 3.");
-                binding.frameLayoutPicture3.setVisibility(View.GONE);
-                disablePhotoButtons(false);
-                deleteImageFile(viewModel.getImage3().getValue());
-                viewModel.setImage3(null);
-                break;
-            case R.id.imageViewPicture3:
-                String image3 = viewModel.getImage3().getValue();
-                if (image3 != null) {
-                    Log.i(TAG, "Image 3 clicked. URL: " + image3);
-                    viewImage(image3);
-                } else {
-                    Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.materialCheckBoxDead:
-                viewModel.checkDead();
-                break;
-            case R.id.linearLayoutLocation, R.id.imageViewMap:
-                showMap();
-                break;
-            case R.id.imageViewPhotoFromCamera:
-                takePhoto();
-                break;
-            case R.id.imageViewPhotoFromGallery:
-                pickMultipleImages.launch(
-                        new PickVisualMediaRequest.Builder()
-                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                                .setMaxItems(getEmptyImageSlots())
-                                .build());
-                break;
+        int id = view.getId();
+        if (id == R.id.textInputEditTextAtlasCode) {
+            getAtlasCodeForList();
+        } else if (id == R.id.textInputEditTextStages) {
+            getStageForTaxon();
+        } else if (id == R.id.checkBoxMale) {
+            Log.d(TAG, "Males checkbox selected!");
+            updateSexViewModel("male");
+        } else if (id == R.id.checkBoxFemale) {
+            Log.d(TAG, "Females checkbox selected!");
+            updateSexViewModel("female");
+        } else if (id == R.id.imageViewDeletePicture1) {
+            Log.i(TAG, "Deleting image 1.");
+            binding.frameLayoutPicture1.setVisibility(View.GONE);
+            disablePhotoButtons(false);
+            deleteImageFile(viewModel.getImage1().getValue());
+            viewModel.setImage1(null);
+        } else if (id == R.id.imageViewPicture1) {
+            String image1 = viewModel.getImage1().getValue();
+            if (image1 != null) {
+                Log.i(TAG, "Image 1 clicked. URL: " + image1);
+                viewImage(image1);
+            } else {
+                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (id == R.id.imageViewDeletePicture2) {
+            Log.i(TAG, "Deleting image 2.");
+            binding.frameLayoutPicture2.setVisibility(View.GONE);
+            disablePhotoButtons(false);
+            deleteImageFile(viewModel.getImage2().getValue());
+            viewModel.setImage2(null);
+        } else if (id == R.id.imageViewPicture2) {
+            String image2 = viewModel.getImage2().getValue();
+            if (image2 != null) {
+                Log.i(TAG, "Image 2 clicked. URL: " + image2);
+                viewImage(image2);
+            } else {
+                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (id == R.id.imageViewDeletePicture3) {
+            Log.i(TAG, "Deleting image 3.");
+            binding.frameLayoutPicture3.setVisibility(View.GONE);
+            disablePhotoButtons(false);
+            deleteImageFile(viewModel.getImage3().getValue());
+            viewModel.setImage3(null);
+        } else if (id == R.id.imageViewPicture3) {
+            String image3 = viewModel.getImage3().getValue();
+            if (image3 != null) {
+                Log.i(TAG, "Image 3 clicked. URL: " + image3);
+                viewImage(image3);
+            } else {
+                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (id == R.id.materialCheckBoxDead) {
+            viewModel.checkDead();
+        } else if (id == R.id.linearLayoutLocation || id == R.id.imageViewMap) {
+            showMap();
+        } else if (id == R.id.imageViewPhotoFromCamera) {
+            takePhoto();
+        } else if (id == R.id.imageViewPhotoFromGallery) {
+            int emptySlots = getEmptyImageSlots();
+            if (emptySlots == 1) {
+                // Use the single picker contract
+                pickSingleImage.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build());
+            } else if (emptySlots > 1) {
+                // Use the multiple picker contract
+                pickMultipleImages.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .setMaxItems(emptySlots)
+                        .build());
+            }
         }
     }
 
@@ -1207,6 +1201,13 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         viewModel.setCurrentImage(current_image);
         takePictureFromCamera.launch(current_image);
     }
+
+    private final ActivityResultLauncher<PickVisualMediaRequest> pickSingleImage = registerForActivityResult(
+            new ActivityResultContracts.PickVisualMedia(), uri -> {
+                if (uri != null) {
+                    resizeAndDisplayImage(uri);
+                }
+            });
 
     ActivityResultLauncher<PickVisualMediaRequest> pickMultipleImages = registerForActivityResult(
             new ActivityResultContracts.PickMultipleVisualMedia(), photoPicker -> {

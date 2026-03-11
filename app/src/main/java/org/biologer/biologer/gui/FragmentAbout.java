@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.FragmentAboutBinding;
 
@@ -39,6 +40,9 @@ public class FragmentAbout extends Fragment {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://biologer.org"));
             startActivity(browserIntent);
         });
+
+        String version = " " + BuildConfig.VERSION_NAME;
+        binding.textView8.setText(version);
 
     }
 }
