@@ -5,10 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -30,6 +31,8 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -42,13 +45,13 @@ import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
-import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.sql.EntryDb;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -74,63 +77,58 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         items = LandingFragmentItems.loadAllEntries(requireContext()); // Load the entries from the database
         setupRecyclerView();
         setupFloatingActionButton();
-        setupBroadcastReceiver();
+        setupWorkerObserver();
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
     }
 
-    private void setupBroadcastReceiver() {
-        // Broadcast will watch if upload service is active
-        // and run the command when the upload is complete
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String s = intent.getStringExtra(UploadRecords.TASK_COMPLETED);
-                long entry_id = intent.getLongExtra("EntryID", 0);
+    private void setupWorkerObserver() {
+        WorkManager.getInstance(requireContext())
+                .getWorkInfosByTagLiveData("UPLOAD_WORK")
+                .observe(getViewLifecycleOwner(), workInfos -> {
+                    if (workInfos == null || workInfos.isEmpty()) {
+                        showUploadCompletedInfo(false, null);
+                        return;
+                    }
 
-                // This will be executed after upload is completed
-                if (s != null) {
-                    Log.i(TAG, "Uploading records returned the code: " + s);
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        TextView textView = getActivity().findViewById(R.id.list_entries_info_text);
-                        if (s.equals("success")) {
-                            textView.setText(getString(R.string.entry_info_uploaded, SettingsManager.getDatabaseName()));
-                            textView.setVisibility(View.VISIBLE);
-                            ((ActivityLanding) getActivity()).setMenuIconVisibility(false);
-                        }
-                        if (s.equals("failed_photo")) {
-                            textView.setText(R.string.failed_to_upload_photo);
-                            textView.setVisibility(View.VISIBLE);
-                            ((ActivityLanding) getActivity()).setMenuIconVisibility(true);
-                        }
-                        if (s.equals("failed_entry")) {
-                            textView.setText(R.string.failed_to_upload_entry);
-                            textView.setVisibility(View.VISIBLE);
-                            ((ActivityLanding) getActivity()).setMenuIconVisibility(true);
-                        }
-                        if (s.equals("id_uploaded")) {
-                            Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
-                            int index = getIndexFromID(entry_id);
-                            if (index != -1) {
-                                items.remove(index);
-                                entriesAdapter.notifyItemRemoved(index);
-                            }
-                        }
-                        if (s.equals("timed_count_uploaded")) {
-                            Log.i(TAG, "The ID: " + entry_id + " is now uploaded, trying to remove it from the fragment.");
-                            int index = getIndexFromTimedCountID(entry_id);
-                            if (index != -1) {
-                                items.remove(index);
-                                entriesAdapter.notifyItemRemoved(index);
+                    List<LandingFragmentItems> updatedItems = LandingFragmentItems.loadAllEntries(requireContext());
+                    if (entriesAdapter != null) {
+                        entriesAdapter.updateData(updatedItems);
+                    }
+
+                    int totalWorkers = workInfos.size();
+                    int finishedWorkers = 0;
+                    int failedWorkers = 0;
+
+                    for (WorkInfo info : workInfos) {
+                        if (info.getState().isFinished()) {
+                            finishedWorkers++;
+                            if (info.getState() == WorkInfo.State.FAILED) {
+                                failedWorkers++;
                             }
                         }
                     }
+                    int percentage = (finishedWorkers * 100) / totalWorkers;
+                    Log.d(TAG, "Progress: " + percentage + "%");
 
-                }
-            }
-        };
+                    if (finishedWorkers < totalWorkers) {
+                        String progressText = "Uploaded" + " " + percentage + "%";
+                        showUploadCompletedInfo(true, progressText);
+                    } else {
+                        if (failedWorkers > 0) {
+                            showUploadCompletedInfo(true, "Upload failed for " + failedWorkers + " items.");
+                        } else {
+                            showUploadCompletedInfo(true, "All data uploaded successfully!");
+
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                if (isAdded()) {
+                                    WorkManager.getInstance(requireContext()).pruneWork();
+                                }
+                            }, 15000);
+                        }
+                    }
+                });
     }
 
     private void setupFloatingActionButton() {
@@ -344,7 +342,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             binding.recycledViewEntries.smoothScrollToPosition(0);
         }
 
-        removeInfoText();
+        showUploadCompletedInfo(false, null);
     }
 
     @Override
@@ -360,13 +358,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     public void onResume() {
         super.onResume();
         Context context = getContext();
-        if (context != null) {
-            LocalBroadcastManager.getInstance(context).registerReceiver((broadcastReceiver),
-                    new IntentFilter(UploadRecords.TASK_COMPLETED)
-            );
-        }
 
-        if (App.get().getBoxStore().boxFor(EntryDb.class).count() != entriesAdapter.getItemCount()) {
+        if (App.get().getBoxStore().boxFor(EntryDb.class).count()
+                != entriesAdapter.getItemCount()) {
             items = LandingFragmentItems.loadAllEntries(context);
             entriesAdapter = new LandingFragmentAdapter(items, false);
             binding.recycledViewEntries.setAdapter(entriesAdapter);
@@ -425,11 +419,18 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     // Remove the info text that should be displayed if there are no entries
-    private void removeInfoText() {
+    private void showUploadCompletedInfo(boolean shown, String text) {
         Activity activity = getActivity();
         if (activity != null) {
             TextView textView = activity.findViewById(R.id.list_entries_info_text);
-            textView.setVisibility(View.GONE);
+            if (text != null) {
+                textView.setText(text);
+            }
+            if (shown) {
+                textView.setVisibility(View.VISIBLE);
+            } else {
+                textView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -605,14 +606,15 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     private void reloadRecyclerView() {
-        if (!isAdded() || getContext() == null) {
-            Log.w(TAG, "Skipping reloadRecyclerView: Fragment is detached or has no context.");
-            return;
-        }
+        if (!isAdded()) return;
 
-        items = LandingFragmentItems.loadAllEntries(requireContext());
-        entriesAdapter = new LandingFragmentAdapter(items, false);
-        binding.recycledViewEntries.setAdapter(entriesAdapter);
+        List<LandingFragmentItems> updatedItems = LandingFragmentItems.loadAllEntries(requireContext());
+        if (entriesAdapter == null) {
+            entriesAdapter = new LandingFragmentAdapter(new ArrayList<>(updatedItems), false);
+            binding.recycledViewEntries.setAdapter(entriesAdapter);
+        } else {
+            entriesAdapter.updateData(updatedItems);
+        }
     }
 
 }

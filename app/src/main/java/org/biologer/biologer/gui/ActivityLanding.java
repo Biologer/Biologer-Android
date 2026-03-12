@@ -30,6 +30,10 @@ import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -45,7 +49,6 @@ import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateTaxa;
-import org.biologer.biologer.network.UploadRecords;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.workers.NotificationSyncWorker;
@@ -54,6 +57,7 @@ import org.biologer.biologer.helpers.CsvTaxaLoader;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
+import org.biologer.biologer.workers.UploadCoordinatorWorker;
 
 import java.util.List;
 import java.util.Objects;
@@ -632,10 +636,16 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     private void uploadRecords() {
         if (!App.get().getBoxStore().boxFor(EntryDb.class).getAll().isEmpty()) {
             Log.d(TAG, "Uploading entries to the online database.");
-            final Intent uploadRecords = new Intent(ActivityLanding.this, UploadRecords.class);
-            uploadRecords.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            uploadRecords.setAction(UploadRecords.ACTION_START);
-            startService(uploadRecords);
+            OneTimeWorkRequest request =
+                    new OneTimeWorkRequest.Builder(UploadCoordinatorWorker.class)
+                            .addTag("MASTER_UPLOAD_WORK")
+                            .setConstraints(
+                                    new Constraints.Builder()
+                                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                                            .build()
+                            )
+                            .build();
+            WorkManager.getInstance(this).enqueue(request);
         } else {
             Log.d(TAG, "No entries to upload to the online database.");
         }

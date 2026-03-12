@@ -122,10 +122,6 @@
         </service>
         <service android:name="org.biologer.biologer.network.GetTaxaGroups"/>
         <service
-            android:name="org.biologer.biologer.network.UploadRecords"
-            android:foregroundServiceType="dataSync">
-        </service>
-        <service
             android:name="org.biologer.biologer.services.LocationTrackingService"
             android:foregroundServiceType="location">
         </service>

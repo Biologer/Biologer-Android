@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -155,4 +156,54 @@ public class LandingFragmentAdapter
         super.onViewRecycled(viewHolder);
     }
 
+    public static class LandingDiffCallback extends DiffUtil.Callback {
+        private final List<LandingFragmentItems> oldList;
+        private final List<LandingFragmentItems> newList;
+
+        public LandingDiffCallback(List<LandingFragmentItems> oldList, List<LandingFragmentItems> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            LandingFragmentItems oldItem = oldList.get(oldItemPosition);
+            LandingFragmentItems newItem = newList.get(newItemPosition);
+
+            // Of Observation, compare ObservationId
+            if (oldItem.getObservationId() != null && newItem.getObservationId() != null) {
+                return oldItem.getObservationId().equals(newItem.getObservationId());
+            }
+            // If Timed Count, compare TimedCountId
+            if (oldItem.getTimedCountId() != null && newItem.getTimedCountId() != null) {
+                return oldItem.getTimedCountId().equals(newItem.getTimedCountId());
+            }
+            return false;
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).equals(newList.get(newItemPosition));
+        }
+    }
+
+    public void updateData(List<LandingFragmentItems> newItems) {
+        LandingDiffCallback diffCallback = new LandingDiffCallback(this.myEntries, newItems);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        this.myEntries.clear();
+        this.myEntries.addAll(newItems);
+
+        diffResult.dispatchUpdatesTo(this);
+    }
 }

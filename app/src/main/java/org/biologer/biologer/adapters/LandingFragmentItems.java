@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Objects;
 
 public class LandingFragmentItems {
     private Long observationId;
@@ -203,6 +204,34 @@ public class LandingFragmentItems {
 
         return new LandingFragmentItems(null, timed_count.getTimedCountId(),
                 title, subtitle, image, calendar.getTime());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LandingFragmentItems that = (LandingFragmentItems) o;
+
+        if (!Objects.equals(observationId, that.observationId))
+            return false;
+        if (!Objects.equals(timedCountId, that.timedCountId))
+            return false;
+        if (!Objects.equals(title, that.title)) return false;
+        if (!Objects.equals(subtitle, that.subtitle)) return false;
+        if (!Objects.equals(image, that.image)) return false;
+        return Objects.equals(date, that.date);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = observationId != null ? observationId.hashCode() : 0;
+        result = 31 * result + (timedCountId != null ? timedCountId.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (subtitle != null ? subtitle.hashCode() : 0);
+        result = 31 * result + (image != null ? image.hashCode() : 0);
+        result = 31 * result + (date != null ? date.hashCode() : 0);
+        return result;
     }
 
 }
