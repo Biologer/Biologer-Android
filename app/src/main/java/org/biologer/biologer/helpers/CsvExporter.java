@@ -88,7 +88,7 @@ public class CsvExporter {
                 String[] row = {
                         e.getTaxonSuggestion(),
                         e.getYear(),
-                        e.getMonth(),
+                        e.getMonth() + 1,
                         e.getDay(),
                         formatDouble(e.getLattitude(), 6),
                         formatDouble(e.getLongitude(), 6),
