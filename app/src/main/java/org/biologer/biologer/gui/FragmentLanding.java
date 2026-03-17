@@ -1,7 +1,6 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +28,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.work.WorkInfo;
@@ -62,7 +61,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private FragmentLandingBinding binding;
     private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
-    BroadcastReceiver broadcastReceiver;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,7 +75,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         items = LandingFragmentItems.loadAllEntries(requireContext()); // Load the entries from the database
         setupRecyclerView();
         setupFloatingActionButton();
-        setupWorkerObserver();
+        setupWorkerObserver(); // To track upload of data online
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
@@ -87,6 +85,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         WorkManager.getInstance(requireContext())
                 .getWorkInfosByTagLiveData("UPLOAD_WORK")
                 .observe(getViewLifecycleOwner(), workInfos -> {
+                    // Remove text if no workers area active
                     if (workInfos == null || workInfos.isEmpty()) {
                         showUploadCompletedInfo(false, null);
                         return;
@@ -113,13 +112,16 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     Log.d(TAG, "Progress: " + percentage + "%");
 
                     if (finishedWorkers < totalWorkers) {
-                        String progressText = "Uploaded" + " " + percentage + "%";
-                        showUploadCompletedInfo(true, progressText);
+                        showUploadCompletedInfo(false, null);
+                        showUploadProgress(true, percentage);
                     } else {
                         if (failedWorkers > 0) {
-                            showUploadCompletedInfo(true, "Upload failed for " + failedWorkers + " items.");
+                            showUploadCompletedInfo(true, getString(R.string.upload_failed_for) +
+                                    failedWorkers + " " + getString(R.string.items) + ".");
+                            showUploadProgress(false, 0);
                         } else {
-                            showUploadCompletedInfo(true, "All data uploaded successfully!");
+                            showUploadCompletedInfo(true, getString(R.string.all_data_uploaded_successfully));
+                            showUploadProgress(false, 0);
 
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                 if (isAdded()) {
@@ -346,15 +348,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        Context context = getContext();
-        if (context != null) {
-            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(broadcastReceiver);
-        }
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Context context = getContext();
@@ -434,6 +427,15 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
+    private void showUploadProgress(boolean shown, int percentage) {
+        if (shown) {
+            binding.uploadProgressBar.setVisibility(View.VISIBLE);
+            binding.uploadProgressBar.setProgress(percentage);
+        } else {
+            binding.uploadProgressBar.setVisibility(View.GONE);
+        }
+    }
+
     private void updateEntry(long oldDataId) {
         // Load the entry from the ObjectBox
         EntryDb entryDb = ObjectBoxHelper.getObservationById(oldDataId);
@@ -463,7 +465,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         Log.d(TAG, "Entry " + entry_id + " not found in items.");
         return -1;
     }
-
 
     // Find the entry’s index by TimedCountId
     private int getIndexFromTimedCountID(long tc_id) {

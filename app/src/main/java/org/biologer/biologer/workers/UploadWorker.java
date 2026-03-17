@@ -15,9 +15,9 @@ import org.biologer.biologer.adapters.LandingFragmentItems;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UploadCoordinatorWorker extends Worker {
+public class UploadWorker extends Worker {
 
-    public UploadCoordinatorWorker(
+    public UploadWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params
     ) {

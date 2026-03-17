@@ -38,7 +38,6 @@ public class App extends Application {
         SettingsManager.init(getApplicationContext());
 
         // Create Notification channel in order to send notification to android API 26+
-        createNotificationChannelEntries();
         createNotificationChannelUnreadNotifications();
         createNotificationChannelAnnouncements();
         createNotificationChannelLocationTracker();
@@ -69,23 +68,6 @@ public class App extends Application {
         if (BuildConfig.DEBUG) {
             boolean started = new Admin(boxStore).start(this);
             Log.i("Biologer", "Started: " + started);
-        }
-    }
-
-    public void createNotificationChannelEntries() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channel_id = "biologer_entries";
-            CharSequence name = getString(R.string.channel_entries_name);
-            String description = getString(R.string.channel_entries_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(channel_id, name, importance);
-            channel.setDescription(description);
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
         }
     }
 

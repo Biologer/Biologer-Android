@@ -566,4 +566,7 @@
     <string name="not_found">not found</string>
     <string name="observation">Observation\n</string>
     <string name="could_not_access_icon">Could not access upload icon menu.</string>
+    <string name="upload_failed_for">"Upload failed for "</string>
+    <string name="items">items</string>
+    <string name="all_data_uploaded_successfully">All data uploaded successfully!</string>
 </resources>

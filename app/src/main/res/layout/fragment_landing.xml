@@ -10,6 +10,15 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@color/fragment_background">
+
+        <ProgressBar
+            android:id="@+id/upload_progress_bar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:max="100" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycled_view_entries"
             android:layout_width="match_parent"

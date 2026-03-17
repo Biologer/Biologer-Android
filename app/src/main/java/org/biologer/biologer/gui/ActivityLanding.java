@@ -57,7 +57,7 @@ import org.biologer.biologer.helpers.CsvTaxaLoader;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
-import org.biologer.biologer.workers.UploadCoordinatorWorker;
+import org.biologer.biologer.workers.UploadWorker;
 
 import java.util.List;
 import java.util.Objects;
@@ -637,7 +637,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         if (!App.get().getBoxStore().boxFor(EntryDb.class).getAll().isEmpty()) {
             Log.d(TAG, "Uploading entries to the online database.");
             OneTimeWorkRequest request =
-                    new OneTimeWorkRequest.Builder(UploadCoordinatorWorker.class)
+                    new OneTimeWorkRequest.Builder(UploadWorker.class)
                             .addTag("MASTER_UPLOAD_WORK")
                             .setConstraints(
                                     new Constraints.Builder()
