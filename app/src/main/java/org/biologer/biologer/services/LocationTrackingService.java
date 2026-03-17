@@ -53,7 +53,7 @@ public class LocationTrackingService extends Service {
     public static final String CENTROID_LATITUDE = "centroid_latitude";
     public static final String CENTROID_LONGITUDE = "centroid_longitude";
     public static final String GEOMETRY_LINESTRING_WKT = "geometry_linestring_wkt";
-    private static final float MIN_DISTANCE_METERS = 2.5f; // Only record if moved at least 2.5m
+    private static final float MIN_DISTANCE_METERS = 50.0f; // Only record if moved at least 50m – ButterflyCount compatible
     private static final float MAX_ACCURACY_METERS = 25.0f; // Discard points with precision worse than 25m
     private Location lastAcceptedLocation = null;
     private boolean isTracking = true;
