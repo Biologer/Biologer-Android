@@ -90,7 +90,7 @@ public class ObjectBoxHelper {
             if (timedCount != null) {
                 Log.i(TAG, "Timed count with ID " + timedCountId + " found in the database");
             } else {
-                Log.i(TAG, "There is no timed cound with ID " + timedCountId + " in the database");
+                Log.i(TAG, "There is no timed count with ID " + timedCountId + " in the database");
             }
             return timedCount;
         } catch (Exception e) {
@@ -163,6 +163,13 @@ public class ObjectBoxHelper {
             Log.e(TAG, "Error retrieving timed count observations by ID: " + timedCountId, e);
             return new ArrayList<>();
         }
+    }
+
+    public static long setTimedCount(TimedCountDb timedCount) {
+        Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        long id = box.put(timedCount);
+        Log.d(TAG, "TimedCount will be saved in TimedCountDb under ID " + id);
+        return id;
     }
 
     public static Location calculateCentroidLocation(Integer timedCountId) {

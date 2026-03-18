@@ -1,6 +1,7 @@
 package org.biologer.biologer.workers;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
@@ -31,42 +32,51 @@ public class TimedCountUploadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        int timedCountId = getInputData().getInt("timed_count_id", -1);
+        long timedCountId = getInputData().getLong("timed_count_id", -1);
         if (timedCountId == -1) {
             return Result.success();
         }
 
         try {
-            TimedCountDb timed = ObjectBoxHelper.getTimedCountById(timedCountId);
-            if (timed == null)
-                return Result.success();
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+            if (timedCount == null) return Result.success();
 
             APITimedCounts api = new APITimedCounts();
-            api.getFromTimedCountDatabase(timed);
+            api.getFromTimedCountDatabase(timedCount);
 
-            Response<APITimedCountsResponse> response =
-                    RetrofitClient.getService(SettingsManager.getDatabaseName())
-                            .uploadTimedCount(api)
-                            .execute();
+            Response<APITimedCountsResponse> response;
+            if (timedCount.getServerId() != null && timedCount.isUploaded()) {
+                // Modified, should reupload
+                response = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .updateTimedCount(timedCount.getServerId(), api)
+                        .execute();
+            } else {
+                // New timed count, should upload
+                response = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .uploadTimedCount(api)
+                        .execute();
+            }
+
+            if (response.code() == 429) return Result.retry();
 
             if (response.isSuccessful() && response.body() != null) {
                 long serverId = response.body().getData().getId();
-                List<EntryDb> children = ObjectBoxHelper.getTimedCountObservations(timedCountId);
 
-                if (!children.isEmpty()) {
-                    for (EntryDb obs : children) {
-                        obs.setTimedCoundId((int) serverId);
-                        ObjectBoxHelper.setObservation(obs);
-                    }
-                }
+                timedCount.setServerId(serverId);
+                timedCount.setUploaded(true);
+                timedCount.setModified(false);
 
-                ObjectBoxHelper.removeTimedCountById(timedCountId);
+                ObjectBoxHelper.setTimedCount(timedCount);
+
+                Log.d(TAG, "TimedCount " + timedCountId + " synchronised. Server ID: " + serverId);
                 return Result.success();
             } else {
                 return Result.retry();
             }
         } catch (Exception e) {
+            Log.e(TAG, "Error uploading TimedCount", e);
             return Result.retry();
         }
     }
+
 }

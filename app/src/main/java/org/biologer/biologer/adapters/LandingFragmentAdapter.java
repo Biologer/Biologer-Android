@@ -43,7 +43,8 @@ public class LandingFragmentAdapter
             extends RecyclerView.ViewHolder
             implements View.OnCreateContextMenuListener {
 
-        public ImageView imageView;
+        public ImageView thumbnailImage;
+        public ImageView uploadStatus;
         public TextView textTitle;
         public TextView textSubtitle;
         private boolean isTimedCount = false;
@@ -53,7 +54,8 @@ public class LandingFragmentAdapter
             super(view);
 
             // Define click listener for the ViewHolder's View
-            imageView = view.findViewById(R.id.entry_image);
+            thumbnailImage = view.findViewById(R.id.entry_image);
+            uploadStatus = view.findViewById(R.id.image_view_entry_upload_status);
             textTitle = view.findViewById(R.id.entry_taxon_name);
             textSubtitle = view.findViewById(R.id.entry_stage);
 
@@ -110,7 +112,7 @@ public class LandingFragmentAdapter
         String subtitle = entry.getSubtitle();
         subtitleText.setText(subtitle);
 
-        ImageView entryImage = viewHolder.imageView;
+        ImageView entryImage = viewHolder.thumbnailImage;
         entryImage.setImageDrawable(null); // Clear the previous image
         String image = entry.getImage();
 
@@ -129,6 +131,28 @@ public class LandingFragmentAdapter
                     .load(image)
                     .override(40, 40)
                     .into(entryImage);
+        }
+
+        if (viewHolder.uploadStatus != null) {
+            if (entry.isUploaded()) {
+                if (entry.isModified()) {
+                    // Modified entry
+                    viewHolder.uploadStatus.setImageResource(R.drawable.ic_modified);
+                    viewHolder.uploadStatus.setVisibility(View.VISIBLE);
+                    viewHolder.uploadStatus.setAlpha(0.5f);
+                    viewHolder.itemView.setAlpha(0.9f);
+                } else {
+                    // Uploaded entry
+                    viewHolder.uploadStatus.setImageResource(R.drawable.ic_uploaded);
+                    viewHolder.uploadStatus.setVisibility(View.VISIBLE);
+                    viewHolder.uploadStatus.setAlpha(0.4f);
+                    viewHolder.itemView.setAlpha(0.6f);
+                }
+            } else {
+                // New entry, not uploaded
+                viewHolder.uploadStatus.setVisibility(View.GONE);
+                viewHolder.itemView.setAlpha(1.0f);
+            }
         }
 
         viewHolder.itemView.setOnLongClickListener(v -> {

@@ -110,7 +110,9 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Log.d(TAG, "Opening existing entry.");
             loadExistingViewModel();
             fillExistingEntry(); // Update the UI from View Model
-            setupEntryAsTimedCount(); // Just hide unnecessary stuff from UI.
+            if (viewModel.getTimedCountId() != null) {
+                setupEntryAsTimedCount(); // Just hide unnecessary stuff from UI.
+            }
         }
 
         setupView(); // Get on click listeners and watchers
@@ -120,13 +122,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void setupEntryAsTimedCount() {
-        if (viewModel.getTimedCountId() != null) {
-            binding.textInputLayoutSpecimensNo.setVisibility(View.GONE);
-            binding.linearLayoutDateAndTime.setVisibility(View.GONE);
-            binding.materialCheckBoxDead.setVisibility(View.GONE);
-            binding.textInputLayoutStages.setVisibility(View.GONE);
-            binding.linearLayoutLocation.setVisibility(View.GONE);
-        }
+        binding.textInputLayoutSpecimensNo.setVisibility(View.GONE);
+        binding.linearLayoutDateAndTime.setVisibility(View.GONE);
+        binding.materialCheckBoxDead.setVisibility(View.GONE);
+        binding.textInputLayoutStages.setVisibility(View.GONE);
+        binding.linearLayoutLocation.setVisibility(View.GONE);
     }
 
     private void addObservedTag() {
@@ -166,7 +166,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 binding.linearLayoutDateAndTime.setVisibility(View.VISIBLE);
             }
         }
-        // Fill in the drop down menu with list of taxa
+        // Fill in the drop-down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this, R.layout.taxa_dropdown_list, new ArrayList<>());
         binding.autoCompleteTextViewSpeciesName.setAdapter(adapter);
         binding.autoCompleteTextViewSpeciesName.setThreshold(2);
@@ -200,7 +200,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 if (changed_entered_name.equals(entered_name)) {
                     Log.d(TAG, "TextChanged call ignored, previous text and entered text is the same.");
                 } else {
-                    // Try to get the latin name from ObjectBox database
+                    // Try to get the Latin name from ObjectBox database
                     handler.removeCallbacks(runnable);
                     runnable = () -> {
 
@@ -214,7 +214,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         // TODO The list could contain only species names and IDs to be mode memory efficient
                         List<TaxonDb> allTaxaLists = taxonSearchHelper.searchTaxa(s.toString(), 0);
 
-                        // Add the Query to the drop down list (adapter)
+                        // Add the Query to the drop-down list (adapter)
                         TaxaListAdapter adapter1 =
                                 new TaxaListAdapter(ActivityObservation.this, R.layout.taxa_dropdown_list, allTaxaLists);
                         binding.autoCompleteTextViewSpeciesName.setAdapter(adapter1);
@@ -504,7 +504,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
                 String[] all_stages = stages.split(";");
 
-                // If the user changed the taxon in the mean time, we'll try to get the previous stage
+                // If the user changed the taxon in the meantime, we'll try to get the previous stage
                 if (viewModel.getStage().getValue() != null) {
                     Log.d(TAG, "There is a stage already selected. ID: " + viewModel.getStage().getValue() + "; ");
                     StageDb stage = ObjectBoxHelper.getStageById(viewModel.getStage().getValue());
@@ -553,6 +553,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void fillExistingEntry() {
+        viewModel.setModified(true);
         viewModel.setSaveEnabled(true);
 
         // Get the name of the taxon if there is one (when opening existing entry)

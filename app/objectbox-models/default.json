@@ -104,7 +104,7 @@
     },
     {
       "id": "11:1544941449612204904",
-      "lastPropertyId": "33:236514361401407390",
+      "lastPropertyId": "39:6770658024707945124",
       "name": "EntryDb",
       "properties": [
         {
@@ -252,6 +252,36 @@
           "id": "33:236514361401407390",
           "name": "timedCoundId",
           "type": 5
+        },
+        {
+          "id": "34:2426378920729081766",
+          "name": "serverId",
+          "type": 6
+        },
+        {
+          "id": "35:4751078309345745111",
+          "name": "uploaded",
+          "type": 1
+        },
+        {
+          "id": "36:2334442110110349570",
+          "name": "modified",
+          "type": 1
+        },
+        {
+          "id": "37:297848624786294411",
+          "name": "serverImage1",
+          "type": 9
+        },
+        {
+          "id": "38:2773131629283811786",
+          "name": "serverImage2",
+          "type": 9
+        },
+        {
+          "id": "39:6770658024707945124",
+          "name": "serverImage3",
+          "type": 9
         }
       ],
       "relations": []
@@ -628,7 +658,7 @@
     },
     {
       "id": "22:5077654541060987432",
-      "lastPropertyId": "22:4823756202052739700",
+      "lastPropertyId": "25:1372259122690782908",
       "name": "TimedCountDb",
       "properties": [
         {
@@ -741,6 +771,21 @@
           "id": "22:4823756202052739700",
           "name": "geometry",
           "type": 9
+        },
+        {
+          "id": "23:3116595882742540200",
+          "name": "serverId",
+          "type": 6
+        },
+        {
+          "id": "24:1182331903237440380",
+          "name": "uploaded",
+          "type": 1
+        },
+        {
+          "id": "25:1372259122690782908",
+          "name": "modified",
+          "type": 1
         }
       ],
       "relations": []

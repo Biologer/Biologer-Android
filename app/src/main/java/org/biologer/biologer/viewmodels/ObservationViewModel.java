@@ -24,6 +24,9 @@ import java.util.Set;
 
 public class ObservationViewModel extends ViewModel {
     private Long entryId = null;
+    private Long serverId = null;
+    private boolean uploaded;
+    private boolean modified;
     private Long taxonId = null;
     private Integer timedCountId = null;
     private String taxonSuggestion = null;
@@ -42,6 +45,9 @@ public class ObservationViewModel extends ViewModel {
     private final MutableLiveData<String> image1 = new MutableLiveData<>();
     private final MutableLiveData<String> image2 = new MutableLiveData<>();
     private final MutableLiveData<String> image3 = new MutableLiveData<>();
+    private String serverImage1 = null;
+    private String serverImage2 = null;
+    private String serverImage3 = null;
     private String project = null;
     private String foundOn = null;
     private String dataLicence = null;
@@ -58,6 +64,9 @@ public class ObservationViewModel extends ViewModel {
 
     public void getFromObjectBox(EntryDb entry) {
         setEntryId(entry.getId());
+        setServerId(entry.getServerId());
+        setUploaded(entry.isUploaded());
+        setModified(entry.isModified());
         setTaxonId(entry.getTaxonId() != 0 ? entry.getTaxonId() : null);
         setTimedCountId(entry.getTimedCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
@@ -76,6 +85,9 @@ public class ObservationViewModel extends ViewModel {
         setImage1(entry.getSlika1());
         setImage2(entry.getSlika2());
         setImage3(entry.getSlika3());
+        setServerImage1(entry.getServerImage1());
+        setServerImage2(entry.getServerImage2());
+        setServerImage3(entry.getServerImage3());
         setProject(entry.getProjectId());
         setFoundOn(entry.getFoundOn());
         setDataLicence(entry.getDataLicence());
@@ -92,7 +104,11 @@ public class ObservationViewModel extends ViewModel {
         String isAlive = isDead() ? "false" : "true";
 
         if (calendar1 != null) {
-            return new EntryDb(entryId,
+            return new EntryDb(
+                    entryId,
+                    getServerId(),
+                    isUploaded(),
+                    isModified(),
                     taxonId,
                     getTimedCountId(),
                     getTaxonSuggestion(),
@@ -114,13 +130,17 @@ public class ObservationViewModel extends ViewModel {
                     getImage1().getValue(),
                     getImage2().getValue(),
                     getImage3().getValue(),
+                    getServerImage1(),
+                    getServerImage2(),
+                    getServerImage3(),
                     getProject(),
                     getFoundOn(),
                     getDataLicence(),
                     imageLicense,
                     DateHelper.getPlainTime(calendar1),
                     getHabitat(),
-                    getObservationTypes().toString());
+                    getObservationTypes().toString()
+            );
         }
         return null;
     }
@@ -525,5 +545,53 @@ public class ObservationViewModel extends ViewModel {
 
     public void setTimedCountId(Integer timedCountId) {
         this.timedCountId = timedCountId;
+    }
+
+    public Long getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Long serverId) {
+        this.serverId = serverId;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
+    }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
+    }
+
+    public String getServerImage1() {
+        return serverImage1;
+    }
+
+    public void setServerImage1(String serverImage1) {
+        this.serverImage1 = serverImage1;
+    }
+
+    public String getServerImage2() {
+        return serverImage2;
+    }
+
+    public void setServerImage2(String serverImage2) {
+        this.serverImage2 = serverImage2;
+    }
+
+    public String getServerImage3() {
+        return serverImage3;
+    }
+
+    public void setServerImage3(String serverImage3) {
+        this.serverImage3 = serverImage3;
     }
 }

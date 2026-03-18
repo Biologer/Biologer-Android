@@ -314,8 +314,11 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
                 getString(R.string.at_time) + " " +
                 DateHelper.getLocalizedCalendarTime(calendar);
-        LandingFragmentItems item = new LandingFragmentItems(null,
+        LandingFragmentItems item = new LandingFragmentItems(
+                null,
                 new_timed_count_id,
+                false,
+                false,
                 title,
                 subtitle,
                 image,
@@ -469,19 +472,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         return -1;
     }
 
-    // Find the entry’s index by TimedCountId
-    private int getIndexFromTimedCountID(long tc_id) {
-        for (int i = items.size() - 1; i >= 0; i--) {
-            Integer timedCountId = items.get(i).getTimedCountId();
-            if (timedCountId != null && timedCountId.longValue() == tc_id) {
-                Log.d(TAG, "Entry " + tc_id + " index ID is " + i);
-                return i;
-            }
-        }
-        Log.d(TAG, "Entry " + tc_id + " not found in items.");
-        return -1;
-    }
-
     public void duplicateEntry(int position) {
         // TODO handle timed counts
         Log.d(TAG, "You will now duplicate entry ID: " + position);
@@ -491,6 +481,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         if (entry_from != null) {
             EntryDb entry = new EntryDb(
                     0,
+                    null,
+                    false,
+                    false,
                     entry_from.getTaxonId(),
                     entry_from.getTimedCoundId(),
                     entry_from.getTaxonSuggestion(),
@@ -498,20 +491,31 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     entry_from.getMonth(),
                     entry_from.getDay(),
                     entry_from.getComment(),
-                    null, "", null, null, "true", "",
+                    null,
+                    "",
+                    null,
+                    null,
+                    "true",
+                    "",
                     entry_from.getLattitude(),
                     entry_from.getLongitude(),
                     entry_from.getAccuracy(),
                     entry_from.getElevation(),
                     entry_from.getLocation(),
-                    null, null, null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
                     entry_from.getProjectId(),
                     entry_from.getFoundOn(),
                     entry_from.getDataLicence(),
                     entry_from.getImageLicence(),
                     entry_from.getTime(),
                     entry_from.getHabitat(),
-                    "");
+                    ""
+            );
 
             // Update ObjectBox
             long new_entry_id = ObjectBoxHelper.setObservation(entry);

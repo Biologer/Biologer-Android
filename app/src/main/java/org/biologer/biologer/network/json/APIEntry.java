@@ -283,6 +283,14 @@ public class APIEntry {
     public void setHabitat(String habitat) {
         this.habitat = habitat;
     }
+    @JsonProperty("reason")
+    private String reason;
+
+    @JsonProperty("observed_by_id")
+    private Integer observedById;
+
+    @JsonProperty("identified_by_id")
+    private Integer identifiedById;
 
     public Long getAtlasCode() {
         return atlas_code;
@@ -331,6 +339,7 @@ public class APIEntry {
         if (observation_types == null) observation_types = new int[]{1};
         setTypes(observation_types);
         setHabitat(entry.getHabitat());
+        setReason(null);
     }
 
     public Integer getTimedCountId() {
@@ -339,5 +348,29 @@ public class APIEntry {
 
     public void setTimedCountId(Integer timedCountId) {
         this.timedCountId = timedCountId;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public Integer getObservedById() {
+        return observedById;
+    }
+
+    public void setObservedById(Integer observedById) {
+        this.observedById = observedById;
+    }
+
+    public Integer getIdentifiedById() {
+        return identifiedById;
+    }
+
+    public void setIdentifiedById(Integer identifiedById) {
+        this.identifiedById = identifiedById;
     }
 }

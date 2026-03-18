@@ -115,7 +115,9 @@ public class FragmentTimedCountEntries extends Fragment {
                         Log.d(TAG, "Item " + position + " long pressed.");
                         entriesAdapter.setPosition(position);
                     }
-                }));
+                }
+                )
+        );
         registerForContextMenu(binding.recyclerViewTimedCounts);
 
     }
@@ -237,6 +239,14 @@ public class FragmentTimedCountEntries extends Fragment {
         Calendar calendar = DateHelper.getCalendar(entry.getYear(),
                 entry.getMonth(), entry.getDay(), entry.getTime());
 
-        return new LandingFragmentItems(observationId, null, title, subtitle, image, calendar.getTime());
+        return new LandingFragmentItems(
+                observationId,
+                null,
+                false,
+                false,
+                title,
+                subtitle,
+                image,
+                calendar.getTime());
     }
 }

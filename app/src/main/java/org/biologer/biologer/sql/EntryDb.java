@@ -12,6 +12,9 @@ public class EntryDb {
 
     @Id(assignable = true)
     long id;
+    private Long serverId;
+    private boolean uploaded;
+    private boolean modified;
     private long taxonId;
     private Integer timedCoundId;
     private String taxonSuggestion;
@@ -33,6 +36,9 @@ public class EntryDb {
     private String slika1;
     private String slika2;
     private String slika3;
+    private String serverImage1;
+    private String serverImage2;
+    private String serverImage3;
     private final String projectId;
     private String foundOn;
     private String dataLicence;
@@ -41,12 +47,17 @@ public class EntryDb {
     private String habitat;
     private String observationTypeIds;
 
-    public EntryDb(long id, long taxonId, Integer timedCoundId, String taxonSuggestion, String year, String month, String day,
+    public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Integer timedCoundId,
+                   String taxonSuggestion, String year, String month, String day,
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
-                   String location, String slika1, String slika2, String slika3, String projectId, String foundOn,
+                   String location, String slika1, String slika2, String slika3,
+                   String serverImage1, String serverImage2, String serverImage3, String projectId, String foundOn,
                    String dataLicence, int imageLicence, String time, String habitat, String observationTypeIds) {
         this.id = id;
+        this.serverId = serverId;
+        this.uploaded = uploaded;
+        this.modified = modified;
         this.taxonId = taxonId;
         this.timedCoundId = timedCoundId;
         this.taxonSuggestion = taxonSuggestion;
@@ -68,6 +79,9 @@ public class EntryDb {
         this.slika1 = slika1;
         this.slika2 = slika2;
         this.slika3 = slika3;
+        this.serverImage1 = serverImage1;
+        this.serverImage2 = serverImage2;
+        this.serverImage3 = serverImage3;
         this.projectId = projectId;
         this.foundOn = foundOn;
         this.dataLicence = dataLicence;
@@ -258,5 +272,53 @@ public class EntryDb {
 
     public void setTimedCoundId(Integer timedCoundId) {
         this.timedCoundId = timedCoundId;
+    }
+
+    public Long getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Long serverId) {
+        this.serverId = serverId;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
+    }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
+    }
+
+    public String getServerImage1() {
+        return serverImage1;
+    }
+
+    public void setServerImage1(String serverImage1) {
+        this.serverImage1 = serverImage1;
+    }
+
+    public String getServerImage2() {
+        return serverImage2;
+    }
+
+    public void setServerImage2(String serverImage2) {
+        this.serverImage2 = serverImage2;
+    }
+
+    public String getServerImage3() {
+        return serverImage3;
+    }
+
+    public void setServerImage3(String serverImage3) {
+        this.serverImage3 = serverImage3;
     }
 }

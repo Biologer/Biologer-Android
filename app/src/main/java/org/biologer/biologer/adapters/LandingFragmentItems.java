@@ -21,7 +21,10 @@ import java.util.Date;
 import java.util.Objects;
 
 public class LandingFragmentItems {
+    private static final String TAG = "Biologer.LandingItems";
     private Long observationId;
+    private boolean uploaded;
+    private boolean modified;
     private Integer timedCountId;
     private String title;
     private String subtitle;
@@ -29,10 +32,13 @@ public class LandingFragmentItems {
     private Date date;
 
     public LandingFragmentItems(Long observationId, Integer timedCountId,
+                                boolean uploaded, boolean modified,
                                 String title, String subtitle, String image,
                                 Date date) {
         this.observationId = observationId;
         this.timedCountId = timedCountId;
+        this.uploaded = uploaded;
+        this.modified = modified;
         this.title = title;
         this.subtitle = subtitle;
         this.image = image;
@@ -94,14 +100,14 @@ public class LandingFragmentItems {
 
         // Get the ObjectBox entries containing regular species observation data
         ArrayList<EntryDb> observations = ObjectBoxHelper.getObservations();
-        Log.d("Biologer.LandingItems", "There are " + observations.size() + " regular observations.");
+        Log.d(TAG, "There are " + observations.size() + " regular observations.");
         for (EntryDb entry : observations) {
             items.add(getItemFromEntry(context, entry));
         }
 
         // Get the ObjectBox entries containing timed count data
         ArrayList<TimedCountDb> timedCounts = ObjectBoxHelper.getTimedCounts();
-        Log.d("Biologer.LandingItems", "There are " + timedCounts.size() + " timed counts.");
+        Log.d(TAG, "There are " + timedCounts.size() + " timed counts.");
         for (TimedCountDb timedCountDb : timedCounts) {
             items.add(getItemFromTimedCount(context, timedCountDb));
         }
@@ -124,6 +130,7 @@ public class LandingFragmentItems {
     }
 
     public static LandingFragmentItems getItemFromEntry(Context context, EntryDb entry) {
+
         Long observationId = entry.getId();
         String title = entry.getTaxonSuggestion();
 
@@ -150,8 +157,16 @@ public class LandingFragmentItems {
         Calendar calendar = DateHelper.getCalendar(entry.getYear(),
                 entry.getMonth(), entry.getDay(), entry.getTime());
 
-        return new LandingFragmentItems(observationId, null,
-                title, subtitle, image, calendar.getTime());
+        return new LandingFragmentItems(
+                observationId,
+                null,
+                entry.isUploaded(),
+                entry.isModified(),
+                title,
+                subtitle,
+                image,
+                calendar.getTime()
+        );
     }
 
     /**
@@ -202,8 +217,16 @@ public class LandingFragmentItems {
                 context.getString(R.string.at_time) + " " +
                 DateHelper.getLocalizedCalendarTime(calendar);
 
-        return new LandingFragmentItems(null, timed_count.getTimedCountId(),
-                title, subtitle, image, calendar.getTime());
+        return new LandingFragmentItems(
+                null,
+                timed_count.getTimedCountId(),
+                timed_count.isUploaded(),
+                timed_count.isModified(),
+                title,
+                subtitle,
+                image,
+                calendar.getTime()
+        );
     }
 
     @Override
@@ -234,4 +257,19 @@ public class LandingFragmentItems {
         return result;
     }
 
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
+    }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
+    }
 }

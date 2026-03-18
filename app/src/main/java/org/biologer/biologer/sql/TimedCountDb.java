@@ -8,6 +8,9 @@ public class TimedCountDb {
 
     @Id(assignable = true)
     long id;
+    private Long serverId;
+    private boolean uploaded;
+    private boolean modified;
     private Integer timedCountId;
     private String startTime;
     private String endTime;
@@ -32,7 +35,8 @@ public class TimedCountDb {
 
     public TimedCountDb() {
     }
-    public TimedCountDb(long id, Integer timedCountId, String startTime, String endTime, Integer countDurationMinutes,
+    public TimedCountDb(long id, Long serverId, boolean uploaded, boolean modified, Integer timedCountId,
+                        String startTime, String endTime, Integer countDurationMinutes,
                         Integer walkedArea, Integer walkedDistance, Integer cloudCoverPercentage,
                         Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
@@ -231,5 +235,29 @@ public class TimedCountDb {
 
     public void setGeometry(String geometry) {
         this.geometry = geometry;
+    }
+
+    public Long getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Long serverId) {
+        this.serverId = serverId;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
+    }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
     }
 }

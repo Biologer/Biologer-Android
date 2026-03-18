@@ -572,4 +572,5 @@
         <item quantity="other">Upload failed for %d items.</item>
     </plurals>
     <string name="all_data_uploaded_successfully">All data uploaded successfully!</string>
+    <string name="upload_status">Upload status</string>
 </resources>

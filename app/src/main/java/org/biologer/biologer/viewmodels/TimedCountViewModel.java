@@ -24,11 +24,13 @@ public class TimedCountViewModel extends ViewModel {
     private String habitatData = null;
     private String commentData = null;
     private Long taxonId = null;
+    private Long serverId = null;
+    private boolean uploaded;
     private Long taxonGroupId = null;
     private Integer timedCountId = null;
     private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
     private Boolean isRunning = null;
-    private Boolean isModified = null;
+    private Boolean isModified = false;
     private String startTimeString = null;
     private String endTimeString = null;
     private Integer area = null;
@@ -122,7 +124,9 @@ public class TimedCountViewModel extends ViewModel {
         setCommentData(timedCount.getComment());
         setIsRunning(false);
         setNewEntry(false);
-        setModified(false);
+        setModified(timedCount.isModified());
+        setUploaded(timedCount.isUploaded());
+        setServerId(timedCount.getServerId());
     }
 
     @Override
@@ -317,5 +321,21 @@ public class TimedCountViewModel extends ViewModel {
 
     public void setGeometry(String geometry) {
         this.geometry = geometry;
+    }
+
+    public Long getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Long serverId) {
+        this.serverId = serverId;
+    }
+
+    public boolean isUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(boolean uploaded) {
+        this.uploaded = uploaded;
     }
 }

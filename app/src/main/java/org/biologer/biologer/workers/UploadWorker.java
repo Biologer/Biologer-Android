@@ -10,10 +10,16 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import org.biologer.biologer.adapters.LandingFragmentItems;
+import org.biologer.biologer.App;
+import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.TimedCountDb;
+import org.biologer.biologer.sql.TimedCountDb_;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.objectbox.query.Query;
 
 public class UploadWorker extends Worker {
 
@@ -27,46 +33,73 @@ public class UploadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        List<LandingFragmentItems> entries =
-                LandingFragmentItems.loadAllEntries(getApplicationContext());
         WorkManager wm = WorkManager.getInstance(getApplicationContext());
-        List<OneTimeWorkRequest> timedCountRequests = new ArrayList<>();
-        List<OneTimeWorkRequest> observationRequests = new ArrayList<>();
 
-        for (LandingFragmentItems item : entries) {
-            Data data = new Data.Builder()
-                    .putLong("observation_id", item.getObservationId())
-                    .putInt("timed_count_id", item.getTimedCountId() == null ? -1 : item.getTimedCountId())
-                    .build();
-
-            if (item.getTimedCountId() != null) {
-                timedCountRequests.add(new OneTimeWorkRequest.Builder(TimedCountUploadWorker.class)
-                        .setInputData(data)
-                        .addTag("UPLOAD_WORK")
-                        .build());
-            } else {
-                observationRequests.add(new OneTimeWorkRequest.Builder(ObservationUploadWorker.class)
-                        .setInputData(data)
-                        .addTag("UPLOAD_WORK")
-                        .build());
-            }
+        // 1. Get the timed counts first
+        List<TimedCountDb> pendingTimedCounts;
+        try (Query<TimedCountDb> queryTimedCounts = App.get().getBoxStore().boxFor(TimedCountDb.class)
+                .query()
+                .equal(TimedCountDb_.uploaded, false)
+                .or()
+                .equal(TimedCountDb_.modified, true)
+                .build()) {
+            pendingTimedCounts = queryTimedCounts.find();
         }
 
-        if (timedCountRequests.isEmpty() && observationRequests.isEmpty()) {
+        // 2. Get the species observations
+        List<EntryDb> pendingEntries;
+        try (Query<EntryDb> queryEntries = App.get().getBoxStore().boxFor(EntryDb.class)
+                .query()
+                .equal(EntryDb_.uploaded, false)
+                .or()
+                .equal(EntryDb_.modified, true)
+                .build()) {
+            pendingEntries = queryEntries.find();
+        }
+
+        if (pendingTimedCounts.isEmpty() && pendingEntries.isEmpty()) {
             return Result.success();
         }
 
-        WorkContinuation continuation;
-        if (!timedCountRequests.isEmpty()) {
-            continuation = wm.beginWith(timedCountRequests);
-            if (!observationRequests.isEmpty()) {
-                continuation = continuation.then(observationRequests);
+        WorkContinuation continuation = null;
+
+        // Upload Timed Counts first!
+        if (!pendingTimedCounts.isEmpty()) {
+            List<OneTimeWorkRequest> tcRequests = new ArrayList<>();
+            for (TimedCountDb tc : pendingTimedCounts) {
+                Data data = new Data.Builder()
+                        .putLong("timed_count_id", tc.getId())
+                        .build();
+                tcRequests.add(new OneTimeWorkRequest.Builder(TimedCountUploadWorker.class)
+                        .setInputData(data)
+                        .addTag("UPLOAD_WORK")
+                        .build());
             }
-        } else {
-            continuation = wm.beginWith(observationRequests);
+            continuation = wm.beginWith(tcRequests);
+        }
+
+        // After Timed Counts are uploaded add the Observations
+        if (!pendingEntries.isEmpty()) {
+            List<OneTimeWorkRequest> entryRequests = new ArrayList<>();
+            for (EntryDb entry : pendingEntries) {
+                Data data = new Data.Builder()
+                        .putLong("observation_id", entry.getId())
+                        .build();
+                entryRequests.add(new OneTimeWorkRequest.Builder(ObservationUploadWorker.class)
+                        .setInputData(data)
+                        .addTag("UPLOAD_WORK")
+                        .build());
+            }
+
+            if (continuation == null) {
+                continuation = wm.beginWith(entryRequests);
+            } else {
+                continuation = continuation.then(entryRequests);
+            }
         }
 
         continuation.enqueue();
+
         return Result.success();
     }
 }

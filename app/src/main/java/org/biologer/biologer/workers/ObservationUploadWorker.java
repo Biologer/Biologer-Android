@@ -15,6 +15,7 @@ import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
 import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -62,17 +63,53 @@ public class ObservationUploadWorker extends Worker {
             api.getFromEntryDb(entry);
             api.setPhotos(uploadedPhotos);
 
-            Response<APIEntryResponse> response = RetrofitClient
-                    .getService(SettingsManager.getDatabaseName())
-                    .uploadEntry(api)
-                    .execute();
+            // Link with parent Timed Count
+            if (entry.getTimedCoundId() != null && entry.getTimedCoundId() != -1) {
+                TimedCountDb parentTimeCount = ObjectBoxHelper.getTimedCountById(entry.getTimedCoundId());
+
+                if (parentTimeCount != null && parentTimeCount.isUploaded() && parentTimeCount.getServerId() != null) {
+                    // Set the server ID now
+                    api.setTimedCountId(parentTimeCount.getServerId().intValue());
+                    Log.d(TAG, "Linking observation " + entryId + " to server TimedCount ID: " + parentTimeCount.getServerId());
+                } else {
+                    Log.w(TAG, "Parent TimedCount not yet uploaded. Retrying later...");
+                    return Result.retry();
+                }
+            }
+
+            Response<APIEntryResponse> response;
+            if (entry.getServerId() != null && entry.getServerId() != 0) {
+                // Update
+                Integer userId = ObjectBoxHelper.getUserId();
+                api.setObservedById(userId);
+                api.setIdentifiedById(userId);
+                api.setReason("User updated observation via Android app");
+                Log.d(TAG, "Updating existing field observation with server ID: " + entry.getServerId());
+                response = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .updateEntry(entry.getServerId(), api)
+                        .execute();
+            } else {
+                // Create
+                Log.d(TAG, "Uploading new field observation.");
+                response = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .uploadEntry(api)
+                        .execute();
+            }
 
             if (response.code() == 429) {
                 return Result.retry();
             }
 
-            if (response.isSuccessful()) {
-                ObjectBoxHelper.removeObservationById(entryId);
+            if (response.isSuccessful() && response.body() != null) {
+                Long serverId = response.body().getData().getId();
+
+                entry.setServerId(serverId);
+                entry.setUploaded(true);
+                entry.setModified(false);
+
+                ObjectBoxHelper.setObservation(entry);
+
+                Log.d(TAG, "Entry " + entryId + " successfully synced with server ID: " + serverId);
                 return Result.success();
             }
             return Result.retry();

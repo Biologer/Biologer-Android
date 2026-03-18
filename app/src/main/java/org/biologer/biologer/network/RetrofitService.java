@@ -86,15 +86,31 @@ public interface RetrofitService {
     @POST("api/uploads/photos")
     Call<UploadFileResponse> uploadFile(@Part MultipartBody.Part file);
 
-    @Headers({"Accept: application/json"
-    ,"content-type: application/json"})
+    @Headers({"Accept: application/json",
+            "content-type: application/json"})
     @POST("api/field-observations")
     Call<APIEntryResponse> uploadEntry(@Body APIEntry apiEntry);
+
+    @Headers({"Accept: application/json",
+            "content-type: application/json"})
+    @PUT("api/field-observations/{id}")
+    Call<APIEntryResponse> updateEntry(
+            @Path("id") long serverId,
+            @Body APIEntry apiEntry
+    );
 
     @Headers({"Accept: application/json"
             ,"content-type: application/json"})
     @POST("api/timed-count-observations")
     Call<APITimedCountsResponse> uploadTimedCount(@Body APITimedCounts timedCounts);
+
+    @Headers({"Accept: application/json",
+            "content-type: application/json"})
+    @PUT("api/timed-count-observations/${id}")
+    Call<APITimedCountsResponse> updateTimedCount(
+            @Path("id") long serverId,
+            @Body APITimedCounts timedCounts
+    );
 
     @Headers({"Accept: application/json"})
     @GET("api/field-observations/")

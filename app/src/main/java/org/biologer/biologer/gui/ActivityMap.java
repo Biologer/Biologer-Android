@@ -984,8 +984,8 @@ public class ActivityMap extends AppCompatActivity implements OnMapReadyCallback
 
     private void saveAndExit() {
         Intent returnLocation = new Intent();
-        if (Integer.parseInt(accuracy) > 100000) {
-            accuracy = "100000";
+        if (Integer.parseInt(accuracy) > 10000) {
+            accuracy = "10000";
         }
         returnLocation.putExtra("google_map_accuracy", String.valueOf(safeAccuracyInt()));
         returnLocation.putExtra("google_map_lat", String.valueOf(latLong.latitude));

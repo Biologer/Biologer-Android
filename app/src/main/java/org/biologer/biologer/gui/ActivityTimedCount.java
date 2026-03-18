@@ -148,7 +148,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void setupSpeciesAutocompleteEntry() {
-        // Fill in the drop down menu with list of taxa
+        // Fill in the drop-down menu with list of taxa
         TaxaListAdapter adapter = new TaxaListAdapter(this,
                 R.layout.taxa_dropdown_list,
                 new ArrayList<>());
@@ -216,7 +216,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                             allTaxaLists = taxonSearchHelper.searchTaxa(s.toString(), viewModel.getTaxonGroupId());
                         }
 
-                        // Add the Query to the drop down list (adapter)
+                        // Add the Query to the drop-down list (adapter)
                         TaxaListAdapter adapter1 =
                                 new TaxaListAdapter(ActivityTimedCount.this,
                                         R.layout.taxa_dropdown_list,
@@ -392,11 +392,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             fetchLatestLocation(new LocationResultCallback() {
                 @Override
                 public void onLocationSuccess(Location location) {
-                    createAndSaveNewEntry(taxon, location,
+                    createAndSaveNewEntry(
+                            taxon,
+                            location,
                             DateHelper.getCurrentYear(),
                             DateHelper.getCurrentMonth(),
                             DateHelper.getCurrentDay(),
-                            DateHelper.getCurrentTime());
+                            DateHelper.getCurrentTime()
+                    );
                 }
 
                 @Override
@@ -436,12 +439,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             // Derive Accuracy as half of the walked distance
             double accuracy = (double) viewModel.getDistance() / 2.0;
             centralLocation.setAccuracy((float) accuracy);
-            createAndSaveNewEntry(taxon,
+            createAndSaveNewEntry(
+                    taxon,
                     centralLocation,
                     timedCount.getYear(),
                     timedCount.getMonth(),
                     timedCount.getDay(),
-                    averageTime);
+                    averageTime
+            );
         }
     }
 
@@ -470,7 +475,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             }
         }
 
-        EntryDb entryDb = new EntryDb(0,
+        EntryDb entryDb = new EntryDb(
+                0,
+                null,
+                false,
+                false,
                 taxon.getId(),
                 viewModel.getTimedCountId(),
                 taxon.getLatinName(),
@@ -492,13 +501,17 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
                 preferences.getString("project_name", ""),
                 "",
                 data_license,
                 image_license,
                 time,
                 "",
-                observed_id);
+                observed_id
+        );
         long newEntryId = ObjectBoxHelper.setObservation(entryDb);
         viewModel.addNewEntryId(newEntryId);
     }
@@ -634,7 +647,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void saveTimedCount() {
-        TimedCountDb timedCountDb = new TimedCountDb(getObjectBoxID(),
+        TimedCountDb timedCountDb = new TimedCountDb(
+                getObjectBoxID(),
+                viewModel.getServerId(),
+                viewModel.isUploaded(),
+                viewModel.isModified(),
                 viewModel.getTimedCountId(),
                 viewModel.getStartTimeString(),
                 viewModel.getEndTimeString(),
@@ -655,7 +672,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 DateHelper.getCurrentYear(),
                 viewModel.getCentroidLongitude(),
                 viewModel.getCentroidLatitude(),
-                viewModel.getGeometry());
+                viewModel.getGeometry()
+        );
 
         Box<TimedCountDb> timedCountDbBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
         timedCountDbBox.put(timedCountDb);
@@ -762,24 +780,25 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             Log.d(TAG, "Minutes: " + viewModel.getCountDuration() + ", Selected Option: " + selectedTaxa);
             Box<TaxonGroupsDb> taxonGroupsDataBox = App.get().getBoxStore().boxFor(TaxonGroupsDb.class);
             if (selectedTaxa.equals(getString(R.string.butterflies))) {
-                Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                try (Query<TaxonGroupsDb> query = taxonGroupsDataBox
                         .query(TaxonGroupsDb_.name.contains("butterfly", QueryBuilder.StringOrder.CASE_INSENSITIVE)
                                 .or(TaxonGroupsDb_.name.contains("butterflies", QueryBuilder.StringOrder.CASE_INSENSITIVE)))
-                        .build();
-                List<TaxonGroupsDb> listParents = query.find();
-                query.close();
-                if (!listParents.isEmpty()) {
-                    viewModel.setTaxonGroupId(listParents.get(0).getId());
+                        .build()) {
+                    List<TaxonGroupsDb> listParents = query.find();
+                    if (!listParents.isEmpty()) {
+                        viewModel.setTaxonGroupId(listParents.get(0).getId());
+                    }
                 }
             }
             if (selectedTaxa.equals(getString(R.string.birds))) {
-                Query<TaxonGroupsDb> query = taxonGroupsDataBox
+                try (Query<TaxonGroupsDb> query = taxonGroupsDataBox
                         .query(TaxonGroupsDb_.name.contains("bird", QueryBuilder.StringOrder.CASE_INSENSITIVE))
-                        .build();
-                List<TaxonGroupsDb> listParents = query.find();
-                query.close();
-                if (!listParents.isEmpty()) {
-                    viewModel.setTaxonGroupId(listParents.get(0).getId());
+                        .build()) {
+
+                    List<TaxonGroupsDb> listParents = query.find();
+                    if (!listParents.isEmpty()) {
+                        viewModel.setTaxonGroupId(listParents.get(0).getId());
+                    }
                 }
             }
             Log.d(TAG, "Selected taxa (" + selectedTaxa + ") has ID: " + viewModel.getTaxonGroupId());
@@ -1090,7 +1109,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         if (id != 0) {
             return (Integer) (int) id;
         } else {
-            Log.e(TAG, "Timed cound ID from Bundle is null!");
+            Log.e(TAG, "Timed count ID from Bundle is null!");
             return null;
         }
     }

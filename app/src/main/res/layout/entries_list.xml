@@ -1,45 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/entry_root_layout"
     android:layout_width="match_parent"
-    android:layout_height="72dp"
+    android:layout_height="wrap_content"
+    android:minHeight="72dp"
+    android:gravity="center_vertical"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp">
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/entry_image"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
         android:scaleType="centerCrop"
         android:src="@mipmap/ic_kornjaca_kocka"
         android:contentDescription="@string/thumbnail" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:paddingStart="16dp"
-        android:paddingEnd="0dp"
+        android:paddingEnd="8dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/entry_taxon_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/taxon_name"
             android:textSize="16sp"
             android:textStyle="italic"
-            android:textColor="@color/colorPrimary"/>
+            android:textColor="@color/colorPrimary"
+            android:ellipsize="end"
+            android:maxLines="1"/>
 
         <TextView
             android:id="@+id/entry_stage"
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:text="@string/developmental_stage"
-            android:textSize="12sp"
-            android:textColor="@color/colorPrimary"/>
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#757575"/> </LinearLayout>
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/image_view_entry_upload_status"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@string/upload_status"
+        android:visibility="visible"
+        android:alpha="0.5"
+        android:src="@drawable/ic_uploaded" />
 
 </LinearLayout>
