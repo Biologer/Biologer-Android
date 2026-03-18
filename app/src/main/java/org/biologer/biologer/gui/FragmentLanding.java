@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.PopupMenu;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -116,8 +115,12 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                         showUploadProgress(true, percentage);
                     } else {
                         if (failedWorkers > 0) {
-                            showUploadCompletedInfo(true, getString(R.string.upload_failed_for) +
-                                    failedWorkers + " " + getString(R.string.items) + ".");
+                            String message = getResources().getQuantityString(
+                                    R.plurals.upload_failed_items,
+                                    failedWorkers,
+                                    failedWorkers
+                            );
+                            showUploadCompletedInfo(true, message);
                             showUploadProgress(false, 0);
                         } else {
                             showUploadCompletedInfo(true, getString(R.string.all_data_uploaded_successfully));

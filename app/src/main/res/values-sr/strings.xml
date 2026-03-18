@@ -577,4 +577,10 @@
     <string name="notification_id_id_not_present">Није доступан ИД обавештења!</string>
     <string name="notification_not_found">Није пронађено обавештење!</string>
     <string name="all_notifications">Сва обавештења</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">Не могу да пошаљем %d унос.</item>
+        <item quantity="few">Не могу да пошаљем %d уноса.</item>
+        <item quantity="other">Не могу да пошаљем %d уноса.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Сви подаци су успешно послати!</string>
 </resources>
