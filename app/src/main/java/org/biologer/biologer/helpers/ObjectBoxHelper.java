@@ -13,6 +13,7 @@ import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationTypesDb;
 import org.biologer.biologer.sql.ObservationTypesDb_;
+import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.StageDb_;
 import org.biologer.biologer.sql.SynonymsDb;
@@ -310,6 +311,14 @@ public class ObjectBoxHelper {
         } catch (Exception e) {
             Log.e(TAG, "Error getting ID for photographed tag!", e);
             return null;
+        }
+    }
+
+    public static void removePhoto(long photoId) {
+        if (photoId > 0) {
+            Box<PhotoDb> box = App.get().getBoxStore().boxFor(PhotoDb.class);
+            box.remove(photoId);
+            Log.d(TAG, "Photo with ID " + photoId + " removed from database.");
         }
     }
 
