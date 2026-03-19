@@ -9,8 +9,13 @@ import android.util.Log;
 import com.google.firebase.FirebaseApp;
 
 import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
+import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.MyObjectBox;
+import org.biologer.biologer.sql.PhotoDb;
 
+import java.util.List;
+
+import io.objectbox.Box;
 import io.objectbox.BoxStore;
 import io.objectbox.android.Admin;
 
@@ -30,6 +35,8 @@ public class App extends Application {
         app = this;
 
         initializeBoxStore();
+
+        migrateOldObjectBoxes();
 
         // Initialize Firebase logging
         FirebaseApp.initializeApp(this);
@@ -113,6 +120,49 @@ public class App extends Application {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             assert notificationManager != null;
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    public void migrateOldObjectBoxes() {
+        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
+        List<EntryDb> allEntries = entryBox.getAll();
+
+        for (EntryDb entry : allEntries) {
+            if (entry.photos.isEmpty()) {
+                boolean migrated = false;
+
+                if (entry.getSlika1() != null && !entry.getSlika1().isEmpty()) {
+                    PhotoDb p = new PhotoDb();
+                    p.setLocalPath(entry.getSlika1());
+                    p.setServerPath(null);
+                    p.setServerId(0);
+                    entry.photos.add(p);
+                    migrated = true;
+                }
+
+                if (entry.getSlika2() != null && !entry.getSlika2().isEmpty()) {
+                    PhotoDb p = new PhotoDb();
+                    p.setLocalPath(entry.getSlika2());
+                    p.setServerPath(null);
+                    p.setServerId(0);
+                    entry.photos.add(p);
+                    migrated = true;
+                }
+
+                if (entry.getSlika3() != null && !entry.getSlika3().isEmpty()) {
+                    PhotoDb p = new PhotoDb();
+                    p.setLocalPath(entry.getSlika3());
+                    p.setServerPath(null);
+                    p.setServerId(0);
+                    entry.photos.add(p);
+                    migrated = true;
+                }
+
+                if (migrated) {
+                    entryBox.put(entry);
+                    Log.d("Migration", "Photos for Entry ID: " + entry.getId() + " migrated.");
+                }
+            }
         }
     }
 

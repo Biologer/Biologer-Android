@@ -12,6 +12,7 @@ import com.google.android.gms.maps.model.LatLng;
 import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.PhotoDb;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -42,12 +43,7 @@ public class ObservationViewModel extends ViewModel {
     private final MutableLiveData<Double> accuracy = new MutableLiveData<>();
     private final MutableLiveData<Double> elevation = new MutableLiveData<>();
     private final MutableLiveData<String> location = new MutableLiveData<>();
-    private final MutableLiveData<String> image1 = new MutableLiveData<>();
-    private final MutableLiveData<String> image2 = new MutableLiveData<>();
-    private final MutableLiveData<String> image3 = new MutableLiveData<>();
-    private String serverImage1 = null;
-    private String serverImage2 = null;
-    private String serverImage3 = null;
+    private final MutableLiveData<ArrayList<PhotoDb>> photos = new MutableLiveData<>(new ArrayList<>());
     private String project = null;
     private String foundOn = null;
     private String dataLicence = null;
@@ -55,7 +51,6 @@ public class ObservationViewModel extends ViewModel {
     private String habitat = null;
     private Boolean saveEnabled = null;
     private Uri currentImage = null;
-    private final ArrayList<String> listNewImages = new ArrayList<>();
     private Boolean taxonFromTheList = false;
     private Boolean locationFromTheMap = false;
     private Boolean callTagSelected = false;
@@ -82,12 +77,8 @@ public class ObservationViewModel extends ViewModel {
         setAccuracy(entry.getAccuracy());
         setElevation(entry.getElevation());
         setLocation(entry.getLocation());
-        setImage1(entry.getSlika1());
-        setImage2(entry.getSlika2());
-        setImage3(entry.getSlika3());
-        setServerImage1(entry.getServerImage1());
-        setServerImage2(entry.getServerImage2());
-        setServerImage3(entry.getServerImage3());
+        ArrayList<PhotoDb> photoList = new ArrayList<>(entry.photos);
+        setPhotos(photoList);
         setProject(entry.getProjectId());
         setFoundOn(entry.getFoundOn());
         setDataLicence(entry.getDataLicence());
@@ -127,12 +118,7 @@ public class ObservationViewModel extends ViewModel {
                     getRoundedAccuracy(),
                     getRoundedElevation(),
                     getLocation().getValue(),
-                    getImage1().getValue(),
-                    getImage2().getValue(),
-                    getImage3().getValue(),
-                    getServerImage1(),
-                    getServerImage2(),
-                    getServerImage3(),
+                    null, null, null,
                     getProject(),
                     getFoundOn(),
                     getDataLicence(),
@@ -320,40 +306,6 @@ public class ObservationViewModel extends ViewModel {
 
     public void setLocation(String data) {
         location.setValue(data);
-    }
-
-
-    public MutableLiveData<String> getImage1() {
-        return image1;
-    }
-
-    public void setImage1(String data) {
-        image1.setValue(data);
-    }
-
-
-    public MutableLiveData<String> getImage2() {
-        return image2;
-    }
-
-    public void setImage2(String data) {
-        image2.setValue(data);
-    }
-
-    public MutableLiveData<String> getImage3() {
-        return image3;
-    }
-
-    public void setImage3(String data) {
-        image3.setValue(data);
-    }
-
-    public ArrayList<String> getListNewImages() {
-        return listNewImages;
-    }
-
-    public void addItemToListNewImage(String data) {
-        listNewImages.add(data);
     }
 
     public Boolean isTaxonSelectedFromTheList() {
@@ -571,27 +523,27 @@ public class ObservationViewModel extends ViewModel {
         this.modified = modified;
     }
 
-    public String getServerImage1() {
-        return serverImage1;
+    public MutableLiveData<ArrayList<PhotoDb>> getPhotos() {
+        return photos;
     }
 
-    public void setServerImage1(String serverImage1) {
-        this.serverImage1 = serverImage1;
+    public void setPhotos(ArrayList<PhotoDb> data) {
+        photos.setValue(data);
     }
 
-    public String getServerImage2() {
-        return serverImage2;
+    public void addPhoto(PhotoDb photo) {
+        ArrayList<PhotoDb> currentPhotos = photos.getValue();
+        if (currentPhotos != null) {
+            currentPhotos.add(photo);
+            photos.setValue(currentPhotos);
+        }
     }
 
-    public void setServerImage2(String serverImage2) {
-        this.serverImage2 = serverImage2;
-    }
-
-    public String getServerImage3() {
-        return serverImage3;
-    }
-
-    public void setServerImage3(String serverImage3) {
-        this.serverImage3 = serverImage3;
+    public void removePhoto(int index) {
+        ArrayList<PhotoDb> currentPhotos = photos.getValue();
+        if (currentPhotos != null && currentPhotos.size() > index) {
+            currentPhotos.remove(index);
+            photos.setValue(currentPhotos);
+        }
     }
 }

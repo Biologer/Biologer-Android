@@ -2,6 +2,7 @@ package org.biologer.biologer.sql;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
+import io.objectbox.relation.ToMany;
 
 /**
  * Created by brjovanovic on 2/22/2018.
@@ -33,12 +34,10 @@ public class EntryDb {
     private Double accuracy;
     private double elevation;
     private String location;
+    public ToMany<PhotoDb> photos;
     private String slika1;
     private String slika2;
     private String slika3;
-    private String serverImage1;
-    private String serverImage2;
-    private String serverImage3;
     private final String projectId;
     private String foundOn;
     private String dataLicence;
@@ -52,7 +51,7 @@ public class EntryDb {
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
                    String location, String slika1, String slika2, String slika3,
-                   String serverImage1, String serverImage2, String serverImage3, String projectId, String foundOn,
+                   String projectId, String foundOn,
                    String dataLicence, int imageLicence, String time, String habitat, String observationTypeIds) {
         this.id = id;
         this.serverId = serverId;
@@ -79,9 +78,6 @@ public class EntryDb {
         this.slika1 = slika1;
         this.slika2 = slika2;
         this.slika3 = slika3;
-        this.serverImage1 = serverImage1;
-        this.serverImage2 = serverImage2;
-        this.serverImage3 = serverImage3;
         this.projectId = projectId;
         this.foundOn = foundOn;
         this.dataLicence = dataLicence;
@@ -181,6 +177,11 @@ public class EntryDb {
     public void setLocation(String location) {
         this.location = location;
     }
+
+    public ToMany<PhotoDb> getPhotos() {
+        return photos;
+    }
+
     public String getSlika1() {
         return this.slika1;
     }
@@ -298,27 +299,4 @@ public class EntryDb {
         this.modified = modified;
     }
 
-    public String getServerImage1() {
-        return serverImage1;
-    }
-
-    public void setServerImage1(String serverImage1) {
-        this.serverImage1 = serverImage1;
-    }
-
-    public String getServerImage2() {
-        return serverImage2;
-    }
-
-    public void setServerImage2(String serverImage2) {
-        this.serverImage2 = serverImage2;
-    }
-
-    public String getServerImage3() {
-        return serverImage3;
-    }
-
-    public void setServerImage3(String serverImage3) {
-        this.serverImage3 = serverImage3;
-    }
 }

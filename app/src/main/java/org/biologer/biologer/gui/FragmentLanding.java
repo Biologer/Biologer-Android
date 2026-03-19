@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -17,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.PopupMenu;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -86,7 +83,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                 .observe(getViewLifecycleOwner(), workInfos -> {
                     // Remove text if no workers area active
                     if (workInfos == null || workInfos.isEmpty()) {
-                        showUploadCompletedInfo(false, null);
                         return;
                     }
 
@@ -111,26 +107,18 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     Log.d(TAG, "Progress: " + percentage + "%");
 
                     if (finishedWorkers < totalWorkers) {
-                        showUploadCompletedInfo(false, null);
                         showUploadProgress(true, percentage);
                     } else {
                         if (failedWorkers > 0) {
-                            String message = getResources().getQuantityString(
+                            Toast.makeText(getContext(), getResources().getQuantityString(
                                     R.plurals.upload_failed_items,
                                     failedWorkers,
                                     failedWorkers
-                            );
-                            showUploadCompletedInfo(true, message);
+                            ), Toast.LENGTH_LONG).show();
                             showUploadProgress(false, 0);
                         } else {
-                            showUploadCompletedInfo(true, getString(R.string.all_data_uploaded_successfully));
+                            Toast.makeText(getContext(), getString(R.string.all_data_uploaded_successfully), Toast.LENGTH_SHORT).show();
                             showUploadProgress(false, 0);
-
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                if (isAdded()) {
-                                    WorkManager.getInstance(requireContext()).pruneWork();
-                                }
-                            }, 15000);
                         }
                     }
                 });
@@ -350,7 +338,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             binding.recycledViewEntries.smoothScrollToPosition(0);
         }
 
-        showUploadCompletedInfo(false, null);
     }
 
     @Override
@@ -414,22 +401,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         Activity activity = getActivity();
         if (activity != null) {
             ((ActivityLanding) getActivity()).updateMenuIconVisibility();
-        }
-    }
-
-    // Remove the info text that should be displayed if there are no entries
-    private void showUploadCompletedInfo(boolean shown, String text) {
-        Activity activity = getActivity();
-        if (activity != null) {
-            TextView textView = activity.findViewById(R.id.list_entries_info_text);
-            if (text != null) {
-                textView.setText(text);
-            }
-            if (shown) {
-                textView.setVisibility(View.VISIBLE);
-            } else {
-                textView.setVisibility(View.GONE);
-            }
         }
     }
 
@@ -502,9 +473,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     entry_from.getAccuracy(),
                     entry_from.getElevation(),
                     entry_from.getLocation(),
-                    null,
-                    null,
-                    null,
                     null,
                     null,
                     null,

@@ -144,14 +144,8 @@ public class LandingFragmentItems {
         }
 
         String image = null;
-        if (entry.getSlika3() != null) {
-            image = entry.getSlika3();
-        }
-        if (entry.getSlika2() != null) {
-            image = entry.getSlika2();
-        }
-        if (entry.getSlika1() != null) {
-            image = entry.getSlika1();
+        if (entry.photos != null && !entry.photos.isEmpty()) {
+            image = entry.photos.get(0).getLocalPath();
         }
 
         Calendar calendar = DateHelper.getCalendar(entry.getYear(),

@@ -58,6 +58,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.viewmodels.ObservationViewModel;
 import org.biologer.biologer.adapters.TaxaListAdapter;
 import org.biologer.biologer.databinding.ActivityObservationBinding;
@@ -310,7 +311,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void setupLocationListenerAndManager() {
-        // Define locationListener and locationManager in order to
+        // Define locationListener and locationManager in order
         // to receive the Location.
         locationListener = new LocationListenerCompat() {
             @Override
@@ -344,17 +345,54 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void setViewModelObservers() {
-        viewModel.getImage1().observe(this, imageUri -> {
-            Log.d(TAG, "Image 1 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, binding.imageViewPicture1, binding.frameLayoutPicture1);
-        });
-        viewModel.getImage2().observe(this, imageUri -> {
-            Log.d(TAG, "Image 2 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, binding.imageViewPicture2, binding.frameLayoutPicture2);
-        });
-        viewModel.getImage3().observe(this, imageUri -> {
-            Log.d(TAG, "Image 3 loaded: " + imageUri);
-            loadImageThumbnail(imageUri, binding.imageViewPicture3, binding.frameLayoutPicture3);
+        viewModel.getPhotos().observe(this, photoList -> {
+            int photoCount = (photoList != null) ? photoList.size() : 0;
+            Log.d(TAG, "Photos updated. Count: " + photoCount);
+
+            // Part 1: Check if add photo buttons (camera/gallery) should be disabled
+            disablePhotoButtons(photoCount >= 3);
+
+            // Part 2: Show images if there are some
+            binding.frameLayoutPicture1.setVisibility(View.GONE);
+            binding.frameLayoutPicture2.setVisibility(View.GONE);
+            binding.frameLayoutPicture3.setVisibility(View.GONE);
+
+            if (photoList != null) {
+                for (int i = 0; i < photoList.size(); i++) {
+                    PhotoDb photo = photoList.get(i);
+                    String path = photo.getLocalPath();
+
+                    if (i == 0) {
+                        binding.frameLayoutPicture1.setVisibility(View.VISIBLE);
+                        loadImageThumbnail(path, binding.imageViewPicture1, binding.frameLayoutPicture1);
+                    } else if (i == 1) {
+                        binding.frameLayoutPicture2.setVisibility(View.VISIBLE);
+                        loadImageThumbnail(path, binding.imageViewPicture2, binding.frameLayoutPicture2);
+                    } else if (i == 2) {
+                        binding.frameLayoutPicture3.setVisibility(View.VISIBLE);
+                        loadImageThumbnail(path, binding.imageViewPicture3, binding.frameLayoutPicture3);
+                    }
+                }
+            }
+
+            // Part 3: Update Observation Types to include "Photographed" tag if there are images
+            Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
+            if (id_photo_tag != null) {
+                int tagId = id_photo_tag.intValue();
+
+                if (photoCount > 0) {
+                    if (!viewModel.getObservationTypes().contains(tagId)) {
+                        viewModel.addObservationType(tagId);
+                        Log.d(TAG, "Added 'Photographed' tag to ViewModel.");
+                    }
+                } else {
+                    if (viewModel.getObservationTypes().contains(tagId)) {
+                        viewModel.removeObservationType(tagId);
+                        Log.d(TAG, "Removed 'Photographed' tag from ViewModel.");
+                    }
+                }
+            }
+
         });
 
         viewModel.getCalendar().observe(this, calendar -> {
@@ -466,7 +504,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         viewModel.setCalendar(calendar);
         viewModel.setProject(PreferenceManager.getDefaultSharedPreferences(this)
                 .getString("project_name", "0"));
-        getPhotoTag();
         viewModel.setDataLicence(String.valueOf(ObjectBoxHelper.getDataLicense()));
         viewModel.setImageLicence(ObjectBoxHelper.getImageLicense());
     }
@@ -483,7 +520,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void showStagesAndAtlasCode(SharedPreferences preferences) {
-        // Check if the taxon has stages. If not hide the stages dialog.
+        // Check if the taxon has stages. If not hide the stages' dialog.
         if (viewModel.getTaxonId() == null) {
             Log.e(TAG, "There is no taxon ID. Skipping stages and atlas code.");
             return;
@@ -607,11 +644,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             binding.checkBoxFemale.setChecked(true);
         }
 
-        // Check if photos buttons should be disabled
-        disablePhotoButtons(viewModel.getImage1().getValue() != null &&
-                viewModel.getImage2().getValue() != null &&
-                viewModel.getImage3().getValue() != null);
-
         // Load other data
         if (!viewModel.getComment().isEmpty()) {
             binding.textInputEditTextComment.setText(viewModel.getComment());
@@ -629,16 +661,6 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             binding.textInputEditTextSpecimensNo.setText(String.valueOf(viewModel.getNumberOfSpecimens()));
         }
 
-        // Load observation types and delete tag for photographed.
-        //TODO Removing image tag just in case images got deleted.");
-        if (viewModel.getImage1().getValue() != null ||
-                viewModel.getImage2().getValue() != null ||
-                viewModel.getImage3().getValue() != null) {
-            Long id_photo_tag = ObjectBoxHelper.getIdForPhotographedTag();
-            if (id_photo_tag != null) {
-                viewModel.removeObservationType(id_photo_tag.intValue());
-            }
-        }
     }
 
     // Add Save button in the right part of the toolbar
@@ -703,47 +725,17 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Log.d(TAG, "Females checkbox selected!");
             updateSexViewModel("female");
         } else if (id == R.id.imageViewDeletePicture1) {
-            Log.i(TAG, "Deleting image 1.");
-            binding.frameLayoutPicture1.setVisibility(View.GONE);
-            disablePhotoButtons(false);
-            deleteImageFile(viewModel.getImage1().getValue());
-            viewModel.setImage1(null);
+            deletePhotoAt(0);
         } else if (id == R.id.imageViewPicture1) {
-            String image1 = viewModel.getImage1().getValue();
-            if (image1 != null) {
-                Log.i(TAG, "Image 1 clicked. URL: " + image1);
-                viewImage(image1);
-            } else {
-                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-            }
+            openPhotoAt(0);
         } else if (id == R.id.imageViewDeletePicture2) {
-            Log.i(TAG, "Deleting image 2.");
-            binding.frameLayoutPicture2.setVisibility(View.GONE);
-            disablePhotoButtons(false);
-            deleteImageFile(viewModel.getImage2().getValue());
-            viewModel.setImage2(null);
+            deletePhotoAt(1);
         } else if (id == R.id.imageViewPicture2) {
-            String image2 = viewModel.getImage2().getValue();
-            if (image2 != null) {
-                Log.i(TAG, "Image 2 clicked. URL: " + image2);
-                viewImage(image2);
-            } else {
-                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-            }
+            openPhotoAt(1);
         } else if (id == R.id.imageViewDeletePicture3) {
-            Log.i(TAG, "Deleting image 3.");
-            binding.frameLayoutPicture3.setVisibility(View.GONE);
-            disablePhotoButtons(false);
-            deleteImageFile(viewModel.getImage3().getValue());
-            viewModel.setImage3(null);
+            deletePhotoAt(2);
         } else if (id == R.id.imageViewPicture3) {
-            String image3 = viewModel.getImage3().getValue();
-            if (image3 != null) {
-                Log.i(TAG, "Image 3 clicked. URL: " + image3);
-                viewImage(image3);
-            } else {
-                Toast.makeText(this, "Image clicked, but URI is null.", Toast.LENGTH_SHORT).show();
-            }
+            openPhotoAt(2);
         } else if (id == R.id.materialCheckBoxDead) {
             viewModel.checkDead();
         } else if (id == R.id.linearLayoutLocation || id == R.id.imageViewMap) {
@@ -864,7 +856,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 SettingsManager.setPreviousLocationLat(viewModel.getLatitudeString());
                 saveEntry4();
             } else {
-                // It there are coordinates already saved, read them and compare to the current location.
+                // It there is coordinates already saved, read them and compare to the current location.
                 old_location.setLongitude(Double.parseDouble(SettingsManager.getPreviousLocationLong()));
                 old_location.setLatitude(Double.parseDouble(SettingsManager.getPreviousLocationLat()));
                 Location current_location = new Location("");
@@ -976,22 +968,41 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private long saveEntryToObjectBox() {
-        // Write observation into the ObjectBox database
         EntryDb entry = viewModel.getObservation();
         long entryId = ObjectBoxHelper.setObservation(entry);
-        Log.d(TAG, "Entry will be saved under ID " + entryId);
-        return entryId;
-    }
+        EntryDb savedEntry = ObjectBoxHelper.getObservationById(entryId);
 
-    private void getPhotoTag() {
-        if (viewModel.getImage1().getValue() != null ||
-                viewModel.getImage2().getValue() != null ||
-                viewModel.getImage3().getValue() != null) {
-            Long photo_tag_id = ObjectBoxHelper.getIdForPhotographedTag();
-            if (photo_tag_id != null) {
-                viewModel.addObservationType(photo_tag_id.intValue());
+        if (savedEntry != null) {
+            // 1. Identify images that needs to be deleted
+            List<PhotoDb> photosInDatabase = new ArrayList<>(savedEntry.photos);
+            List<PhotoDb> photosInViewModel = viewModel.getPhotos().getValue();
+
+            for (PhotoDb dbPhoto : photosInDatabase) {
+                boolean existsInViewModel = false;
+                if (photosInViewModel != null) {
+                    for (PhotoDb vmPhoto : photosInViewModel) {
+                        if (dbPhoto.getId() == vmPhoto.getId() && dbPhoto.getId() != 0) {
+                            existsInViewModel = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!existsInViewModel) {
+                    Log.d(TAG, "Removing photo " + dbPhoto.getId() + " no longer in ViewModel.");
+                    deleteImageFile(dbPhoto.getLocalPath());
+                    ObjectBoxHelper.removePhoto(dbPhoto.getId());
+                }
             }
+
+            // 2. Add photos to the entry
+            savedEntry.photos.clear();
+            if (photosInViewModel != null) {
+                savedEntry.photos.addAll(photosInViewModel);
+            }
+            ObjectBoxHelper.setObservation(savedEntry);
         }
+        return entryId;
     }
 
     private Long getAtlasCode() {
@@ -1120,16 +1131,14 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         openMap.launch(intent);
     }
 
-    private void disablePhotoButtons(Boolean value) {
-        if (value) {
-            binding.imageViewPhotoFromGallery.setEnabled(false);
+    private void disablePhotoButtons(Boolean disable) {
+        binding.imageViewPhotoFromGallery.setEnabled(!disable);
+        binding.imageViewPhotoFromCamera.setEnabled(!disable);
+        if (disable) {
             binding.imageViewPhotoFromGallery.setImageAlpha(20);
-            binding.imageViewPhotoFromCamera.setEnabled(false);
             binding.imageViewPhotoFromCamera.setImageAlpha(20);
         } else {
-            binding.imageViewPhotoFromGallery.setEnabled(true);
             binding.imageViewPhotoFromGallery.setImageAlpha(255);
-            binding.imageViewPhotoFromCamera.setEnabled(true);
             binding.imageViewPhotoFromCamera.setImageAlpha(255);
         }
     }
@@ -1165,7 +1174,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             }
         }
 
-        // For recent android we don’t need permit for external storage
+        // For recent android we don’t need a permit for external storage
         else {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 takePhotoFromCamera();
@@ -1272,15 +1281,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             });
 
     private int getEmptyImageSlots() {
-        int emptySlots = 0;
-        if (viewModel.getImage1().getValue() == null) {
-            emptySlots = emptySlots + 1;
-        } if (viewModel.getImage2().getValue() == null) {
-            emptySlots = emptySlots + 1;
-        } if (viewModel.getImage3().getValue() == null) {
-            emptySlots = emptySlots + 1;
+        int currentCount = 0;
+        if (viewModel.getPhotos().getValue() != null) {
+            currentCount = viewModel.getPhotos().getValue().size();
         }
-        return emptySlots;
+        return 3 - currentCount;
     }
 
     // Function used to retrieve the location
@@ -1396,12 +1401,14 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
     }
 
     private void deleteUnsavedImages() {
-        for (String image: viewModel.getListNewImages()) {
-            if (image != null) {
-                String filename = new File(image).getName();
-                final File file = new File(getFilesDir(), filename);
-                boolean b = file.delete();
-                Log.d(TAG, "Deleting image " + image + " returned: " + b);
+        List<PhotoDb> photos = viewModel.getPhotos().getValue();
+        if (photos != null) {
+            for (PhotoDb photo : photos) {
+                // ID = 0 for new images
+                if (photo.getId() == 0) {
+                    deleteImageFile(photo.getLocalPath());
+                    Log.d(TAG, "Unsaved new image deleted: " + photo.getLocalPath());
+                }
             }
         }
     }
@@ -1543,17 +1550,9 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             String s = workInfo.getOutputData()
                                     .getString(PreparePhotosWorker.KEY_OUTPUT_URI);
                             if (s != null) {
-                                if (viewModel.getImage1().getValue() == null) {
-                                    viewModel.setImage1(s);
-                                    viewModel.addItemToListNewImage(s);
-                                } else if (viewModel.getImage2().getValue() == null) {
-                                    viewModel.setImage2(s);
-                                    viewModel.addItemToListNewImage(s);
-                                } else if (viewModel.getImage3().getValue() == null) {
-                                    viewModel.setImage3(s);
-                                    viewModel.addItemToListNewImage(s);
-                                    disablePhotoButtons(true);
-                                }
+                                PhotoDb newPhoto = new PhotoDb();
+                                newPhoto.setLocalPath(s);
+                                viewModel.addPhoto(newPhoto);
                             }
                         } else if (workInfo.getState() == WorkInfo.State.FAILED) {
                             Toast.makeText(this,
@@ -1562,5 +1561,32 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                         }
                     }
                 });
+    }
+
+    private void deletePhotoAt(int index) {
+        List<PhotoDb> currentPhotos = viewModel.getPhotos().getValue();
+        if (currentPhotos != null && currentPhotos.size() > index) {
+            PhotoDb photo = currentPhotos.get(index);
+            // Instantly delete image file if the photo was not saved previously
+            if (photo.getId() == 0) {
+                deleteImageFile(photo.getLocalPath());
+            }
+
+            viewModel.removePhoto(index);
+            Log.i(TAG, "Photo removed from UI list at index " + index + ".");
+        }
+    }
+
+    private void openPhotoAt(int index) {
+        List<PhotoDb> currentPhotos = viewModel.getPhotos().getValue();
+        if (currentPhotos != null && currentPhotos.size() > index) {
+            String path = currentPhotos.get(index).getLocalPath();
+            if (path != null) {
+                Log.i(TAG, "Opening image: " + path);
+                viewImage(path);
+            }
+        } else {
+            Toast.makeText(this, R.string.no_image_to_view, Toast.LENGTH_SHORT).show();
+        }
     }
 }

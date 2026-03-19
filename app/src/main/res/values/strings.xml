@@ -573,4 +573,5 @@
     </plurals>
     <string name="all_data_uploaded_successfully">All data uploaded successfully!</string>
     <string name="upload_status">Upload status</string>
+    <string name="no_image_to_view">Image clicked, but URI is null.</string>
 </resources>

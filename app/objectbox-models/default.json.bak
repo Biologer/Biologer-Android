@@ -104,7 +104,7 @@
     },
     {
       "id": "11:1544941449612204904",
-      "lastPropertyId": "36:2334442110110349570",
+      "lastPropertyId": "39:6770658024707945124",
       "name": "EntryDb",
       "properties": [
         {
@@ -267,6 +267,21 @@
           "id": "36:2334442110110349570",
           "name": "modified",
           "type": 1
+        },
+        {
+          "id": "37:297848624786294411",
+          "name": "serverImage1",
+          "type": 9
+        },
+        {
+          "id": "38:2773131629283811786",
+          "name": "serverImage2",
+          "type": 9
+        },
+        {
+          "id": "39:6770658024707945124",
+          "name": "serverImage3",
+          "type": 9
         }
       ],
       "relations": []
