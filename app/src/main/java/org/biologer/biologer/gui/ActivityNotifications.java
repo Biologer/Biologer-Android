@@ -205,7 +205,7 @@ public class ActivityNotifications extends AppCompatActivity {
 
                         int resultCode = result.getResultCode();
 
-                        // If comming from FCM message
+                        // If coming from FCM message
                         if (resultCode == 1) {
                             Log.i(TAG, "Returned successfully from FCM -> ActivityNotification.");
                         }

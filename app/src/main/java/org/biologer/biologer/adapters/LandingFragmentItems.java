@@ -30,6 +30,7 @@ public class LandingFragmentItems {
     private String subtitle;
     private String image;
     private Date date;
+    private boolean marked = false;
 
     public LandingFragmentItems(Long observationId, Integer timedCountId,
                                 boolean uploaded, boolean modified,
@@ -265,5 +266,13 @@ public class LandingFragmentItems {
 
     public void setModified(boolean modified) {
         this.modified = modified;
+    }
+
+    public boolean isMarked() {
+        return marked;
+    }
+
+    public void setMarked(boolean marked) {
+        this.marked = marked;
     }
 }

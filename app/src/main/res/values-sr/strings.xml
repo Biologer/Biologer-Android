@@ -583,4 +583,9 @@
         <item quantity="other">Не могу да пошаљем %d уноса.</item>
     </plurals>
     <string name="all_data_uploaded_successfully">Сви подаци су успешно послати!</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">Обрисан је %d унос.</item>
+        <item quantity="few">Обрисана су %d уноса.</item>
+        <item quantity="other">Обрисано је %d уноса.</item>
+    </plurals>
 </resources>

@@ -7,6 +7,10 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorSecondary">@color/colorPrimary</item>
         <item name="iconColor">@color/icon_color</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeStyle">@style/Widget.Biologer.ActionMode</item>
+        <item name="actionModeBackground">@color/colorPrimary</item>
+        <item name="actionMenuTextColor">@color/white</item>
     </style>
 
     <!-- Toolbar text color. -->
@@ -14,11 +18,21 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
-
     <!-- Toolbar theme. -->
     <style name="Theme.Biologer.Toolbar" parent="ThemeOverlay.AppCompat.DayNight.ActionBar">
         <item name="titleTextAppearance">@style/Theme.Biologer.Toolbar.TitleText</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColor">@color/black_on_light_white_on_night</item>
+    </style>
+
+    <!-- ActionBar for Contextual Action Mode -->
+    <style name="Widget.Biologer.ActionMode" parent="Widget.AppCompat.ActionMode">
+        <item name="background">?attr/colorPrimary</item>
+        <item name="titleTextStyle">@style/Biologer.ActionMode.Title</item>
+    </style>
+
+    <style name="Biologer.ActionMode.Title" parent="TextAppearance.AppCompat.Widget.ActionMode.Title">
+        <item name="titleTextAppearance">@style/Theme.Biologer.Toolbar.TitleText</item>
+        <item name="android:textColor">@color/white</item>
     </style>
 </resources>

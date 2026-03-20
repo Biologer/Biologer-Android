@@ -232,8 +232,6 @@
     <string name="csv_note">Note</string>
     <string name="delete_entry">Delete this observation</string>
     <string name="delete_all_entries">Delete all observations!</string>
-    <string name="entry_deleted_msg1">Observation No.</string>
-    <string name="entry_deleted_msg2">is deleted.</string>
     <string name="entries_deleted_msg">All observation are deleted from the list.</string>
     <string name="confirm_delete_all">You are about to delete every single data collected on the field! Are you sure about this?</string>
     <string name="yes_delete">Delete everything</string>
@@ -574,4 +572,10 @@
     <string name="all_data_uploaded_successfully">All data uploaded successfully!</string>
     <string name="upload_status">Upload status</string>
     <string name="no_image_to_view">Image clicked, but URI is null.</string>
+    <string name="delete_selected_entry">Delete selected entry</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">%d entry deleted.</item>
+        <item quantity="few">%d entries deleted.</item>
+        <item quantity="other">%d entries deleted.</item>
+    </plurals>
 </resources>

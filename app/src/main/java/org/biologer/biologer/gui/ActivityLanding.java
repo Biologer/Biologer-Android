@@ -238,7 +238,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     // Right menu for uploading entries
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.upload_menu, menu);
+        getMenuInflater().inflate(R.menu.menu_landing, menu);
         uploadMenu = menu;
         updateMenuIconVisibility();
         return super.onCreateOptionsMenu(menu);

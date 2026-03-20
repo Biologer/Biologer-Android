@@ -1,5 +1,7 @@
 package org.biologer.biologer.adapters;
 
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -25,6 +27,8 @@ import java.util.List;
 public class LandingFragmentAdapter
         extends RecyclerView.Adapter<LandingFragmentAdapter.ViewHolder> {
     private final List<LandingFragmentItems> myEntries;
+    private List<Long> selectedIds = new ArrayList<>();
+    private boolean isSelectionMode = false;
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
@@ -40,8 +44,7 @@ public class LandingFragmentAdapter
     }
 
     public static class ViewHolder
-            extends RecyclerView.ViewHolder
-            implements View.OnCreateContextMenuListener {
+            extends RecyclerView.ViewHolder {
 
         public ImageView thumbnailImage;
         public ImageView uploadStatus;
@@ -60,7 +63,7 @@ public class LandingFragmentAdapter
             textSubtitle = view.findViewById(R.id.entry_stage);
 
             // Add the entry items menu
-            view.setOnCreateContextMenuListener(this);
+            //view.setOnCreateContextMenuListener(this);
             this.isTimedCountObservation = isTimedCountObservation;
         }
 
@@ -68,20 +71,20 @@ public class LandingFragmentAdapter
             this.isTimedCount = isTimedCount;
         }
 
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-            Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
-            if (!this.isTimedCount && !this.isTimedCountObservation) {
-                menu.add(Menu.NONE, R.id.duplicate,
-                        Menu.NONE, R.string.duplicate_entry);
-            }
-            menu.add(Menu.NONE, R.id.delete,
-                    Menu.NONE, R.string.delete_entry);
-            if (!this.isTimedCountObservation) {
-                menu.add(Menu.NONE, R.id.delete_all,
-                        Menu.NONE, R.string.delete_all_entries);
-            }
-        }
+        //@Override
+        //public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        //    Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
+        //    if (!this.isTimedCount && !this.isTimedCountObservation) {
+        //        menu.add(Menu.NONE, R.id.duplicate,
+        //                Menu.NONE, R.string.duplicate_entry);
+        //    }
+        //    menu.add(Menu.NONE, R.id.delete,
+        //            Menu.NONE, R.string.delete_entry);
+            //if (!this.isTimedCountObservation) {
+            //    menu.add(Menu.NONE, R.id.delete_all,
+            //            Menu.NONE, R.string.delete_all_entries);
+            //}
+        //}
     }
 
     @NonNull
@@ -134,31 +137,46 @@ public class LandingFragmentAdapter
         }
 
         if (viewHolder.uploadStatus != null) {
+            viewHolder.uploadStatus.clearColorFilter();
+            setAlpha(viewHolder, 1.0f);
             if (entry.isUploaded()) {
+                viewHolder.uploadStatus.setVisibility(View.VISIBLE);
                 if (entry.isModified()) {
                     // Modified entry
                     viewHolder.uploadStatus.setImageResource(R.drawable.ic_modified);
-                    viewHolder.uploadStatus.setVisibility(View.VISIBLE);
-                    viewHolder.uploadStatus.setAlpha(0.5f);
-                    viewHolder.itemView.setAlpha(0.9f);
+                    int grayColor = ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.icon_color);
+                    viewHolder.uploadStatus.setColorFilter(grayColor, PorterDuff.Mode.SRC_IN);
+                    setAlpha(viewHolder, 1.0f);
                 } else {
                     // Uploaded entry
                     viewHolder.uploadStatus.setImageResource(R.drawable.ic_uploaded);
-                    viewHolder.uploadStatus.setVisibility(View.VISIBLE);
-                    viewHolder.uploadStatus.setAlpha(0.4f);
-                    viewHolder.itemView.setAlpha(0.6f);
+                    int okColor = ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryDark);
+                    viewHolder.uploadStatus.setColorFilter(okColor, PorterDuff.Mode.SRC_IN);
+                    setAlpha(viewHolder, 0.6f);
                 }
             } else {
                 // New entry, not uploaded
                 viewHolder.uploadStatus.setVisibility(View.GONE);
-                viewHolder.itemView.setAlpha(1.0f);
+                setAlpha(viewHolder, 1.0f);
             }
         }
 
-        viewHolder.itemView.setOnLongClickListener(v -> {
-            Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
-            return false;
-        });
+        if (entry.isMarked()) {
+            viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryLight));
+        } else {
+            viewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);
+        }
+
+//        viewHolder.itemView.setOnLongClickListener(v -> {
+//            Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
+//            return false;
+//        });
+    }
+
+    private void setAlpha(ViewHolder viewHolder, float alpha) {
+        if (viewHolder.thumbnailImage != null) viewHolder.thumbnailImage.setAlpha(alpha);
+        if (viewHolder.textTitle != null) viewHolder.textTitle.setAlpha(alpha);
+        if (viewHolder.textSubtitle != null) viewHolder.textSubtitle.setAlpha(alpha);
     }
 
     @Override
@@ -229,5 +247,25 @@ public class LandingFragmentAdapter
         this.myEntries.addAll(newItems);
 
         diffResult.dispatchUpdatesTo(this);
+    }
+
+    public void toggleSelection(long id) {
+        if (selectedIds.contains(id)) {
+            selectedIds.remove(id);
+        } else {
+            selectedIds.add(id);
+        }
+        isSelectionMode = !selectedIds.isEmpty();
+        notifyDataSetChanged();
+    }
+
+    public List<Long> getSelectedIds() {
+        return selectedIds;
+    }
+
+    public void clearSelection() {
+        selectedIds.clear();
+        isSelectionMode = false;
+        notifyDataSetChanged();
     }
 }

@@ -99,6 +99,11 @@ public interface RetrofitService {
             @Body APIEntry apiEntry
     );
 
+    @Headers({"Accept: application/json",
+            "content-type: application/json"})
+    @DELETE("api/field-observations/{id}")
+    Call<Void> deleteFieldObservation(@Path("id") long id);
+
     @Headers({"Accept: application/json"
             ,"content-type: application/json"})
     @POST("api/timed-count-observations")
@@ -111,6 +116,11 @@ public interface RetrofitService {
             @Path("id") long serverId,
             @Body APITimedCounts timedCounts
     );
+
+    @Headers({"Accept: application/json",
+            "content-type: application/json"})
+    @DELETE("api/timed-count-observations/{id}")
+    Call<Void> deleteTimedCountObservation(@Path("id") long id);
 
     @Headers({"Accept: application/json"})
     @GET("api/field-observations/")

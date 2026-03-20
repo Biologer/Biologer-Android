@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,14 +18,18 @@ import android.widget.Button;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
@@ -39,8 +44,10 @@ import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
+import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,12 +58,17 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class FragmentLanding extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     String TAG = "Biologer.LandingFragment";
     private FragmentLandingBinding binding;
     private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
+    private ActionMode actionMode;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -75,6 +87,79 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
+
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (actionMode != null) {
+                    actionMode.finish();
+                } else {
+                    setEnabled(false);
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
+    }
+
+    private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.menu_entry_items_selected, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            int selectedCount = getSelectedItemsCount();
+            // Hide Duplicate if more than one item selected
+            MenuItem duplicateItem = menu.findItem(R.id.duplicate);
+            if (duplicateItem != null) {
+                duplicateItem.setVisible(selectedCount == 1);
+            }
+            return true;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            if (item.getItemId() == R.id.delete) {
+                deleteSelectedEntries();
+                return true;
+            } else if (item.getItemId() == R.id.duplicate) {
+                for (int i = 0; i < items.size(); i++) {
+                    if (items.get(i).isMarked()) {
+                        duplicateEntry(i);
+                        break;
+                    }
+                }
+                mode.finish();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            deselectAllItems();
+            actionMode = null;
+        }
+    };
+
+    private int getSelectedItemsCount() {
+        int count = 0;
+        for (LandingFragmentItems item : items) {
+            if (item.isMarked()) count++;
+        }
+        return count;
+    }
+
+    private void deselectAllItems() {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).isMarked()) {
+                items.get(i).setMarked(false);
+                entriesAdapter.notifyItemChanged(i);
+            }
+        }
     }
 
     private void setupWorkerObserver() {
@@ -153,27 +238,61 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         binding.recycledViewEntries.setAdapter(entriesAdapter);
         binding.recycledViewEntries.setClickable(true);
         binding.recycledViewEntries.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.recycledViewEntries.setItemAnimator(new DefaultItemAnimator());
         binding.recycledViewEntries.addOnItemTouchListener(
                 new RecyclerOnClickListener(requireContext(), binding.recycledViewEntries, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        binding.recycledViewEntries.setClickable(false);
-                        LandingFragmentItems item = items.get(position);
-                        if (item.getTimedCountId() != null) {
-                            openTimedCount(item.getTimedCountId());
-                        } else {
-                            openObservation(item.getObservationId());
+                        // Select the notifications
+                        if (actionMode != null) {
+                            selectDeselect(position);
+                            entriesAdapter.notifyItemChanged(position);
+                        }
+                        // Or open it in normal way...
+                        else {
+                            binding.recycledViewEntries.setClickable(false);
+                            LandingFragmentItems item = items.get(position);
+                            if (item.getTimedCountId() != null) {
+                                openTimedCount(item.getTimedCountId());
+                            } else {
+                                openObservation(item.getObservationId());
+                            }
                         }
                     }
 
                     @Override
                     public void onLongItemClick(View view, int position) {
                         Log.d(TAG, "Item " + position + " long pressed.");
+                        // Update Toolbar
+                        if (actionMode == null) {
+                            actionMode = ((AppCompatActivity) requireActivity())
+                                    .startSupportActionMode(actionModeCallback);
+                        }
+                        selectDeselect(position);
+                        entriesAdapter.notifyItemChanged(position);
+
                         entriesAdapter.setPosition(position);
                     }
                 })
         );
         registerForContextMenu(binding.recycledViewEntries);
+    }
+
+    private void selectDeselect(int position) {
+        items.get(position).setMarked(!items.get(position).isMarked());
+
+        int selected = getSelectedItemsCount();
+
+        if (selected == 0) {
+            if (actionMode != null) {
+                actionMode.finish();
+            }
+        } else {
+            if (actionMode != null) {
+                actionMode.setTitle(String.valueOf(selected));
+                actionMode.invalidate();
+            }
+        }
     }
 
     // Opens ActivityEntry to add new species observation
@@ -353,26 +472,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        Log.d(TAG, "Context item.");
-
-        if (item.getItemId() == R.id.duplicate) {
-            duplicateEntry(entriesAdapter.getPosition());
-            return true;
-        }
-        if (item.getItemId() == R.id.delete) {
-            deleteEntryAtPosition(entriesAdapter.getPosition());
-            return true;
-        }
-        if (item.getItemId() == R.id.delete_all) {
-            // Delete the entry
-            buildAlertOnDeleteAll();
-            return true;
-        }
-        return super.onContextItemSelected(item);
-    }
-
     // Method to show the context menu on + button long press
     private void showContextMenu(View view) {
         // Create the context menu and set its items
@@ -491,27 +590,101 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             // Open EntryActivity to edit the new record
             newDuplicateObservation(new_entry_id);
         }
+
+        actionMode.finish();
     }
 
-    public void deleteEntryAtPosition(int position) {
-        Log.d(TAG, "You will now delete entry index ID: " + position);
-        if (items.get(position).getTimedCountId() != null) {
-            // This is Timed Count
-            ObjectBoxHelper.removeObservationsForTimedCountId(items.get(position).getTimedCountId());
-            ObjectBoxHelper.removeTimedCountById(items.get(position).getTimedCountId());
-        } else {
-            // This is species observation
-            ObjectBoxHelper.removeObservationById(items.get(position).getObservationId());
+    private void deleteSelectedEntries() {
+        int count = 0;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).isMarked()) {
+                Log.d(TAG, "You will now delete entry index ID: " + i);
+                // Delete from server
+                if (items.get(i).isUploaded()) {
+                    sendDeleteRequestToServer(items.get(i));
+                } else {
+                    // Just delete local files
+                    deleteLocally(items.get(i));
+                }
+                count ++;
+            }
         }
-        items.remove(position);
-        entriesAdapter.notifyItemRemoved(position);
 
-        // Print user a message
-        int entryNo = position + 1;
-        Toast.makeText(getContext(), getString(R.string.entry_deleted_msg1) + " " + entryNo + " " + getString(R.string.entry_deleted_msg2), Toast.LENGTH_SHORT).show();
-        Activity activity = getActivity();
-        if (activity != null) {
-            ((ActivityLanding)activity).updateMenuIconVisibility();
+        updateUploadIconVisibility();
+
+        String message = getResources().getQuantityString(
+                R.plurals.entries_deleted_count,
+                count,
+                count
+        );
+        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+
+        actionMode.finish();
+    }
+
+    private void deleteLocally(LandingFragmentItems item) {
+        int currentPosition = items.indexOf(item);
+        Log.d(TAG, "Deleting recycler view item index ID " + currentPosition);
+
+        if (currentPosition == -1) return; // Already deleted
+
+        if (item.getTimedCountId() != null) {
+            int id = item.getTimedCountId();
+            ObjectBoxHelper.removeObservationsForTimedCountId(id);
+            ObjectBoxHelper.removeTimedCountById(id);
+        } else {
+            Long id = item.getObservationId();
+            ObjectBoxHelper.removeObservationById(id);
+        }
+
+        items.remove(currentPosition);
+        entriesAdapter.notifyItemRemoved(currentPosition);
+    }
+
+    private void sendDeleteRequestToServer(LandingFragmentItems item) {
+
+        Call<Void> call = null;
+        if (item.getTimedCountId() != null) {
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(item.getTimedCountId());
+            if (timedCount != null) {
+                call = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .deleteTimedCountObservation(timedCount.getServerId());
+            }
+        } else {
+            EntryDb entry = ObjectBoxHelper.getObservationById(item.getObservationId());
+            if (entry != null) {
+                call = RetrofitClient.getService(SettingsManager.getDatabaseName())
+                        .deleteFieldObservation(entry.getServerId());
+            }
+        }
+
+        if (call != null) {
+            call.enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        if (item.getTimedCountId() != null) {
+                            Log.d(TAG, "Timed Count ID " + item.getTimedCountId() + " deleted from server.");
+                        } else {
+                            Log.d(TAG, "Observation ID " + item.getObservationId() + " deleted from server.");
+                        }
+                        deleteLocally(item);
+                    } else {
+                        if (response.code() == 404 || response.code() == 403) {
+                            deleteLocally(item);
+                            Log.e(TAG, "File already deleted on the server: " + response.code());
+                        } else {
+                            Toast.makeText(getContext(), "Error deleting (server).", Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Error deleting file from server: " + response.code());
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Network error deleting the file: " + t.getMessage());
+                }
+            });
         }
     }
 
