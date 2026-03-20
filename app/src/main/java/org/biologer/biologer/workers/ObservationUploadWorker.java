@@ -15,6 +15,7 @@ import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
 import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.File;
@@ -42,26 +43,37 @@ public class ObservationUploadWorker extends Worker {
     public Result doWork() {
         long entryId = getInputData().getLong("observation_id", -1);
         EntryDb entry = ObjectBoxHelper.getObservationById(entryId);
+
         if (entry == null) {
             return Result.success();
         }
 
         try {
             // Part 1. Upload photos
-            List<APIEntryPhotos> uploadedPhotos = new ArrayList<>();
-            List<String> localPhotos = getLocalPhotoPaths(entry);
+            List<APIEntryPhotos> photosForApi = new ArrayList<>();
 
-            for (String path : localPhotos) {
-                APIEntryPhotos photo = uploadPhotoSync(entry, path);
-                if (photo != null) {
-                    uploadedPhotos.add(photo);
+            for (PhotoDb photoDb : entry.photos) {
+                if (photoDb.getServerId() > 0) {
+                    // Image uploaded, sending its ID
+                    APIEntryPhotos existingPhoto = new APIEntryPhotos();
+                    existingPhoto.setId(photoDb.getServerId());
+                    existingPhoto.setPath(null);
+                    existingPhoto.setLicense(entry.getImageLicence());
+                    photosForApi.add(existingPhoto);
+                    Log.d(TAG, "Image already on server, sending ID: " + photoDb.getServerId());
+                } else {
+                    // New image, should be uploaded first
+                    APIEntryPhotos newPhoto = uploadPhotoSync(entry, photoDb.getLocalPath());
+                    if (newPhoto != null) {
+                        photosForApi.add(newPhoto);
+                    }
                 }
             }
 
             // Part 2. Upload observation
             APIEntry api = new APIEntry();
             api.getFromEntryDb(entry);
-            api.setPhotos(uploadedPhotos);
+            api.setPhotos(photosForApi);
 
             // Link with parent Timed Count
             if (entry.getTimedCoundId() != null && entry.getTimedCoundId() != -1) {
@@ -101,11 +113,32 @@ public class ObservationUploadWorker extends Worker {
             }
 
             if (response.isSuccessful() && response.body() != null) {
-                Long serverId = response.body().getData().getId();
+                APIEntryResponse.Data responseData = response.body().getData();
+                Long serverId = responseData.getId();
 
+                // Part 1: Update the entry itself
                 entry.setServerId(serverId);
                 entry.setUploaded(true);
                 entry.setModified(false);
+
+                // Part 2: Update the photos with the ID and URL received from the server
+                List<APIEntryResponse.PhotoResponseData> photosFromServer = responseData.getPhotos();
+                if (photosFromServer != null && !photosFromServer.isEmpty()) {
+                    for (PhotoDb localPhoto : entry.photos) {
+                        String localFileName = new File(localPhoto.getLocalPath()).getName();
+
+                        for (APIEntryResponse.PhotoResponseData serverPhoto : photosFromServer) {
+                            Log.d(TAG, "Local: " + localFileName + "; Server: " + serverPhoto.getPath());
+                            if (serverPhoto.getPath() != null && serverPhoto.getPath().contains(localFileName)) {
+                                localPhoto.setServerId(serverPhoto.getId());
+                                localPhoto.setServerPath(serverPhoto.getPath());
+                                localPhoto.setServerUrl(serverPhoto.getUrl());
+                                Log.d(TAG, "Photo updated: Local " + localFileName + " now has Server ID " + serverPhoto.getId());
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 ObjectBoxHelper.setObservation(entry);
 
@@ -117,14 +150,6 @@ public class ObservationUploadWorker extends Worker {
             Log.e(TAG, "Upload failed for entry " + entryId, e);
             return Result.retry();
         }
-    }
-
-    private List<String> getLocalPhotoPaths(EntryDb entry) {
-        List<String> images = new ArrayList<>();
-        if (entry.getSlika1() != null && !entry.getSlika1().isEmpty()) images.add(entry.getSlika1());
-        if (entry.getSlika2() != null && !entry.getSlika2().isEmpty()) images.add(entry.getSlika2());
-        if (entry.getSlika3() != null && !entry.getSlika3().isEmpty()) images.add(entry.getSlika3());
-        return images;
     }
 
     private APIEntryPhotos uploadPhotoSync(EntryDb entry, String path) throws Exception {

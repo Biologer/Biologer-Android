@@ -24,16 +24,16 @@ public class APIEntryResponse {
     public static class PhotoResponseData {
         private long id;
         private String author;
-        private List<PhotoLicense> license;
+        private PhotoLicense license;
         private String metadata;
         private String path;
         private String url;
 
-        public List<PhotoLicense> getLicense() {
+        public PhotoLicense getLicense() {
             return license;
         }
 
-        public void setLicense(List<PhotoLicense> license) {
+        public void setLicense(PhotoLicense license) {
             this.license = license;
         }
 

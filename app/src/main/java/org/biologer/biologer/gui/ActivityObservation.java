@@ -997,7 +997,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
 
             // 2. Add photos to the entry
             savedEntry.photos.clear();
-            if (photosInViewModel != null) {
+            if (photosInViewModel != null && !photosInViewModel.isEmpty()) {
                 savedEntry.photos.addAll(photosInViewModel);
             }
             ObjectBoxHelper.setObservation(savedEntry);

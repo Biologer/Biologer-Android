@@ -267,24 +267,15 @@
           "id": "36:2334442110110349570",
           "name": "modified",
           "type": 1
-        },
-        {
-          "id": "37:297848624786294411",
-          "name": "serverImage1",
-          "type": 9
-        },
-        {
-          "id": "38:2773131629283811786",
-          "name": "serverImage2",
-          "type": 9
-        },
-        {
-          "id": "39:6770658024707945124",
-          "name": "serverImage3",
-          "type": 9
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "1:8723378202848115693",
+          "name": "photos",
+          "targetId": "23:5084452827377797376"
+        }
+      ]
     },
     {
       "id": "12:5787313774176348748",
@@ -789,11 +780,48 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "23:5084452827377797376",
+      "lastPropertyId": "5:8369536817783314642",
+      "name": "PhotoDb",
+      "properties": [
+        {
+          "id": "1:1881863869703931411",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4094750700181239726",
+          "name": "localPath",
+          "type": 9
+        },
+        {
+          "id": "3:1922900431568876383",
+          "name": "serverPath",
+          "type": 9
+        },
+        {
+          "id": "4:8316992406668596787",
+          "name": "serverId",
+          "type": 6
+        },
+        {
+          "id": "5:8369536817783314642",
+          "name": "entryId",
+          "indexId": "1:83751946847849320",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "EntryDb"
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "22:5077654541060987432",
-  "lastIndexId": "0:0",
-  "lastRelationId": "0:0",
+  "lastEntityId": "23:5084452827377797376",
+  "lastIndexId": "1:83751946847849320",
+  "lastRelationId": "1:8723378202848115693",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
@@ -901,7 +929,10 @@
     663772822347069923,
     2394783495475227943,
     1019653800727113008,
-    538337462075283703
+    538337462075283703,
+    297848624786294411,
+    2773131629283811786,
+    6770658024707945124
   ],
   "retiredRelationUids": [],
   "version": 1

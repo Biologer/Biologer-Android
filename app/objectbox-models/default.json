@@ -783,7 +783,7 @@
     },
     {
       "id": "23:5084452827377797376",
-      "lastPropertyId": "5:8369536817783314642",
+      "lastPropertyId": "6:6876500865307295547",
       "name": "PhotoDb",
       "properties": [
         {
@@ -814,6 +814,11 @@
           "type": 11,
           "flags": 520,
           "relationTarget": "EntryDb"
+        },
+        {
+          "id": "6:6876500865307295547",
+          "name": "serverUrl",
+          "type": 9
         }
       ],
       "relations": []

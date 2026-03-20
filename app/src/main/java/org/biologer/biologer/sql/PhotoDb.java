@@ -11,6 +11,7 @@ public class PhotoDb {
 
     private String localPath;
     private String serverPath;
+    private String serverUrl;
     private long serverId;
 
     public ToOne<EntryDb> entry;
@@ -43,4 +44,11 @@ public class PhotoDb {
         this.serverId = serverId;
     }
 
+    public String getServerUrl() {
+        return serverUrl;
+    }
+
+    public void setServerUrl(String serverUrl) {
+        this.serverUrl = serverUrl;
+    }
 }

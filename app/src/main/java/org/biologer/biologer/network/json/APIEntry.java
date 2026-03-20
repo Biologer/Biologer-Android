@@ -316,14 +316,15 @@ public class APIEntry {
         setTimedCountId(entry.getTimedCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setYear(entry.getYear());
-        int month = Integer.parseInt(entry.getMonth()) + 1; // Add 1 since months range from 0 to 11
+        // Add 1 to the month since months range from 0 to 11
+        int month = Integer.parseInt(entry.getMonth()) + 1;
         setMonth(String.valueOf(month));
         setDay(entry.getDay());
         setLatitude(entry.getLattitude());
         setLongitude(entry.getLongitude());
         setAccuracy(entry.getAccuracy() == 0.0 ? null : (int) entry.getAccuracy());
         setLocation(entry.getLocation());
-        setElevation((int) entry.getElevation());
+        setElevation(entry.getElevation() <= 0.0 ? null : (int) entry.getElevation());
         setNote(entry.getComment());
         setSex(entry.getSex());
         setNumber(entry.getNoSpecimens());
