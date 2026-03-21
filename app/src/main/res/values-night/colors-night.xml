@@ -3,13 +3,10 @@
     <color name="colorPrimary">#8bc34a</color>
     <color name="colorPrimaryDark">#689f38</color>
     <color name="colorPrimaryLight">#c5e1a5</color>
-    <color name="colorAccent">#0abd37</color>
-    <color name="colorDivider">#1f000000</color>
     <color name="warningRed">#B33A3A</color>
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
     <color name="transparent">#00000000</color>
-    <color name="colorChips">#689f38</color>
     <color name="fragment_background">#121212</color>
     <color name="checkBox_text">#999999</color>
     <color name="black_on_light_white_on_night">#ffffff</color>
