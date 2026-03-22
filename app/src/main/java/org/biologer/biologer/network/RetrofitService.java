@@ -13,6 +13,7 @@ import org.biologer.biologer.network.json.RefreshTokenResponse;
 import org.biologer.biologer.network.json.RegisterResponse;
 import org.biologer.biologer.network.json.TaxaGroupsResponse;
 import org.biologer.biologer.network.json.TaxaResponse;
+import org.biologer.biologer.network.json.TimedCountResponse;
 import org.biologer.biologer.network.json.UnreadNotificationsResponse;
 import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
@@ -86,6 +87,24 @@ public interface RetrofitService {
     @POST("api/uploads/photos")
     Call<UploadFileResponse> uploadFile(@Part MultipartBody.Part file);
 
+    @Headers({"Accept: application/json"})
+    @GET("api/my/field-observations")
+    Call<FieldObservationResponse> getMyFieldObservations(
+            @Query("page") int page,
+            @Query("per_page") int perPage,
+            @Query("updated_after") String updatedAfter,
+            @Query("order_by") String orderBy,
+            @Query("direction") String direction
+    );
+
+    @Headers({"Accept: application/json"})
+    @GET("api/field-observations")
+    Call<FieldObservationResponse> getFieldObservations(
+            @Query("page") int page,
+            @Query("per_page") int perPage,
+            @Query("updated_after") String updatedAfter // Format: "YYYY-MM-DD HH:mm:ss"
+    );
+
     @Headers({"Accept: application/json",
             "content-type: application/json"})
     @POST("api/field-observations")
@@ -103,6 +122,13 @@ public interface RetrofitService {
             "content-type: application/json"})
     @DELETE("api/field-observations/{id}")
     Call<Void> deleteFieldObservation(@Path("id") long id);
+
+    @Headers({"Accept: application/json"})
+    @GET("api/timed-count-observations")
+    Call<TimedCountResponse> getTimedCountObservations(
+            @Query("page") int page,
+            @Query("per_page") int perPage
+    );
 
     @Headers({"Accept: application/json"
             ,"content-type: application/json"})

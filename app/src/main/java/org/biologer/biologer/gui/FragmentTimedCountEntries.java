@@ -241,6 +241,7 @@ public class FragmentTimedCountEntries extends Fragment {
 
         return new LandingFragmentItems(
                 observationId,
+                entry.getServerId(),
                 null,
                 false,
                 false,

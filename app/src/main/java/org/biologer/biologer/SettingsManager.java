@@ -14,7 +14,8 @@ public class SettingsManager {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
         GOOGLE_MAP_TYPE, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
-        OBSERVATION_TYPES_UPDATED_AT, FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
+        OBSERVATION_TYPES_UPDATED_AT, FIELD_OBSERVATIONS_UPDATED_AT,
+        FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
         DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN, NOTIFICATION_UPDATED_AT
     }
 
@@ -155,6 +156,16 @@ public class SettingsManager {
 
     public static String getNotificationsUpdatedAt() {
         return sharedPreferences.getString(KEY.NOTIFICATION_UPDATED_AT.toString(),"0");
+    }
+
+    public static void setFieldObservationsUpdatedAt(String field_observation_updated) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY.FIELD_OBSERVATIONS_UPDATED_AT.toString(), field_observation_updated);
+        editor.apply();
+    }
+
+    public static String getFieldObservationsUpdatedAt() {
+        return sharedPreferences.getString(KEY.FIELD_OBSERVATIONS_UPDATED_AT.toString(),null);
     }
 
     public static void setObservationTypesUpdated(String observation_types_updated) {

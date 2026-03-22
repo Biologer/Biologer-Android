@@ -49,6 +49,18 @@ public class ObjectBoxHelper {
         }
     }
 
+    public static ArrayList<EntryDb> getPagedObservations(int limit, int offset) {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        try(Query<EntryDb> query = box.query().orderDesc(EntryDb_.serverId).build()) {
+            ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find(offset, limit);
+            Log.i(TAG, "There are " + observations.size() + " observations inn the query.");
+            return observations;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving observations from database!", e);
+            return new ArrayList<>();
+        }
+    }
+
     public static EntryDb getObservationById(long entryId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try (Query<EntryDb> query = box.query(EntryDb_.id.equal(entryId)).build()) {

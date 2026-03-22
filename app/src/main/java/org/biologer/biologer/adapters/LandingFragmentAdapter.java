@@ -27,8 +27,6 @@ import java.util.List;
 public class LandingFragmentAdapter
         extends RecyclerView.Adapter<LandingFragmentAdapter.ViewHolder> {
     private final List<LandingFragmentItems> myEntries;
-    private List<Long> selectedIds = new ArrayList<>();
-    private boolean isSelectionMode = false;
     private int position;
     private static final String TAG = "Biologer.EntryAdapter";
     View view;
@@ -71,20 +69,6 @@ public class LandingFragmentAdapter
             this.isTimedCount = isTimedCount;
         }
 
-        //@Override
-        //public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-        //    Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
-        //    if (!this.isTimedCount && !this.isTimedCountObservation) {
-        //        menu.add(Menu.NONE, R.id.duplicate,
-        //                Menu.NONE, R.string.duplicate_entry);
-        //    }
-        //    menu.add(Menu.NONE, R.id.delete,
-        //            Menu.NONE, R.string.delete_entry);
-            //if (!this.isTimedCountObservation) {
-            //    menu.add(Menu.NONE, R.id.delete_all,
-            //            Menu.NONE, R.string.delete_all_entries);
-            //}
-        //}
     }
 
     @NonNull
@@ -167,10 +151,6 @@ public class LandingFragmentAdapter
             viewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
 
-//        viewHolder.itemView.setOnLongClickListener(v -> {
-//            Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
-//            return false;
-//        });
     }
 
     private void setAlpha(ViewHolder viewHolder, float alpha) {
@@ -249,23 +229,4 @@ public class LandingFragmentAdapter
         diffResult.dispatchUpdatesTo(this);
     }
 
-    public void toggleSelection(long id) {
-        if (selectedIds.contains(id)) {
-            selectedIds.remove(id);
-        } else {
-            selectedIds.add(id);
-        }
-        isSelectionMode = !selectedIds.isEmpty();
-        notifyDataSetChanged();
-    }
-
-    public List<Long> getSelectedIds() {
-        return selectedIds;
-    }
-
-    public void clearSelection() {
-        selectedIds.clear();
-        isSelectionMode = false;
-        notifyDataSetChanged();
-    }
 }

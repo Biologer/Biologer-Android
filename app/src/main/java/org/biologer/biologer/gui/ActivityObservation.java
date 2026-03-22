@@ -645,7 +645,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         }
 
         // Load other data
-        if (!viewModel.getComment().isEmpty()) {
+        if (viewModel.getComment() != null && !viewModel.getComment().isEmpty()) {
             binding.textInputEditTextComment.setText(viewModel.getComment());
         }
         if (viewModel.getHabitat() != null) {
@@ -654,7 +654,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         if (viewModel.getFoundOn() != null) {
             binding.editTextFoundOn.setText(viewModel.getFoundOn());
         }
-        if (!viewModel.getCauseOfDeath().isEmpty()) {
+        if (viewModel.getCauseOfDeath() != null && !viewModel.getCauseOfDeath().isEmpty()) {
             binding.textInputEditTextDeathComment.setText(viewModel.getCauseOfDeath());
         }
         if (viewModel.getNumberOfSpecimens() != null) {

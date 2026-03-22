@@ -13,6 +13,8 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
         "id",
+        "timed_count_id",
+        "transect_visit_id",
         "taxon",
         "taxon_id",
         "taxon_suggestion",
@@ -55,124 +57,92 @@ import java.util.Map;
 public class FieldObservationData {
 
     @JsonProperty("id")
-    private int id;
-
+    private long id;
+    @JsonProperty("timed_count_id")
+    private Long timedCountId;
+    @JsonProperty("transect_visit_id")
+    private Long transectVisitId;
     @JsonProperty("taxon")
     private Object taxon;
-
     @JsonProperty("taxon_id")
-    private String taxonId;
-
+    private Long taxonId;
     @JsonProperty("taxon_suggestion")
     private String taxonSuggestion;
-
     @JsonProperty("day")
     private int day;
-
     @JsonProperty("month")
     private int month;
-
     @JsonProperty("year")
     private int year;
-
     @JsonProperty("location")
     private String location;
-
     @JsonProperty("latitude")
     private Double latitude;
-
     @JsonProperty("longitude")
     private Double longitude;
-
     @JsonProperty("mgrs10k")
     private String mgrs10k;
-
     @JsonProperty("accuracy")
-    private int accuracy;
-
+    private double accuracy;
     @JsonProperty("elevation")
     private int elevation;
-
     @JsonProperty("photos")
     private List<FieldObservationDataPhotos> photos = null;
-
     @JsonProperty("observer")
     private String observer;
-
     @JsonProperty("identifier")
     private String identifier;
-
     @JsonProperty("license")
     private int license;
-
     @JsonProperty("sex")
     private String sex;
-
     @JsonProperty("stage_id")
-    private int stageId;
-
+    private Long stageId;
     @JsonProperty("number")
-    private int number;
-
+    private Integer number;
     @JsonProperty("note")
     private String note;
-
     @JsonProperty("project")
     private String project;
-
     @JsonProperty("habitat")
     private String habitat;
-
     @JsonProperty("found_on")
     private String foundOn;
-
     @JsonProperty("found_dead")
     private boolean foundDead;
-
     @JsonProperty("found_dead_note")
     private String foundDeadNote;
-
     @JsonProperty("data_license")
     private int dataLicense;
-
     @JsonProperty("time")
     private String time;
-
     @JsonProperty("status")
     private String status;
-
     @JsonProperty("activity")
-    private Object activity;
-
+    private List<FieldObservationDataActivity> activity;
     @JsonProperty("types")
-    private Object types;
-
+    private List<FieldObservationDataTypes> types;
     @JsonProperty("observed_by_id")
-    private String observedById;
-
+    private int observedById;
     @JsonProperty("observed_by")
     private Object observedBy;
-
     @JsonProperty("identified_by_id")
-    private String identifiedById;
-
+    private int identifiedById;
     @JsonProperty("identified_by")
     private Object identifiedBy;
-
     @JsonProperty("dataset")
     private String dataset;
-
     @JsonProperty("atlas_code")
-    private String atlasCode;
+    private Long atlasCode;
 
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -247,11 +217,11 @@ public class FieldObservationData {
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
-    public String getObservedById() {
+    public int getObservedById() {
         return observedById;
     }
 
-    public void setObservedById(String observedById) {
+    public void setObservedById(int observedById) {
         this.observedById = observedById;
     }
 
@@ -263,19 +233,19 @@ public class FieldObservationData {
         this.dataset = dataset;
     }
 
-    public String getAtlasCode() {
+    public Long getAtlasCode() {
         return atlasCode;
     }
 
-    public void setAtlasCode(String atlasCode) {
+    public void setAtlasCode(Long atlasCode) {
         this.atlasCode = atlasCode;
     }
 
-    public String getTaxonId() {
+    public Long getTaxonId() {
         return taxonId;
     }
 
-    public void setTaxonId(String taxonId) {
+    public void setTaxonId(Long taxonId) {
         this.taxonId = taxonId;
     }
 
@@ -287,11 +257,11 @@ public class FieldObservationData {
         this.mgrs10k = mgrs10k;
     }
 
-    public int getAccuracy() {
+    public double getAccuracy() {
         return accuracy;
     }
 
-    public void setAccuracy(int accuracy) {
+    public void setAccuracy(double accuracy) {
         this.accuracy = accuracy;
     }
 
@@ -319,19 +289,19 @@ public class FieldObservationData {
         this.sex = sex;
     }
 
-    public int getStageId() {
+    public Long getStageId() {
         return stageId;
     }
 
-    public void setStageId(int stageId) {
+    public void setStageId(Long stageId) {
         this.stageId = stageId;
     }
 
-    public int getNumber() {
+    public Integer getNumber() {
         return number;
     }
 
-    public void setNumber(int number) {
+    public void setNumber(Integer number) {
         this.number = number;
     }
 
@@ -413,5 +383,21 @@ public class FieldObservationData {
 
     public void setPhotos(List<FieldObservationDataPhotos> photos) {
         this.photos = photos;
+    }
+
+    public List<FieldObservationDataTypes> getTypes() {
+        return types;
+    }
+
+    public void setTypes(List<FieldObservationDataTypes> types) {
+        this.types = types;
+    }
+
+    public List<FieldObservationDataActivity> getActivity() {
+        return activity;
+    }
+
+    public Long getTimedCountId() {
+        return timedCountId;
     }
 }

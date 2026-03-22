@@ -86,7 +86,7 @@ public class FieldObservationDataTaxon {
     private String description;
 
     @JsonProperty("translations")
-    private String translations;
+    private Object translations;
 
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();

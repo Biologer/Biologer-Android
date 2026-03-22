@@ -21,11 +21,14 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FieldObservationDataPhotos {
 
+    @JsonProperty("id")
+    private long id;
+
     @JsonProperty("author")
     private String author;
 
     @JsonProperty("license")
-    private Object license;
+    private FieldObservationDataPhotosLicense license;
 
     @JsonProperty("metadata")
     private String metadata;
@@ -53,5 +56,13 @@ public class FieldObservationDataPhotos {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public FieldObservationDataPhotosLicense getLicense() {
+        return license;
+    }
+
+    public void setLicense(FieldObservationDataPhotosLicense license) {
+        this.license = license;
     }
 }

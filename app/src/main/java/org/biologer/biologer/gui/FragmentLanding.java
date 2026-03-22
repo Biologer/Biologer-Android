@@ -31,6 +31,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -43,21 +44,30 @@ import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.DateHelper;
+import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
+import org.biologer.biologer.helpers.ObservationsHelper;
 import org.biologer.biologer.network.RetrofitClient;
+import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,6 +79,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
     private ActionMode actionMode;
+    private int localOffset = 0;
+    private int serverPage = 1;
+    private boolean isLoading = false;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -237,8 +250,24 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         entriesAdapter = new LandingFragmentAdapter(items, false);
         binding.recycledViewEntries.setAdapter(entriesAdapter);
         binding.recycledViewEntries.setClickable(true);
-        binding.recycledViewEntries.setLayoutManager(new LinearLayoutManager(requireContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
+        binding.recycledViewEntries.setLayoutManager(layoutManager);
         binding.recycledViewEntries.setItemAnimator(new DefaultItemAnimator());
+        binding.recycledViewEntries.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) {
+                    int totalItemCount = layoutManager.getItemCount();
+                    int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+
+                    // Threshold: Load more when 5 items from the bottom
+                    if (!isLoading && totalItemCount <= (lastVisibleItem + 5)) {
+                        loadNextBatch();
+                    }
+                }
+            }
+        });
         binding.recycledViewEntries.addOnItemTouchListener(
                 new RecyclerOnClickListener(requireContext(), binding.recycledViewEntries, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
@@ -276,6 +305,120 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                 })
         );
         registerForContextMenu(binding.recycledViewEntries);
+    }
+
+    private void loadNextBatch() {
+        isLoading = true;
+
+        // 1. Try loading from ObjectBox first
+        int PAGE_SIZE = 20;
+        ArrayList<EntryDb> localBatch = ObjectBoxHelper.getPagedObservations(PAGE_SIZE, localOffset);
+        if (!localBatch.isEmpty()) {
+            Log.d(TAG, "Loading more data from ObjectBox.");
+            ArrayList<LandingFragmentItems> items = new ArrayList<>();
+            for (EntryDb entry : localBatch) {
+                items.add(LandingFragmentItems.getItemFromEntry(getContext(), entry));
+            }
+            localOffset += localBatch.size();
+            appendItems(items);
+            isLoading = false;
+        }
+
+        // 2. If no local data in ObjectBox, download them from the server
+        else {
+            Log.d(TAG, "Loading more data from Retrofit.");
+            ObservationsHelper.fetchMyObservations(serverPage, "0", new ObservationsHelper.ObservationPageCallback() {
+                @Override
+                public void onSuccess(List<FieldObservationData> data, boolean hasNext, int lastPage) {
+                    if (data != null && !data.isEmpty()) {
+                        ArrayList<LandingFragmentItems> newItems = addDownloadedToRecyclerView(data);
+                        serverPage++;
+                        if (!newItems.isEmpty()) {
+                            appendItems(newItems);
+                        }
+                    }
+                    isLoading = false;
+                }
+
+                @Override
+                public void onError(String error) {
+                    isLoading = false;
+                    Log.e(TAG, "Error fetching from server: " + error);
+                }
+            });
+        }
+    }
+
+    private ArrayList<LandingFragmentItems> addDownloadedToRecyclerView(List<FieldObservationData> data) {
+        ArrayList<LandingFragmentItems> items = new ArrayList<>();
+
+        // 1. Extract IDs from the downloaded data
+        long[] incomingIds = new long[data.size()];
+        for (int i = 0; i < data.size(); i++) {
+            incomingIds[i] = data.get(i).getId();
+        }
+
+        // 2. Query ObjectBox for IDs
+        List<EntryDb> existingInDb = new ArrayList<>();
+        try {
+            Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+            try (Query<EntryDb> query = box.query()
+                    .in(EntryDb_.serverId, incomingIds)
+                    .build()) {
+                existingInDb = query.find();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to query ObjectBox for existing server IDs", e);
+        }
+        Set<Long> existingIdsSet = new HashSet<>();
+        for (EntryDb entry : existingInDb) {
+            existingIdsSet.add(entry.getServerId());
+        }
+
+        // 3. Continue download if nothing is new
+        // or update RecyclerView to display new items
+        for (FieldObservationData obs : data) {
+            if (existingIdsSet.contains(obs.getId())) {
+                continue;
+            }
+
+            String stageName = null;
+            if (obs.getStageId() != null) {
+                StageDb stage = ObjectBoxHelper.getStageById(obs.getStageId());
+                if (stage != null) {
+                    stageName = Localisation.getStageLocale(getContext(), stage.getName());
+                }
+            }
+
+            Integer timedCountId = null;
+            if (obs.getTimedCountId() != null) {
+                timedCountId = obs.getTimedCountId().intValue();
+            }
+
+            items.add(new LandingFragmentItems(
+                    0L,
+                    obs.getId(),
+                    timedCountId,
+                    true,
+                    false,
+                    obs.getTaxonSuggestion(),
+                    stageName,
+                    null,
+                    DateHelper.getCalendar(
+                            String.valueOf(obs.getYear()),
+                            String.valueOf(obs.getMonth()),
+                            String.valueOf(obs.getDay()),
+                            obs.getTime()
+                    ).getTime()
+            ));
+        }
+        if (items.isEmpty()) {
+            Log.d(TAG, "All data is already in ObjectBox, downloading next batch.");
+            loadNextBatch();
+        } else {
+            Log.d(TAG, "Adding " + items.size() + " to the RecyclerView.");
+        }
+        return items;
     }
 
     private void selectDeselect(int position) {
@@ -423,6 +566,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                 DateHelper.getLocalizedCalendarTime(calendar);
         LandingFragmentItems item = new LandingFragmentItems(
                 null,
+                null,
                 new_timed_count_id,
                 false,
                 false,
@@ -457,6 +601,15 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             binding.recycledViewEntries.smoothScrollToPosition(0);
         }
 
+    }
+
+    private void appendItems(List<LandingFragmentItems> newItems) {
+        binding.recycledViewEntries.post(() -> {
+            int startPosition = items.size();
+            items.addAll(newItems);
+            entriesAdapter.notifyItemRangeInserted(startPosition, newItems.size());
+            isLoading = false;
+        });
     }
 
     @Override

@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class DateHelper {
 
@@ -52,12 +53,16 @@ public class DateHelper {
                 Integer.parseInt(month),
                 Integer.parseInt(day));
 
-        String[] timeParts = time.split(":");
-        int hours = Integer.parseInt(timeParts[0]);
-        int minutes = Integer.parseInt(timeParts[1]);
-
-        calendar.set(Calendar.HOUR_OF_DAY, hours);
-        calendar.set(Calendar.MINUTE, minutes);
+        if (time != null && time.contains(":")) {
+            String[] timeParts = time.split(":");
+            int hours = Integer.parseInt(timeParts[0]);
+            int minutes = Integer.parseInt(timeParts[1]);
+            calendar.set(Calendar.HOUR_OF_DAY, hours);
+            calendar.set(Calendar.MINUTE, minutes);
+        } else {
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+        }
 
         return calendar;
     }
@@ -178,5 +183,18 @@ public class DateHelper {
     public static String getCurrentDay() {
         Calendar calendar = Calendar.getInstance();
         return String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+    }
+
+    public static long getMillisTimestampFromIsoString(String isoDate) {
+        if (isoDate == null || isoDate.isEmpty()) return 0;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = sdf.parse(isoDate);
+            return date != null ? date.getTime() : 0;
+        } catch (Exception e) {
+            Log.e("DateHelper", "Error parsing ISO date: " + isoDate, e);
+            return 0;
+        }
     }
 }

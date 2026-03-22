@@ -23,6 +23,7 @@ import java.util.Objects;
 public class LandingFragmentItems {
     private static final String TAG = "Biologer.LandingItems";
     private Long observationId;
+    private Long serverId;
     private boolean uploaded;
     private boolean modified;
     private Integer timedCountId;
@@ -32,11 +33,12 @@ public class LandingFragmentItems {
     private Date date;
     private boolean marked = false;
 
-    public LandingFragmentItems(Long observationId, Integer timedCountId,
+    public LandingFragmentItems(Long observationId, Long serverId, Integer timedCountId,
                                 boolean uploaded, boolean modified,
                                 String title, String subtitle, String image,
                                 Date date) {
         this.observationId = observationId;
+        this.serverId = serverId;
         this.timedCountId = timedCountId;
         this.uploaded = uploaded;
         this.modified = modified;
@@ -130,9 +132,12 @@ public class LandingFragmentItems {
         return items;
     }
 
+
+
     public static LandingFragmentItems getItemFromEntry(Context context, EntryDb entry) {
 
         Long observationId = entry.getId();
+        Long serverId = entry.getServerId();
         String title = entry.getTaxonSuggestion();
 
         String subtitle = "";
@@ -154,6 +159,7 @@ public class LandingFragmentItems {
 
         return new LandingFragmentItems(
                 observationId,
+                serverId,
                 null,
                 entry.isUploaded(),
                 entry.isModified(),
@@ -214,6 +220,7 @@ public class LandingFragmentItems {
 
         return new LandingFragmentItems(
                 null,
+                timed_count.getServerId(),
                 timed_count.getTimedCountId(),
                 timed_count.isUploaded(),
                 timed_count.isModified(),
@@ -274,5 +281,13 @@ public class LandingFragmentItems {
 
     public void setMarked(boolean marked) {
         this.marked = marked;
+    }
+
+    public Long getServerId() {
+        return serverId;
+    }
+
+    public void setServerId(Long serverId) {
+        this.serverId = serverId;
     }
 }

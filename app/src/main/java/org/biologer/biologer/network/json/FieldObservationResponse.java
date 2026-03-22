@@ -16,6 +16,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class FieldObservationResponse {
     @JsonProperty("data")
     private FieldObservationData[] data;
+    @JsonProperty("links")
+    private FieldObservationLinks links;
+    @JsonProperty("meta")
+    private FieldObservationMeta meta;
 
     public FieldObservationData[] getData() {
         return data;
@@ -23,5 +27,21 @@ public class FieldObservationResponse {
 
     public void setData(FieldObservationData[] data) {
         this.data = data;
+    }
+
+    public FieldObservationLinks getLinks() {
+        return links;
+    }
+
+    public void setLinks(FieldObservationLinks links) {
+        this.links = links;
+    }
+
+    public FieldObservationMeta getMeta() {
+        return meta;
+    }
+
+    public void setMeta(FieldObservationMeta meta) {
+        this.meta = meta;
     }
 }
