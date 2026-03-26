@@ -28,6 +28,11 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
@@ -41,15 +46,15 @@ import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
-import org.biologer.biologer.helpers.ObservationsHelper;
 import org.biologer.biologer.network.RetrofitClient;
-import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.PhotoDb_;
 import org.biologer.biologer.sql.TimedCountDb;
+import org.biologer.biologer.workers.DataSyncWorker;
+import org.biologer.biologer.workers.PhotoDownloadWorker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -78,9 +83,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private ActionMode actionMode;
     private int localObjectBoxOffset = 0;
     private boolean isLoading = false;
-    Long minServerId;
     private DataSubscription photoSubscription;
-    boolean hasNewPhotos = false;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -92,14 +95,11 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        minServerId = box.query().build().property(EntryDb_.serverId).min();
-
         loadItemsForRecyclerView();
         setupRecyclerView();
         setupFloatingActionButton();
         setupWorkerObserver(); // To track upload of data online
-        setupObjectBoxObserver(); // To track image downloads
+        //setupObjectBoxObserver(); // To track image downloads
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
@@ -288,6 +288,27 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                         }
                     }
                 });
+
+        WorkManager.getInstance(requireContext())
+                .getWorkInfosByTagLiveData("PHOTO_DOWNLOAD")
+                .observe(getViewLifecycleOwner(), workInfos -> {
+                    if (workInfos != null && !workInfos.isEmpty()) {
+                        WorkInfo workInfo = workInfos.get(0);
+                        WorkInfo.State state = workInfo.getState();
+
+                        if (state.isFinished()) {
+                            isLoading = false;
+                            progressBar(false);
+
+                            if (state == WorkInfo.State.SUCCEEDED) {
+                                reloadRecyclerView();
+                            } else {
+                                Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                    }
+                });
     }
 
     private void setupFloatingActionButton() {
@@ -367,9 +388,23 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         registerForContextMenu(binding.recycledViewEntries);
     }
 
+    private void progressBar(boolean show) {
+        if (show) {
+            binding.loadingProgressBar.setAlpha(1f);
+            binding.loadingProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            binding.loadingProgressBar.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction(() -> binding.loadingProgressBar.setVisibility(View.GONE));
+        }
+    }
+
     private void loadNextBatch() {
         if (isLoading) return;
         isLoading = true;
+
+        progressBar(true);
 
         // 1. Try loading from ObjectBox first
         int PAGE_SIZE = 25;
@@ -382,42 +417,39 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             }
             localObjectBoxOffset += localBatch.size();
             appendItems(batchItems);
+            progressBar(false);
+            isLoading = false;
         }
 
         // 2. If no local data in ObjectBox, download them from the server
         else {
             Log.d(TAG, "Loading more data from Retrofit.");
-            ObservationsHelper.fetchMyObservations(
-                    1,
-                    25,
-                    null,
-                    "desc",
-                    minServerId = (minServerId >= 0) ? minServerId : null,
-                    null,
-                    new ObservationsHelper.ObservationPageCallback() {
-                        @Override
-                        public void onSuccess(List<FieldObservationData> data, boolean hasNext, int lastPage) {
-                            if (data != null && !data.isEmpty()) {
-                                // Update the pointer to the oldest ID in this batch
-                                minServerId = data.get(data.size() - 1).getId();
 
-                                ArrayList<EntryDb> newLocalBatch = ObjectBoxHelper.getPagedObservations(PAGE_SIZE, localObjectBoxOffset);
-                                ArrayList<LandingFragmentItems> batchItems = new ArrayList<>();
-                                for (EntryDb entry : newLocalBatch) {
-                                    batchItems.add(LandingFragmentItems.getItemFromEntry(getContext(), entry));
-                                }
-                                localObjectBoxOffset += newLocalBatch.size();
-                                appendItems(batchItems);
-                            }
-                            isLoading = false;
-                        }
+            Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+            long minServerId = box.query().build().property(EntryDb_.serverId).min();
+            long beforeId = (box.count() > 0) ? minServerId : -1L;
 
-                        @Override
-                        public void onError(String error) {
-                            isLoading = false;
-                            Log.e(TAG, "Error fetching from server: " + error);
-                        }
-                    });
+            Data inputData = new Data.Builder()
+                    .putLong("beforeId", beforeId)
+                    .build();
+
+            OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
+                    .setInputData(inputData)
+                    .addTag("DATA_SYNC")
+                    .build();
+
+            OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
+                    .setConstraints(new Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .build())
+                    .addTag("PHOTO_DOWNLOAD")
+                    .build();
+
+            WorkManager.getInstance(requireContext())
+                    .beginUniqueWork("observation_sync_chain",
+                            ExistingWorkPolicy.APPEND_OR_REPLACE, dataRequest)
+                    .then(photoRequest)
+                    .enqueue();
         }
     }
 
@@ -867,25 +899,46 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
+//    private void reloadRecyclerView() {
+//        if (!isAdded() || items == null) return;
+//
+//        Log.d(TAG, "Refreshing existing UI items from ObjectBox (e.g. photos downloaded)");
+//        // Just refresh the items currently in memory to grab the new photo paths
+//        for (int i = 0; i < items.size(); i++) {
+//            LandingFragmentItems currentItem = items.get(i);
+//            if (currentItem.getObservationId() != null) {
+//                EntryDb entry = App.get().getBoxStore()
+//                        .boxFor(EntryDb.class)
+//                        .get(currentItem.getObservationId());
+//                if (entry != null) {
+//                    entry.photos.reset();
+//                    items.set(i, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
+//                }
+//            }
+//        }
+//
+//        // Tell DiffUtil to visually update the thumbnails smoothly
+//        if (entriesAdapter != null) {
+//            entriesAdapter.updateData(new ArrayList<>(items));
+//        }
+//    }
+
     private void reloadRecyclerView() {
         if (!isAdded() || items == null) return;
 
-        Log.d(TAG, "Refreshing existing UI items from ObjectBox (e.g. photos downloaded)");
-        // Just refresh the items currently in memory to grab the new photo paths
-        for (int i = 0; i < items.size(); i++) {
-            LandingFragmentItems currentItem = items.get(i);
-            if (currentItem.getObservationId() != null) {
-                EntryDb entry = App.get().getBoxStore()
-                        .boxFor(EntryDb.class)
-                        .get(currentItem.getObservationId());
-                if (entry != null) {
-                    entry.photos.reset();
-                    items.set(i, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
-                }
-            }
-        }
+        Log.d(TAG, "Refreshing UI items from ObjectBox after sync.");
 
-        // Tell DiffUtil to visually update the thumbnails smoothly
+        long totalSyncedCount = App.get().getBoxStore().boxFor(EntryDb.class).count();
+        ArrayList<EntryDb> allSyncedEntries = ObjectBoxHelper.getPagedObservations((int) totalSyncedCount, 0);
+
+        ArrayList<LandingFragmentItems> localEntries = LandingFragmentItems.loadAllLocalEntries(requireContext());
+        for (EntryDb entry : allSyncedEntries) {
+            localEntries.add(getItemFromEntry(requireContext(), entry));
+        }
+        items = localEntries;
+
+        localObjectBoxOffset = (int) totalSyncedCount;
+
         if (entriesAdapter != null) {
             entriesAdapter.updateData(new ArrayList<>(items));
         }

@@ -11,8 +11,8 @@ android {
         applicationId "org.biologer.biologer"
         minSdk 23
         targetSdk 36
-        versionCode 228
-        versionName '5.1.102'
+        versionCode 230
+        versionName '5.1.104'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
@@ -68,7 +68,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.work:work-runtime:2.11.1'
+    implementation 'androidx.work:work-runtime:2.11.2'
     androidTestImplementation('androidx.test.espresso:espresso-core:3.6.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -107,8 +107,8 @@ dependencies {
     implementation ('com.github.bumptech.glide:glide:5.0.5')
     annotationProcessor 'com.github.bumptech.glide:compiler:5.0.5'
 
-    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.3.0")
-    releaseImplementation("io.objectbox:objectbox-android:5.3.0")
+    debugImplementation("io.objectbox:objectbox-android-objectbrowser:5.4.0")
+    releaseImplementation("io.objectbox:objectbox-android:5.4.0")
     configurations {
         debugImplementation {
             exclude group: 'io.objectbox', module: 'objectbox-android'

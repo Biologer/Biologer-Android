@@ -1,5 +1,6 @@
-package org.biologer.biologer.helpers;
+package org.biologer.biologer.workers;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,8 @@ import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
@@ -20,119 +23,58 @@ import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.PhotoDb_;
-import org.biologer.biologer.workers.PhotoDownloadWorker;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ObservationsHelper {
-    private static final String TAG = "Biologer.ObsHelper";
+public class DataSyncWorker extends Worker {
+    private static final String TAG = "Biologer.DataSyncWorker";
 
-    // direction should be "desc" = descending, "asc" = ascending
-    public static void fetchMyObservations(int page, Integer per_page, String timestamp, String direction, Long beforeId, Long afterId, ObservationPageCallback callback) {
+    public DataSyncWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+    }
+
+    @NonNull
+    @Override
+    public Result doWork() {
+        long beforeId = getInputData().getLong("beforeId", -1);
+        Long serverBeforeId = (beforeId != -1) ? beforeId : null;
+
         String database = SettingsManager.getDatabaseName();
-        if (database == null) {return;}
+        if (database == null) return Result.failure();
 
-        RetrofitClient.getService(database)
-                .getMyFieldObservations(page, per_page, timestamp, "id", direction, afterId, beforeId)
-                .enqueue(new Callback<>() {
-                    @Override
-                    public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            FieldObservationResponse body = response.body();
-                            List<FieldObservationData> data = Arrays.asList(body.getData());
-                            if (!data.isEmpty()) {
-                                saveToLocalDatabase(data);
-                            }
+        try {
+            Response<FieldObservationResponse> response = RetrofitClient.getService(database)
+                    .getMyFieldObservations(1,
+                            25,
+                            null,
+                            "id",
+                            "desc",
+                            null,
+                            serverBeforeId)
+                    .execute();
 
-                            boolean hasNext = body.getMeta().getCurrentPage() < body.getMeta().getLastPage();
-                            callback.onSuccess(data, hasNext, body.getMeta().getLastPage());
-
-                        } else {
-                            callback.onError("HTTP " + response.code());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<FieldObservationResponse> call, @NonNull Throwable t) {
-                        callback.onError(t.getLocalizedMessage());
-                    }
-                });
-    }
-
-    public static void downloadAllMyObservations(int currentPage, SyncCallback syncCallback) {
-        fetchMyObservations(currentPage, 25, null, null, null, null, new ObservationPageCallback() {
-            @Override
-            public void onSuccess(List<FieldObservationData> data, boolean hasNextPage, int totalPages) {
-                syncCallback.onPageDownloaded(currentPage, totalPages);
-
-                if (hasNextPage) {
-                    downloadAllMyObservations(currentPage + 1, syncCallback);
-                } else {
-                    syncCallback.onFinished();
+            if (response.isSuccessful() && response.body() != null) {
+                List<FieldObservationData> data = Arrays.asList(response.body().getData());
+                if (!data.isEmpty()) {
+                    saveToLocalDatabase(data);
                 }
+                return Result.success();
+            } else {
+                return Result.retry();
             }
-
-            @Override
-            public void onError(String error) {
-                syncCallback.onError(error);
-            }
-        });
-    }
-
-    public interface ObservationPageCallback {
-        void onSuccess(List<FieldObservationData> data, boolean hasNextPage, int totalPages);
-        void onError(String error);
-    }
-
-    public interface SyncCallback {
-        void onPageDownloaded(int current, int total);
-        void onFinished();
-        void onError(String message);
-    }
-
-    public interface ObservationFetchCallback {
-        void onSuccess(FieldObservationData data);
-        void onError(String error);
-    }
-
-    public static void fetchObservation(long observationId, ObservationFetchCallback callback) {
-        Call<FieldObservationResponse> call = RetrofitClient
-                .getService(SettingsManager.getDatabaseName())
-                .getFieldObservation(String.valueOf(observationId));
-
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    FieldObservationData[] dataArray = response.body().getData();
-                    if (dataArray != null && dataArray.length > 0) {
-                        callback.onSuccess(dataArray[0]);
-                    } else {
-                        callback.onError("No data found for ID: " + observationId);
-                    }
-                } else {
-                    callback.onError("Server error: " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<FieldObservationResponse> call, @NonNull Throwable t) {
-                callback.onError(t.getLocalizedMessage());
-            }
-        });
+        } catch (IOException e) {
+            Log.e(TAG, "Network error during sync", e);
+            return Result.retry();
+        }
     }
 
     private static void saveToLocalDatabase(List<FieldObservationData> dataList) {
@@ -200,7 +142,6 @@ public class ObservationsHelper {
                         );
 
                         long localId = box.put(newEntry);
-                        newEntry.setId(localId);
                         entryToUse = newEntry;
                         entryToUse.setId(localId);
 
@@ -250,23 +191,5 @@ public class ObservationsHelper {
             }
         });
 
-        Log.d(TAG, "Now this should start the worker...");
-        // Download all photos using worker
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-
-        OneTimeWorkRequest downloadWork = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
-                .setConstraints(constraints)
-                .addTag("PHOTO_DOWNLOAD")
-                .build();
-
-        WorkManager.getInstance(App.get()).enqueueUniqueWork(
-                "photo_sync",
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
-                downloadWork
-        );
-
     }
-
 }
