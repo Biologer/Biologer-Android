@@ -140,6 +140,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                 if (!SettingsManager.getEntryOpen()) {
                     binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
                     binding.listEntriesInfoText.setVisibility(View.VISIBLE);
+                    SettingsManager.setEntryOpen(true);
                 }
 
             } else {
@@ -717,10 +718,10 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     public void updateMenuIconVisibility() {
-        long numberOfItems = App.get().getBoxStore().boxFor(EntryDb.class).count();
-        Log.d(TAG, "Should disable buttons? There are " + numberOfItems + " items in the list.");
+        long numberForUpload = ObjectBoxHelper.getUnsyncedCount();
+        Log.d(TAG, "Should disable buttons? There are " + numberForUpload + " items for upload.");
         // Enable/disable the upload button
-        setMenuIconVisibility(numberOfItems != 0);
+        setMenuIconVisibility(numberForUpload != 0);
     }
 
     public void setMenuIconVisibility (boolean visible) {

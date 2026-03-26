@@ -3,20 +3,33 @@ package org.biologer.biologer.helpers;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
+import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationDataTypes;
 import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.PhotoDb;
+import org.biologer.biologer.sql.PhotoDb_;
+import org.biologer.biologer.workers.PhotoDownloadWorker;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
@@ -27,29 +40,21 @@ import retrofit2.Response;
 public class ObservationsHelper {
     private static final String TAG = "Biologer.ObsHelper";
 
-    public static void fetchMyObservations(int page, String timestamp, ObservationPageCallback callback) {
-        RetrofitClient.getService(SettingsManager.getDatabaseName())
-                .getMyFieldObservations(page, 50, timestamp, "id", "desc")
-                .enqueue(new Callback<FieldObservationResponse>() {
+    // direction should be "desc" = descending, "asc" = ascending
+    public static void fetchMyObservations(int page, Integer per_page, String timestamp, String direction, Long beforeId, Long afterId, ObservationPageCallback callback) {
+        String database = SettingsManager.getDatabaseName();
+        if (database == null) {return;}
+
+        RetrofitClient.getService(database)
+                .getMyFieldObservations(page, per_page, timestamp, "id", direction, afterId, beforeId)
+                .enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             FieldObservationResponse body = response.body();
                             List<FieldObservationData> data = Arrays.asList(body.getData());
-
                             if (!data.isEmpty()) {
                                 saveToLocalDatabase(data);
-
-                                // If this is Page 1, we should capture the most recent
-                                // timestamp to use for the NEXT sync session.
-                                if (page == 1) {
-                                    String timestamp = data.get(0).getActivity().get(0).getCreatedAt();
-                                    SettingsManager.setFieldObservationsUpdatedAt(
-                                            String.valueOf(
-                                                    DateHelper.getMillisTimestampFromIsoString(timestamp)
-                                            )
-                                    );
-                                }
                             }
 
                             boolean hasNext = body.getMeta().getCurrentPage() < body.getMeta().getLastPage();
@@ -68,7 +73,7 @@ public class ObservationsHelper {
     }
 
     public static void downloadAllMyObservations(int currentPage, SyncCallback syncCallback) {
-        fetchMyObservations(currentPage, "0", new ObservationPageCallback() {
+        fetchMyObservations(currentPage, 25, null, null, null, null, new ObservationPageCallback() {
             @Override
             public void onSuccess(List<FieldObservationData> data, boolean hasNextPage, int totalPages) {
                 syncCallback.onPageDownloaded(currentPage, totalPages);
@@ -108,7 +113,7 @@ public class ObservationsHelper {
                 .getService(SettingsManager.getDatabaseName())
                 .getFieldObservation(String.valueOf(observationId));
 
-        call.enqueue(new Callback<FieldObservationResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<FieldObservationResponse> call, @NonNull Response<FieldObservationResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -134,17 +139,20 @@ public class ObservationsHelper {
         if (dataList == null || dataList.isEmpty()) return;
 
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        Box<PhotoDb> photoBox = App.get().getBoxStore().boxFor(PhotoDb.class);
 
         App.get().getBoxStore().runInTx(() -> {
             for (FieldObservationData data : dataList) {
-                EntryDb existing;
 
+                EntryDb existing;
                 try (Query<EntryDb> query = box.query(EntryDb_.serverId.equal(data.getId())).build()) {
                     existing = query.findFirst();
                 } catch (Exception e) {
                     Log.e(TAG, "Error in ObjectBox query for serverId: " + data.getId(), e);
                     continue;
                 }
+
+                EntryDb entryToUse;
 
                 if (existing == null) {
                     try {
@@ -191,7 +199,48 @@ public class ObservationsHelper {
                                 observationTypeIds.toString()
                         );
 
-                        box.put(newEntry);
+                        long localId = box.put(newEntry);
+                        newEntry.setId(localId);
+                        entryToUse = newEntry;
+                        entryToUse.setId(localId);
+
+                        Log.d(TAG, "Saving server ID " + data.getId() + " locally (ObjectBox ID " + localId + ").");
+
+                        if (data.getPhotos() != null && !data.getPhotos().isEmpty()) {
+                            Log.d(TAG, "Saving " + data.getPhotos().size() + " photos for entry " + localId + ".");
+
+                            for (FieldObservationDataPhotos photoData : data.getPhotos()) {
+
+                                PhotoDb existingPhoto = photoBox.query()
+                                        .equal(PhotoDb_.serverId, photoData.getId())
+                                        .build()
+                                        .findFirst();
+
+                                if (existingPhoto == null) {
+                                    PhotoDb photo = new PhotoDb();
+                                    photo.setServerId(photoData.getId());
+                                    photo.setServerUrl(photoData.getUrl());
+                                    photo.setLocalPath(null);
+                                    photo.setServerPath(photoData.getPath());
+                                    photo.setAuthor(photoData.getAuthor());
+                                    photo.setLicenseId(photoData.getLicense().getId());
+
+                                    photo.entry.setTarget(entryToUse);
+                                    entryToUse.photos.add(photo);
+                                    box.put(entryToUse);
+
+                                } else {
+                                    String path = existingPhoto.getLocalPath();
+                                    if (path == null || path.isEmpty() || !new File(path.replace("file://", "")).exists()) {
+                                        Log.d(TAG, "Photo exists in DB but file is missing. Resetting path for re-download.");
+                                        existingPhoto.setLocalPath(null);
+                                        photoBox.put(existingPhoto);
+                                    }
+                                }
+
+                            }
+                        }
+
                     } catch (Exception e) {
                         Log.e(TAG, "Error saving to ObjectBox: " + data.getId(), e);
                     }
@@ -200,25 +249,24 @@ public class ObservationsHelper {
                 }
             }
         });
-    }
 
-    private static String findLatestTimestamp(List<FieldObservationData> dataList) {
-        String latest = "0";
-        for (FieldObservationData data : dataList) {
-            if (data.getActivity() != null && !data.getActivity().isEmpty()) {
-                String current = data.getActivity().get(0).getUpdatedAt();
-                if (isNewer(current, latest)) {
-                    latest = current;
-                }
-            }
-        }
-        return latest;
-    }
+        Log.d(TAG, "Now this should start the worker...");
+        // Download all photos using worker
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
 
-    private static boolean isNewer(String newTs, String oldTs) {
-        if (newTs == null || newTs.equals("0")) return false;
-        if (oldTs == null || oldTs.equals("0")) return true;
-        return newTs.compareTo(oldTs) > 0; // ISO 8601
+        OneTimeWorkRequest downloadWork = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
+                .setConstraints(constraints)
+                .addTag("PHOTO_DOWNLOAD")
+                .build();
+
+        WorkManager.getInstance(App.get()).enqueueUniqueWork(
+                "photo_sync",
+                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                downloadWork
+        );
+
     }
 
 }

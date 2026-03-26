@@ -31,7 +31,7 @@ public class FieldObservationDataPhotos {
     private FieldObservationDataPhotosLicense license;
 
     @JsonProperty("metadata")
-    private String metadata;
+    private Object metadata;
 
     @JsonProperty("path")
     private String path;
@@ -64,5 +64,13 @@ public class FieldObservationDataPhotos {
 
     public void setLicense(FieldObservationDataPhotosLicense license) {
         this.license = license;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getAuthor() {
+        return author;
     }
 }

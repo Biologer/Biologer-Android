@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.Localisation;
@@ -18,7 +19,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+
+import io.objectbox.Box;
 
 public class LandingFragmentItems {
     private static final String TAG = "Biologer.LandingItems";
@@ -97,44 +101,36 @@ public class LandingFragmentItems {
     }
 
     // Loads all LandingFragmentItems into the RecyclerView list of items
-    public static ArrayList<LandingFragmentItems> loadAllEntries(Context context) {
+    public static ArrayList<LandingFragmentItems> loadAllLocalEntries(Context context) {
         // This list will hold all the items displayed
         ArrayList<LandingFragmentItems> items = new ArrayList<>();
 
         // Get the ObjectBox entries containing regular species observation data
-        ArrayList<EntryDb> observations = ObjectBoxHelper.getObservations();
-        Log.d(TAG, "There are " + observations.size() + " regular observations.");
+        ArrayList<EntryDb> observations = ObjectBoxHelper.getObservationsForUpload();
+        Log.d(TAG, "There are " + observations.size() + " regular observations awaiting upload.");
         for (EntryDb entry : observations) {
             items.add(getItemFromEntry(context, entry));
         }
 
         // Get the ObjectBox entries containing timed count data
-        ArrayList<TimedCountDb> timedCounts = ObjectBoxHelper.getTimedCounts();
-        Log.d(TAG, "There are " + timedCounts.size() + " timed counts.");
+        ArrayList<TimedCountDb> timedCounts = ObjectBoxHelper.getTimedCountsForUpload();
+        Log.d(TAG, "There are " + timedCounts.size() + " timed counts awaiting upload.");
         for (TimedCountDb timedCountDb : timedCounts) {
             items.add(getItemFromTimedCount(context, timedCountDb));
         }
 
-        // Sort items based of preference settings
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String sortBy = prefs.getString("sort_observations", "time");
-
-        if ("name".equals(sortBy)) {
-            // Sort alphabetically by title (case-insensitive)
-            Collections.sort(items, (item1, item2) ->
-                    item1.getTitle().compareToIgnoreCase(item2.getTitle()));
-        } else {
-            // Sort by date descending (newest first)
-            Collections.sort(items, (item1, item2) ->
-                    item2.getDate().compareTo(item1.getDate()));
-        }
+        // Sort by date descending (newest first)
+        Collections.sort(items, (item1, item2) ->
+                item2.getDate().compareTo(item1.getDate()));
 
         return items;
     }
 
-
-
     public static LandingFragmentItems getItemFromEntry(Context context, EntryDb entry) {
+
+        if (entry.getId() == 0) {
+            Log.e(TAG, "Building UI item for Entry with ID 0! This observation will be un-clickable.");
+        }
 
         Long observationId = entry.getId();
         Long serverId = entry.getServerId();
@@ -152,6 +148,7 @@ public class LandingFragmentItems {
         String image = null;
         if (entry.photos != null && !entry.photos.isEmpty()) {
             image = entry.photos.get(0).getLocalPath();
+            Log.d(TAG, "Entry " + entry.getId() + " has image path: " + image);
         }
 
         Calendar calendar = DateHelper.getCalendar(entry.getYear(),
@@ -229,6 +226,38 @@ public class LandingFragmentItems {
                 image,
                 calendar.getTime()
         );
+    }
+
+    public static ArrayList<LandingFragmentItems> refreshItemsFromObjectBox(Context context, List<LandingFragmentItems> currentItems) {
+        ArrayList<LandingFragmentItems> refreshedList = new ArrayList<>();
+        Box<EntryDb> observationsBox = App.get().getBoxStore().boxFor(EntryDb.class);
+        Box<TimedCountDb> timedCountBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
+
+        for (LandingFragmentItems item : currentItems) {
+            LandingFragmentItems refreshedItem = null;
+
+            // Refresh Species Observations
+            if (item.getTimedCountId() == null) {
+                // Use the local ObjectBox ID to get the freshest data
+                EntryDb updatedObservation = observationsBox.get(item.getObservationId());
+                if (updatedObservation != null) {
+                    refreshedItem = getItemFromEntry(context, updatedObservation);
+                }
+            }
+            // Refresh Timed Counts
+            else {
+                TimedCountDb updatedTimedCount = timedCountBox.get(item.getTimedCountId());
+                if (updatedTimedCount != null) {
+                    refreshedItem = getItemFromTimedCount(context, updatedTimedCount);
+                }
+            }
+
+            // Add the refreshed item (or the original if DB lookup failed)
+            refreshedList.add(refreshedItem != null ? refreshedItem : item);
+        }
+
+        Log.d("Biologer.Refresh", "Refreshed " + refreshedList.size() + " items from ObjectBox.");
+        return refreshedList;
     }
 
     @Override

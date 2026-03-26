@@ -10,11 +10,15 @@ import android.util.Log;
 
 import androidx.exifinterface.media.ExifInterface;
 
+import org.biologer.biologer.SettingsManager;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -188,4 +192,66 @@ public class PhotoUtils {
             ExifInterface.TAG_COLOR_SPACE,
             ExifInterface.TAG_ARTIST
     };
+
+    /**
+     * Downloads a file from a URL directly to the app's internal storage.
+     *
+     * @param context   Application context
+     * @param urlString The remote image URL
+     * @return The absolute path to the saved file, or null if it fails.
+     */
+    public static String downloadPhotoFile(Context context, String urlString) {
+        InputStream input = null;
+        FileOutputStream fos = null;
+        HttpURLConnection connection = null;
+
+        try {
+            URL url = new URL(urlString);
+            connection = (HttpURLConnection) url.openConnection();
+            String token = SettingsManager.getAccessToken();
+            connection.setRequestProperty("Authorization", "Bearer " + token);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(15000);
+            connection.connect();
+
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                return null;
+            }
+
+            String contentType = connection.getContentType();
+            Log.i(TAG, "Photo content type: " + contentType);
+            if (contentType != null && contentType.contains("text/html")) {
+                Log.e(TAG, "Error: Server returned HTML instead of an image. Check Auth!");
+                return null;
+            }
+
+            String filename = getImageFileName() + ".jpg";
+            fos = context.openFileOutput(filename, Context.MODE_PRIVATE);
+
+            input = connection.getInputStream();
+            byte[] data = new byte[4096];
+            int count;
+            while ((count = input.read(data)) != -1) {
+                fos.write(data, 0, count);
+            }
+
+            fos.flush();
+            fos.close();
+
+            File file = new File(context.getFilesDir(), filename);
+            Log.i(TAG, "Downloaded and saved server photo: " + file.getAbsolutePath());
+
+            return file.getAbsolutePath();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error downloading from " + urlString, e);
+            return null;
+        } finally {
+            try {
+                if (fos != null) fos.close();
+                if (input != null) input.close();
+                if (connection != null) connection.disconnect();
+            } catch (IOException ignored) {}
+        }
+    }
 }

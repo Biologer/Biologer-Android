@@ -49,11 +49,26 @@ public class ObjectBoxHelper {
         }
     }
 
+    public static ArrayList<EntryDb> getObservationsForUpload() {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        try (Query<EntryDb> query = box.query(
+                EntryDb_.timedCoundId.isNull()
+                        .and(EntryDb_.serverId.isNull())
+        ).build()) {
+            ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
+            Log.i(TAG, "There are " + observations.size() + " observations awaiting upload in the database.");
+            return observations;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving observations from database!", e);
+            return new ArrayList<>();
+        }
+    }
+
     public static ArrayList<EntryDb> getPagedObservations(int limit, int offset) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try(Query<EntryDb> query = box.query().orderDesc(EntryDb_.serverId).build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find(offset, limit);
-            Log.i(TAG, "There are " + observations.size() + " observations inn the query.");
+            Log.i(TAG, "There are " + observations.size() + " observations with served ID in the ObjectBox query.");
             return observations;
         } catch (Exception e) {
             Log.e(TAG, "Error retrieving observations from database!", e);
@@ -96,6 +111,19 @@ public class ObjectBoxHelper {
         }
     }
 
+    public static ArrayList<TimedCountDb> getTimedCountsForUpload() {
+        Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        try (Query<TimedCountDb> query = box.query(
+                TimedCountDb_.serverId.isNull()
+        ).build()) {
+            ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find();
+            Log.i(TAG, "There are " + timedCounts.size() + " timed counts awaiting upload in the database.");
+            return timedCounts;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving timed counts from database!", e);
+            return new ArrayList<>();
+        }
+    }
     public static TimedCountDb getTimedCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
@@ -110,6 +138,30 @@ public class ObjectBoxHelper {
             Log.e(TAG, "Error retrieving timed count by ID: " + timedCountId, e);
             return null;
         }
+    }
+
+    /**
+     * Checks if there are any observations or timed counts that
+     * 1) are not been uploaded or 2) are modified.
+     * @return the total count of records that needs sync with server.
+     */
+    public static long getUnsyncedCount() {
+        Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
+        Box<TimedCountDb> timedBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
+
+        // Count observations: serverId is 0 OR modified flag is true
+        long unsyncedEntries = entryBox.query(
+                EntryDb_.uploaded.equal(false)
+                        .or(EntryDb_.modified.equal(true))
+        ).build().count();
+
+        // Count timed counts: serverId is 0 OR modified flag is true
+        long unsyncedTimedCounts = timedBox.query(
+                TimedCountDb_.uploaded.equal(false)
+                        .or(TimedCountDb_.modified.equal(true))
+        ).build().count();
+
+        return unsyncedEntries + unsyncedTimedCounts;
     }
 
     public static TaxonDb getTaxonById(long taxonId) {
@@ -436,6 +488,7 @@ public class ObjectBoxHelper {
     }
 
     public static void removeAllObservations() {
+        App.get().getBoxStore().boxFor(PhotoDb.class).removeAll();
         App.get().getBoxStore().boxFor(EntryDb.class).removeAll();
     }
 

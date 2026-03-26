@@ -90,11 +90,13 @@ public interface RetrofitService {
     @Headers({"Accept: application/json"})
     @GET("api/my/field-observations")
     Call<FieldObservationResponse> getMyFieldObservations(
-            @Query("page") int page,
-            @Query("per_page") int perPage,
+            @Query("page") Integer page,
+            @Query("per_page") Integer perPage,
             @Query("updated_after") String updatedAfter,
             @Query("order_by") String orderBy,
-            @Query("direction") String direction
+            @Query("direction") String direction,
+            @Query("after_id") Long afterId,
+            @Query("before_id") Long beforeId
     );
 
     @Headers({"Accept: application/json"})

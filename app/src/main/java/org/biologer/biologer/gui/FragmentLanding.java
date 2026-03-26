@@ -1,12 +1,11 @@
 package org.biologer.biologer.gui;
 
+import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromEntry;
+
 import android.app.Activity;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,7 +13,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -23,11 +21,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,7 +40,6 @@ import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.DateHelper;
-import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.helpers.ObservationsHelper;
 import org.biologer.biologer.network.RetrofitClient;
@@ -52,7 +47,8 @@ import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
-import org.biologer.biologer.sql.StageDb;
+import org.biologer.biologer.sql.PhotoDb;
+import org.biologer.biologer.sql.PhotoDb_;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.ArrayList;
@@ -61,27 +57,30 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 
 import io.objectbox.Box;
-import io.objectbox.query.Query;
+import io.objectbox.android.AndroidScheduler;
+import io.objectbox.reactive.DataSubscription;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class FragmentLanding extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    String TAG = "Biologer.LandingFragment";
+    String TAG = "Biologer.FragmentLanding";
     private FragmentLandingBinding binding;
     private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
+    private final Set<UUID> processedWorkerIds = new HashSet<>();
     private ActionMode actionMode;
-    private int localOffset = 0;
-    private int serverPage = 1;
+    private int localObjectBoxOffset = 0;
     private boolean isLoading = false;
+    Long minServerId;
+    private DataSubscription photoSubscription;
+    boolean hasNewPhotos = false;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -93,10 +92,14 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        items = LandingFragmentItems.loadAllEntries(requireContext()); // Load the entries from the database
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        minServerId = box.query().build().property(EntryDb_.serverId).min();
+
+        loadItemsForRecyclerView();
         setupRecyclerView();
         setupFloatingActionButton();
         setupWorkerObserver(); // To track upload of data online
+        setupObjectBoxObserver(); // To track image downloads
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
@@ -113,6 +116,65 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
+    }
+
+    private void setupObjectBoxObserver() {
+        photoSubscription = App.get().getBoxStore()
+                .boxFor(PhotoDb.class)
+                .query()
+                .notNull(PhotoDb_.localPath)
+                .build()
+                .subscribe()
+                .on(AndroidScheduler.mainThread())
+                .observer(photos -> {
+                    if (photos.isEmpty()) return;
+
+                    for (PhotoDb photo : photos) {
+                        long entryId = photo.entry.getTargetId();
+
+                        int index = getIndexFromID(entryId);
+                        if (index != -1) {
+                            EntryDb entry = ObjectBoxHelper.getObservationById(entryId);
+                            if (entry != null) {
+                                entry.photos.reset();
+                                items.set(index, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
+                                entriesAdapter.notifyItemChanged(index);
+                            }
+                        }
+                    }
+                });
+    }
+
+    private void loadItemsForRecyclerView() {
+        localObjectBoxOffset = 0;
+        if (items != null) {
+            items.clear();
+        } else {
+            items = new ArrayList<>();
+        }
+
+        // Load new data not uploaded to the server
+        items = LandingFragmentItems.loadAllLocalEntries(requireContext());
+        items = LandingFragmentItems.loadAllLocalEntries(requireContext());
+
+        // If the list is short ask for more items
+        ArrayList<EntryDb> syncedEntries = ObjectBoxHelper.getPagedObservations(25, 0);
+        for (EntryDb entry : syncedEntries) {
+            items.add(getItemFromEntry(requireContext(), entry));
+        }
+
+        // Update the adapter
+        if (entriesAdapter == null) {
+            entriesAdapter = new LandingFragmentAdapter(items, false);
+            binding.recycledViewEntries.setAdapter(entriesAdapter);
+        } else {
+            entriesAdapter.updateData(items);
+        }
+
+        // If the list is short check the server
+        if (items.size() < 10) {
+            loadNextBatch();
+        }
     }
 
     private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
@@ -179,39 +241,45 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         WorkManager.getInstance(requireContext())
                 .getWorkInfosByTagLiveData("UPLOAD_WORK")
                 .observe(getViewLifecycleOwner(), workInfos -> {
-                    // Remove text if no workers area active
-                    if (workInfos == null || workInfos.isEmpty()) {
-                        return;
-                    }
+                    if (workInfos == null || workInfos.isEmpty()) return;
 
-                    List<LandingFragmentItems> updatedItems = LandingFragmentItems.loadAllEntries(requireContext());
-                    if (entriesAdapter != null) {
-                        entriesAdapter.updateData(updatedItems);
-                    }
-
-                    int totalWorkers = workInfos.size();
-                    int finishedWorkers = 0;
-                    int failedWorkers = 0;
+                    boolean needsUIRefresh = false;
+                    int total = workInfos.size();
+                    int finished = 0;
+                    int failed = 0;
 
                     for (WorkInfo info : workInfos) {
                         if (info.getState().isFinished()) {
-                            finishedWorkers++;
-                            if (info.getState() == WorkInfo.State.FAILED) {
-                                failedWorkers++;
+                            finished++;
+                            if (info.getState() == WorkInfo.State.FAILED) failed++;
+
+                            // Check if we've already handled this worker – be more efficient :)
+                            if (!processedWorkerIds.contains(info.getId())) {
+                                needsUIRefresh = true;
+                                processedWorkerIds.add(info.getId());
                             }
                         }
                     }
-                    int percentage = (finishedWorkers * 100) / totalWorkers;
+
+                    if (needsUIRefresh) {
+                        Log.d(TAG, "A worker just finished. Refreshing in-memory items.");
+                        items = LandingFragmentItems.refreshItemsFromObjectBox(requireContext(), items);
+                        if (entriesAdapter != null) {
+                            entriesAdapter.updateData(items);
+                        }
+                    }
+
+                    int percentage = (finished * 100) / total;
                     Log.d(TAG, "Progress: " + percentage + "%");
 
-                    if (finishedWorkers < totalWorkers) {
+                    if (finished < total) {
                         showUploadProgress(true, percentage);
                     } else {
-                        if (failedWorkers > 0) {
+                        if (failed > 0) {
                             Toast.makeText(getContext(), getResources().getQuantityString(
                                     R.plurals.upload_failed_items,
-                                    failedWorkers,
-                                    failedWorkers
+                                    failed,
+                                    failed
                             ), Toast.LENGTH_LONG).show();
                             showUploadProgress(false, 0);
                         } else {
@@ -229,15 +297,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         floatingActionButton.setEnabled(mail_confirmed);
         floatingActionButton.setAlpha(mail_confirmed ? 1f : 0.25f);
 
-        floatingActionButton.setOnClickListener(v -> {
-            // When user opens the EntryActivity for the first time set this to true.
-            // This is used to display intro message for new users.
-            if (!SettingsManager.getEntryOpen()) {
-                SettingsManager.setEntryOpen(true);
-            }
-            // Start the new Entry Activity.
-            newObservation();
-        });
+        floatingActionButton.setOnClickListener(v -> newObservation());
 
         floatingActionButton.setOnLongClickListener(v -> {
             // Show the context menu
@@ -308,117 +368,57 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     private void loadNextBatch() {
+        if (isLoading) return;
         isLoading = true;
 
         // 1. Try loading from ObjectBox first
-        int PAGE_SIZE = 20;
-        ArrayList<EntryDb> localBatch = ObjectBoxHelper.getPagedObservations(PAGE_SIZE, localOffset);
+        int PAGE_SIZE = 25;
+        ArrayList<EntryDb> localBatch = ObjectBoxHelper.getPagedObservations(PAGE_SIZE, localObjectBoxOffset);
         if (!localBatch.isEmpty()) {
-            Log.d(TAG, "Loading more data from ObjectBox.");
-            ArrayList<LandingFragmentItems> items = new ArrayList<>();
+            Log.d(TAG, "Loading more data from ObjectBox. Offset: " + localObjectBoxOffset);
+            ArrayList<LandingFragmentItems> batchItems = new ArrayList<>();
             for (EntryDb entry : localBatch) {
-                items.add(LandingFragmentItems.getItemFromEntry(getContext(), entry));
+                batchItems.add(getItemFromEntry(getContext(), entry));
             }
-            localOffset += localBatch.size();
-            appendItems(items);
-            isLoading = false;
+            localObjectBoxOffset += localBatch.size();
+            appendItems(batchItems);
         }
 
         // 2. If no local data in ObjectBox, download them from the server
         else {
             Log.d(TAG, "Loading more data from Retrofit.");
-            ObservationsHelper.fetchMyObservations(serverPage, "0", new ObservationsHelper.ObservationPageCallback() {
-                @Override
-                public void onSuccess(List<FieldObservationData> data, boolean hasNext, int lastPage) {
-                    if (data != null && !data.isEmpty()) {
-                        ArrayList<LandingFragmentItems> newItems = addDownloadedToRecyclerView(data);
-                        serverPage++;
-                        if (!newItems.isEmpty()) {
-                            appendItems(newItems);
-                        }
-                    }
-                    isLoading = false;
-                }
-
-                @Override
-                public void onError(String error) {
-                    isLoading = false;
-                    Log.e(TAG, "Error fetching from server: " + error);
-                }
-            });
-        }
-    }
-
-    private ArrayList<LandingFragmentItems> addDownloadedToRecyclerView(List<FieldObservationData> data) {
-        ArrayList<LandingFragmentItems> items = new ArrayList<>();
-
-        // 1. Extract IDs from the downloaded data
-        long[] incomingIds = new long[data.size()];
-        for (int i = 0; i < data.size(); i++) {
-            incomingIds[i] = data.get(i).getId();
-        }
-
-        // 2. Query ObjectBox for IDs
-        List<EntryDb> existingInDb = new ArrayList<>();
-        try {
-            Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-            try (Query<EntryDb> query = box.query()
-                    .in(EntryDb_.serverId, incomingIds)
-                    .build()) {
-                existingInDb = query.find();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to query ObjectBox for existing server IDs", e);
-        }
-        Set<Long> existingIdsSet = new HashSet<>();
-        for (EntryDb entry : existingInDb) {
-            existingIdsSet.add(entry.getServerId());
-        }
-
-        // 3. Continue download if nothing is new
-        // or update RecyclerView to display new items
-        for (FieldObservationData obs : data) {
-            if (existingIdsSet.contains(obs.getId())) {
-                continue;
-            }
-
-            String stageName = null;
-            if (obs.getStageId() != null) {
-                StageDb stage = ObjectBoxHelper.getStageById(obs.getStageId());
-                if (stage != null) {
-                    stageName = Localisation.getStageLocale(getContext(), stage.getName());
-                }
-            }
-
-            Integer timedCountId = null;
-            if (obs.getTimedCountId() != null) {
-                timedCountId = obs.getTimedCountId().intValue();
-            }
-
-            items.add(new LandingFragmentItems(
-                    0L,
-                    obs.getId(),
-                    timedCountId,
-                    true,
-                    false,
-                    obs.getTaxonSuggestion(),
-                    stageName,
+            ObservationsHelper.fetchMyObservations(
+                    1,
+                    25,
                     null,
-                    DateHelper.getCalendar(
-                            String.valueOf(obs.getYear()),
-                            String.valueOf(obs.getMonth()),
-                            String.valueOf(obs.getDay()),
-                            obs.getTime()
-                    ).getTime()
-            ));
+                    "desc",
+                    minServerId = (minServerId >= 0) ? minServerId : null,
+                    null,
+                    new ObservationsHelper.ObservationPageCallback() {
+                        @Override
+                        public void onSuccess(List<FieldObservationData> data, boolean hasNext, int lastPage) {
+                            if (data != null && !data.isEmpty()) {
+                                // Update the pointer to the oldest ID in this batch
+                                minServerId = data.get(data.size() - 1).getId();
+
+                                ArrayList<EntryDb> newLocalBatch = ObjectBoxHelper.getPagedObservations(PAGE_SIZE, localObjectBoxOffset);
+                                ArrayList<LandingFragmentItems> batchItems = new ArrayList<>();
+                                for (EntryDb entry : newLocalBatch) {
+                                    batchItems.add(LandingFragmentItems.getItemFromEntry(getContext(), entry));
+                                }
+                                localObjectBoxOffset += newLocalBatch.size();
+                                appendItems(batchItems);
+                            }
+                            isLoading = false;
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            isLoading = false;
+                            Log.e(TAG, "Error fetching from server: " + error);
+                        }
+                    });
         }
-        if (items.isEmpty()) {
-            Log.d(TAG, "All data is already in ObjectBox, downloading next batch.");
-            loadNextBatch();
-        } else {
-            Log.d(TAG, "Adding " + items.size() + " to the RecyclerView.");
-        }
-        return items;
     }
 
     private void selectDeselect(int position) {
@@ -537,7 +537,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
 
         // Display observation in the RecyclerView
-        LandingFragmentItems newItem = LandingFragmentItems.getItemFromEntry(requireContext(), entryDb);
+        LandingFragmentItems newItem = getItemFromEntry(requireContext(), entryDb);
         int insertionIndex = LandingFragmentItems.findSortedInsertionIndex(
                 requireContext(), items, newItem);
         items.add(insertionIndex, newItem);
@@ -603,11 +603,33 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
     }
 
+    // Add new items to RecyclerView
     private void appendItems(List<LandingFragmentItems> newItems) {
         binding.recycledViewEntries.post(() -> {
-            int startPosition = items.size();
-            items.addAll(newItems);
-            entriesAdapter.notifyItemRangeInserted(startPosition, newItems.size());
+            if (items == null) {
+                items = new ArrayList<>();
+            }
+
+            // Prevent exact duplicates safely
+            for (LandingFragmentItems newItem : newItems) {
+                boolean exists = false;
+                for (LandingFragmentItems existingItem : items) {
+                    if (existingItem.getObservationId() != null && newItem.getObservationId() != null &&
+                            existingItem.getObservationId().equals(newItem.getObservationId())) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    items.add(newItem);
+                }
+            }
+
+            if (entriesAdapter == null) {
+                setupRecyclerView();
+            } else {
+                entriesAdapter.updateData(new ArrayList<>(this.items));
+            }
             isLoading = false;
         });
     }
@@ -615,14 +637,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     @Override
     public void onResume() {
         super.onResume();
-        Context context = getContext();
-
-        if (App.get().getBoxStore().boxFor(EntryDb.class).count()
-                != entriesAdapter.getItemCount()) {
-            items = LandingFragmentItems.loadAllEntries(context);
-            entriesAdapter = new LandingFragmentAdapter(items, false);
-            binding.recycledViewEntries.setAdapter(entriesAdapter);
-        }
+        loadItemsForRecyclerView();
+        entriesAdapter = new LandingFragmentAdapter(items, false);
+        binding.recycledViewEntries.setAdapter(entriesAdapter);
     }
 
     // Method to show the context menu on + button long press
@@ -672,7 +689,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         if (entry_index != -1 && entryDb != null) {
             Log.d(TAG, "Updating existing entry with ID " + oldDataId + " at index " + entry_index);
-            items.set(entry_index, LandingFragmentItems.getItemFromEntry(requireContext(), entryDb));
+            items.set(entry_index, getItemFromEntry(requireContext(), entryDb));
             entriesAdapter.notifyItemChanged(entry_index);
         } else {
             Log.e(TAG, "Cannot update entry with ID " + oldDataId +
@@ -759,7 +776,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                     // Just delete local files
                     deleteLocally(items.get(i));
                 }
-                count ++;
+                count++;
             }
         }
 
@@ -841,63 +858,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
-    protected void buildAlertOnDeleteAll() {
-        Activity activity_alert = getActivity();
-        if (activity_alert != null) {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage(getString(R.string.confirm_delete_all))
-                    .setCancelable(true)
-                    .setPositiveButton(getString(R.string.yes_delete), (dialog, id) -> {
-
-                        Toast.makeText(FragmentLanding.this.getContext(), FragmentLanding.this.getString(R.string.entries_deleted_msg), Toast.LENGTH_SHORT).show();
-
-                        int last_index = items.size() - 1;
-                        items.clear();
-                        ObjectBoxHelper.removeAllEntries();
-                        ((ActivityLanding)getActivity()).updateMenuIconVisibility();
-                        Log.i(TAG, "There are " + last_index + " in the RecycleView to be deleted.");
-
-                        Fragment replacementFragment = new FragmentLanding();
-                        FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.add(R.id.content_frame , replacementFragment);
-                        fragmentTransaction.commit();
-
-                    })
-                    .setNegativeButton(getString(R.string.no_delete), (dialog, id) -> dialog.cancel());
-            final AlertDialog alert = builder.create();
-
-            alert.setOnShowListener(new DialogInterface.OnShowListener() {
-                private static final int AUTO_DISMISS_MILLIS = 10000;
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    final Button defaultButton = alert.getButton(AlertDialog.BUTTON_POSITIVE);
-                    defaultButton.setEnabled(false);
-                    final CharSequence negativeButtonText = defaultButton.getText();
-                    new CountDownTimer(AUTO_DISMISS_MILLIS, 100) {
-                        @Override
-                        public void onTick(long l) {
-                            defaultButton.setText(String.format(
-                                    Locale.getDefault(), "%s (%d)",
-                                    negativeButtonText,
-                                    TimeUnit.MILLISECONDS.toSeconds(l) + 1
-                            ));
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            if (alert.isShowing()) {
-                                defaultButton.setEnabled(true);
-                                defaultButton.setText(negativeButtonText);
-                            }
-                        }
-                    }.start();
-                }
-            });
-
-            alert.show();
-        }
-    }
-
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if ("sort_observations".equals(key)) {
@@ -908,15 +868,36 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     private void reloadRecyclerView() {
-        if (!isAdded()) return;
+        if (!isAdded() || items == null) return;
 
-        List<LandingFragmentItems> updatedItems = LandingFragmentItems.loadAllEntries(requireContext());
-        if (entriesAdapter == null) {
-            entriesAdapter = new LandingFragmentAdapter(new ArrayList<>(updatedItems), false);
-            binding.recycledViewEntries.setAdapter(entriesAdapter);
-        } else {
-            entriesAdapter.updateData(updatedItems);
+        Log.d(TAG, "Refreshing existing UI items from ObjectBox (e.g. photos downloaded)");
+        // Just refresh the items currently in memory to grab the new photo paths
+        for (int i = 0; i < items.size(); i++) {
+            LandingFragmentItems currentItem = items.get(i);
+            if (currentItem.getObservationId() != null) {
+                EntryDb entry = App.get().getBoxStore()
+                        .boxFor(EntryDb.class)
+                        .get(currentItem.getObservationId());
+                if (entry != null) {
+                    entry.photos.reset();
+                    items.set(i, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
+                }
+            }
         }
+
+        // Tell DiffUtil to visually update the thumbnails smoothly
+        if (entriesAdapter != null) {
+            entriesAdapter.updateData(new ArrayList<>(items));
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (photoSubscription != null && !photoSubscription.isCanceled()) {
+            photoSubscription.cancel();
+        }
+        binding = null;
     }
 
 }

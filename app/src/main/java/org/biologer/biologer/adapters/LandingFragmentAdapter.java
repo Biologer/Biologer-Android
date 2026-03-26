@@ -21,6 +21,7 @@ import com.bumptech.glide.Glide;
 
 import org.biologer.biologer.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,22 +87,22 @@ public class LandingFragmentAdapter
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
-        LandingFragmentItems entry = myEntries.get(position);
-        viewHolder.setIsTimedCount(entry.getTimedCountId() != null);
+        LandingFragmentItems item = myEntries.get(position);
+        viewHolder.setIsTimedCount(item.getTimedCountId() != null);
 
         // Get the title
         TextView titleText = viewHolder.textTitle;
-        String title = entry.getTitle();
+        String title = item.getTitle();
         titleText.setText(title);
 
         // Get the subtitle
         TextView subtitleText = viewHolder.textSubtitle;
-        String subtitle = entry.getSubtitle();
+        String subtitle = item.getSubtitle();
         subtitleText.setText(subtitle);
 
         ImageView entryImage = viewHolder.thumbnailImage;
         entryImage.setImageDrawable(null); // Clear the previous image
-        String image = entry.getImage();
+        String image = item.getImage();
 
         if (image == null) {
             Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.mipmap.ic_kornjaca_kocka);
@@ -114,8 +115,16 @@ public class LandingFragmentAdapter
                     .load(defaultImage)
                     .into(entryImage);
         } else {
+            Log.d(TAG, "Loading thumbnail image: " + image);
+            File file;
+            if (image.startsWith("file://")) {
+                file = new File(image.replace("file://", ""));
+            } else {
+                file = new File(image);
+            }
+
             Glide.with(view.getContext())
-                    .load(image)
+                    .load(file)
                     .override(40, 40)
                     .into(entryImage);
         }
@@ -123,9 +132,9 @@ public class LandingFragmentAdapter
         if (viewHolder.uploadStatus != null) {
             viewHolder.uploadStatus.clearColorFilter();
             setAlpha(viewHolder, 1.0f);
-            if (entry.isUploaded()) {
+            if (item.isUploaded()) {
                 viewHolder.uploadStatus.setVisibility(View.VISIBLE);
-                if (entry.isModified()) {
+                if (item.isModified()) {
                     // Modified entry
                     viewHolder.uploadStatus.setImageResource(R.drawable.ic_modified);
                     int grayColor = ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.icon_color);
@@ -145,7 +154,7 @@ public class LandingFragmentAdapter
             }
         }
 
-        if (entry.isMarked()) {
+        if (item.isMarked()) {
             viewHolder.itemView.setBackgroundColor(ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryLight));
         } else {
             viewHolder.itemView.setBackgroundColor(Color.TRANSPARENT);

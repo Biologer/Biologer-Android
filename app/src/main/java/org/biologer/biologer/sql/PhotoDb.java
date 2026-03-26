@@ -8,11 +8,12 @@ import io.objectbox.relation.ToOne;
 public class PhotoDb {
     @Id
     public long id;
-
     private String localPath;
     private String serverPath;
     private String serverUrl;
     private long serverId;
+    private String author;
+    private Integer licenseId;
 
     public ToOne<EntryDb> entry;
 
@@ -50,5 +51,21 @@ public class PhotoDb {
 
     public void setServerUrl(String serverUrl) {
         this.serverUrl = serverUrl;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Integer getLicenseId() {
+        return licenseId;
+    }
+
+    public void setLicenseId(Integer licenseId) {
+        this.licenseId = licenseId;
     }
 }

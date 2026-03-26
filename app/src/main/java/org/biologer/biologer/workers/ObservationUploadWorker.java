@@ -1,12 +1,14 @@
 package org.biologer.biologer.workers;
 
 import android.content.Context;
+import android.service.autofill.UserData;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
@@ -17,6 +19,7 @@ import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.TimedCountDb;
+import org.biologer.biologer.sql.UserDb;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -171,9 +174,10 @@ public class ObservationUploadWorker extends Worker {
         }
 
         if (response.isSuccessful() && response.body() != null) {
+            int license = (entry.getImageLicence() == 0) ? ObjectBoxHelper.getImageLicense(): entry.getImageLicence();
             APIEntryPhotos photo = new APIEntryPhotos();
             photo.setPath(response.body().getFile());
-            photo.setLicense(entry.getImageLicence());
+            photo.setLicense(license);
             return photo;
         } else {
             throw new Exception("Error uploading photo: " + response.code());

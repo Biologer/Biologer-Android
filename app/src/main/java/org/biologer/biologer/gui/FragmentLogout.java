@@ -33,7 +33,7 @@ public class FragmentLogout extends Fragment {
     private FragmentLogoutBinding binding;
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentLogoutBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
@@ -64,42 +64,27 @@ public class FragmentLogout extends Fragment {
                 binding.textViewUser.setText(database_text);
 
                 binding.buttonLogout.setOnClickListener(v -> {
-                    long entryCount = App.get().getBoxStore().boxFor(EntryDb.class).count();
-                    // If there are entries warn the user that the data will be lost!
-                    Log.d(TAG, "There are " + entryCount + " entries in the list.");
-                    if (entryCount > 0) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                        builder.setMessage(getString(R.string.there_are) + " " +
-                                entryCount + " " +
-                                getString(R.string.there_are2));
-                        builder.setPositiveButton(getString(R.string.yes), (dialog, id) -> deleteDataAndLogout(activity));
-                        builder.setNegativeButton(getString(R.string.no), (dialog, id) -> dialog.cancel());
-                        builder.setCancelable(true);
-                        final AlertDialog alert = builder.create();
-                        alert.show();
-                    } else {
-                        // If download process is active, stop it first
-                        if (UpdateTaxa.isInstanceCreated()) {
-                            final Intent updateTaxa = new Intent(getActivity(), UpdateTaxa.class);
-                            updateTaxa.setAction(UpdateTaxa.ACTION_STOP);
-                            requireActivity().startService(updateTaxa);
+                    // If download process is active, stop it first
+                    if (UpdateTaxa.isInstanceCreated()) {
+                        final Intent updateTaxa = new Intent(getActivity(), UpdateTaxa.class);
+                        updateTaxa.setAction(UpdateTaxa.ACTION_STOP);
+                        requireActivity().startService(updateTaxa);
 
-                            final Handler handler = new Handler(Looper.getMainLooper());
-                            final Runnable runnable = new Runnable() {
-                                public void run() {
-                                    // need to do tasks on the UI thread
-                                    Log.d(TAG, "Waiting for downloading to finish...");
-                                    if (UpdateTaxa.isInstanceCreated()) {
-                                        handler.postDelayed(this, 2000);
-                                    } else {
-                                        deleteDataAndLogout(activity);
-                                    }
+                        final Handler handler = new Handler(Looper.getMainLooper());
+                        final Runnable runnable = new Runnable() {
+                            public void run() {
+                                // need to do tasks on the UI thread
+                                Log.d(TAG, "Waiting for downloading to finish...");
+                                if (UpdateTaxa.isInstanceCreated()) {
+                                    handler.postDelayed(this, 2000);
+                                } else {
+                                    deleteDataAndLogout(activity);
                                 }
-                            };
-                            handler.post(runnable);
-                        } else {
-                            deleteDataAndLogout(activity);
-                        }
+                            }
+                        };
+                        handler.post(runnable);
+                    } else {
+                        deleteDataAndLogout(activity);
                     }
                 });
 
@@ -110,8 +95,9 @@ public class FragmentLogout extends Fragment {
     }
 
     private void logoutEnableDisable(MaterialButton button, TextView textView) {
-        long entries = App.get().getBoxStore().boxFor(EntryDb.class).count();
-        if (entries >= 1) {
+        long unsyncedCount = ObjectBoxHelper.getUnsyncedCount();
+        Log.d(TAG, "There are " + unsyncedCount + " entries in the list.");
+        if (unsyncedCount >= 1) {
             button.setEnabled(false);
             textView.setText(R.string.logout_disabled_note);
         } else {
