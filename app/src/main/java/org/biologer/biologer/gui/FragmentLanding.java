@@ -50,8 +50,6 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
-import org.biologer.biologer.sql.PhotoDb;
-import org.biologer.biologer.sql.PhotoDb_;
 import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.workers.DataSyncWorker;
 import org.biologer.biologer.workers.PhotoDownloadWorker;
@@ -67,8 +65,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import io.objectbox.Box;
-import io.objectbox.android.AndroidScheduler;
-import io.objectbox.reactive.DataSubscription;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -83,7 +79,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     private ActionMode actionMode;
     private int localObjectBoxOffset = 0;
     private boolean isLoading = false;
-    private DataSubscription photoSubscription;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -98,8 +93,8 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         loadItemsForRecyclerView();
         setupRecyclerView();
         setupFloatingActionButton();
-        setupWorkerObserver(); // To track upload of data online
-        //setupObjectBoxObserver(); // To track image downloads
+        setupWorkerObservers(); // To track upload of data online
+        downloadNewerData(); // If the data is added directly on the server
 
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
@@ -116,33 +111,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
-    }
-
-    private void setupObjectBoxObserver() {
-        photoSubscription = App.get().getBoxStore()
-                .boxFor(PhotoDb.class)
-                .query()
-                .notNull(PhotoDb_.localPath)
-                .build()
-                .subscribe()
-                .on(AndroidScheduler.mainThread())
-                .observer(photos -> {
-                    if (photos.isEmpty()) return;
-
-                    for (PhotoDb photo : photos) {
-                        long entryId = photo.entry.getTargetId();
-
-                        int index = getIndexFromID(entryId);
-                        if (index != -1) {
-                            EntryDb entry = ObjectBoxHelper.getObservationById(entryId);
-                            if (entry != null) {
-                                entry.photos.reset();
-                                items.set(index, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
-                                entriesAdapter.notifyItemChanged(index);
-                            }
-                        }
-                    }
-                });
     }
 
     private void loadItemsForRecyclerView() {
@@ -237,7 +205,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
-    private void setupWorkerObserver() {
+    private void setupWorkerObservers() {
         WorkManager.getInstance(requireContext())
                 .getWorkInfosByTagLiveData("UPLOAD_WORK")
                 .observe(getViewLifecycleOwner(), workInfos -> {
@@ -307,6 +275,20 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                             }
                         }
 
+                    }
+                });
+
+        WorkManager.getInstance(requireContext())
+                .getWorkInfosByTagLiveData("DATA_SYNC_TOP")
+                .observe(getViewLifecycleOwner(), workInfos -> {
+                    if (workInfos != null && !workInfos.isEmpty()) {
+                        WorkInfo workInfo = workInfos.get(0);
+                        WorkInfo.State state = workInfo.getState();
+                        if (state.isFinished()) {
+                            // Just scroll to the top of the recycler view...
+                            reloadRecyclerView();
+                            binding.recycledViewEntries.smoothScrollToPosition(0);
+                        }
                     }
                 });
     }
@@ -423,34 +405,68 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         // 2. If no local data in ObjectBox, download them from the server
         else {
-            Log.d(TAG, "Loading more data from Retrofit.");
-
-            Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-            long minServerId = box.query().build().property(EntryDb_.serverId).min();
-            long beforeId = (box.count() > 0) ? minServerId : -1L;
-
-            Data inputData = new Data.Builder()
-                    .putLong("beforeId", beforeId)
-                    .build();
-
-            OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
-                    .setInputData(inputData)
-                    .addTag("DATA_SYNC")
-                    .build();
-
-            OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
-                    .setConstraints(new Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .build())
-                    .addTag("PHOTO_DOWNLOAD")
-                    .build();
-
-            WorkManager.getInstance(requireContext())
-                    .beginUniqueWork("observation_sync_chain",
-                            ExistingWorkPolicy.APPEND_OR_REPLACE, dataRequest)
-                    .then(photoRequest)
-                    .enqueue();
+            downloadOlderData();
         }
+    }
+
+    private void downloadNewerData() {
+        Log.d(TAG, "Loading more data from Retrofit.");
+
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        long maxServerId = box.query().build().property(EntryDb_.serverId).max();
+        long afterId = (box.count() > 0) ? maxServerId : -1L;
+
+        Data inputData = new Data.Builder()
+                .putLong("afterId", afterId)
+                .build();
+
+        OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
+                .setInputData(inputData)
+                .addTag("DATA_SYNC_TOP")
+                .build();
+
+        OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
+                .setConstraints(new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build())
+                .addTag("PHOTO_DOWNLOAD")
+                .build();
+
+        WorkManager.getInstance(requireContext())
+                .beginUniqueWork("observation_sync_chain",
+                        ExistingWorkPolicy.APPEND_OR_REPLACE, dataRequest)
+                .then(photoRequest)
+                .enqueue();
+    }
+
+    private void downloadOlderData() {
+        Log.d(TAG, "Loading more data from Retrofit.");
+
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        long minServerId = box.query().build().property(EntryDb_.serverId).min();
+        long beforeId = (box.count() > 0) ? minServerId : -1L;
+
+        Data inputData = new Data.Builder()
+                .putLong("beforeId", beforeId)
+                .build();
+
+        OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
+                .setInputData(inputData)
+                .addTag("DATA_SYNC")
+                .build();
+
+        OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
+                .setConstraints(new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build())
+                .addTag("PHOTO_DOWNLOAD")
+                .build();
+
+        WorkManager.getInstance(requireContext())
+                .beginUniqueWork("observation_sync_chain",
+                        ExistingWorkPolicy.APPEND_OR_REPLACE, dataRequest)
+                .then(photoRequest)
+                .enqueue();
     }
 
     private void selectDeselect(int position) {
@@ -899,32 +915,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         }
     }
 
-//    private void reloadRecyclerView() {
-//        if (!isAdded() || items == null) return;
-//
-//        Log.d(TAG, "Refreshing existing UI items from ObjectBox (e.g. photos downloaded)");
-//        // Just refresh the items currently in memory to grab the new photo paths
-//        for (int i = 0; i < items.size(); i++) {
-//            LandingFragmentItems currentItem = items.get(i);
-//            if (currentItem.getObservationId() != null) {
-//                EntryDb entry = App.get().getBoxStore()
-//                        .boxFor(EntryDb.class)
-//                        .get(currentItem.getObservationId());
-//                if (entry != null) {
-//                    entry.photos.reset();
-//                    items.set(i, LandingFragmentItems.getItemFromEntry(requireContext(), entry));
-//                }
-//            }
-//        }
-//
-//        // Tell DiffUtil to visually update the thumbnails smoothly
-//        if (entriesAdapter != null) {
-//            entriesAdapter.updateData(new ArrayList<>(items));
-//        }
-//    }
-
     private void reloadRecyclerView() {
-        if (!isAdded() || items == null) return;
+        if (!isAdded()) return;
+        if (items == null) items = new ArrayList<>();
 
         Log.d(TAG, "Refreshing UI items from ObjectBox after sync.");
 
@@ -947,9 +940,6 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (photoSubscription != null && !photoSubscription.isCanceled()) {
-            photoSubscription.cancel();
-        }
         binding = null;
     }
 

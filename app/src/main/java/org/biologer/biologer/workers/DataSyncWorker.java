@@ -4,9 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.work.Constraints;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
+import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
@@ -46,19 +44,22 @@ public class DataSyncWorker extends Worker {
     @Override
     public Result doWork() {
         long beforeId = getInputData().getLong("beforeId", -1);
+        long afterId = getInputData().getLong("afterId", -1);
         Long serverBeforeId = (beforeId != -1) ? beforeId : null;
+        Long serverAfterId = (afterId != -1) ? afterId : null;
+        int page = getInputData().getInt("page", 1);
 
         String database = SettingsManager.getDatabaseName();
         if (database == null) return Result.failure();
 
         try {
             Response<FieldObservationResponse> response = RetrofitClient.getService(database)
-                    .getMyFieldObservations(1,
+                    .getMyFieldObservations(page,
                             25,
                             null,
                             "id",
                             "desc",
-                            null,
+                            serverAfterId,
                             serverBeforeId)
                     .execute();
 
@@ -67,6 +68,26 @@ public class DataSyncWorker extends Worker {
                 if (!data.isEmpty()) {
                     saveToLocalDatabase(data);
                 }
+
+                // Resume download if there are new data on the server compared to local data
+                // In other cases we will download data when the user scrolls down the recycler view
+                boolean hasNextPage = response.body().getMeta().getCurrentPage() < response.body().getMeta().getLastPage();
+                if (hasNextPage && serverAfterId != null) {
+
+                    Data nextInput = new Data.Builder()
+                            .putLong("afterId", serverAfterId)
+                            .putInt("page", page + 1)
+                            .build();
+
+                    OneTimeWorkRequest nextRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
+                            .setInputData(nextInput)
+                            .addTag("DATA_SYNC_TOP")
+                            .build();
+
+                    WorkManager.getInstance(getApplicationContext())
+                            .enqueue(nextRequest);
+                }
+
                 return Result.success();
             } else {
                 return Result.retry();
