@@ -34,7 +34,6 @@ public class EntryDb {
     private Double accuracy;
     private double elevation;
     private String location;
-    public ToMany<PhotoDb> photos;
     private String slika1;
     private String slika2;
     private String slika3;
@@ -45,6 +44,8 @@ public class EntryDb {
     private String time;
     private String habitat;
     private String observationTypeIds;
+    public ToMany<PhotoDb> photos;
+    public ToMany<ObservationActivityDb> observationActivity;
 
     public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Integer timedCoundId,
                    String taxonSuggestion, String year, String month, String day,

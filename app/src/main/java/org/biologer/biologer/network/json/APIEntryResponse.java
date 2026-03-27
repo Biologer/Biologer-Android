@@ -1,16 +1,22 @@
 package org.biologer.biologer.network.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class APIEntryResponse {
+    @JsonProperty("data")
     private Data data;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Data {
+        @JsonProperty("id")
         private Long id;
+
+        @JsonProperty("activity")
+        private List<FieldObservationDataActivity> activity;
         private List<PhotoResponseData> photos;
 
         public Long getId() { return id; }
@@ -18,6 +24,14 @@ public class APIEntryResponse {
 
         public List<PhotoResponseData> getPhotos() { return photos; }
         public void setPhotos(List<PhotoResponseData> photos) { this.photos = photos; }
+
+        public List<FieldObservationDataActivity> getActivity() {
+            return activity;
+        }
+
+        public void setActivity(List<FieldObservationDataActivity> activity) {
+            this.activity = activity;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

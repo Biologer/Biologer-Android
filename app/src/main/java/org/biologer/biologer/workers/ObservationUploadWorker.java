@@ -1,7 +1,6 @@
 package org.biologer.biologer.workers;
 
 import android.content.Context;
-import android.service.autofill.UserData;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -15,11 +14,12 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.APIEntry;
 import org.biologer.biologer.network.json.APIEntryPhotos;
 import org.biologer.biologer.network.json.APIEntryResponse;
+import org.biologer.biologer.network.json.FieldObservationDataActivity;
 import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.ObservationActivityDb;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.TimedCountDb;
-import org.biologer.biologer.sql.UserDb;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -127,6 +127,7 @@ public class ObservationUploadWorker extends Worker {
                 // Part 2: Update the photos with the ID and URL received from the server
                 List<APIEntryResponse.PhotoResponseData> photosFromServer = responseData.getPhotos();
                 if (photosFromServer != null && !photosFromServer.isEmpty()) {
+
                     for (PhotoDb localPhoto : entry.photos) {
                         String localFileName = new File(localPhoto.getLocalPath()).getName();
 
@@ -141,6 +142,26 @@ public class ObservationUploadWorker extends Worker {
                             }
                         }
                     }
+                }
+
+                // Part 3: Update activity logs from server response
+                List<FieldObservationDataActivity> activityItems = responseData.getActivity();
+                if (activityItems != null && !activityItems.isEmpty()) {
+
+                    App.get().getBoxStore().runInTx(() -> {
+                        // Clear existing activity from ObjectBox
+                        entry.observationActivity.clear();
+
+                        for (FieldObservationDataActivity activity : activityItems) {
+                            ObservationActivityDb activityLog = FieldObservationDataActivity
+                                    .getObservationActivityDb(activity);
+
+                            activityLog.entry.setTarget(entry);
+                            entry.observationActivity.add(activityLog);
+                        }
+
+                        App.get().getBoxStore().boxFor(EntryDb.class).put(entry);
+                    });
                 }
 
                 ObjectBoxHelper.setObservation(entry);

@@ -829,18 +829,60 @@
           "id": "8:5564386004765785466",
           "name": "licenseId",
           "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "24:1674884884924857982",
+      "lastPropertyId": "7:3107919479654543973",
+      "name": "ObservationActivityDb",
+      "properties": [
+        {
+          "id": "1:4105607494407365646",
+          "name": "id",
+          "type": 6,
+          "flags": 1
         },
         {
-          "id": "9:290569150187918907",
-          "name": "observationId",
+          "id": "2:3803238150835404719",
+          "name": "serverId",
           "type": 6
+        },
+        {
+          "id": "3:3448669360259810236",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "4:1880744693069496173",
+          "name": "createdAt",
+          "type": 9
+        },
+        {
+          "id": "5:4716715983585464751",
+          "name": "causerName",
+          "type": 9
+        },
+        {
+          "id": "6:3680838843684649866",
+          "name": "reason",
+          "type": 9
+        },
+        {
+          "id": "7:3107919479654543973",
+          "name": "entryId",
+          "indexId": "2:3008232395480651523",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "EntryDb"
         }
       ],
       "relations": []
     }
   ],
-  "lastEntityId": "23:5084452827377797376",
-  "lastIndexId": "1:83751946847849320",
+  "lastEntityId": "24:1674884884924857982",
+  "lastIndexId": "2:3008232395480651523",
   "lastRelationId": "1:8723378202848115693",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
@@ -952,7 +994,8 @@
     538337462075283703,
     297848624786294411,
     2773131629283811786,
-    6770658024707945124
+    6770658024707945124,
+    290569150187918907
   ],
   "retiredRelationUids": [],
   "version": 1

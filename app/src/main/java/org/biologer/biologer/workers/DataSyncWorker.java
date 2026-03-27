@@ -14,11 +14,13 @@ import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
+import org.biologer.biologer.network.json.FieldObservationDataActivity;
 import org.biologer.biologer.network.json.FieldObservationDataPhotos;
 import org.biologer.biologer.network.json.FieldObservationDataTypes;
 import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
+import org.biologer.biologer.sql.ObservationActivityDb;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.PhotoDb_;
 
@@ -119,6 +121,7 @@ public class DataSyncWorker extends Worker {
 
                 if (existing == null) {
                     try {
+                        // Part 1: Save the observation
                         Log.d(TAG, "Saving field observation id " + data.getId() + " to ObjectBox!");
                         Set<Long> observationTypeIds = new HashSet<>();
                         if (data.getTypes() != null && !data.getTypes().isEmpty()) {
@@ -143,7 +146,7 @@ public class DataSyncWorker extends Worker {
                                 data.getSex(),
                                 data.getStageId(),
                                 data.getAtlasCode(),
-                                String.valueOf(data.isFoundDead()),
+                                String.valueOf(!data.isFoundDead()),
                                 data.getFoundDeadNote(),
                                 data.getLatitude(),
                                 data.getLongitude(),
@@ -168,6 +171,7 @@ public class DataSyncWorker extends Worker {
 
                         Log.d(TAG, "Saving server ID " + data.getId() + " locally (ObjectBox ID " + localId + ").");
 
+                        // Part 2: Save the photos
                         if (data.getPhotos() != null && !data.getPhotos().isEmpty()) {
                             Log.d(TAG, "Saving " + data.getPhotos().size() + " photos for entry " + localId + ".");
 
@@ -189,8 +193,6 @@ public class DataSyncWorker extends Worker {
 
                                     photo.entry.setTarget(entryToUse);
                                     entryToUse.photos.add(photo);
-                                    box.put(entryToUse);
-
                                 } else {
                                     String path = existingPhoto.getLocalPath();
                                     if (path == null || path.isEmpty() || !new File(path.replace("file://", "")).exists()) {
@@ -201,6 +203,24 @@ public class DataSyncWorker extends Worker {
                                 }
 
                             }
+
+                            box.put(entryToUse);
+                        }
+
+                        // Part 3: Save the activity log
+                        List<FieldObservationDataActivity> activityItems = data.getActivity();
+                        if (activityItems != null && !activityItems.isEmpty()) {
+                            entryToUse.observationActivity.clear(); // just in case...
+
+                            for (FieldObservationDataActivity activity : activityItems) {
+                                ObservationActivityDb activityLog = FieldObservationDataActivity
+                                        .getObservationActivityDb(activity);
+
+                                activityLog.entry.setTarget(entryToUse);
+                                entryToUse.observationActivity.add(activityLog);
+                            }
+
+                            box.put(entryToUse);
                         }
 
                     } catch (Exception e) {
