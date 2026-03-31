@@ -2,6 +2,7 @@ package org.biologer.biologer.network.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.biologer.biologer.sql.ObservationActivityDb;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,7 @@ public class FieldObservationDataActivity {
     @JsonProperty("causer_type")
     private String causerType;
     @JsonProperty("properties")
-    private FieldObservationDataActivityProperties properties;
+    private JsonNode properties;
     @JsonProperty("batch_uuid")
     private String batchUuid;
     @JsonProperty("created_at")
@@ -56,15 +57,27 @@ public class FieldObservationDataActivity {
         return description;
     }
 
-    public static @NotNull ObservationActivityDb getObservationActivityDb(FieldObservationDataActivity activity) {
+    public static @NotNull ObservationActivityDb
+    getObservationActivityDb(FieldObservationDataActivity activity) {
         String causerName = (activity.getCauser() != null) ?
                 activity.getCauser().getFullName() : "Unknown";
+
+        String reason = "";
+        JsonNode props = activity.getProperties();
+        if (props != null && props.isObject() && props.has("reason")) {
+            reason = props.get("reason").asText();
+        }
 
         return new ObservationActivityDb(
                 activity.getId(),
                 activity.getDescription(),
                 causerName,
-                activity.getCreatedAt()
+                activity.getCreatedAt(),
+                reason
         );
+    }
+
+    public JsonNode getProperties() {
+        return properties;
     }
 }

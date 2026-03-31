@@ -94,10 +94,9 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
         setupRecyclerView();
         setupFloatingActionButton();
         setupWorkerObservers(); // To track upload of data online
-        downloadNewerData(); // If the data is added directly on the server
-
         PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .registerOnSharedPreferenceChangeListener(this);
+        downloadNewerData(); // If the data is added directly on the server
 
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
@@ -279,7 +278,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
                 });
 
         WorkManager.getInstance(requireContext())
-                .getWorkInfosByTagLiveData("DATA_SYNC_TOP")
+                .getWorkInfosByTagLiveData("DATA_SYNC_UPDATED_AT")
                 .observe(getViewLifecycleOwner(), workInfos -> {
                     if (workInfos != null && !workInfos.isEmpty()) {
                         WorkInfo workInfo = workInfos.get(0);
@@ -410,19 +409,18 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
     }
 
     private void downloadNewerData() {
-        Log.d(TAG, "Loading more data from Retrofit.");
 
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        long maxServerId = box.query().build().property(EntryDb_.serverId).max();
-        long afterId = (box.count() > 0) ? maxServerId : -1L;
+        long updatedAt = SettingsManager.getObservationsUpdatedAt();
+        Log.d(TAG, "Loading new data from Retrofit, timestamp: " + updatedAt);
 
-        Data inputData = new Data.Builder()
-                .putLong("afterId", afterId)
+        Data data = new Data.Builder()
+                .putBoolean("isSyncOnScroll", false)
+                .putLong("updatedAt", updatedAt)
                 .build();
 
         OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
-                .setInputData(inputData)
-                .addTag("DATA_SYNC_TOP")
+                .setInputData(data)
+                .addTag("DATA_SYNC_UPDATED_AT")
                 .build();
 
         OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
@@ -448,6 +446,7 @@ public class FragmentLanding extends Fragment implements SharedPreferences.OnSha
 
         Data inputData = new Data.Builder()
                 .putLong("beforeId", beforeId)
+                .putBoolean("isSyncOnScroll", true)
                 .build();
 
         OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)

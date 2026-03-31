@@ -92,7 +92,7 @@ public interface RetrofitService {
     Call<FieldObservationResponse> getMyFieldObservations(
             @Query("page") Integer page,
             @Query("per_page") Integer perPage,
-            @Query("updated_after") String updatedAfter,
+            @Query("updated_after") Long updatedAfter,
             @Query("order_by") String orderBy,
             @Query("direction") String direction,
             @Query("after_id") Long afterId,

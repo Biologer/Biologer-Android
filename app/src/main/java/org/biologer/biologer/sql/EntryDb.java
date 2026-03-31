@@ -22,6 +22,7 @@ public class EntryDb {
     private String year;
     private String month;
     private String day;
+    private String time;
     private String comment;
     private Integer noSpecimens;
     private String sex;
@@ -37,15 +38,17 @@ public class EntryDb {
     private String slika1;
     private String slika2;
     private String slika3;
-    private final String projectId;
+    private String projectId;
     private String foundOn;
     private String dataLicence;
     private int imageLicence;
-    private String time;
     private String habitat;
     private String observationTypeIds;
     public ToMany<PhotoDb> photos;
     public ToMany<ObservationActivityDb> observationActivity;
+
+    public EntryDb() {
+    }
 
     public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Integer timedCoundId,
                    String taxonSuggestion, String year, String month, String day,
@@ -204,7 +207,7 @@ public class EntryDb {
     public String getProjectId() {
         return this.projectId;
     }
-
+    public void setProjectId(String projectId) { this.projectId = projectId; }
     public String getFoundOn() {
         return this.foundOn;
     }
@@ -235,7 +238,6 @@ public class EntryDb {
     public void setHabitat(String habitat) {
         this.habitat = habitat;
     }
-
     public String getObservationTypeIds() {
         return observationTypeIds;
     }
@@ -243,7 +245,6 @@ public class EntryDb {
     public void setObservationTypeIds(String observation_type_ids) {
         this.observationTypeIds = observation_type_ids;
     }
-
     public Long getAtlasCode() {
         return atlasCode;
     }
@@ -251,27 +252,21 @@ public class EntryDb {
     public void setAtlasCode(Long atlasCode) {
         this.atlasCode = atlasCode;
     }
-
     public String getDataLicence() {
         return dataLicence;
     }
-
     public void setDataLicence(String dataLicence) {
         this.dataLicence = dataLicence;
     }
-
     public int getImageLicence() {
         return imageLicence;
     }
-
     public void setImageLicence(int imageLicence) {
         this.imageLicence = imageLicence;
     }
-
     public Integer getTimedCoundId() {
         return timedCoundId;
     }
-
     public void setTimedCoundId(Integer timedCoundId) {
         this.timedCoundId = timedCoundId;
     }

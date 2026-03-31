@@ -18,11 +18,12 @@ public class ObservationActivityDb {
 
     public ObservationActivityDb() {}
 
-    public ObservationActivityDb(long serverId, String description, String causerName, String createdAt) {
+    public ObservationActivityDb(long serverId, String description, String causerName, String createdAt, String reason) {
         this.serverId = serverId;
         this.description = description;
         this.causerName = causerName;
         this.createdAt = createdAt;
+        this.reason = reason;
     }
 
     public long getId() {

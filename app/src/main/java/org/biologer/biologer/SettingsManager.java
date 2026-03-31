@@ -14,7 +14,7 @@ public class SettingsManager {
         ACCESS_TOKEN, REFRESH_TOKEN, TOKEN_EXPIRE_TIMESTAMP, MAIL_CONFIRMED, ENTRY_OPEN, DATABASE_NAME,
         GOOGLE_MAP_TYPE, MAP_UTM_OVERLAY, MAP_KML_FILE,
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
-        OBSERVATION_TYPES_UPDATED_AT,
+        OBSERVATION_TYPES_UPDATED_AT, OBSERVATIONS_UPDATED_AT,
         FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
         DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN, NOTIFICATION_UPDATED_AT
     }
@@ -166,6 +166,16 @@ public class SettingsManager {
 
     public static String getObservationTypesUpdated() {
         return sharedPreferences.getString(KEY.OBSERVATION_TYPES_UPDATED_AT.toString(),"0");
+    }
+
+    public static void setObservationsUpdatedAt(long observations_updated_at) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(KEY.OBSERVATIONS_UPDATED_AT.toString(), observations_updated_at);
+        editor.apply();
+    }
+
+    public static long getObservationsUpdatedAt() {
+        return sharedPreferences.getLong(KEY.OBSERVATIONS_UPDATED_AT.toString(),0L);
     }
 
     public static void setTaxaLastPageFetched(String last_page) {
