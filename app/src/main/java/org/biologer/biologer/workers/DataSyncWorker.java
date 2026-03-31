@@ -12,6 +12,7 @@ import androidx.work.WorkerParameters;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.SettingsManager;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.network.json.FieldObservationDataActivity;
@@ -61,7 +62,7 @@ public class DataSyncWorker extends Worker {
         String database = SettingsManager.getDatabaseName();
         if (database == null) return Result.failure();
 
-        // For the first sync we just reset the serverUpdatedAt and serverAfterId to null
+        // For the first sync we set the serverUpdatedAt and serverAfterId to null
         if (updatedAt == 0 && !isSyncOnScroll) {
             Log.d(TAG, "First sync of observations initiated.");
             serverUpdatedAt = null;
@@ -148,45 +149,10 @@ public class DataSyncWorker extends Worker {
                 EntryDb entryToUse;
 
                 if (existing == null) {
+                    // Path 1: New observation. Not in ObjectBox.
                     try {
-                        // Part 1: Save the observation
-                        Log.d(TAG, "Saving field observation id " + data.getId() + " to ObjectBox!");
-
-                        EntryDb newEntry = new EntryDb(
-                                0,
-                                data.getId(),
-                                true,
-                                false,
-                                data.getTaxonId() != null ? data.getTaxonId() : 0,
-                                null,
-                                data.getTaxonSuggestion(),
-                                String.valueOf(data.getYear()),
-                                String.valueOf(data.getMonth() - 1),
-                                String.valueOf(data.getDay()),
-                                data.getNote(),
-                                data.getNumber(),
-                                data.getSex(),
-                                data.getStageId(),
-                                data.getAtlasCode(),
-                                String.valueOf(!data.isFoundDead()),
-                                data.getFoundDeadNote(),
-                                data.getLatitude(),
-                                data.getLongitude(),
-                                data.getAccuracy(),
-                                data.getElevation(),
-                                data.getLocation(),
-                                null,
-                                null,
-                                null,
-                                data.getProject(),
-                                data.getFoundOn(),
-                                String.valueOf(data.getDataLicense()),
-                                0,
-                                data.getTime(),
-                                data.getHabitat(),
-                                getObservationTypeIds(data)
-                        );
-
+                        // Part 1: Save the new observation
+                        EntryDb newEntry = getEntryFields(data);
                         long localId = box.put(newEntry);
                         entryToUse = newEntry;
                         entryToUse.setId(localId);
@@ -194,26 +160,22 @@ public class DataSyncWorker extends Worker {
                         Log.d(TAG, "Saving server ID " + data.getId() + " locally (ObjectBox ID " + localId + ").");
 
                         // Part 2: Save the photos
-
                         if (data.getPhotos() != null && !data.getPhotos().isEmpty()) {
                             Log.d(TAG, "Saving " + data.getPhotos().size() + " photos for entry " + localId + ".");
 
                             for (FieldObservationDataPhotos photoData : data.getPhotos()) {
 
-                                PhotoDb existingPhoto = photoBox.query()
+                                PhotoDb existingPhoto = null;
+                                try (Query<PhotoDb> query = photoBox.query()
                                         .equal(PhotoDb_.serverId, photoData.getId())
-                                        .build()
-                                        .findFirst();
+                                        .build()) {
+                                    existingPhoto = query.findFirst();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Photo query failed: ", e);
+                                }
 
                                 if (existingPhoto == null) {
-                                    PhotoDb photo = new PhotoDb();
-                                    photo.setServerId(photoData.getId());
-                                    photo.setServerUrl(photoData.getUrl());
-                                    photo.setLocalPath(null);
-                                    photo.setServerPath(photoData.getPath());
-                                    photo.setAuthor(photoData.getAuthor());
-                                    photo.setLicenseId(photoData.getLicense().getId());
-
+                                    PhotoDb photo = getPhotoFields(photoData);
                                     photo.entry.setTarget(entryToUse);
                                     entryToUse.photos.add(photo);
                                 } else {
@@ -250,6 +212,7 @@ public class DataSyncWorker extends Worker {
                         Log.e(TAG, "Error saving to ObjectBox: " + data.getId(), e);
                     }
                 } else {
+                    // Path 2: Existing observation already stored in ObjectBox.
                     if (data.getActivity().size() > existing.observationActivity.size()) {
                         Log.d(TAG, "Server has " + data.getActivity().size() + " activities. Updating local entry " + data.getId());
 
@@ -258,68 +221,65 @@ public class DataSyncWorker extends Worker {
 
                         // Part 2: Update photos
                         List<FieldObservationDataPhotos> serverPhotos = data.getPhotos();
-                        List<PhotoDb> localPhotos = existing.photos;
+                        List<PhotoDb> objectBoxPhotos = existing.photos;
 
                         if (serverPhotos == null) {
                             serverPhotos = new ArrayList<>();
                         }
 
-                        Log.d(TAG, "Syncing photos: Server has " + serverPhotos.size() + ", Local has " + localPhotos.size());
+                        Log.d(TAG, "Syncing photos: server has " + serverPhotos.size() + ", ObjectBox has " + objectBoxPhotos.size());
 
-                        for (int i = localPhotos.size() - 1; i >= 0; i--) {
-                            PhotoDb lp = localPhotos.get(i);
+                        // Case 1. Delete local photos removed on server
+                        for (int i = objectBoxPhotos.size() - 1; i >= 0; i--) {
+                            PhotoDb photoDb = objectBoxPhotos.get(i);
 
-                            // Only manage photos that have a serverId (don't touch pending local uploads)
-                            if (lp.getServerId() != 0) {
+                            // Only consider photos that have a serverId,
+                            // i.e. don't delete unuploaded photos
+                            if (photoDb.getServerId() != 0) {
                                 boolean foundOnServer = false;
-                                for (FieldObservationDataPhotos sp : serverPhotos) {
-                                    if (sp.getId() == lp.getServerId()) {
+                                for (FieldObservationDataPhotos serverPhoto : serverPhotos) {
+                                    if (serverPhoto.getId() == photoDb.getServerId()) {
                                         foundOnServer = true;
                                         break;
                                     }
                                 }
 
                                 if (!foundOnServer) {
-                                    Log.d(TAG, "Photo ID " + lp.getServerId() + " was deleted on server. Cleaning up.");
+                                    Log.d(TAG, "Photo ID " + photoDb.getServerId() + " was deleted on server. Cleaning up.");
 
                                     // Delete the physical file from internal storage
-                                    String localPath = lp.getLocalPath();
+                                    String localPath = photoDb.getLocalPath();
                                     if (localPath != null && !localPath.isEmpty()) {
-                                        // Remove the "file://" prefix if it exists to get a valid File path
                                         File file = new File(localPath.replace("file://", ""));
                                         if (file.exists()) {
                                             if (file.delete()) {
-                                                Log.d(TAG, "Successfully deleted local file: " + localPath);
+                                                Log.d(TAG, "Successfully deleted local image file: " + localPath);
                                             } else {
-                                                Log.e(TAG, "Failed to delete local file: " + localPath);
+                                                Log.e(TAG, "Failed to delete local image file: " + localPath);
                                             }
                                         }
                                     }
 
                                     // Remove the relationship from the ObjectBox ToMany list
-                                    localPhotos.remove(i);
+                                    objectBoxPhotos.remove(i);
                                 }
                             }
                         }
 
-                        for (FieldObservationDataPhotos sp : serverPhotos) {
+                        // Case 2. Add new server photo to ObjectBox
+                        for (FieldObservationDataPhotos photoData : serverPhotos) {
                             boolean existsLocally = false;
-                            for (PhotoDb lp : localPhotos) {
-                                if (lp.getServerId() == sp.getId()) {
+                            for (PhotoDb photoDb : objectBoxPhotos) {
+                                if (photoDb.getServerId() == photoData.getId()) {
                                     existsLocally = true;
                                     break;
                                 }
                             }
 
                             if (!existsLocally) {
-                                PhotoDb newPhoto = new PhotoDb();
-                                newPhoto.setServerId(sp.getId());
-                                newPhoto.setServerUrl(sp.getUrl());
-                                newPhoto.setServerPath(sp.getPath());
-                                newPhoto.setAuthor(sp.getAuthor());
-                                newPhoto.setLicenseId(sp.getLicense().getId());
-                                newPhoto.entry.setTarget(existing);
-                                localPhotos.add(newPhoto);
+                                PhotoDb photo = getPhotoFields(photoData);
+                                photo.entry.setTarget(existing);
+                                objectBoxPhotos.add(photo);
                             }
                         }
 
@@ -336,24 +296,59 @@ public class DataSyncWorker extends Worker {
                     } else {
                         Log.d(TAG, "Entry " + data.getId() + " is up to date. Skipping.");
                     }
-
-
-                    Log.d(TAG, "There are " + existing.observationActivity.size() + " activities in this ObjectBox entry!");
-                    List<ObservationActivityDb> observationActivityDbs = existing.observationActivity;
-                    for (ObservationActivityDb activity : observationActivityDbs) {
-                        Log.d(TAG, "ObjectBox entry updated at: " + activity.createdAt);
-                    }
-                    Log.d(TAG, "There are " + data.getActivity().size() + " activities in JSON!");
-                    List<FieldObservationDataActivity> fieldObservationDataActivities = data.getActivity();
-                    for (FieldObservationDataActivity activity : fieldObservationDataActivities) {
-                        Log.d(TAG, "Server data updated at: " + activity.getCreatedAt());
-                    }
-
-                    Log.d(TAG, "Not saving id " + data.getId() + " to ObjectBox, already there!");
                 }
             }
         });
 
+    }
+
+    private static PhotoDb getPhotoFields(FieldObservationDataPhotos data) {
+        PhotoDb photo = new PhotoDb();
+        photo.setServerId(data.getId());
+        photo.setServerUrl(data.getUrl());
+        photo.setLocalPath(null);
+        photo.setServerPath(data.getPath());
+        photo.setAuthor(data.getAuthor());
+        photo.setLicenseId(data.getLicense().getId());
+
+        return photo;
+    }
+
+    private static EntryDb getEntryFields(FieldObservationData data) {
+        return new EntryDb(
+                0,
+                data.getId(),
+                true,
+                false,
+                data.getTaxonId() != null ? data.getTaxonId() : 0,
+                null,
+                data.getTaxonSuggestion(),
+                String.valueOf(data.getYear()),
+                String.valueOf(data.getMonth() - 1),
+                String.valueOf(data.getDay()),
+                data.getNote(),
+                data.getNumber(),
+                data.getSex(),
+                data.getStageId(),
+                data.getAtlasCode(),
+                String.valueOf(!data.isFoundDead()),
+                data.getFoundDeadNote(),
+                data.getLatitude(),
+                data.getLongitude(),
+                data.getAccuracy(),
+                data.getElevation(),
+                data.getLocation(),
+                null,
+                null,
+                null,
+                data.getProject(),
+                data.getFoundOn(),
+                String.valueOf(data.getDataLicense()),
+                0,
+                data.getTime(),
+                data.getHabitat(),
+                getObservationTypeIds(data)
+        );
     }
 
     private static String getObservationTypeIds(FieldObservationData data) {
@@ -367,6 +362,11 @@ public class DataSyncWorker extends Worker {
     }
 
     private static void syncEntryFields(EntryDb existing, FieldObservationData serverData) {
+
+        int imageLicense = ObjectBoxHelper.getImageLicense();
+        if (!serverData.getPhotos().isEmpty()) {
+            imageLicense = serverData.getPhotos().get(0).getLicense().getId();
+        }
 
         existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
         existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
@@ -390,8 +390,7 @@ public class DataSyncWorker extends Worker {
         existing.setFoundOn(serverData.getFoundOn());
         existing.setHabitat(serverData.getHabitat());
         existing.setDataLicence(String.valueOf(serverData.getDataLicense()));
-        existing.setImageLicence(existing.getImageLicence());
+        existing.setImageLicence(imageLicense);
         existing.setObservationTypeIds(getObservationTypeIds(serverData));
-
     }
 }
