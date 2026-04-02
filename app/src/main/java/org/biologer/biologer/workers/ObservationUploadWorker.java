@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -167,7 +168,10 @@ public class ObservationUploadWorker extends Worker {
                 ObjectBoxHelper.setObservation(entry);
 
                 Log.d(TAG, "Entry " + entryId + " successfully synced with server ID: " + serverId);
-                return Result.success();
+                Data output = new Data.Builder()
+                        .putLong("updatedObservationId", entryId)
+                        .build();
+                return Result.success(output);
             }
             return Result.retry();
         } catch (Exception e) {

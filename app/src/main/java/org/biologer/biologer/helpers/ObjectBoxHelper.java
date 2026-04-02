@@ -49,6 +49,10 @@ public class ObjectBoxHelper {
         }
     }
 
+    public static int getObservationsCount() {
+        return (int) App.get().getBoxStore().boxFor(EntryDb.class).count();
+    }
+
     public static ArrayList<EntryDb> getObservationsForUpload() {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try (Query<EntryDb> query = box.query(
@@ -92,6 +96,20 @@ public class ObjectBoxHelper {
         }
     }
 
+    // Get the minimal server ID of the ObjectBox EntryDb items
+    public static long getMinObservationServerId() {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        if (box.isEmpty()) {
+            return -1L;
+        }
+        try (Query<EntryDb> query = box.query().build()) {
+            return query.property(EntryDb_.serverId).min();
+        } catch (Exception e) {
+            Log.e(TAG,"Error retrieving minimal Server ID of ObjectBox observations!" + e);
+            return -1L;
+        }
+    }
+
     public static long setObservation(EntryDb entry) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long id = box.put(entry);
@@ -111,6 +129,36 @@ public class ObjectBoxHelper {
         }
     }
 
+    public static int getTimedCountsCount() {
+        return (int) App.get().getBoxStore().boxFor(TimedCountDb.class).count();
+    }
+
+    public static ArrayList<TimedCountDb> getPagedTimedCounts(int limit, int offset) {
+        Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        try(Query<TimedCountDb> query = box.query().orderDesc(TimedCountDb_.serverId).build()) {
+            ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find(offset, limit);
+            Log.i(TAG, "There are " + timedCounts.size() + " timed counts with served ID in the ObjectBox query.");
+            return timedCounts;
+        } catch (Exception e) {
+            Log.e(TAG, "Error retrieving timed counts from database!", e);
+            return new ArrayList<>();
+        }
+    }
+
+    // Get the minimal server ID of the ObjectBox EntryDb items
+    public static long getMinTimedCountsServerId() {
+        Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        if (box.isEmpty()) {
+            return -1L;
+        }
+        try (Query<TimedCountDb> query = box.query().build()) {
+            return query.property(TimedCountDb_.serverId).min();
+        } catch (Exception e) {
+            Log.e(TAG,"Error retrieving minimal Server ID of ObjectBox timed count!" + e);
+            return -1L;
+        }
+    }
+
     public static ArrayList<TimedCountDb> getTimedCountsForUpload() {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         try (Query<TimedCountDb> query = box.query(
@@ -124,6 +172,7 @@ public class ObjectBoxHelper {
             return new ArrayList<>();
         }
     }
+
     public static TimedCountDb getTimedCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {

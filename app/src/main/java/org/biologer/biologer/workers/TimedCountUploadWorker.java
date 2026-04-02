@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.Data;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -12,10 +13,7 @@ import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.APITimedCounts;
 import org.biologer.biologer.network.json.APITimedCountsResponse;
-import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
-
-import java.util.List;
 
 import retrofit2.Response;
 
@@ -69,7 +67,10 @@ public class TimedCountUploadWorker extends Worker {
                 ObjectBoxHelper.setTimedCount(timedCount);
 
                 Log.d(TAG, "TimedCount " + timedCountId + " synchronised. Server ID: " + serverId);
-                return Result.success();
+                Data output = new Data.Builder()
+                        .putLong("updatedTimedCountId", timedCountId)
+                        .build();
+                return Result.success(output);
             } else {
                 return Result.retry();
             }

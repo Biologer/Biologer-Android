@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
@@ -37,11 +38,12 @@ import io.objectbox.Box;
 import io.objectbox.query.Query;
 import retrofit2.Response;
 
-public class DataSyncWorker extends Worker {
-    private static final String TAG = "Biologer.DataSyncWorker";
+public class ObservationsDownloadWorker extends Worker {
+    private static final String TAG = "Biologer.ObsSyncWorker";
     boolean firstSync = false;
+    Set<Long> addedObservationIds = new HashSet<>();
 
-    public DataSyncWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+    public ObservationsDownloadWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
@@ -105,13 +107,14 @@ public class DataSyncWorker extends Worker {
                             .putInt("page", page + 1)
                             .build();
 
-                    OneTimeWorkRequest nextRequest = new OneTimeWorkRequest.Builder(DataSyncWorker.class)
+                    OneTimeWorkRequest nextRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
                             .setInputData(nextInput)
-                            .addTag("DATA_SYNC_UPDATED_AT")
+                            .addTag("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
                             .build();
 
                     WorkManager.getInstance(getApplicationContext())
-                            .enqueue(nextRequest);
+                            .enqueueUniqueWork("observation_sync_chain",
+                                    ExistingWorkPolicy.APPEND, nextRequest);
                 } else {
                     if (!isSyncOnScroll && currentSyncTimestamp != -1) {
                         SettingsManager.setObservationsUpdatedAt(currentSyncTimestamp);
@@ -119,7 +122,18 @@ public class DataSyncWorker extends Worker {
                     }
                 }
 
-                return Result.success();
+                // Prepare data to return
+                long[] idsArray = new long[addedObservationIds.size()];
+                int i = 0;
+                for (Long id : addedObservationIds) {
+                    idsArray[i++] = id;
+                }
+
+                Data output = new Data.Builder()
+                        .putLongArray("updatedObservationIds", idsArray)
+                        .build();
+
+                return Result.success(output);
             } else {
                 return Result.retry();
             }
@@ -129,7 +143,7 @@ public class DataSyncWorker extends Worker {
         }
     }
 
-    private static void saveToLocalDatabase(List<FieldObservationData> dataList) {
+    private void saveToLocalDatabase(List<FieldObservationData> dataList) {
         if (dataList == null || dataList.isEmpty()) return;
 
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
@@ -158,6 +172,8 @@ public class DataSyncWorker extends Worker {
                         entryToUse.setId(localId);
 
                         Log.d(TAG, "Saving server ID " + data.getId() + " locally (ObjectBox ID " + localId + ").");
+
+                        addedObservationIds.add(localId);
 
                         // Part 2: Save the photos
                         if (data.getPhotos() != null && !data.getPhotos().isEmpty()) {
@@ -218,6 +234,7 @@ public class DataSyncWorker extends Worker {
 
                         // Part 1. Update observation
                         syncEntryFields(existing, data);
+                        addedObservationIds.add(existing.getId());
 
                         // Part 2: Update photos
                         List<FieldObservationDataPhotos> serverPhotos = data.getPhotos();

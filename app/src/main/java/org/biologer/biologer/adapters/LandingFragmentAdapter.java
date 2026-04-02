@@ -4,9 +4,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -101,54 +99,49 @@ public class LandingFragmentAdapter
         subtitleText.setText(subtitle);
 
         ImageView entryImage = viewHolder.thumbnailImage;
-        entryImage.setImageDrawable(null); // Clear the previous image
         String image = item.getImage();
 
         if (image == null) {
-            Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.mipmap.ic_kornjaca_kocka);
             Glide.with(view.getContext())
-                    .load(defaultImage)
+                    .load(R.mipmap.ic_kornjaca_kocka)
                     .into(entryImage);
+
         } else if (image.equals("timed_count")) {
-            Drawable defaultImage = ContextCompat.getDrawable(view.getContext(), R.drawable.ic_timer);
             Glide.with(view.getContext())
-                    .load(defaultImage)
+                    .load(R.drawable.ic_timer)
                     .into(entryImage);
+
         } else {
-            Log.d(TAG, "Loading thumbnail image: " + image);
-            File file;
-            if (image.startsWith("file://")) {
-                file = new File(image.replace("file://", ""));
-            } else {
-                file = new File(image);
-            }
+            File file = image.startsWith("file://")
+                    ? new File(image.replace("file://", ""))
+                    : new File(image);
 
             Glide.with(view.getContext())
                     .load(file)
                     .override(40, 40)
+                    .dontAnimate()
                     .into(entryImage);
         }
 
         if (viewHolder.uploadStatus != null) {
-            viewHolder.uploadStatus.clearColorFilter();
-            setAlpha(viewHolder, 1.0f);
             if (item.isUploaded()) {
                 viewHolder.uploadStatus.setVisibility(View.VISIBLE);
+
                 if (item.isModified()) {
-                    // Modified entry
+                    // Case 1. Modified entry
                     viewHolder.uploadStatus.setImageResource(R.drawable.ic_modified);
                     int grayColor = ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.icon_color);
                     viewHolder.uploadStatus.setColorFilter(grayColor, PorterDuff.Mode.SRC_IN);
                     setAlpha(viewHolder, 1.0f);
                 } else {
-                    // Uploaded entry
+                    // Case 2. Uploaded entry
                     viewHolder.uploadStatus.setImageResource(R.drawable.ic_uploaded);
                     int okColor = ContextCompat.getColor(viewHolder.itemView.getContext(), R.color.colorPrimaryDark);
                     viewHolder.uploadStatus.setColorFilter(okColor, PorterDuff.Mode.SRC_IN);
                     setAlpha(viewHolder, 0.6f);
                 }
             } else {
-                // New entry, not uploaded
+                // Case 3. New entry, not uploaded
                 viewHolder.uploadStatus.setVisibility(View.GONE);
                 setAlpha(viewHolder, 1.0f);
             }

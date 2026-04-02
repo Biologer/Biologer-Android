@@ -1,12 +1,8 @@
 package org.biologer.biologer.adapters;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
-import androidx.preference.PreferenceManager;
-
-import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.Localisation;
@@ -19,10 +15,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
-
-import io.objectbox.Box;
 
 public class LandingFragmentItems {
     private static final String TAG = "Biologer.LandingItems";
@@ -132,10 +125,6 @@ public class LandingFragmentItems {
             Log.e(TAG, "Building UI item for Entry with ID 0! This observation will be un-clickable.");
         }
 
-        Long observationId = entry.getId();
-        Long serverId = entry.getServerId();
-        String title = entry.getTaxonSuggestion();
-
         String subtitle = "";
         Long stage_id = entry.getStage();
         if (stage_id != null) {
@@ -155,57 +144,24 @@ public class LandingFragmentItems {
                 entry.getMonth(), entry.getDay(), entry.getTime());
 
         return new LandingFragmentItems(
-                observationId,
-                serverId,
+                entry.getId(),
+                entry.getServerId(),
                 null,
                 entry.isUploaded(),
                 entry.isModified(),
-                title,
+                entry.getTaxonSuggestion(),
                 subtitle,
                 image,
                 calendar.getTime()
         );
     }
 
-    /**
-     * Finds the correct index to insert a new item into an already sorted list,
-     * based on the user's current sorting preference ("time" or "name").
-     *
-     * @param context The application context to access SharedPreferences.
-     * @param items The existing, sorted list of LandingFragmentItems.
-     * @param newItem The new item to be inserted.
-     * @return The index where the newItem should be inserted.
-     */
-    public static int findSortedInsertionIndex(Context context, ArrayList<LandingFragmentItems> items, LandingFragmentItems newItem) {
-
-        if (items.isEmpty()) {
-            return 0;
-        }
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String sortBy = prefs.getString("sort_observations", "time");
-
-        if ("name".equals(sortBy)) {
-            // Sort by name
-            for (int i = 0; i < items.size(); i++) {
-                // Check if the new item's title comes before the current item's title
-                if (newItem.getTitle().compareToIgnoreCase(items.get(i).getTitle()) < 0) {
-                    return i;
-                }
-            }
-        } else {
-            // Sort by date descending
-            for (int i = 0; i < items.size(); i++) {
-                if (newItem.getDate().compareTo(items.get(i).getDate()) > 0) {
-                    return i;
-                }
-            }
-        }
-
-        return items.size();
-    }
-
     public static LandingFragmentItems getItemFromTimedCount(Context context, TimedCountDb timed_count) {
+
+        if (timed_count.getId() == 0) {
+            Log.e(TAG, "Building UI item for Entry with ID 0! This timed count will be un-clickable.");
+        }
+
         String title = context.getString(R.string.timed_count);
         String image = "timed_count";
         String subtitle;
@@ -228,53 +184,22 @@ public class LandingFragmentItems {
         );
     }
 
-    public static ArrayList<LandingFragmentItems> refreshItemsFromObjectBox(Context context, List<LandingFragmentItems> currentItems) {
-        ArrayList<LandingFragmentItems> refreshedList = new ArrayList<>();
-        Box<EntryDb> observationsBox = App.get().getBoxStore().boxFor(EntryDb.class);
-        Box<TimedCountDb> timedCountBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
-
-        for (LandingFragmentItems item : currentItems) {
-            LandingFragmentItems refreshedItem = null;
-
-            // Refresh Species Observations
-            if (item.getTimedCountId() == null) {
-                // Use the local ObjectBox ID to get the freshest data
-                EntryDb updatedObservation = observationsBox.get(item.getObservationId());
-                if (updatedObservation != null) {
-                    refreshedItem = getItemFromEntry(context, updatedObservation);
-                }
-            }
-            // Refresh Timed Counts
-            else {
-                TimedCountDb updatedTimedCount = timedCountBox.get(item.getTimedCountId());
-                if (updatedTimedCount != null) {
-                    refreshedItem = getItemFromTimedCount(context, updatedTimedCount);
-                }
-            }
-
-            // Add the refreshed item (or the original if DB lookup failed)
-            refreshedList.add(refreshedItem != null ? refreshedItem : item);
-        }
-
-        Log.d("Biologer.Refresh", "Refreshed " + refreshedList.size() + " items from ObjectBox.");
-        return refreshedList;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         LandingFragmentItems that = (LandingFragmentItems) o;
 
-        if (!Objects.equals(observationId, that.observationId))
-            return false;
-        if (!Objects.equals(timedCountId, that.timedCountId))
-            return false;
-        if (!Objects.equals(title, that.title)) return false;
-        if (!Objects.equals(subtitle, that.subtitle)) return false;
-        if (!Objects.equals(image, that.image)) return false;
-        return Objects.equals(date, that.date);
+        return Objects.equals(observationId, that.observationId) &&
+                Objects.equals(timedCountId, that.timedCountId) &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(subtitle, that.subtitle) &&
+                Objects.equals(image, that.image) &&
+                uploaded == that.uploaded &&
+                modified == that.modified &&
+                (date != null && that.date != null
+                        ? date.getTime() == that.date.getTime()
+                        : date == that.date);
     }
 
     @Override
