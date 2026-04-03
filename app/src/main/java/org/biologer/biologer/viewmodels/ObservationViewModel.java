@@ -65,7 +65,11 @@ public class ObservationViewModel extends ViewModel {
         setTaxonId(entry.getTaxonId() != 0 ? entry.getTaxonId() : null);
         setTimedCountId(entry.getTimedCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
-        setCalendar(DateHelper.getCalendar(entry.getYear(), entry.getMonth(), entry.getDay(), entry.getTime()));
+        setCalendar(DateHelper.getCalendar(
+                Integer.parseInt(entry.getYear()),
+                Integer.parseInt(entry.getMonth()),
+                Integer.parseInt(entry.getDay()),
+                entry.getTime()));
         setComment(entry.getComment());
         setNumberOfSpecimens(entry.getNoSpecimens());
         setSex(entry.getSex());
@@ -409,10 +413,6 @@ public class ObservationViewModel extends ViewModel {
         this.habitat = habitat;
     }
 
-    public Boolean getSaveEnabled() {
-        return saveEnabled;
-    }
-
     public void setSaveEnabled(Boolean saveEnabled) {
         this.saveEnabled = saveEnabled;
     }
@@ -461,10 +461,6 @@ public class ObservationViewModel extends ViewModel {
 
     public void setLocationFromTheMap(Boolean locationFromTheMap) {
         this.locationFromTheMap = locationFromTheMap;
-    }
-
-    public Boolean getCallTagSelected() {
-        return callTagSelected;
     }
 
     public Boolean isCallTagSelected() {

@@ -2,8 +2,6 @@ package org.biologer.biologer.adapters;
 
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,7 +84,7 @@ public class LandingFragmentAdapter
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
         LandingFragmentItems item = myEntries.get(position);
-        viewHolder.setIsTimedCount(item.getTimedCountId() != null);
+        viewHolder.setIsTimedCount(item.getServerId() != null);
 
         // Get the title
         TextView titleText = viewHolder.textTitle;
@@ -204,14 +202,14 @@ public class LandingFragmentAdapter
             LandingFragmentItems oldItem = oldList.get(oldItemPosition);
             LandingFragmentItems newItem = newList.get(newItemPosition);
 
-            // Of Observation, compare ObservationId
-            if (oldItem.getObservationId() != null && newItem.getObservationId() != null) {
-                return oldItem.getObservationId().equals(newItem.getObservationId());
+            if (oldItem.isTimedCount() != newItem.isTimedCount()) {
+                return false;
             }
-            // If Timed Count, compare TimedCountId
-            if (oldItem.getTimedCountId() != null && newItem.getTimedCountId() != null) {
-                return oldItem.getTimedCountId().equals(newItem.getTimedCountId());
+
+            if (oldItem.getLocalId() != null && newItem.getLocalId() != null) {
+                return oldItem.getLocalId().equals(newItem.getLocalId());
             }
+
             return false;
         }
 
@@ -229,6 +227,11 @@ public class LandingFragmentAdapter
         this.myEntries.addAll(newItems);
 
         diffResult.dispatchUpdatesTo(this);
+    }
+
+    public void insertItem(LandingFragmentItems item, int position) {
+        this.myEntries.add(position, item);
+        notifyItemInserted(position);
     }
 
 }

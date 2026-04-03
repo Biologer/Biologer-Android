@@ -1,5 +1,7 @@
 package org.biologer.biologer.sql;
 
+import org.biologer.biologer.network.json.FieldObservationDataPhotos;
+
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 import io.objectbox.relation.ToOne;
@@ -16,6 +18,18 @@ public class PhotoDb {
     private Integer licenseId;
 
     public ToOne<EntryDb> entry;
+
+    public static PhotoDb getPhotoFields(FieldObservationDataPhotos data) {
+            PhotoDb photo = new PhotoDb();
+            photo.setServerId(data.getId());
+            photo.setServerUrl(data.getUrl());
+            photo.setLocalPath(null);
+            photo.setServerPath(data.getPath());
+            photo.setAuthor(data.getAuthor());
+            photo.setLicenseId(data.getLicense().getId());
+
+            return photo;
+    }
 
     public long getId() {
         return id;

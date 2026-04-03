@@ -6,8 +6,6 @@ import org.biologer.biologer.sql.TimedCountDb;
 
 public class APITimedCounts {
 
-    @JsonProperty("start_time")
-    private String startTime;
     @JsonProperty("end_time")
     private String endTime;
     @JsonProperty("count_duration")
@@ -37,98 +35,53 @@ public class APITimedCounts {
     @JsonProperty("habitat")
     private String habitat;
     @JsonProperty("view_groups_id")
-    private String taxonGroup;
+    private Long taxonGroup;
     @JsonProperty("comment")
     private String comment;
     @JsonProperty("day")
-    private String day;
+    private Integer day;
     @JsonProperty("month")
-    private String month;
+    private Integer month;
     @JsonProperty("year")
-    private String year;
-
-    public String getStartTime() {
-        return startTime;
-    }
+    private Integer year;
 
     public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
     }
 
     public void setEndTime(String endTime) {
         this.endTime = endTime;
     }
 
-    public Integer getCountDurationMinutes() {
-        return countDurationMinutes;
-    }
-
     public void setCountDurationMinutes(Integer countDurationMinutes) {
         this.countDurationMinutes = countDurationMinutes;
-    }
-
-    public Integer getWalkedArea() {
-        return walkedArea;
     }
 
     public void setWalkedArea(Integer walkedArea) {
         this.walkedArea = walkedArea;
     }
 
-    public Integer getWalkedDistance() {
-        return walkedDistance;
-    }
-
     public void setWalkedDistance(Integer walkedDistance) {
         this.walkedDistance = walkedDistance;
-    }
-
-    public Integer getCloudCoverPercentage() {
-        return cloudCoverPercentage;
     }
 
     public void setCloudCoverPercentage(Integer cloudCoverPercentage) {
         this.cloudCoverPercentage = cloudCoverPercentage;
     }
 
-    public Integer getAtmosphericPressureHPa() {
-        return atmosphericPressureHPa;
-    }
-
     public void setAtmosphericPressureHPa(Integer atmosphericPressureHPa) {
         this.atmosphericPressureHPa = atmosphericPressureHPa;
-    }
-
-    public Integer getHumidityPercentage() {
-        return humidityPercentage;
     }
 
     public void setHumidityPercentage(Integer humidityPercentage) {
         this.humidityPercentage = humidityPercentage;
     }
 
-    public Double getTemperatureCelsius() {
-        return temperatureCelsius;
-    }
-
     public void setTemperatureCelsius(Double temperatureCelsius) {
         this.temperatureCelsius = temperatureCelsius;
     }
 
-    public String getWindDirection() {
-        return windDirection;
-    }
-
     public void setWindDirection(String windDirection) {
         this.windDirection = windDirection;
-    }
-
-    public Integer getWindSpeed() {
-        return windSpeed;
     }
 
     public void setWindSpeed(Integer windSpeed) {
@@ -143,11 +96,7 @@ public class APITimedCounts {
         this.habitat = habitat;
     }
 
-    public String getTaxonGroup() {
-        return taxonGroup;
-    }
-
-    public void setTaxonGroup(String taxonGroup) {
+    public void setTaxonGroup(Long taxonGroup) {
         this.taxonGroup = taxonGroup;
     }
 
@@ -159,27 +108,27 @@ public class APITimedCounts {
         this.comment = comment;
     }
 
-    public String getDay() {
+    public Integer getDay() {
         return day;
     }
 
-    public void setDay(String day) {
+    public void setDay(Integer day) {
         this.day = day;
     }
 
-    public String getMonth() {
+    public Integer getMonth() {
         return month;
     }
 
-    public void setMonth(String month) {
+    public void setMonth(Integer month) {
         this.month = month;
     }
 
-    public String getYear() {
+    public Integer getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(Integer year) {
         this.year = year;
     }
 
@@ -199,8 +148,8 @@ public class APITimedCounts {
         setTaxonGroup(db.getTaxonGroup());
         setComment(db.getComment());
         setDay(db.getDay());
-        int real_month = Integer.parseInt(db.getMonth()) + 1; // Add 1 since months range from 0 to 11
-        setMonth(String.valueOf(real_month));
+        int real_month = db.getMonth() + 1; // Add 1 since months range from 0 to 11
+        setMonth(real_month);
         setYear(db.getYear());
         setLongitude(db.getLongitude());
         setLatitude(db.getLatitude());

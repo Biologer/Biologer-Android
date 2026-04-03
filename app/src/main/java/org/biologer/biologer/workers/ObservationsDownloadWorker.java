@@ -152,21 +152,14 @@ public class ObservationsDownloadWorker extends Worker {
         App.get().getBoxStore().runInTx(() -> {
             for (FieldObservationData data : dataList) {
 
-                EntryDb existing;
-                try (Query<EntryDb> query = box.query(EntryDb_.serverId.equal(data.getId())).build()) {
-                    existing = query.findFirst();
-                } catch (Exception e) {
-                    Log.e(TAG, "Error in ObjectBox query for serverId: " + data.getId(), e);
-                    continue;
-                }
-
+                EntryDb existing = ObjectBoxHelper.getObservationByServerId(data.getId());
                 EntryDb entryToUse;
 
                 if (existing == null) {
                     // Path 1: New observation. Not in ObjectBox.
                     try {
                         // Part 1: Save the new observation
-                        EntryDb newEntry = getEntryFields(data);
+                        EntryDb newEntry = EntryDb.getEntryFieldsFromData(data);
                         long localId = box.put(newEntry);
                         entryToUse = newEntry;
                         entryToUse.setId(localId);
@@ -191,7 +184,7 @@ public class ObservationsDownloadWorker extends Worker {
                                 }
 
                                 if (existingPhoto == null) {
-                                    PhotoDb photo = getPhotoFields(photoData);
+                                    PhotoDb photo = PhotoDb.getPhotoFields(photoData);
                                     photo.entry.setTarget(entryToUse);
                                     entryToUse.photos.add(photo);
                                 } else {
@@ -233,7 +226,7 @@ public class ObservationsDownloadWorker extends Worker {
                         Log.d(TAG, "Server has " + data.getActivity().size() + " activities. Updating local entry " + data.getId());
 
                         // Part 1. Update observation
-                        syncEntryFields(existing, data);
+                        EntryDb.syncEntryFieldsFromData(existing, data);
                         addedObservationIds.add(existing.getId());
 
                         // Part 2: Update photos
@@ -294,7 +287,7 @@ public class ObservationsDownloadWorker extends Worker {
                             }
 
                             if (!existsLocally) {
-                                PhotoDb photo = getPhotoFields(photoData);
+                                PhotoDb photo = PhotoDb.getPhotoFields(photoData);
                                 photo.entry.setTarget(existing);
                                 objectBoxPhotos.add(photo);
                             }
@@ -317,97 +310,5 @@ public class ObservationsDownloadWorker extends Worker {
             }
         });
 
-    }
-
-    private static PhotoDb getPhotoFields(FieldObservationDataPhotos data) {
-        PhotoDb photo = new PhotoDb();
-        photo.setServerId(data.getId());
-        photo.setServerUrl(data.getUrl());
-        photo.setLocalPath(null);
-        photo.setServerPath(data.getPath());
-        photo.setAuthor(data.getAuthor());
-        photo.setLicenseId(data.getLicense().getId());
-
-        return photo;
-    }
-
-    private static EntryDb getEntryFields(FieldObservationData data) {
-        return new EntryDb(
-                0,
-                data.getId(),
-                true,
-                false,
-                data.getTaxonId() != null ? data.getTaxonId() : 0,
-                null,
-                data.getTaxonSuggestion(),
-                String.valueOf(data.getYear()),
-                String.valueOf(data.getMonth() - 1),
-                String.valueOf(data.getDay()),
-                data.getNote(),
-                data.getNumber(),
-                data.getSex(),
-                data.getStageId(),
-                data.getAtlasCode(),
-                String.valueOf(!data.isFoundDead()),
-                data.getFoundDeadNote(),
-                data.getLatitude(),
-                data.getLongitude(),
-                data.getAccuracy(),
-                data.getElevation(),
-                data.getLocation(),
-                null,
-                null,
-                null,
-                data.getProject(),
-                data.getFoundOn(),
-                String.valueOf(data.getDataLicense()),
-                0,
-                data.getTime(),
-                data.getHabitat(),
-                getObservationTypeIds(data)
-        );
-    }
-
-    private static String getObservationTypeIds(FieldObservationData data) {
-        Set<Long> observationTypeIds = new HashSet<>();
-        if (data.getTypes() != null && !data.getTypes().isEmpty()) {
-            for (FieldObservationDataTypes type : data.getTypes()) {
-                observationTypeIds.add(type.getId());
-            }
-        }
-        return observationTypeIds.toString();
-    }
-
-    private static void syncEntryFields(EntryDb existing, FieldObservationData serverData) {
-
-        int imageLicense = ObjectBoxHelper.getImageLicense();
-        if (!serverData.getPhotos().isEmpty()) {
-            imageLicense = serverData.getPhotos().get(0).getLicense().getId();
-        }
-
-        existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
-        existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
-        existing.setYear(String.valueOf(serverData.getYear()));
-        existing.setMonth(String.valueOf(serverData.getMonth() - 1));
-        existing.setDay(String.valueOf(serverData.getDay()));
-        existing.setTime(serverData.getTime());
-        existing.setComment(serverData.getNote());
-        existing.setNoSpecimens(serverData.getNumber());
-        existing.setSex(serverData.getSex());
-        existing.setStage(serverData.getStageId());
-        existing.setAtlasCode(serverData.getAtlasCode());
-        existing.setDeadOrAlive(String.valueOf(!serverData.isFoundDead()));
-        existing.setCauseOfDeath(serverData.getFoundDeadNote());
-        existing.setLattitude(serverData.getLatitude());
-        existing.setLongitude(serverData.getLongitude());
-        existing.setAccuracy(serverData.getAccuracy());
-        existing.setElevation(serverData.getElevation());
-        existing.setLocation(serverData.getLocation());
-        existing.setProjectId(serverData.getProject());
-        existing.setFoundOn(serverData.getFoundOn());
-        existing.setHabitat(serverData.getHabitat());
-        existing.setDataLicence(String.valueOf(serverData.getDataLicense()));
-        existing.setImageLicence(imageLicense);
-        existing.setObservationTypeIds(getObservationTypeIds(serverData));
     }
 }

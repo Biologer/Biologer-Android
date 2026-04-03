@@ -1,5 +1,12 @@
 package org.biologer.biologer.sql;
 
+import org.biologer.biologer.helpers.ObjectBoxHelper;
+import org.biologer.biologer.network.json.FieldObservationData;
+import org.biologer.biologer.network.json.FieldObservationDataTypes;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 import io.objectbox.relation.ToMany;
@@ -293,6 +300,86 @@ public class EntryDb {
 
     public void setModified(boolean modified) {
         this.modified = modified;
+    }
+
+    public static EntryDb getEntryFieldsFromData(FieldObservationData data) {
+        return new EntryDb(
+                0,
+                data.getId(),
+                true,
+                false,
+                data.getTaxonId() != null ? data.getTaxonId() : 0,
+                null,
+                data.getTaxonSuggestion(),
+                String.valueOf(data.getYear()),
+                String.valueOf(data.getMonth() - 1),
+                String.valueOf(data.getDay()),
+                data.getNote(),
+                data.getNumber(),
+                data.getSex(),
+                data.getStageId(),
+                data.getAtlasCode(),
+                String.valueOf(!data.isFoundDead()),
+                data.getFoundDeadNote(),
+                data.getLatitude(),
+                data.getLongitude(),
+                data.getAccuracy(),
+                data.getElevation(),
+                data.getLocation(),
+                null,
+                null,
+                null,
+                data.getProject(),
+                data.getFoundOn(),
+                String.valueOf(data.getDataLicense()),
+                0,
+                data.getTime(),
+                data.getHabitat(),
+                getObservationTypeIds(data)
+        );
+    }
+
+    private static String getObservationTypeIds(FieldObservationData data) {
+        Set<Long> observationTypeIds = new HashSet<>();
+        if (data.getTypes() != null && !data.getTypes().isEmpty()) {
+            for (FieldObservationDataTypes type : data.getTypes()) {
+                observationTypeIds.add(type.getId());
+            }
+        }
+        return observationTypeIds.toString();
+    }
+
+    public static void syncEntryFieldsFromData(EntryDb existing, FieldObservationData serverData) {
+
+        int imageLicense = ObjectBoxHelper.getImageLicense();
+        if (!serverData.getPhotos().isEmpty()) {
+            imageLicense = serverData.getPhotos().get(0).getLicense().getId();
+        }
+
+        existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
+        existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
+        existing.setYear(String.valueOf(serverData.getYear()));
+        existing.setMonth(String.valueOf(serverData.getMonth() - 1));
+        existing.setDay(String.valueOf(serverData.getDay()));
+        existing.setTime(serverData.getTime());
+        existing.setComment(serverData.getNote());
+        existing.setNoSpecimens(serverData.getNumber());
+        existing.setSex(serverData.getSex());
+        existing.setStage(serverData.getStageId());
+        existing.setAtlasCode(serverData.getAtlasCode());
+        existing.setDeadOrAlive(String.valueOf(!serverData.isFoundDead()));
+        existing.setCauseOfDeath(serverData.getFoundDeadNote());
+        existing.setLattitude(serverData.getLatitude());
+        existing.setLongitude(serverData.getLongitude());
+        existing.setAccuracy(serverData.getAccuracy());
+        existing.setElevation(serverData.getElevation());
+        existing.setLocation(serverData.getLocation());
+        existing.setProjectId(serverData.getProject());
+        existing.setFoundOn(serverData.getFoundOn());
+        existing.setHabitat(serverData.getHabitat());
+        existing.setDataLicence(String.valueOf(serverData.getDataLicense()));
+        existing.setImageLicence(imageLicense);
+        existing.setObservationTypeIds(getObservationTypeIds(serverData));
     }
 
 }

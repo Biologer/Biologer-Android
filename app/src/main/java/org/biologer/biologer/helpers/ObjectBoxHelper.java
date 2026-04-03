@@ -70,7 +70,10 @@ public class ObjectBoxHelper {
 
     public static ArrayList<EntryDb> getPagedObservations(int limit, int offset) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        try(Query<EntryDb> query = box.query().orderDesc(EntryDb_.serverId).build()) {
+        try(Query<EntryDb> query = box.query()
+                .isNull(EntryDb_.timedCoundId)
+                .orderDesc(EntryDb_.serverId)
+                .build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find(offset, limit);
             Log.i(TAG, "There are " + observations.size() + " observations with served ID in the ObjectBox query.");
             return observations;
@@ -92,6 +95,16 @@ public class ObjectBoxHelper {
             return entry;
         } catch (Exception e) {
             Log.e(TAG, "Error retrieving observation by ID: " + entryId, e);
+            return null;
+        }
+    }
+
+    public static EntryDb getObservationByServerId(long id) {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        try (Query<EntryDb> query = box.query(EntryDb_.serverId.equal(id)).build()) {
+            return query.findFirst();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in ObjectBox observation query for serverId: " + id, e);
             return null;
         }
     }
@@ -175,7 +188,7 @@ public class ObjectBoxHelper {
 
     public static TimedCountDb getTimedCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.id.equal(timedCountId)).build()) {
             TimedCountDb timedCount = query.findFirst();
             if (timedCount != null) {
                 Log.i(TAG, "Timed count with ID " + timedCountId + " found in the database");
@@ -185,6 +198,18 @@ public class ObjectBoxHelper {
             return timedCount;
         } catch (Exception e) {
             Log.e(TAG, "Error retrieving timed count by ID: " + timedCountId, e);
+            return null;
+        }
+    }
+
+    public static TimedCountDb getTimedCountByServerId(long id) {
+        Box<TimedCountDb> timedCountBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        try (Query<TimedCountDb> query = timedCountBox.query(
+                        TimedCountDb_.serverId.equal(id))
+                .build()) {
+            return query.findFirst();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in ObjectBox timed count query for serverId: " + id, e);
             return null;
         }
     }
@@ -229,21 +254,21 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static long getIdFromTimeCountId(int timeCountId) {
+    public static long getIdFromServerId(long serverId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timeCountId)).build()) {
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.serverId.equal(serverId)).build()) {
             TimedCountDb timedCount = query.findFirst();
             if (timedCount != null) {
                 Log.i(TAG,
                         "ObjectBox ID of the timed count is " + timedCount.getId()
-                                + " (Timed count ID (" + timeCountId + ")).");
+                                + " (Timed count ID (" + serverId + ")).");
                 return timedCount.getId();
             } else {
-                Log.i(TAG, "Could not find ObjectBox id for time cound ID " + timeCountId + ".");
+                Log.i(TAG, "Could not find ObjectBox id for time count server ID " + serverId + ".");
                 return 0;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error retrieving ObjectBox ID from time count ID: " + timeCountId, e);
+            Log.e(TAG, "Error retrieving ObjectBox ID from time count server ID: " + serverId, e);
             return 0;
         }
     }
@@ -257,7 +282,7 @@ public class ObjectBoxHelper {
             } else {
                 // Note: property().max() internally handles query closing correctly, but having
                 // the query declared in try-with-resources is safer overall.
-                int maxId = (int) query.property(TimedCountDb_.timedCountId).max();
+                int maxId = (int) query.property(TimedCountDb_.id).max();
                 Log.i(TAG, "The last timed count in the database has ID " + maxId + ".");
                 return ++maxId;
             }
@@ -267,7 +292,7 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static ArrayList<EntryDb> getTimedCountObservations(int timedCountId) {
+    public static ArrayList<EntryDb> getTimedCountObservations(long timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
@@ -286,7 +311,7 @@ public class ObjectBoxHelper {
         return id;
     }
 
-    public static Location calculateCentroidLocation(Integer timedCountId) {
+    public static Location calculateCentroidLocation(Long timedCountId) {
         List<EntryDb> observations = getTimedCountObservations(timedCountId);
 
         if (observations.isEmpty()) {
@@ -509,7 +534,7 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static void removeObservationsForTimedCountId(int timedCountId) {
+    public static void removeObservationsForTimedCountId(long timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long removedCount;
         try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
@@ -527,13 +552,12 @@ public class ObjectBoxHelper {
         Log.i(TAG, "Removed " + removedCount + " observation with ID " + observationId + ".");
     }
 
-    public static void removeTimedCountById(int timedCountId) {
+    public static void removeTimedCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        long removedCount;
-        try (Query<TimedCountDb> query = box.query(TimedCountDb_.timedCountId.equal(timedCountId)).build()) {
-            removedCount = query.remove();
+        try (Query<TimedCountDb> query = box.query(TimedCountDb_.id.equal(timedCountId)).build()) {
+            long removedCount = query.remove();
+            Log.i(TAG, "Removed " + removedCount + " timed count with ID " + timedCountId + ".");
         }
-        Log.i(TAG, "Removed " + removedCount + " time count with ID " + timedCountId + ".");
     }
 
     public static void removeAllObservations() {
@@ -592,4 +616,5 @@ public class ObjectBoxHelper {
             return false;
         }
     }
+
 }

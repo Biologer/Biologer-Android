@@ -119,15 +119,22 @@ public class FragmentLanding extends Fragment {
         // Load new data not uploaded to the server
         items = LandingFragmentItems.loadAllLocalEntries(requireContext());
 
+        ArrayList<LandingFragmentItems> syncedItems = new ArrayList<>();
+
         // If the list is short ask for more items
         ArrayList<EntryDb> syncedObservations = ObjectBoxHelper.getPagedObservations(25, 0);
         for (EntryDb observation : syncedObservations) {
-            items.add(getItemFromEntry(requireContext(), observation));
+            syncedItems.add(getItemFromEntry(requireContext(), observation));
         }
         ArrayList<TimedCountDb> syncedTimedCounts = ObjectBoxHelper.getPagedTimedCounts(25, 0);
         for (TimedCountDb timedCount : syncedTimedCounts) {
-            items.add(getItemFromTimedCount(requireContext(), timedCount));
+            syncedItems.add(getItemFromTimedCount(requireContext(), timedCount));
         }
+
+        Collections.sort(syncedItems, (item1, item2) ->
+                item2.getDate().compareTo(item1.getDate()));
+
+        items.addAll(syncedItems);
 
         // Update the adapter
         if (entriesAdapter == null) {
@@ -236,6 +243,7 @@ public class FragmentLanding extends Fragment {
                                     if (timedCountId > 0) {
                                         updateSingleTimeCountItem(timedCountId);
                                     }
+                                    Log.d(TAG, "Observation ID: " + observationId + "; Timed Count ID: " + timedCountId);
                                 }
                             }
                     }
@@ -248,6 +256,7 @@ public class FragmentLanding extends Fragment {
                     if (finished < total) {
                         showUploadProgress(true, percentage);
                     } else {
+                        showUploadProgress(false, 0);
                         if (shouldShowToast) {
                             if (failed > 0) {
                                 Toast.makeText(getContext(), getResources().getQuantityString(
@@ -255,10 +264,8 @@ public class FragmentLanding extends Fragment {
                                         failed,
                                         failed
                                 ), Toast.LENGTH_LONG).show();
-                                showUploadProgress(false, 0);
                             } else {
                                 Toast.makeText(getContext(), getString(R.string.all_data_uploaded_successfully), Toast.LENGTH_SHORT).show();
-                                showUploadProgress(false, 0);
                             }
                         }
                     }
@@ -342,7 +349,7 @@ public class FragmentLanding extends Fragment {
 
     private void updateSingleObservationItem(long observationId) {
 
-        int index = getIndexFromObservationID(observationId);
+        int index = getItemIndex(observationId, false);
 
         EntryDb entry = ObjectBoxHelper.getObservationById(observationId);
         if (entry != null) {
@@ -354,7 +361,7 @@ public class FragmentLanding extends Fragment {
                 Log.e(TAG, "Cannot update observation with ID " + observationId +
                         ". It was not found in the fragment list (index: " + index +
                         ") or database entry is null. Reloading list.");
-                loadItemsForRecyclerView();
+                //loadItemsForRecyclerView();
             }
         }
 
@@ -362,7 +369,7 @@ public class FragmentLanding extends Fragment {
 
     private void updateSingleTimeCountItem(long timedCountId) {
 
-        int index = getIndexFromTimedCountID(timedCountId);
+        int index = getItemIndex(timedCountId, true);
 
         TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
         if (timedCount != null) {
@@ -374,7 +381,7 @@ public class FragmentLanding extends Fragment {
                 Log.e(TAG, "Cannot update timed count with ID " + timedCountId +
                         ". It was not found in the fragment list (index: " + index +
                         ") or database entry is null. Reloading list.");
-                loadItemsForRecyclerView();
+                //loadItemsForRecyclerView();
             }
         }
 
@@ -433,10 +440,10 @@ public class FragmentLanding extends Fragment {
                         else {
                             binding.recycledViewEntries.setClickable(false);
                             LandingFragmentItems item = items.get(position);
-                            if (item.getTimedCountId() != null) {
-                                openTimedCount(item.getTimedCountId());
+                            if (item.isTimedCount()) {
+                                openTimedCount(item.getLocalId());
                             } else {
-                                openObservation(item.getObservationId());
+                                openObservation(item.getLocalId());
                             }
                         }
                     }
@@ -528,12 +535,15 @@ public class FragmentLanding extends Fragment {
                 .putLong("updatedAt", updatedAt)
                 .build();
 
-        OneTimeWorkRequest dataRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
+        OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
+                .setInputData(data)
+                .addTag("TIMED_COUNTS_DOWNLOAD_UPDATED_AT")
+                .build();
+
+        OneTimeWorkRequest observationRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
                 .setInputData(data)
                 .addTag("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
                 .build();
-
-        // TODO TIMED COUNTS!
 
         OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
                 .setConstraints(new Constraints.Builder()
@@ -543,8 +553,11 @@ public class FragmentLanding extends Fragment {
                 .build();
 
         WorkManager.getInstance(requireContext())
-                .beginUniqueWork("data_sync_chain",
-                        ExistingWorkPolicy.KEEP, dataRequest)
+                .beginUniqueWork(
+                        "data_sync_chain",
+                        ExistingWorkPolicy.KEEP,
+                        timedCountRequest)
+                .then(observationRequest)
                 .then(photoRequest)
                 .enqueue();
     }
@@ -705,35 +718,38 @@ public class FragmentLanding extends Fragment {
         }
 
         // Display observation in the RecyclerView
+        Log.d(TAG, "Adding entry " + entryId + "to the list.");
         LandingFragmentItems newItem = getItemFromEntry(requireContext(), entryDb);
-        items.add(0, newItem);
-        entriesAdapter.notifyItemInserted(0);
-        binding.recycledViewEntries.smoothScrollToPosition(0);
+        addItemToRecyclerView(newItem);
 
         // Update UI element
         ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
     }
 
     private void addTimedCountItem(Intent data) {
-        Integer new_timed_count_id = data.getIntExtra("TIMED_COUNT_ID", 0);
+        int new_timed_count_id = data.getIntExtra("TIMED_COUNT_ID", 0);
         String time = data.getStringExtra("TIMED_COUNT_START_TIME");
-        String day = data.getStringExtra("TIMED_COUNT_DAY");
-        String month = data.getStringExtra("TIMED_COUNT_MONTH");
-        String year = data.getStringExtra("TIMED_COUNT_YEAR");
+        Integer day = data.getIntExtra("TIMED_COUNT_DAY", 0);
+        Integer month = data.getIntExtra("TIMED_COUNT_MONTH", 0);
+        Integer year = data.getIntExtra("TIMED_COUNT_YEAR", 0);
         Log.d(TAG, "This was a new Timed Count with ID: " + new_timed_count_id);
+        Log.d(TAG, "Y-M-D" + year + "-" + month + "-" + day + " at " + time);
 
         String title = getString(R.string.timed_count);
         String image = "timed_count";
         String subtitle;
-        Calendar calendar = DateHelper.getCalendar(year,
-                month, day, Objects.requireNonNull(time));
+        Calendar calendar = DateHelper.getCalendar(
+                year,
+                month,
+                day,
+                Objects.requireNonNull(time));
         subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
                 getString(R.string.at_time) + " " +
                 DateHelper.getLocalizedCalendarTime(calendar);
         LandingFragmentItems item = new LandingFragmentItems(
                 null,
                 null,
-                new_timed_count_id,
+                true,
                 false,
                 false,
                 title,
@@ -744,9 +760,19 @@ public class FragmentLanding extends Fragment {
     }
 
     private void addItemToRecyclerView(LandingFragmentItems item) {
-            items.add(0, item);
-            entriesAdapter.notifyItemInserted(0);
+        if (items == null) {
+            items = new ArrayList<>();
+            Log.e(TAG, "Items are null in the recycler view.");
+        }
+
+        items.add(0, item);
+        Log.d(TAG, "There are " + entriesAdapter.getItemCount() + " items in the adapter, " + items.size() + " in the list.");
+        if (entriesAdapter != null) {
+            entriesAdapter.insertItem(item, 0);
+            Log.d(TAG, "NotifyItemInserted. Items in the adapter now: " + entriesAdapter.getItemCount());
             binding.recycledViewEntries.smoothScrollToPosition(0);
+        }
+
     }
 
     // Add new items to RecyclerView
@@ -756,13 +782,12 @@ public class FragmentLanding extends Fragment {
                 items = new ArrayList<>();
             }
 
-
             int initialSize = items.size();
             for (LandingFragmentItems newItem : newItems) {
                 boolean exists = false;
                 for (LandingFragmentItems existingItem : items) {
-                    if (Objects.equals(existingItem.getObservationId(), newItem.getObservationId()) &&
-                            Objects.equals(existingItem.getTimedCountId(), newItem.getTimedCountId())) {
+                    if (Objects.equals(existingItem.getLocalId(), newItem.getLocalId()) &&
+                            existingItem.isTimedCount() == newItem.isTimedCount()) {
                         exists = true;
                         break;
                     }
@@ -822,35 +847,32 @@ public class FragmentLanding extends Fragment {
     }
 
     // Find the entry’s index by ObservationId
-    private int getIndexFromObservationID(long entry_id) {
+    private int getItemIndex(long id, boolean isTimedCount) {
         for (int i = items.size() - 1; i >= 0; i--) {
-            Long entryId = items.get(i).getObservationId();
-            if (entryId != null && entryId == entry_id) {
-                Log.d(TAG, "Entry " + entry_id + " index ID is " + i);
-                return i;
-            }
-        }
-        Log.d(TAG, "Entry " + entry_id + " not found in items.");
-        return -1;
-    }
+            LandingFragmentItems item = items.get(i);
+            Log.d(TAG, "Checking item at " + i + ": ItemID=" + item.getLocalId() + ", SearchID=" + id + ", ServerID=" + item.getServerId() + ", Match=" + (item.getLocalId() == id));
 
-    // Find the entry’s index by TimedCountId
-    private int getIndexFromTimedCountID(long timed_count_id) {
-        for (int i = items.size() - 1; i >= 0; i--) {
-            Integer timedCountId = items.get(i).getTimedCountId();
-            if (timedCountId != null && timedCountId == timed_count_id) {
-                Log.d(TAG, "Entry " + timed_count_id + " index ID is " + i);
+            if (item.isTimedCount() == isTimedCount &&
+                    item.getLocalId() != null && item.getLocalId() == id) {
+
+                Log.d(TAG, (isTimedCount ? "Timed Count " : "Observation ") + id + " index is " + i);
                 return i;
             }
         }
-        Log.d(TAG, "Entry " + timed_count_id + " not found in items.");
+        Log.d(TAG, (isTimedCount ? "Timed Count " : "Observation ") + id + " not found in items.");
         return -1;
     }
 
     public void duplicateEntry(int position) {
-        // TODO handle timed counts
-        Log.d(TAG, "You will now duplicate entry ID: " + position);
-        EntryDb entry_from = ObjectBoxHelper.getObservationById(items.get(position).getObservationId());
+        LandingFragmentItems item = items.get(position);
+        if (item.isTimedCount()) {
+            Log.d(TAG, "Timed counts cannot be duplicated.");
+            actionMode.finish();
+            return;
+        }
+
+        Log.d(TAG, "You will now duplicate entry at position " + position);
+        EntryDb entry_from = ObjectBoxHelper.getObservationById(item.getLocalId());
 
         // Create new entry based on current one
         if (entry_from != null) {
@@ -896,7 +918,9 @@ public class FragmentLanding extends Fragment {
             newDuplicateObservation(new_entry_id);
         }
 
-        actionMode.finish();
+        if (actionMode != null) {
+            actionMode.finish();
+        }
     }
 
     private void deleteSelectedEntries() {
@@ -933,12 +957,12 @@ public class FragmentLanding extends Fragment {
 
         if (currentPosition == -1) return; // Already deleted
 
-        if (item.getTimedCountId() != null) {
-            int id = item.getTimedCountId();
+        Long id = item.getLocalId();
+
+        if (item.isTimedCount()) {
             ObjectBoxHelper.removeObservationsForTimedCountId(id);
             ObjectBoxHelper.removeTimedCountById(id);
         } else {
-            Long id = item.getObservationId();
             ObjectBoxHelper.removeObservationById(id);
         }
 
@@ -949,14 +973,14 @@ public class FragmentLanding extends Fragment {
     private void sendDeleteRequestToServer(LandingFragmentItems item) {
 
         Call<Void> call = null;
-        if (item.getTimedCountId() != null) {
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(item.getTimedCountId());
+        if (item.isTimedCount()) {
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(item.getLocalId());
             if (timedCount != null) {
                 call = RetrofitClient.getService(SettingsManager.getDatabaseName())
                         .deleteTimedCountObservation(timedCount.getServerId());
             }
         } else {
-            EntryDb entry = ObjectBoxHelper.getObservationById(item.getObservationId());
+            EntryDb entry = ObjectBoxHelper.getObservationById(item.getLocalId());
             if (entry != null) {
                 call = RetrofitClient.getService(SettingsManager.getDatabaseName())
                         .deleteFieldObservation(entry.getServerId());
@@ -968,10 +992,10 @@ public class FragmentLanding extends Fragment {
                 @Override
                 public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                     if (response.isSuccessful()) {
-                        if (item.getTimedCountId() != null) {
-                            Log.d(TAG, "Timed Count ID " + item.getTimedCountId() + " deleted from server.");
+                        if (item.isTimedCount()) {
+                            Log.d(TAG, "Timed Count ID " + item.getLocalId() + " deleted from server.");
                         } else {
-                            Log.d(TAG, "Observation ID " + item.getObservationId() + " deleted from server.");
+                            Log.d(TAG, "Observation ID " + item.getLocalId() + " deleted from server.");
                         }
                         deleteLocally(item);
                     } else {

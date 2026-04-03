@@ -131,7 +131,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void loadSpeciesData() {
-        Integer id = getTimedCountIdFromBundle();
+        Long id = getTimedCountIdFromBundle();
         if (id != null) {
             ArrayList<EntryDb> timedCounts = ObjectBoxHelper.getTimedCountObservations(id);
             for (EntryDb entry : timedCounts) {
@@ -277,7 +277,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void addNewViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        viewModel.setTimedCountId(ObjectBoxHelper.getUniqueTimedCountID());
+        viewModel.setServerId((long) ObjectBoxHelper.getUniqueTimedCountID());
         viewModel.setNewEntry(true);
         addWeatherObserverToViewModel();
 
@@ -307,9 +307,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private void loadExistingViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
         viewModel.setNewEntry(false);
-        Integer id = getTimedCountIdFromBundle();
+        Long id = getTimedCountIdFromBundle();
         if (id != null) {
-            viewModel.setTimedCountId(id);
+            viewModel.setServerId(id);
             TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
             if (timedCount == null) {
                 Log.e(TAG, "There is no timed count with ID: " + id);
@@ -410,7 +410,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         // Case 2: EXISTING ENTRY - Timed Count is reopened. Use stored data.
         } else {
-            Integer timedCountId = viewModel.getTimedCountId();
+            Long timedCountId = viewModel.getServerId();
             if (timedCountId == null) {
                 Log.e(TAG, "Cannot add entry, Timed Count ID is missing for existing entry.");
                 Toast.makeText(this, R.string.error_loading_timed_count_id, Toast.LENGTH_LONG).show();
@@ -455,7 +455,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
      * relying on current location/time.
      */
     private void createAndSaveNewEntry(TaxonDb taxon, Location location,
-                                       String year, String month, String day, String time) {
+                                       Integer year, Integer month, Integer day, String time) {
         Log.d(TAG, "Saving observation data with location: Lat = " + location.getLatitude() + ", Lng = " + location.getLongitude() + ", Acc = " + location.getAccuracy());
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ActivityTimedCount.this);
@@ -481,11 +481,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 false,
                 false,
                 taxon.getId(),
-                viewModel.getTimedCountId(),
+                viewModel.getServerId().intValue(),
                 taxon.getLatinName(),
-                year,
-                month,
-                day,
+                String.valueOf(year),
+                String.valueOf(month),
+                String.valueOf(day),
                 "",
                 1,
                 "",
@@ -649,7 +649,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 viewModel.getServerId(),
                 viewModel.isUploaded(),
                 viewModel.isModified(),
-                viewModel.getTimedCountId(),
                 viewModel.getStartTimeString(),
                 viewModel.getEndTimeString(),
                 viewModel.getCountDuration(),
@@ -663,7 +662,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 viewModel.getWindSpeedData(),
                 viewModel.getHabitatData(),
                 viewModel.getCommentData(),
-                String.valueOf(viewModel.getTaxonGroupId()),
+                viewModel.getTaxonGroupId(),
                 DateHelper.getCurrentDay(),
                 DateHelper.getCurrentMonth(),
                 DateHelper.getCurrentYear(),
@@ -677,7 +676,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         Intent intent = new Intent();
         intent.putExtra("IS_NEW_ENTRY", isNewEntry());
-        intent.putExtra("TIMED_COUNT_ID", viewModel.getTimedCountId());
+        intent.putExtra("TIMED_COUNT_ID", viewModel.getServerId());
         intent.putExtra("TIMED_COUNT_START_TIME", viewModel.getStartTimeString());
         intent.putExtra("TIMED_COUNT_DAY", DateHelper.getCurrentDay());
         intent.putExtra("TIMED_COUNT_MONTH", DateHelper.getCurrentMonth());
@@ -692,9 +691,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         if (isNewEntry()) {
             return 0;
         } else {
-            Integer id = viewModel.getTimedCountId();
+            Long id = viewModel.getServerId();
             if (id != null) {
-                return ObjectBoxHelper.getIdFromTimeCountId(id);
+                return ObjectBoxHelper.getIdFromServerId(id);
             } else {
                 return 0;
             }
@@ -1101,10 +1100,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         return getIntent().getBooleanExtra("IS_NEW_ENTRY", true);
     }
 
-    private Integer getTimedCountIdFromBundle() {
+    private Long getTimedCountIdFromBundle() {
         long id = getIntent().getLongExtra("TIMED_COUNT_ID", 0);
         if (id != 0) {
-            return (Integer) (int) id;
+            return id;
         } else {
             Log.e(TAG, "Timed count ID from Bundle is null!");
             return null;

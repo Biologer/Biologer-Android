@@ -27,7 +27,6 @@ public class TimedCountViewModel extends ViewModel {
     private Long serverId = null;
     private boolean uploaded;
     private Long taxonGroupId = null;
-    private Integer timedCountId = null;
     private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
     private Boolean isRunning = null;
     private Boolean isModified = false;
@@ -104,7 +103,6 @@ public class TimedCountViewModel extends ViewModel {
     }
 
     public void getFromObjectBox(TimedCountDb timedCount) {
-        setTimedCountId(timedCount.getTimedCountId());
         setStartTimeString(timedCount.getStartTime());
         setEndTimeString(timedCount.getEndTime());
         setCountDuration(timedCount.getCountDurationMinutes());
@@ -113,7 +111,7 @@ public class TimedCountViewModel extends ViewModel {
         setCentroidLongitude(timedCount.getLongitude());
         setCentroidLatitude(timedCount.getLatitude());
         setGeometry(timedCount.getGeometry());
-        setTaxonGroupId(Long.parseLong(timedCount.getTaxonGroup()));
+        setTaxonGroupId(timedCount.getTaxonGroup());
         setTemperatureData(timedCount.getTemperatureCelsius());
         setCloudinessData(timedCount.getCloudCoverPercentage());
         setWindSpeedData(timedCount.getWindSpeed());
@@ -229,14 +227,6 @@ public class TimedCountViewModel extends ViewModel {
     public void setTaxonId(Long taxonId) {
         setModified(true);
         this.taxonId = taxonId;
-    }
-
-    public Integer getTimedCountId() {
-        return timedCountId;
-    }
-
-    public void setTimedCountId(Integer timedCountId) {
-        this.timedCountId = timedCountId;
     }
 
     public String getStartTimeString() {

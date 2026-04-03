@@ -47,11 +47,9 @@ public class DateHelper {
         }
     }
 
-    public static Calendar getCalendar(String year, String month, String day, String time) {
+    public static Calendar getCalendar(Integer year, Integer month, Integer day, String time) {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Integer.parseInt(year),
-                Integer.parseInt(month),
-                Integer.parseInt(day));
+        calendar.set(year, month, day);
 
         if (time != null && time.contains(":")) {
             String[] timeParts = time.split(":");
@@ -169,20 +167,19 @@ public class DateHelper {
                 calendar.get(Calendar.MINUTE));
     }
 
-    public static String getCurrentYear() {
+    public static Integer getCurrentYear() {
         Calendar calendar = Calendar.getInstance();
-        return String.valueOf(calendar.get(Calendar.YEAR));
+        return calendar.get(Calendar.YEAR);
     }
 
-    public static String getCurrentMonth() {
+    public static Integer getCurrentMonth() {
         Calendar calendar = Calendar.getInstance();
-        int month = calendar.get(Calendar.MONTH);
-        return String.valueOf(month);
+        return calendar.get(Calendar.MONTH);
     }
 
-    public static String getCurrentDay() {
+    public static Integer getCurrentDay() {
         Calendar calendar = Calendar.getInstance();
-        return String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        return calendar.get(Calendar.DAY_OF_MONTH);
     }
 
     public static long getMillisTimestampFromIsoString(String isoDate) {

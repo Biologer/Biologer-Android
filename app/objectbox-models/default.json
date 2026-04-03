@@ -664,11 +664,6 @@
           "flags": 129
         },
         {
-          "id": "2:1368560095505349989",
-          "name": "timedCountId",
-          "type": 5
-        },
-        {
           "id": "3:6943168398254565037",
           "name": "startTime",
           "type": 9
@@ -721,7 +716,7 @@
         {
           "id": "13:2146561128621106321",
           "name": "taxonGroup",
-          "type": 9
+          "type": 6
         },
         {
           "id": "14:3150745902195515974",
@@ -731,17 +726,17 @@
         {
           "id": "15:8913877479118075771",
           "name": "day",
-          "type": 9
+          "type": 5
         },
         {
           "id": "16:138237147353027633",
           "name": "month",
-          "type": 9
+          "type": 5
         },
         {
           "id": "17:3745161465141926660",
           "name": "year",
-          "type": 9
+          "type": 5
         },
         {
           "id": "18:4657190102378698014",
@@ -784,7 +779,13 @@
           "type": 1
         }
       ],
-      "relations": []
+      "relations": [
+        {
+          "id": "3:3070896470664727652",
+          "name": "observationActivity",
+          "targetId": "24:1674884884924857982"
+        }
+      ]
     },
     {
       "id": "23:5084452827377797376",
@@ -840,7 +841,7 @@
     },
     {
       "id": "24:1674884884924857982",
-      "lastPropertyId": "7:3107919479654543973",
+      "lastPropertyId": "8:347633174841326704",
       "name": "ObservationActivityDb",
       "properties": [
         {
@@ -881,14 +882,22 @@
           "type": 11,
           "flags": 520,
           "relationTarget": "EntryDb"
+        },
+        {
+          "id": "8:347633174841326704",
+          "name": "timedCountId",
+          "indexId": "3:2053014654395371605",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "TimedCountDb"
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "24:1674884884924857982",
-  "lastIndexId": "2:3008232395480651523",
-  "lastRelationId": "2:6336783786273462882",
+  "lastIndexId": "3:2053014654395371605",
+  "lastRelationId": "3:3070896470664727652",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
@@ -1000,7 +1009,8 @@
     297848624786294411,
     2773131629283811786,
     6770658024707945124,
-    290569150187918907
+    290569150187918907,
+    1368560095505349989
   ],
   "retiredRelationUids": [],
   "version": 1

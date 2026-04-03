@@ -19,46 +19,30 @@ import java.util.Objects;
 
 public class LandingFragmentItems {
     private static final String TAG = "Biologer.LandingItems";
-    private Long observationId;
+    private Long localId;
     private Long serverId;
     private boolean uploaded;
     private boolean modified;
-    private Integer timedCountId;
+    private boolean isTimedCount;
     private String title;
     private String subtitle;
     private String image;
     private Date date;
     private boolean marked = false;
 
-    public LandingFragmentItems(Long observationId, Long serverId, Integer timedCountId,
+    public LandingFragmentItems(Long localId, Long serverId, boolean isTimedCount,
                                 boolean uploaded, boolean modified,
                                 String title, String subtitle, String image,
                                 Date date) {
-        this.observationId = observationId;
+        this.localId = localId;
         this.serverId = serverId;
-        this.timedCountId = timedCountId;
+        this.isTimedCount = isTimedCount;
         this.uploaded = uploaded;
         this.modified = modified;
         this.title = title;
         this.subtitle = subtitle;
         this.image = image;
         this.date = date;
-    }
-
-    public Long getObservationId() {
-        return observationId;
-    }
-
-    public void setObservationId(Long observationId) {
-        this.observationId = observationId;
-    }
-
-    public Integer getTimedCountId() {
-        return timedCountId;
-    }
-
-    public void setTimedCountId(Integer timedCountId) {
-        this.timedCountId = timedCountId;
     }
 
     public String getTitle() {
@@ -71,10 +55,6 @@ public class LandingFragmentItems {
 
     public String getSubtitle() {
         return subtitle;
-    }
-
-    public void setSubtitle(String subtitle) {
-        this.subtitle = subtitle;
     }
 
     public String getImage() {
@@ -140,13 +120,16 @@ public class LandingFragmentItems {
             Log.d(TAG, "Entry " + entry.getId() + " has image path: " + image);
         }
 
-        Calendar calendar = DateHelper.getCalendar(entry.getYear(),
-                entry.getMonth(), entry.getDay(), entry.getTime());
+        Calendar calendar = DateHelper.getCalendar(
+                Integer.parseInt(entry.getYear()),
+                Integer.parseInt(entry.getMonth()),
+                Integer.parseInt(entry.getDay()),
+                entry.getTime());
 
         return new LandingFragmentItems(
                 entry.getId(),
                 entry.getServerId(),
-                null,
+                false,
                 entry.isUploaded(),
                 entry.isModified(),
                 entry.getTaxonSuggestion(),
@@ -172,9 +155,9 @@ public class LandingFragmentItems {
                 DateHelper.getLocalizedCalendarTime(calendar);
 
         return new LandingFragmentItems(
-                null,
+                timed_count.getId(),
                 timed_count.getServerId(),
-                timed_count.getTimedCountId(),
+                true,
                 timed_count.isUploaded(),
                 timed_count.isModified(),
                 title,
@@ -190,8 +173,8 @@ public class LandingFragmentItems {
         if (o == null || getClass() != o.getClass()) return false;
         LandingFragmentItems that = (LandingFragmentItems) o;
 
-        return Objects.equals(observationId, that.observationId) &&
-                Objects.equals(timedCountId, that.timedCountId) &&
+        return Objects.equals(localId, that.localId) &&
+                Objects.equals(isTimedCount, that.isTimedCount) &&
                 Objects.equals(title, that.title) &&
                 Objects.equals(subtitle, that.subtitle) &&
                 Objects.equals(image, that.image) &&
@@ -204,8 +187,8 @@ public class LandingFragmentItems {
 
     @Override
     public int hashCode() {
-        int result = observationId != null ? observationId.hashCode() : 0;
-        result = 31 * result + (timedCountId != null ? timedCountId.hashCode() : 0);
+        int result = localId != null ? localId.hashCode() : 0;
+        result = 31 * result + (isTimedCount ? 1231 : 1237);
         result = 31 * result + (title != null ? title.hashCode() : 0);
         result = 31 * result + (subtitle != null ? subtitle.hashCode() : 0);
         result = 31 * result + (image != null ? image.hashCode() : 0);
@@ -243,5 +226,17 @@ public class LandingFragmentItems {
 
     public void setServerId(Long serverId) {
         this.serverId = serverId;
+    }
+
+    public Long getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(Long localId) {
+        this.localId = localId;
+    }
+
+    public boolean isTimedCount() {
+        return isTimedCount;
     }
 }

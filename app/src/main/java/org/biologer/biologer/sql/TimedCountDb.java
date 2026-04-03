@@ -1,7 +1,10 @@
 package org.biologer.biologer.sql;
 
+import org.biologer.biologer.network.json.TimedCountData;
+
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
+import io.objectbox.relation.ToMany;
 
 @Entity
 public class TimedCountDb {
@@ -11,7 +14,6 @@ public class TimedCountDb {
     private Long serverId;
     private boolean uploaded;
     private boolean modified;
-    private Integer timedCountId;
     private String startTime;
     private String endTime;
     private Integer countDurationMinutes;
@@ -24,26 +26,30 @@ public class TimedCountDb {
     private String windDirection;
     private Integer windSpeed;
     private String habitat;
-    private String taxonGroup;
+    private Long taxonGroup;
     private String comment;
-    private String day;
-    private String month;
-    private String year;
+    private Integer day;
+    private Integer month;
+    private Integer year;
     private double longitude;
     private double latitude;
     private String geometry;
+    public ToMany<ObservationActivityDb> observationActivity;
+
 
     public TimedCountDb() {
     }
-    public TimedCountDb(long id, Long serverId, boolean uploaded, boolean modified, Integer timedCountId,
+    public TimedCountDb(long id, Long serverId, boolean uploaded, boolean modified,
                         String startTime, String endTime, Integer countDurationMinutes,
                         Integer walkedArea, Integer walkedDistance, Integer cloudCoverPercentage,
                         Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
-                        String comment, String taxonGroup, String day, String month, String year,
+                        String comment, Long taxonGroup, Integer day, Integer month, Integer year,
                         double longitude, double latitude, String geometry) {
         this.id = id;
-        this.timedCountId = timedCountId;
+        this.serverId = serverId;
+        this.uploaded = uploaded;
+        this.modified = modified;
         this.startTime = startTime;
         this.endTime = endTime;
         this.countDurationMinutes = countDurationMinutes;
@@ -66,21 +72,45 @@ public class TimedCountDb {
         this.geometry = geometry;
     }
 
+    public static TimedCountDb getTimedCountFromData(TimedCountData data) {
+        return new TimedCountDb(
+                0L,
+                data.getId(),
+                true,
+                false,
+                data.getStartTime(),
+                data.getEndTime(),
+                data.getCountDuration(),
+                data.getArea(),
+                data.getRouteLength(),
+                data.getCloudCover(),
+                data.getAtmosphericPressure(),
+                data.getHumidity(),
+                data.getTemperature(),
+                data.getWindDirection(),
+                data.getWindSpeed(),
+                data.getHabitat(),
+                data.getComments(),
+                data.getViewGroup().getId(),
+                data.getDay(),
+                data.getMonth(),
+                data.getYear(),
+                data.getLongitude() != null ? data.getLongitude() : 0,
+                data.getLatitude() != null ? data.getLatitude(): 0,
+                data.getGeometry()
+        );
+    }
+
     public long getId() {
         return id;
     }
-    public Integer getTimedCountId() {
-        return timedCountId;
-    }
-
-    public void setTimedCountId(Integer timedCountId) {
-        this.timedCountId = timedCountId;
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getStartTime() {
         return startTime;
     }
-
     public void setStartTime(String startTime) {
         this.startTime = startTime;
     }
@@ -88,7 +118,6 @@ public class TimedCountDb {
     public String getEndTime() {
         return endTime;
     }
-
     public void setEndTime(String endTime) {
         this.endTime = endTime;
     }
@@ -120,27 +149,21 @@ public class TimedCountDb {
     public Integer getHumidityPercentage() {
         return humidityPercentage;
     }
-
     public void setHumidityPercentage(Integer humidityPercentage) {
         this.humidityPercentage = humidityPercentage;
     }
-
     public Double getTemperatureCelsius() {
         return temperatureCelsius;
     }
-
     public void setTemperatureCelsius(Double temperatureCelsius) {
         this.temperatureCelsius = temperatureCelsius;
     }
-
     public String getWindDirection() {
         return windDirection;
     }
-
     public void setWindDirection(String windDirection) {
         this.windDirection = windDirection;
     }
-
     public Integer getWindSpeed() {
         return windSpeed;
     }
@@ -157,14 +180,6 @@ public class TimedCountDb {
         this.habitat = habitat;
     }
 
-    public String getTaxonGroup() {
-        return taxonGroup;
-    }
-
-    public void setTaxonGroup(String taxonGroup) {
-        this.taxonGroup = taxonGroup;
-    }
-
     public String getComment() {
         return comment;
     }
@@ -173,27 +188,27 @@ public class TimedCountDb {
         this.comment = comment;
     }
 
-    public String getDay() {
+    public int getDay() {
         return day;
     }
 
-    public void setDay(String day) {
+    public void setDay(Integer day) {
         this.day = day;
     }
 
-    public String getMonth() {
+    public Integer getMonth() {
         return month;
     }
 
-    public void setMonth(String month) {
+    public void setMonth(Integer month) {
         this.month = month;
     }
 
-    public String getYear() {
+    public Integer getYear() {
         return year;
     }
 
-    public void setYear(String year) {
+    public void setYear(Integer year) {
         this.year = year;
     }
 
@@ -259,5 +274,41 @@ public class TimedCountDb {
 
     public void setModified(boolean modified) {
         this.modified = modified;
+    }
+
+    public Long getTaxonGroup() {
+        return taxonGroup;
+    }
+
+    public void setTaxonGroup(Long taxonGroup) {
+        this.taxonGroup = taxonGroup;
+    }
+
+    public static void syncTimeCountFieldsFromData(TimedCountDb existing, TimedCountData serverData) {
+
+        existing.setServerId(serverData.getId() != null ? serverData.getId() : 0);
+        existing.setUploaded(true);
+        existing.setModified(false);
+        existing.setStartTime(serverData.getStartTime());
+        existing.setEndTime(serverData.getEndTime());
+        existing.setCountDurationMinutes(serverData.getCountDuration());
+        existing.setWalkedArea(serverData.getArea());
+        existing.setWalkedDistance(serverData.getRouteLength());
+        existing.setCloudCoverPercentage(serverData.getCloudCover());
+        existing.setAtmosphericPressureHPa(serverData.getAtmosphericPressure());
+        existing.setHumidityPercentage(serverData.getHumidity());
+        existing.setTemperatureCelsius(serverData.getTemperature());
+        existing.setWindDirection(serverData.getWindDirection());
+        existing.setWindSpeed(serverData.getWindSpeed());
+        existing.setHabitat(serverData.getHabitat());
+        existing.setComment(serverData.getComments());
+        existing.setTaxonGroup(serverData.getViewGroup().getId());
+        existing.setDay(serverData.getDay());
+        existing.setMonth(serverData.getMonth());
+        existing.setYear(serverData.getYear());
+        existing.setLongitude(serverData.getLongitude());
+        existing.setLatitude(serverData.getLatitude());
+        existing.setGeometry(serverData.getGeometry());
+
     }
 }

@@ -90,7 +90,7 @@ public class FragmentTimedCountEntries extends Fragment {
                     public void onItemClick(View view, int position) {
                         binding.recyclerViewTimedCounts.setClickable(false);
                         LandingFragmentItems item = items.get(position);
-                        long entry_id = item.getObservationId();
+                        long entry_id = item.getLocalId();
                         Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
                         Query<EntryDb> query = entriesBox
                                 .query(EntryDb_.id.equal(entry_id))
@@ -128,9 +128,9 @@ public class FragmentTimedCountEntries extends Fragment {
 
         // Get the observation data for selected species
         if (timedCountViewModel.getTaxonId() != null &&
-                timedCountViewModel.getTimedCountId() != null) {
+                timedCountViewModel.getServerId() != null) {
             long taxon_id = timedCountViewModel.getTaxonId();
-            int timed_count_id = timedCountViewModel.getTimedCountId();
+            long timed_count_id = timedCountViewModel.getServerId();
             Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
             Query<EntryDb> query = entriesBox
                     .query(EntryDb_.timedCoundId.equal(timed_count_id)
@@ -145,7 +145,7 @@ public class FragmentTimedCountEntries extends Fragment {
 
         // Sort in descending order
         Collections.sort(items, (item1, item2) ->
-                Long.compare(item2.getObservationId(), item1.getObservationId()));
+                Long.compare(item2.getLocalId(), item1.getLocalId()));
 
         return items;
     }
@@ -199,7 +199,7 @@ public class FragmentTimedCountEntries extends Fragment {
 
         int index_id = 0;
         for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).getObservationId() == entry_id) {
+            if (items.get(i).getLocalId() == entry_id) {
                 index_id = i;
             }
         }
@@ -236,13 +236,16 @@ public class FragmentTimedCountEntries extends Fragment {
             image = entry.getSlika1();
         }
 
-        Calendar calendar = DateHelper.getCalendar(entry.getYear(),
-                entry.getMonth(), entry.getDay(), entry.getTime());
+        Calendar calendar = DateHelper.getCalendar(
+                Integer.parseInt(entry.getYear()),
+                Integer.parseInt(entry.getMonth()),
+                Integer.parseInt(entry.getDay()),
+                entry.getTime());
 
         return new LandingFragmentItems(
                 observationId,
                 entry.getServerId(),
-                null,
+                false,
                 false,
                 false,
                 title,

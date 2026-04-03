@@ -16,6 +16,8 @@ public class ObservationActivityDb {
 
     public ToOne<EntryDb> entry;
 
+    public ToOne<TimedCountDb> timedCount;
+
     public ObservationActivityDb() {}
 
     public ObservationActivityDb(long serverId, String description, String causerName, String createdAt, String reason) {
