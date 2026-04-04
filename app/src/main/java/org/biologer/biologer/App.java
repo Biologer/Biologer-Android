@@ -12,6 +12,7 @@ import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.MyObjectBox;
 import org.biologer.biologer.sql.PhotoDb;
+import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.List;
 
@@ -162,6 +163,64 @@ public class App extends Application {
                     entryBox.put(entry);
                     Log.d("Migration", "Photos for Entry ID: " + entry.getId() + " migrated.");
                 }
+            }
+        }
+
+        // --- Start of TimedCountDb Migration ---
+        Box<TimedCountDb> timedCountBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
+        List<TimedCountDb> allTimedCounts = timedCountBox.getAll();
+
+        for (TimedCountDb tc : allTimedCounts) {
+            boolean migrated = false;
+
+            // Migrate Day
+            if (tc.getNewDay() == null && tc.getDay() != null && !tc.getDay().isEmpty()) {
+                try {
+                    tc.setNewDay(Integer.parseInt(tc.getDay()));
+                    migrated = true;
+                } catch (NumberFormatException e) {
+                    Log.e("Migration", "Could not parse day: " + tc.getDay());
+                }
+            }
+
+            // Migrate Month
+            if (tc.getNewMonth() == null && tc.getMonth() != null && !tc.getMonth().isEmpty()) {
+                try {
+                    tc.setNewMonth(Integer.parseInt(tc.getMonth()));
+                    migrated = true;
+                } catch (NumberFormatException e) {
+                    Log.e("Migration", "Could not parse month: " + tc.getMonth());
+                }
+            }
+
+            // Migrate Year
+            if (tc.getNewYear() == null && tc.getYear() != null && !tc.getYear().isEmpty()) {
+                try {
+                    tc.setNewYear(Integer.parseInt(tc.getYear()));
+                    migrated = true;
+                } catch (NumberFormatException e) {
+                    Log.e("Migration", "Could not parse year: " + tc.getYear());
+                }
+            }
+
+            // Migrate Taxon Group (String to Long)
+            if (tc.getNewTaxonGroup() == null && tc.getTaxonGroup() != null && !tc.getTaxonGroup().isEmpty()) {
+                try {
+                    tc.setNewTaxonGroup(Long.parseLong(tc.getTaxonGroup()));
+                    migrated = true;
+                } catch (NumberFormatException e) {
+                    Log.e("Migration", "Could not parse taxonGroup: " + tc.getTaxonGroup());
+                }
+            }
+
+            if (migrated) {
+                tc.setDay(null);
+                tc.setMonth(null);
+                tc.setYear(null);
+                tc.setTaxonGroup(null);
+
+                timedCountBox.put(tc);
+                Log.d("Migration", "TimedCount ID: " + tc.getId() + " fields migrated to Integer/Long.");
             }
         }
     }

@@ -26,15 +26,23 @@ public class TimedCountDb {
     private String windDirection;
     private Integer windSpeed;
     private String habitat;
-    private Long taxonGroup;
     private String comment;
-    private Integer day;
-    private Integer month;
-    private Integer year;
     private double longitude;
     private double latitude;
     private String geometry;
     public ToMany<ObservationActivityDb> observationActivity;
+
+    // Correct variable types, should be made default in the future
+    private Integer newDay;
+    private Integer newMonth;
+    private Integer newYear;
+    private Long newTaxonGroup;
+
+    // Obsolete, should be removed
+    private String day;
+    private String month;
+    private String year;
+    private String taxonGroup;
 
 
     public TimedCountDb() {
@@ -44,7 +52,7 @@ public class TimedCountDb {
                         Integer walkedArea, Integer walkedDistance, Integer cloudCoverPercentage,
                         Integer atmosphericPressureHPa, Integer humidityPercentage,
                         Double temperatureCelsius, String windDirection, Integer windSpeed, String habitat,
-                        String comment, Long taxonGroup, Integer day, Integer month, Integer year,
+                        String comment, Long newTaxonGroup, Integer newDay, Integer newMonth, Integer newYear,
                         double longitude, double latitude, String geometry) {
         this.id = id;
         this.serverId = serverId;
@@ -63,10 +71,10 @@ public class TimedCountDb {
         this.windSpeed = windSpeed;
         this.habitat = habitat;
         this.comment = comment;
-        this.taxonGroup = taxonGroup;
-        this.day = day;
-        this.month = month;
-        this.year = year;
+        this.newTaxonGroup = newTaxonGroup;
+        this.newDay = newDay;
+        this.newMonth = newMonth;
+        this.newYear = newYear;
         this.longitude = longitude;
         this.latitude = latitude;
         this.geometry = geometry;
@@ -188,30 +196,6 @@ public class TimedCountDb {
         this.comment = comment;
     }
 
-    public int getDay() {
-        return day;
-    }
-
-    public void setDay(Integer day) {
-        this.day = day;
-    }
-
-    public Integer getMonth() {
-        return month;
-    }
-
-    public void setMonth(Integer month) {
-        this.month = month;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
-    }
-
     public Integer getWalkedArea() {
         return walkedArea;
     }
@@ -276,14 +260,6 @@ public class TimedCountDb {
         this.modified = modified;
     }
 
-    public Long getTaxonGroup() {
-        return taxonGroup;
-    }
-
-    public void setTaxonGroup(Long taxonGroup) {
-        this.taxonGroup = taxonGroup;
-    }
-
     public static void syncTimeCountFieldsFromData(TimedCountDb existing, TimedCountData serverData) {
 
         existing.setServerId(serverData.getId() != null ? serverData.getId() : 0);
@@ -302,13 +278,77 @@ public class TimedCountDb {
         existing.setWindSpeed(serverData.getWindSpeed());
         existing.setHabitat(serverData.getHabitat());
         existing.setComment(serverData.getComments());
-        existing.setTaxonGroup(serverData.getViewGroup().getId());
-        existing.setDay(serverData.getDay());
-        existing.setMonth(serverData.getMonth());
-        existing.setYear(serverData.getYear());
+        existing.setNewTaxonGroup(serverData.getViewGroup().getId());
+        existing.setNewDay(serverData.getDay());
+        existing.setNewMonth(serverData.getMonth());
+        existing.setNewYear(serverData.getYear());
         existing.setLongitude(serverData.getLongitude());
         existing.setLatitude(serverData.getLatitude());
         existing.setGeometry(serverData.getGeometry());
 
+    }
+
+    public Integer getNewDay() {
+        return newDay;
+    }
+
+    public void setNewDay(Integer newDay) {
+        this.newDay = newDay;
+    }
+
+    public Integer getNewMonth() {
+        return newMonth;
+    }
+
+    public void setNewMonth(Integer newMonth) {
+        this.newMonth = newMonth;
+    }
+
+    public Integer getNewYear() {
+        return newYear;
+    }
+
+    public void setNewYear(Integer newYear) {
+        this.newYear = newYear;
+    }
+
+    public Long getNewTaxonGroup() {
+        return newTaxonGroup;
+    }
+
+    public void setNewTaxonGroup(Long newTaxonGroup) {
+        this.newTaxonGroup = newTaxonGroup;
+    }
+
+    public String getDay() {
+        return day;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public String getTaxonGroup() {
+        return taxonGroup;
+    }
+
+    public void setDay(String day) {
+        this.day = day;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public void setTaxonGroup(String taxonGroup) {
+        this.taxonGroup = taxonGroup;
     }
 }

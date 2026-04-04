@@ -178,9 +178,9 @@ public class LandingFragmentItems {
         String image = "timed_count";
         String subtitle;
         Calendar calendar = DateHelper.getCalendar(
-                timed_count.getYear(),
-                timed_count.getMonth() - 1,
-                timed_count.getDay(),
+                timed_count.getNewYear(),
+                timed_count.getNewMonth() - 1,
+                timed_count.getNewDay(),
                 timed_count.getStartTime());
         subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
                 context.getString(R.string.at_time) + " " +

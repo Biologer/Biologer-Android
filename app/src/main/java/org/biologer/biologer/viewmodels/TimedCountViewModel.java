@@ -111,7 +111,7 @@ public class TimedCountViewModel extends ViewModel {
         setCentroidLongitude(timedCount.getLongitude());
         setCentroidLatitude(timedCount.getLatitude());
         setGeometry(timedCount.getGeometry());
-        setTaxonGroupId(timedCount.getTaxonGroup());
+        setTaxonGroupId(timedCount.getNewTaxonGroup());
         setTemperatureData(timedCount.getTemperatureCelsius());
         setCloudinessData(timedCount.getCloudCoverPercentage());
         setWindSpeedData(timedCount.getWindSpeed());

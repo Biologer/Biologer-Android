@@ -442,9 +442,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             createAndSaveNewEntry(
                     taxon,
                     centralLocation,
-                    timedCount.getYear(),
-                    timedCount.getMonth(),
-                    timedCount.getDay(),
+                    timedCount.getNewYear(),
+                    timedCount.getNewMonth(),
+                    timedCount.getNewDay(),
                     averageTime
             );
         }

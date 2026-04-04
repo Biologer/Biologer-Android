@@ -147,12 +147,12 @@ public class APITimedCounts {
         setWindDirection(db.getWindDirection());
         setWindSpeed(db.getWindSpeed());
         setHabitat(db.getHabitat());
-        setTaxonGroup(db.getTaxonGroup());
+        setTaxonGroup(db.getNewTaxonGroup());
         setComment(db.getComment());
-        setDay(db.getDay());
-        int real_month = db.getMonth() + 1; // Add 1 since months range from 0 to 11
+        setDay(db.getNewDay());
+        int real_month = db.getNewMonth() + 1; // Add 1 since months range from 0 to 11
         setMonth(real_month);
-        setYear(db.getYear());
+        setYear(db.getNewYear());
         setLongitude(db.getLongitude());
         setLatitude(db.getLatitude());
         setGeometry(db.getGeometry());

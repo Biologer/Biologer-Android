@@ -250,10 +250,23 @@ public class FragmentLanding extends Fragment {
                                     } else {
                                         shouldShowToast = true;
                                     }
-                                    long observationId = workInfo.getOutputData().getLong("uploadedObservationId", 0);
-                                    long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
-                                    reloadItemsForRecyclerView();
-                                    Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
+
+                                    LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
+                                    if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
+                                        Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
+                                        long observationId = workInfo.getOutputData().getLong("uploadedObservationId", 0);
+                                        long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
+                                        reloadItemsForRecyclerView();
+                                        Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
+                                        binding.recycledViewEntries.post(() -> {
+                                            if (ObjectBoxHelper.getUnsyncedCount() > 0) {
+                                                ((ActivityLanding) requireActivity()).uploadRecords();
+                                            }
+                                            binding.recycledViewEntries.smoothScrollToPosition(0);
+                                        });
+                                    } else {
+                                        reloadItemsForRecyclerView();
+                                    }
                                 }
                             }
                     }
@@ -345,7 +358,7 @@ public class FragmentLanding extends Fragment {
                         }
 
                         if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
-                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate, false);
+                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate);
                         }
 
                         if (allFinished) {
@@ -407,7 +420,7 @@ public class FragmentLanding extends Fragment {
                         }
 
                         if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
-                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate, false);
+                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate);
                         }
 
                         if (allFinished) {
@@ -1037,7 +1050,7 @@ public class FragmentLanding extends Fragment {
         binding = null;
     }
 
-    private void applyBatchUpdates(List<Long> observationIds, List<Long> timedCountIds, boolean scrollToTop) {
+    private void applyBatchUpdates(List<Long> observationIds, List<Long> timedCountIds) {
         // 1. Fetch the list ONCE
         List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
         boolean hasChanges = false;
@@ -1073,12 +1086,7 @@ public class FragmentLanding extends Fragment {
         // 4. Sort and submit ONCE
         if (hasChanges) {
             Collections.sort(currentList, LandingFragmentItems.compareUploadAndDate);
-            entriesAdapter.submitList(currentList, () -> {
-                if (scrollToTop) {
-                    binding.recycledViewEntries.post(() ->
-                            binding.recycledViewEntries.smoothScrollToPosition(0));
-                }
-            });
+            entriesAdapter.submitList(currentList);
             ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
         }
     }
