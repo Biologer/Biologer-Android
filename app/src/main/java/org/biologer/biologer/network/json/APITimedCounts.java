@@ -48,6 +48,7 @@ public class APITimedCounts {
     private Integer year;
 
     public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
     public void setEndTime(String endTime) {

@@ -143,7 +143,7 @@ public interface RetrofitService {
 
     @Headers({"Accept: application/json",
             "content-type: application/json"})
-    @PUT("api/timed-count-observations/${id}")
+    @PUT("api/timed-count-observations/{id}")
     Call<APITimedCountsResponse> updateTimedCount(
             @Path("id") long serverId,
             @Body APITimedCounts timedCounts

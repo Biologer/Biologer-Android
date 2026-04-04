@@ -47,6 +47,7 @@ public class DateHelper {
         }
     }
 
+    // Time should be given as HH:mm
     public static Calendar getCalendar(Integer year, Integer month, Integer day, String time) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month, day);
@@ -193,5 +194,33 @@ public class DateHelper {
             Log.e("DateHelper", "Error parsing ISO date: " + isoDate, e);
             return 0;
         }
+    }
+
+    /**
+     * Extracts HH:mm from an ISO 8601 string (e.g. 2026-04-04T14:51:00.000000Z)
+     * @param isoTime The raw input string
+     * @return String in HH:mm format, or original string if not ISO
+     */
+    public static String getHoursAndMinutesFromIso(String isoTime) {
+        if (isoTime == null || isoTime.isEmpty()) {
+            return "";
+        }
+
+        try {
+            // Case 1. If ISO string 2026-04-04T14:51:00.000000Z
+            if (isoTime.contains("T")) {
+                String timePart = isoTime.split("T")[1]; // Split after 'T'
+                return timePart.substring(0, 5); // Take first 5 characters
+            }
+
+            // Case 2. If HH:mm or HH:mm:ss
+            if (isoTime.contains(":") && isoTime.length() >= 5) {
+                return isoTime.substring(0, 5);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing time: " + isoTime);
+        }
+
+        return isoTime;
     }
 }

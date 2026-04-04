@@ -51,7 +51,7 @@ public class ObservationsDownloadWorker extends Worker {
         boolean isSyncOnScroll = getInputData().getBoolean("isSyncOnScroll", false);
         long beforeId = getInputData().getLong("beforeId", -1);
         long afterId = getInputData().getLong("afterId", -1);
-        long updatedAt = getInputData().getLong("updatedAt", -1);
+        long updatedAt = getInputData().getLong("observationsUpdatedAt", -1);
         int page = getInputData().getInt("page", 1);
         long currentSyncTimestamp = getInputData().getLong("currentSyncTimestamp", -1);
 
@@ -99,7 +99,7 @@ public class ObservationsDownloadWorker extends Worker {
 
                     Data nextInput = new Data.Builder()
                             .putBoolean("isSyncOnScroll", false)
-                            .putLong("updatedAt", updatedAt)
+                            .putLong("observationsUpdatedAt", updatedAt)
                             .putLong("currentSyncTimestamp", currentSyncTimestamp)
                             .putLong("afterId", afterId)
                             .putInt("page", page + 1)

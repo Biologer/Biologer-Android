@@ -1,6 +1,6 @@
 package org.biologer.biologer.gui;
 
-import static org.biologer.biologer.adapters.LandingFragmentItems.compareUploadAndDate;
+import static org.biologer.biologer.adapters.LandingFragmentItems.SORTER;
 import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromEntry;
 import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromTimedCount;
 
@@ -123,7 +123,7 @@ public class FragmentLanding extends Fragment {
         for (TimedCountDb timedCount : syncedTimedCounts) {
             allItems.add(getItemFromTimedCount(requireContext(), timedCount));
         }
-        Collections.sort(allItems, compareUploadAndDate);
+        Collections.sort(allItems, SORTER);
 
         localObjectBoxObservationOffset = syncedObservations.size();
         localObjectBoxTimedCountsOffset = syncedTimedCounts.size();
@@ -154,7 +154,7 @@ public class FragmentLanding extends Fragment {
             for (TimedCountDb timedCount : syncedTimedCounts) {
                 allItems.add(getItemFromTimedCount(requireContext(), timedCount));
             }
-            Collections.sort(allItems, compareUploadAndDate);
+            Collections.sort(allItems, SORTER);
             entriesAdapter.submitList(allItems);
             ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
         });
@@ -208,15 +208,15 @@ public class FragmentLanding extends Fragment {
     }
 
     private void deselectAllItems() {
-        List<LandingFragmentItems> current = new ArrayList<>(entriesAdapter.getCurrentList());
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
         boolean changed = false;
-        for (int i = 0; i < current.size(); i++) {
-            if (current.get(i).isMarked()) {
-                current.set(i, current.get(i).withMarked(false));
+        for (int i = 0; i < currentList.size(); i++) {
+            if (currentList.get(i).isMarked()) {
+                currentList.set(i, currentList.get(i).withMarked(false));
                 changed = true;
             }
         }
-        if (changed) entriesAdapter.submitList(current);
+        if (changed) entriesAdapter.submitList(currentList);
     }
 
     private void setupWorkerObservers() {
@@ -544,7 +544,11 @@ public class FragmentLanding extends Fragment {
             binding.loadingProgressBar.animate()
                     .alpha(0f)
                     .setDuration(300)
-                    .withEndAction(() -> binding.loadingProgressBar.setVisibility(View.GONE));
+                    .withEndAction(() -> {
+                        if (binding != null) {
+                            binding.loadingProgressBar.setVisibility(View.GONE);
+                        }
+                    });
         }
     }
 
@@ -573,8 +577,6 @@ public class FragmentLanding extends Fragment {
         }
 
         if (!batchItems.isEmpty()) {
-            // Sort only the new batch, then append — don't re-sort the whole list
-            Collections.sort(batchItems, compareUploadAndDate);
             appendItems(batchItems);
             progressBar(false);
             isLoading = false;
@@ -585,29 +587,33 @@ public class FragmentLanding extends Fragment {
     }
 
     private void appendItems(List<LandingFragmentItems> newItems) {
-        List<LandingFragmentItems> current = new ArrayList<>(entriesAdapter.getCurrentList());
-        current.addAll(newItems);
-        entriesAdapter.submitList(current, () -> isLoading = false);
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
+        currentList.addAll(newItems);
+        Collections.sort(currentList, SORTER);
+        entriesAdapter.submitList(currentList, () -> isLoading = false);
     }
 
     private void downloadNewerData() {
 
-        long updatedAt = SettingsManager.getObservationsUpdatedAt();
-        Log.d(TAG, "Loading new data from Retrofit, timestamp: " + updatedAt);
-
-        Data data = new Data.Builder()
-                .putBoolean("isSyncOnScroll", false)
-                .putLong("updatedAt", updatedAt)
-                .build();
+        long observationsUpdatedAt = SettingsManager.getObservationsUpdatedAt();
+        long timeCountsUpdatedAt = SettingsManager.getTimeCountsUpdatedAt();
+        Log.d(TAG, "Loading new data from Retrofit, timestamps: "
+                + observationsUpdatedAt + ", " + timeCountsUpdatedAt);
 
         OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
-                .setInputData(data)
+                .setInputData(new Data.Builder()
+                        .putBoolean("isSyncOnScroll", false)
+                        .putLong("timeCountsUpdatedAt", timeCountsUpdatedAt)
+                        .build())
                 .addTag("TIMED_COUNTS_DOWNLOAD_UPDATED_AT")
                 .addTag("UPDATED_AT_SYNC")
                 .build();
 
         OneTimeWorkRequest observationRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
-                .setInputData(data)
+                .setInputData(new Data.Builder()
+                        .putBoolean("isSyncOnScroll", false)
+                        .putLong("observationsUpdatedAt", observationsUpdatedAt)
+                        .build())
                 .addTag("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
                 .addTag("UPDATED_AT_SYNC")
                 .build();
@@ -826,6 +832,7 @@ public class FragmentLanding extends Fragment {
     private void addItemToRecyclerView(LandingFragmentItems item) {
         List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
         currentList.add(0, item);
+        Collections.sort(currentList, SORTER);
         Log.d(TAG, "There are " + entriesAdapter.getItemCount() + " items in the adapter, " + currentList.size() + " in the list.");
         entriesAdapter.submitList(currentList, () ->
                 binding.recycledViewEntries.post(() ->
@@ -1085,7 +1092,7 @@ public class FragmentLanding extends Fragment {
 
         // 4. Sort and submit ONCE
         if (hasChanges) {
-            Collections.sort(currentList, LandingFragmentItems.compareUploadAndDate);
+            Collections.sort(currentList, LandingFragmentItems.SORTER);
             entriesAdapter.submitList(currentList);
             ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
         }

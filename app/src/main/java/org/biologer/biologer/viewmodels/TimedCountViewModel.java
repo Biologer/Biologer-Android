@@ -2,6 +2,7 @@ package org.biologer.biologer.viewmodels;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -14,7 +15,6 @@ import java.util.List;
 
 public class TimedCountViewModel extends ViewModel {
 
-    private static final String TAG = "Biologer.TimedCountVM";
     private final MutableLiveData<Double> temperatureData = new MutableLiveData<>();
     private final MutableLiveData<Integer> cloudinessData = new MutableLiveData<>();
     private Integer windSpeedData = null;
@@ -64,10 +64,6 @@ public class TimedCountViewModel extends ViewModel {
         return temperatureData;
     }
 
-    public void setElapsedTime(Long data) {
-        elapsedTime.setValue(data);
-    }
-
     public LiveData<Long> getElapsedTime() {
         return elapsedTime;
     }
@@ -104,6 +100,7 @@ public class TimedCountViewModel extends ViewModel {
 
     public void getFromObjectBox(TimedCountDb timedCount) {
         setStartTimeString(timedCount.getStartTime());
+        Log.d("TIME COUNT VIEWMODEL", "Start time: " + timedCount.getStartTime());
         setEndTimeString(timedCount.getEndTime());
         setCountDuration(timedCount.getCountDurationMinutes());
         setArea(timedCount.getWalkedArea());

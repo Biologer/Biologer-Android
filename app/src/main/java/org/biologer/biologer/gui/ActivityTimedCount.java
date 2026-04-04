@@ -131,17 +131,33 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void loadSpeciesData() {
-        Long id = getTimedCountIdFromBundle();
-        if (id != null) {
-            ArrayList<EntryDb> timedCounts = ObjectBoxHelper.getTimedCountObservations(id);
-            for (EntryDb entry : timedCounts) {
-                if (timedCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
-                    timedCountAdapter.addToSpeciesCount(entry.getTaxonId());
-                } else {
-                    SpeciesCountItems new_species = new SpeciesCountItems(entry.getTaxonSuggestion(),
-                            entry.getTaxonId(), 1);
-                    speciesCountItems.add(new_species);
-                    timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+        Long localId = getTimedCountIdFromBundle(); // This is the local ObjectBox ID
+        if (localId != null) {
+            // Part 1. Get the Time Count object to check its status
+            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(localId);
+
+            if (timedCount != null) {
+                // Part 2. Should query Server ID of local ObjectBox ID?
+                long id = (timedCount.getServerId() != null)
+                        ? timedCount.getServerId()
+                        : localId;
+
+                Log.d(TAG, "Loading children for TC. Local ID: " + localId + ", Query ID: "
+                        + id + " (is uploaded = " + timedCount.isUploaded() + ")");
+
+                // Part 3. Populate the list of observations
+                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimedCountObservations(id);
+                for (EntryDb entry : observations) {
+                    if (timedCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
+                        timedCountAdapter.addToSpeciesCount(entry.getTaxonId());
+                    } else {
+                        SpeciesCountItems new_species = new SpeciesCountItems(
+                                entry.getTaxonSuggestion(),
+                                entry.getTaxonId(),
+                                1);
+                        speciesCountItems.add(new_species);
+                        timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+                    }
                 }
             }
         }
@@ -1102,6 +1118,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         return getIntent().getBooleanExtra("IS_NEW_ENTRY", true);
     }
 
+    // Note: id is local ObjectBox ID, not the server ID
     private Long getTimedCountIdFromBundle() {
         long id = getIntent().getLongExtra("TIMED_COUNT_ID", 0);
         if (id != 0) {

@@ -49,10 +49,6 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static int getObservationsCount() {
-        return (int) App.get().getBoxStore().boxFor(EntryDb.class).count();
-    }
-
     public static ArrayList<EntryDb> getObservationsForUpload() {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try (Query<EntryDb> query = box.query(
@@ -115,7 +111,9 @@ public class ObjectBoxHelper {
         if (box.isEmpty()) {
             return -1L;
         }
-        try (Query<EntryDb> query = box.query().build()) {
+        try (Query<EntryDb> query = box.query()
+                .isNull(EntryDb_.timedCoundId)
+                .build()) {
             return query.property(EntryDb_.serverId).min();
         } catch (Exception e) {
             Log.e(TAG,"Error retrieving minimal Server ID of ObjectBox observations!" + e);
@@ -130,20 +128,10 @@ public class ObjectBoxHelper {
         return id;
     }
 
-    public static ArrayList<TimedCountDb> getTimedCounts() {
-        Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        try (Query<TimedCountDb> query = box.query().build()) {
-            ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find();
-            Log.i(TAG, "There are " + timedCounts.size() + " timed counts in the database.");
-            return timedCounts;
-        } catch (Exception e) {
-            Log.e(TAG, "Error retrieving timed counts from database!", e);
-            return new ArrayList<>();
-        }
-    }
-
-    public static int getTimedCountsCount() {
-        return (int) App.get().getBoxStore().boxFor(TimedCountDb.class).count();
+    public static void setObservation(List<EntryDb> entries) {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        box.put(entries);
+        Log.d(TAG, "Observations will be saved in EntryDb in batch mode.");
     }
 
     public static ArrayList<TimedCountDb> getPagedTimedCounts(int limit, int offset) {
@@ -223,19 +211,25 @@ public class ObjectBoxHelper {
         Box<EntryDb> entryBox = App.get().getBoxStore().boxFor(EntryDb.class);
         Box<TimedCountDb> timedBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
 
-        // Count observations: serverId is 0 OR modified flag is true
-        long unsyncedEntries = entryBox.query(
+        long unsynced;
+
+        // Count observations
+        try (Query<EntryDb> query = entryBox.query(
                 EntryDb_.uploaded.equal(false)
                         .or(EntryDb_.modified.equal(true))
-        ).build().count();
+        ).build()) {
+            unsynced = query.count();
+        }
 
-        // Count timed counts: serverId is 0 OR modified flag is true
-        long unsyncedTimedCounts = timedBox.query(
-                TimedCountDb_.uploaded.equal(false)
+        // Count timed counts
+        try (Query<TimedCountDb> query = timedBox.query(
+                    TimedCountDb_.uploaded.equal(false)
                         .or(TimedCountDb_.modified.equal(true))
-        ).build().count();
+        ).build()) {
+            unsynced = unsynced + query.count();
+        }
 
-        return unsyncedEntries + unsyncedTimedCounts;
+        return unsynced;
     }
 
     public static TaxonDb getTaxonById(long taxonId) {

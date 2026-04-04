@@ -53,7 +53,7 @@ public class TimedCountsDownloadWorker extends Worker {
         boolean isSyncOnScroll = getInputData().getBoolean("isSyncOnScroll", false);
         long beforeId = getInputData().getLong("beforeId", -1);
         long afterId = getInputData().getLong("afterId", -1);
-        long updatedAt = getInputData().getLong("updatedAt", -1);
+        long updatedAt = getInputData().getLong("timeCountsUpdatedAt", -1);
         int page = getInputData().getInt("page", 1);
         long currentSyncTimestamp = getInputData().getLong("currentSyncTimestamp", -1);
 
@@ -102,7 +102,7 @@ public class TimedCountsDownloadWorker extends Worker {
 
                     Data nextInput = new Data.Builder()
                             .putBoolean("isSyncOnScroll", false)
-                            .putLong("updatedAt", updatedAt)
+                            .putLong("timeCountsUpdatedAt", updatedAt)
                             .putLong("currentSyncTimestamp", currentSyncTimestamp)
                             .putLong("afterId", afterId)
                             .putInt("page", page + 1)
@@ -119,7 +119,7 @@ public class TimedCountsDownloadWorker extends Worker {
                                     ExistingWorkPolicy.APPEND, timedCountRequest);
                 } else {
                     if (!isSyncOnScroll && currentSyncTimestamp != -1) {
-                        SettingsManager.setObservationsUpdatedAt(currentSyncTimestamp);
+                        SettingsManager.setTimeCountsUpdatedAt(currentSyncTimestamp);
                         Log.d(TAG, "Observations sync completed. Updating timestamp to: " + currentSyncTimestamp);
                     }
                 }
@@ -197,12 +197,13 @@ public class TimedCountsDownloadWorker extends Worker {
                             if (existingEntry == null) {
                                 // New entry
                                 entryToUse = EntryDb.getEntryFieldsFromData(observation);
-                                Log.d(TAG, "Creating new observation for server ID " + observation.getId());
+                                entryToUse.setTimedCoundId(observation.getTimedCountId().intValue());
+                                Log.d(TAG, "Creating new observation for server observation ID " + observation.getId());
                             } else {
                                 // Existing entry - Update fields
                                 entryToUse = existingEntry;
                                 EntryDb.syncEntryFieldsFromData(entryToUse, observation);
-                                Log.d(TAG, "Updating existing observation for server ID " + observation.getId());
+                                Log.d(TAG, "Updating existing observation for server observation ID " + observation.getId());
                             }
 
                             entryToUse.setTimedCoundId(timedCount.getServerId().intValue());

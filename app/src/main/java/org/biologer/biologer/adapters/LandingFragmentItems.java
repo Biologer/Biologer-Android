@@ -1,7 +1,10 @@
 package org.biologer.biologer.adapters;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
+
+import androidx.preference.PreferenceManager;
 
 import org.biologer.biologer.App;
 import org.biologer.biologer.R;
@@ -240,13 +243,28 @@ public class LandingFragmentItems {
         return copy;
     }
 
-    public static final Comparator<LandingFragmentItems> compareUploadAndDate = (a, b) -> {
-        // Not uploaded items always go to the top
+    public static final Comparator<LandingFragmentItems> SORTER = (a, b) -> {
+        // 1. Unuploaded items always go to the top
         if (a.isUploaded() != b.isUploaded()) {
             return a.isUploaded() ? 1 : -1;
         }
-        // Then sort by date descending
-        return b.getDate().compareTo(a.getDate());
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(App.get());
+        String sortBy = prefs.getString("sort_observations", "time");
+
+        if ("name".equals(sortBy)) {
+            // Case 1. Sort by name
+            String titleA = a.getTitle() != null ? a.getTitle() : "";
+            String titleB = b.getTitle() != null ? b.getTitle() : "";
+            return titleA.compareToIgnoreCase(titleB);
+        } else {
+            // Case 1. Sort by date (default)
+            if (a.getDate() == null || b.getDate() == null) {
+                return 0;
+            }
+            return b.getDate().compareTo(a.getDate());
+        }
+
     };
 
     public boolean isUploaded() {

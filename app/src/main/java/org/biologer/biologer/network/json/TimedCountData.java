@@ -1,9 +1,9 @@
 package org.biologer.biologer.network.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import org.biologer.biologer.helpers.DateHelper;
 
 import java.util.List;
 
@@ -77,11 +77,11 @@ public class TimedCountData {
     }
 
     public String getStartTime() {
-        return startTime;
+        return DateHelper.getHoursAndMinutesFromIso(startTime);
     }
 
     public String getEndTime() {
-        return endTime;
+        return DateHelper.getHoursAndMinutesFromIso(endTime);
     }
 
     public int getCountDuration() {

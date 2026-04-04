@@ -63,6 +63,12 @@ public class APIEntry {
     private int[] observation_types_ids;
     @JsonProperty("habitat")
     private String habitat;
+    @JsonProperty("reason")
+    private String reason;
+    @JsonProperty("observed_by_id")
+    private Integer observedById;
+    @JsonProperty("identified_by_id")
+    private Integer identifiedById;
 
     @JsonProperty("taxon_id")
     public Integer getTaxonId() {
@@ -283,30 +289,6 @@ public class APIEntry {
     public void setHabitat(String habitat) {
         this.habitat = habitat;
     }
-    @JsonProperty("reason")
-    private String reason;
-
-    @JsonProperty("observed_by_id")
-    private Integer observedById;
-
-    @JsonProperty("identified_by_id")
-    private Integer identifiedById;
-
-    public Long getAtlasCode() {
-        return atlas_code;
-    }
-
-    public void setAtlasCode(Long atlas_code) {
-        this.atlas_code = atlas_code;
-    }
-
-    public List<APIEntryPhotos> getPhotos() {
-        return photos;
-    }
-
-    public void setPhotos(List<APIEntryPhotos> photos) {
-        this.photos = photos;
-    }
 
     public void getFromEntryDb (EntryDb entry) {
         // Set the ID or set the null if there is no ID.
@@ -324,7 +306,7 @@ public class APIEntry {
         setLongitude(entry.getLongitude());
         setAccuracy(entry.getAccuracy() == 0.0 ? null : (int) entry.getAccuracy());
         setLocation(entry.getLocation());
-        setElevation(entry.getElevation() <= 0.0 ? null : (int) entry.getElevation());
+        setElevation(entry.getElevation() <= 0.0 ? 0 : (int) entry.getElevation());
         setNote(entry.getComment());
         setSex(entry.getSex());
         setNumber(entry.getNoSpecimens());
@@ -343,32 +325,28 @@ public class APIEntry {
         setReason(null);
     }
 
-    public Integer getTimedCountId() {
-        return timedCountId;
+    public void setAtlasCode(Long atlas_code) {
+        this.atlas_code = atlas_code;
+    }
+
+    public List<APIEntryPhotos> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(List<APIEntryPhotos> photos) {
+        this.photos = photos;
     }
 
     public void setTimedCountId(Integer timedCountId) {
         this.timedCountId = timedCountId;
     }
 
-    public String getReason() {
-        return reason;
-    }
-
     public void setReason(String reason) {
         this.reason = reason;
     }
 
-    public Integer getObservedById() {
-        return observedById;
-    }
-
     public void setObservedById(Integer observedById) {
         this.observedById = observedById;
-    }
-
-    public Integer getIdentifiedById() {
-        return identifiedById;
     }
 
     public void setIdentifiedById(Integer identifiedById) {

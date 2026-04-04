@@ -196,20 +196,12 @@ public class EntryDb {
     public String getSlika1() {
         return this.slika1;
     }
-    public void setSlika1(String slika1) {
-        this.slika1 = slika1;
-    }
+
     public String getSlika2() {
         return this.slika2;
     }
-    public void setSlika2(String slika2) {
-        this.slika2 = slika2;
-    }
     public String getSlika3() {
         return this.slika3;
-    }
-    public void setSlika3(String slika3) {
-        this.slika3 = slika3;
     }
     public String getProjectId() {
         return this.projectId;
@@ -356,8 +348,10 @@ public class EntryDb {
             imageLicense = serverData.getPhotos().get(0).getLicense().getId();
         }
 
+        existing.setServerId(serverData.getId());
         existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
         existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
+        existing.setTimedCoundId(serverData.getTimedCountId().intValue());
         existing.setYear(String.valueOf(serverData.getYear()));
         existing.setMonth(String.valueOf(serverData.getMonth() - 1));
         existing.setDay(String.valueOf(serverData.getDay()));

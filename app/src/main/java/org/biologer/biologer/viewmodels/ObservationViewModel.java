@@ -249,7 +249,6 @@ public class ObservationViewModel extends ViewModel {
         atlasCode.setValue(data);
     }
 
-
     public MutableLiveData<Boolean> getDead() {
         return dead;
     }
@@ -286,7 +285,6 @@ public class ObservationViewModel extends ViewModel {
         accuracy.setValue(data);
     }
 
-
     public MutableLiveData<Double> getElevation() {
         return elevation;
     }
@@ -303,7 +301,6 @@ public class ObservationViewModel extends ViewModel {
         elevation.setValue(data);
     }
 
-
     public MutableLiveData<String> getLocation() {
         return location;
     }
@@ -315,7 +312,6 @@ public class ObservationViewModel extends ViewModel {
     public Boolean isTaxonSelectedFromTheList() {
         return taxonFromTheList;
     }
-
 
     public void setTaxonSelectedFromTheList(Boolean taxonFromTheList) {
         this.taxonFromTheList = taxonFromTheList;

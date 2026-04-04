@@ -13,9 +13,11 @@ import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.APITimedCounts;
 import org.biologer.biologer.network.json.APITimedCountsResponse;
+import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.IOException;
+import java.util.List;
 
 import retrofit2.Response;
 
@@ -43,16 +45,16 @@ public class TimedCountUploadWorker extends Worker {
 
             APITimedCounts api = new APITimedCounts();
             api.getFromTimedCountDatabase(timedCount);
-            Log.d(TAG, "TIMEDCOUNTAPI start time: " + api.getStartTime());
+            Log.d(TAG, "TIME COUNT API start time: " + api.getStartTime());
 
             Response<APITimedCountsResponse> response;
             if (timedCount.getServerId() != null && timedCount.isUploaded()) {
-                // Modified, should reupload
+                Log.d(TAG, "Time count modified, should reupload.");
                 response = RetrofitClient.getService(SettingsManager.getDatabaseName())
                         .updateTimedCount(timedCount.getServerId(), api)
                         .execute();
             } else {
-                // New timed count, should upload
+                Log.d(TAG, "New time count, should upload.");
                 response = RetrofitClient.getService(SettingsManager.getDatabaseName())
                         .uploadTimedCount(api)
                         .execute();
@@ -65,15 +67,29 @@ public class TimedCountUploadWorker extends Worker {
             }
 
             if (response.isSuccessful() && response.body() != null) {
-                long serverId = response.body().getData().getId();
+                long newServerId = response.body().getData().getId();
+                Long oldServerId = timedCount.getServerId();
 
-                timedCount.setServerId(serverId);
+                timedCount.setServerId(newServerId);
                 timedCount.setUploaded(true);
                 timedCount.setModified(false);
 
-                ObjectBoxHelper.setTimedCount(timedCount);
+                long localId = ObjectBoxHelper.setTimedCount(timedCount);
 
-                Log.d(TAG, "TimedCount " + timedCountId + " synchronised. Server ID: " + serverId);
+                if (oldServerId != null) {
+                    List<EntryDb> childObservations = ObjectBoxHelper.getTimedCountObservations(oldServerId);
+                    if (!childObservations.isEmpty()) {
+                        for (EntryDb child : childObservations) {
+                            child.setTimedCoundId((int) newServerId);
+                        }
+                        ObjectBoxHelper.setObservation(childObservations);
+                        Log.d(TAG, "Successfully linked " + childObservations.size() + " observations to new Server ID: " + newServerId);
+                    }
+                }
+
+                Log.d(TAG, "TimedCount " + timedCountId
+                        + " (returned local ID " + localId +
+                        ") synchronised. Server ID: " + newServerId);
                 Data output = new Data.Builder()
                         .putLong("uploadedTimeCountId", timedCountId)
                         .build();
