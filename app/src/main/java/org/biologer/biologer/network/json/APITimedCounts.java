@@ -8,6 +8,8 @@ public class APITimedCounts {
 
     @JsonProperty("end_time")
     private String endTime;
+    @JsonProperty("start_time")
+    private String startTime;
     @JsonProperty("count_duration")
     private Integer countDurationMinutes;
     @JsonProperty("area")
@@ -36,7 +38,7 @@ public class APITimedCounts {
     private String habitat;
     @JsonProperty("view_groups_id")
     private Long taxonGroup;
-    @JsonProperty("comment")
+    @JsonProperty("comments")
     private String comment;
     @JsonProperty("day")
     private Integer day;
@@ -178,5 +180,9 @@ public class APITimedCounts {
 
     public void setGeometry(String geometry) {
         this.geometry = geometry;
+    }
+
+    public String getStartTime() {
+        return startTime;
     }
 }

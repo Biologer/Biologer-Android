@@ -999,6 +999,9 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             savedEntry.photos.clear();
             if (photosInViewModel != null && !photosInViewModel.isEmpty()) {
                 savedEntry.photos.addAll(photosInViewModel);
+                for (PhotoDb p : photosInViewModel) {
+                    Log.d(TAG, "The photo license ID is " + p.getLicenseId());
+                }
             }
             ObjectBoxHelper.setObservation(savedEntry);
         }
@@ -1552,6 +1555,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                             if (s != null) {
                                 PhotoDb newPhoto = new PhotoDb();
                                 newPhoto.setLocalPath(s);
+                                newPhoto.setLicenseId(ObjectBoxHelper.getImageLicense());
                                 viewModel.addPhoto(newPhoto);
                             }
                         } else if (workInfo.getState() == WorkInfo.State.FAILED) {

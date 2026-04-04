@@ -20,19 +20,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import org.biologer.biologer.App;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
-import org.biologer.biologer.helpers.Localisation;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.FragmentTimedCountEntriesBinding;
-import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.EntryDb_;
-import org.biologer.biologer.sql.StageDb;
-import org.biologer.biologer.sql.StageDb_;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 
 import io.objectbox.Box;
@@ -41,7 +36,6 @@ import io.objectbox.query.Query;
 public class FragmentTimedCountEntries extends Fragment {
     String TAG = "Biologer.TCEntries";
     private FragmentTimedCountEntriesBinding binding;
-    private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
     TimedCountViewModel timedCountViewModel;
     long taxonId;
@@ -74,13 +68,13 @@ public class FragmentTimedCountEntries extends Fragment {
 
         timedCountViewModel = new ViewModelProvider(requireActivity()).get(TimedCountViewModel.class);
 
-        // Load the entries from the database
-        items = (ArrayList<LandingFragmentItems>) loadEntries(); // Load the entries from the database
+        setupRecyclerView();
+        loadItemsForRecyclerView();
 
-        loadEntries();
+    }
 
-        // If there are entries display the list with taxa
-        entriesAdapter = new LandingFragmentAdapter(items, true);
+    private void setupRecyclerView() {
+        entriesAdapter = new LandingFragmentAdapter(true);
         binding.recyclerViewTimedCounts.setAdapter(entriesAdapter);
         binding.recyclerViewTimedCounts.setClickable(true);
         binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -89,7 +83,7 @@ public class FragmentTimedCountEntries extends Fragment {
                     @Override
                     public void onItemClick(View view, int position) {
                         binding.recyclerViewTimedCounts.setClickable(false);
-                        LandingFragmentItems item = items.get(position);
+                        LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
                         long entry_id = item.getLocalId();
                         Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
                         Query<EntryDb> query = entriesBox
@@ -119,35 +113,18 @@ public class FragmentTimedCountEntries extends Fragment {
                 )
         );
         registerForContextMenu(binding.recyclerViewTimedCounts);
-
     }
 
-    private List<LandingFragmentItems> loadEntries() {
-        // This list will hold all the items displayed
-        List<LandingFragmentItems> items = new ArrayList<>();
+    private void loadItemsForRecyclerView() {
 
-        // Get the observation data for selected species
-        if (timedCountViewModel.getTaxonId() != null &&
-                timedCountViewModel.getServerId() != null) {
-            long taxon_id = timedCountViewModel.getTaxonId();
-            long timed_count_id = timedCountViewModel.getServerId();
-            Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
-            Query<EntryDb> query = entriesBox
-                    .query(EntryDb_.timedCoundId.equal(timed_count_id)
-                            .and(EntryDb_.taxonId.equal(taxon_id)))
-                    .build();
-            ArrayList<EntryDb> entriesDb = (ArrayList<EntryDb>) query.find();
-            query.close();
-            for (EntryDb entry : entriesDb) {
-                items.add(getItemFromEntry(entry));
-            }
-        }
+        ArrayList<LandingFragmentItems> items = LandingFragmentItems.loadTimeCountSpeciesEntries(
+                requireContext(),
+                timedCountViewModel.getServerId() != null ? timedCountViewModel.getServerId() : -1L,
+                timedCountViewModel.getTaxonId() != null ? timedCountViewModel.getTaxonId() : -1L
+                );
 
-        // Sort in descending order
-        Collections.sort(items, (item1, item2) ->
-                Long.compare(item2.getLocalId(), item1.getLocalId()));
+        entriesAdapter.submitList(items);
 
-        return items;
     }
 
     private final ActivityResultLauncher<Intent> openEntry = registerForActivityResult(
@@ -166,91 +143,29 @@ public class FragmentTimedCountEntries extends Fragment {
                 }
             });
 
-    private void updateEntry(long entry_id) {
-        // Load the entry from the ObjectBox
-        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = box.query(EntryDb_.id.equal(entry_id)).build();
-        EntryDb entryDb = query.findFirst();
-        query.close();
+    private void updateEntry(long entryId) {
 
-        int index_id = getIndexFromID(entry_id);
-        Log.d(TAG, "Updating entry with ID " + index_id + ".");
+        EntryDb entry = ObjectBoxHelper.getObservationById(entryId);
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
 
-        if (entryDb != null && entryDb.getTaxonId() == taxonId) {
+        int index = entriesAdapter.getItemIndexFromId(entryId, false);
+        Log.d(TAG, "Updating entry with ID " + index + ".");
+
+        if (entry != null && entry.getTaxonId() == taxonId) {
             Log.d(TAG, "Taxon is the same. Updating just the current entry.");
-            // Update the entry to in the entry list (RecycleView)
-            items.set(index_id, getItemFromEntry(entryDb));
-            entriesAdapter.notifyItemChanged(index_id);
+            currentList.set(index, LandingFragmentItems.getItemFromEntry(getContext(), entry));
+            entriesAdapter.submitList(currentList);
         } else {
             Log.d(TAG, "Taxon is changed, removing it from this species entries.");
-            items.remove(index_id);
-            entriesAdapter.notifyItemRemoved(index_id);
+            currentList.remove(index);
+            entriesAdapter.submitList(currentList);
             // Update the SpeciesCount in the main Activity
             if (listener != null) {
-                if (entryDb != null) {
-                    listener.onTaxonChanged(taxonId, entryDb.getTaxonId(), entryDb.getTaxonSuggestion());
+                if (entry != null) {
+                    listener.onTaxonChanged(taxonId, entry.getTaxonId(), entry.getTaxonSuggestion());
                 }
             }
         }
     }
 
-    // Find the entry’s index ID
-    private int getIndexFromID(long entry_id) {
-
-        int index_id = 0;
-        for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).getLocalId() == entry_id) {
-                index_id = i;
-            }
-        }
-        Log.d(TAG, "Entry " + entry_id + " index ID is " + index_id);
-        return index_id;
-    }
-
-    private LandingFragmentItems getItemFromEntry(EntryDb entry) {
-        Long observationId = entry.getId();
-        String title = entry.getTaxonSuggestion();
-
-        String subtitle = "";
-        Long stage_id = entry.getStage();
-        if (stage_id != null) {
-            Box<StageDb> stageBox = App.get().getBoxStore().boxFor(StageDb.class);
-            Query<StageDb> queryStage = stageBox
-                    .query(StageDb_.id.equal(stage_id))
-                    .build();
-            StageDb stage = queryStage.findFirst();
-            queryStage.close();
-            if (stage != null) {
-                subtitle = Localisation.getStageLocale(getContext(), stage.getName());
-            }
-        }
-
-        String image = null;
-        if (entry.getSlika3() != null) {
-            image = entry.getSlika3();
-        }
-        if (entry.getSlika2() != null) {
-            image = entry.getSlika2();
-        }
-        if (entry.getSlika1() != null) {
-            image = entry.getSlika1();
-        }
-
-        Calendar calendar = DateHelper.getCalendar(
-                Integer.parseInt(entry.getYear()),
-                Integer.parseInt(entry.getMonth()),
-                Integer.parseInt(entry.getDay()),
-                entry.getTime());
-
-        return new LandingFragmentItems(
-                observationId,
-                entry.getServerId(),
-                false,
-                false,
-                false,
-                title,
-                subtitle,
-                image,
-                calendar.getTime());
-    }
 }

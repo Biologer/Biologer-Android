@@ -102,7 +102,7 @@ public class PhotoDownloadWorker extends Worker {
         }
 
         Data output = new Data.Builder()
-                .putLongArray("updatedObservationIds", idsArray)
+                .putLongArray("updatedPhotoForObservationIds", idsArray)
                 .build();
 
         return Result.success(output);

@@ -1,5 +1,6 @@
 package org.biologer.biologer.gui;
 
+import static org.biologer.biologer.adapters.LandingFragmentItems.compareUploadAndDate;
 import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromEntry;
 import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromTimedCount;
 
@@ -41,7 +42,6 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
-import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.RecyclerOnClickListener;
@@ -53,11 +53,9 @@ import org.biologer.biologer.workers.TimedCountsDownloadWorker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -69,7 +67,6 @@ public class FragmentLanding extends Fragment {
 
     String TAG = "Biologer.FragmentLanding";
     private FragmentLandingBinding binding;
-    private ArrayList<LandingFragmentItems> items;
     LandingFragmentAdapter entriesAdapter;
     private final Set<UUID> processedWorkerIds = new HashSet<>();
     private ActionMode actionMode;
@@ -87,12 +84,14 @@ public class FragmentLanding extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        loadItemsForRecyclerView();
         setupRecyclerView();
+        loadItemsForRecyclerView();
         setupFloatingActionButton();
         setupWorkerObservers(); // To track upload of data online
-        downloadNewerData(); // If the data is added directly on the server
+        addBackPressedCallback();
+    }
 
+    private void addBackPressedCallback() {
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -110,44 +109,55 @@ public class FragmentLanding extends Fragment {
     private void loadItemsForRecyclerView() {
         localObjectBoxObservationOffset = 0;
         localObjectBoxTimedCountsOffset = 0;
-        if (items != null) {
-            items.clear();
-        } else {
-            items = new ArrayList<>();
-        }
 
-        // Load new data not uploaded to the server
-        items = LandingFragmentItems.loadAllLocalEntries(requireContext());
+        // Group 1. Data waiting for upload to the server
+        ArrayList<LandingFragmentItems> allItems =
+                LandingFragmentItems.loadAllLocalEntries(requireContext());
 
-        ArrayList<LandingFragmentItems> syncedItems = new ArrayList<>();
-
-        // If the list is short ask for more items
+        // Group 2. If the list is short ask for more items
         ArrayList<EntryDb> syncedObservations = ObjectBoxHelper.getPagedObservations(25, 0);
         for (EntryDb observation : syncedObservations) {
-            syncedItems.add(getItemFromEntry(requireContext(), observation));
+            allItems.add(getItemFromEntry(requireContext(), observation));
         }
         ArrayList<TimedCountDb> syncedTimedCounts = ObjectBoxHelper.getPagedTimedCounts(25, 0);
         for (TimedCountDb timedCount : syncedTimedCounts) {
-            syncedItems.add(getItemFromTimedCount(requireContext(), timedCount));
+            allItems.add(getItemFromTimedCount(requireContext(), timedCount));
         }
+        Collections.sort(allItems, compareUploadAndDate);
 
-        Collections.sort(syncedItems, (item1, item2) ->
-                item2.getDate().compareTo(item1.getDate()));
+        localObjectBoxObservationOffset = syncedObservations.size();
+        localObjectBoxTimedCountsOffset = syncedTimedCounts.size();
 
-        items.addAll(syncedItems);
+        entriesAdapter.submitList(allItems);
 
-        // Update the adapter
-        if (entriesAdapter == null) {
-            entriesAdapter = new LandingFragmentAdapter(items, false);
-            binding.recycledViewEntries.setAdapter(entriesAdapter);
-        } else {
-            entriesAdapter.updateData(items);
-        }
-
-        // If the list is short check the server
-        if (items.size() < 10) {
+        // If the list is short get more data
+        if (allItems.size() < 10) {
             loadNextBatch();
         }
+
+        // Finally, download new data updated on the server if exist
+        downloadNewerData();
+    }
+
+    private void reloadItemsForRecyclerView() {
+        binding.recycledViewEntries.post(() -> {
+            ArrayList<LandingFragmentItems> allItems =
+                    LandingFragmentItems.loadAllLocalEntries(requireContext());
+
+            ArrayList<EntryDb> syncedObservations =
+                    ObjectBoxHelper.getPagedObservations(localObjectBoxObservationOffset, 0);
+            for (EntryDb observation : syncedObservations) {
+                allItems.add(getItemFromEntry(requireContext(), observation));
+            }
+            ArrayList<TimedCountDb> syncedTimedCounts =
+                    ObjectBoxHelper.getPagedTimedCounts(localObjectBoxTimedCountsOffset, 0);
+            for (TimedCountDb timedCount : syncedTimedCounts) {
+                allItems.add(getItemFromTimedCount(requireContext(), timedCount));
+            }
+            Collections.sort(allItems, compareUploadAndDate);
+            entriesAdapter.submitList(allItems);
+            ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
+        });
     }
 
     private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
@@ -159,12 +169,6 @@ public class FragmentLanding extends Fragment {
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            int selectedCount = getSelectedItemsCount();
-            // Hide Duplicate if more than one item selected
-            MenuItem duplicateItem = menu.findItem(R.id.duplicate);
-            if (duplicateItem != null) {
-                duplicateItem.setVisible(selectedCount == 1);
-            }
             return true;
         }
 
@@ -174,8 +178,8 @@ public class FragmentLanding extends Fragment {
                 deleteSelectedEntries();
                 return true;
             } else if (item.getItemId() == R.id.duplicate) {
-                for (int i = 0; i < items.size(); i++) {
-                    if (items.get(i).isMarked()) {
+                for (int i = 0; i < entriesAdapter.getCurrentList().size(); i++) {
+                    if (entriesAdapter.getCurrentList().get(i).isMarked()) {
                         duplicateEntry(i);
                         break;
                     }
@@ -188,26 +192,31 @@ public class FragmentLanding extends Fragment {
 
         @Override
         public void onDestroyActionMode(ActionMode mode) {
-            deselectAllItems();
+            if (actionMode != null) {
+                deselectAllItems();
+            }
             actionMode = null;
         }
     };
 
-    private int getSelectedItemsCount() {
+    private int getSelectedItemsCount(List<LandingFragmentItems> list) {
         int count = 0;
-        for (LandingFragmentItems item : items) {
+        for (LandingFragmentItems item : list) {
             if (item.isMarked()) count++;
         }
         return count;
     }
 
     private void deselectAllItems() {
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).isMarked()) {
-                items.get(i).setMarked(false);
-                entriesAdapter.notifyItemChanged(i);
+        List<LandingFragmentItems> current = new ArrayList<>(entriesAdapter.getCurrentList());
+        boolean changed = false;
+        for (int i = 0; i < current.size(); i++) {
+            if (current.get(i).isMarked()) {
+                current.set(i, current.get(i).withMarked(false));
+                changed = true;
             }
         }
+        if (changed) entriesAdapter.submitList(current);
     }
 
     private void setupWorkerObservers() {
@@ -225,7 +234,13 @@ public class FragmentLanding extends Fragment {
                             total++;
                             if (workInfo.getState().isFinished()) {
                                 finished++;
-                                if (workInfo.getState() == WorkInfo.State.FAILED) failed++;
+                                if (workInfo.getState() == WorkInfo.State.FAILED) {
+                                    long code = workInfo.getOutputData().getLong("error_code", 0);
+                                    String message = workInfo.getOutputData().getString("error_message");
+                                    Toast.makeText(getContext(), "Error " + code + ": " + message, Toast.LENGTH_SHORT).show();
+                                    Log.e(TAG, "Error " + code + ": " + message);
+                                    failed++;
+                                }
 
                                 // Check if we've already handled this worker – be more efficient :)
                                 if (!processedWorkerIds.contains(workInfo.getId())) {
@@ -235,15 +250,10 @@ public class FragmentLanding extends Fragment {
                                     } else {
                                         shouldShowToast = true;
                                     }
-                                    long observationId = workInfo.getOutputData().getLong("updatedObservationId", 0);
-                                    if (observationId > 0) {
-                                        updateSingleObservationItem(observationId);
-                                    }
-                                    long timedCountId = workInfo.getOutputData().getLong("updatedTimedCountId", 0);
-                                    if (timedCountId > 0) {
-                                        updateSingleTimeCountItem(timedCountId);
-                                    }
-                                    Log.d(TAG, "Observation ID: " + observationId + "; Timed Count ID: " + timedCountId);
+                                    long observationId = workInfo.getOutputData().getLong("uploadedObservationId", 0);
+                                    long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
+                                    reloadItemsForRecyclerView();
+                                    Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
                                 }
                             }
                     }
@@ -284,8 +294,9 @@ public class FragmentLanding extends Fragment {
 
                             if (!processedWorkerIds.contains(workInfo.getId()) && state == WorkInfo.State.SUCCEEDED) {
                                 processedWorkerIds.add(workInfo.getId());
-                                long[] ids = workInfo.getOutputData().getLongArray("updatedObservationIds");
-                                updateObservationItemsByIds(ids);
+                                long[] ids = workInfo.getOutputData().getLongArray("updatedPhotoForObservationIds");
+                                Log.d(TAG, "Should update these IDs after photos downloaded: " + Arrays.toString(ids));
+                                updatePhotoForObservation(ids);
                             } else if (state == WorkInfo.State.FAILED && !processedWorkerIds.contains(workInfo.getId())) {
                                 processedWorkerIds.add(workInfo.getId());
                                 Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
@@ -296,18 +307,32 @@ public class FragmentLanding extends Fragment {
                 });
 
         WorkManager.getInstance(requireContext())
-                .getWorkInfosByTagLiveData("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
+                .getWorkInfosByTagLiveData("UPDATED_AT_SYNC")
                 .observe(getViewLifecycleOwner(), workInfos -> {
                     if (workInfos != null && !workInfos.isEmpty()) {
 
                         boolean allFinished = true;
+                        List<Long> observationsToUpdate = new ArrayList<>();
+                        List<Long> timedCountsToUpdate = new ArrayList<>();
+
                         for (WorkInfo workInfo : workInfos) {
                             WorkInfo.State state = workInfo.getState();
 
                             if (state == WorkInfo.State.SUCCEEDED && !processedWorkerIds.contains(workInfo.getId())) {
                                 processedWorkerIds.add(workInfo.getId());
-                                long[] ids = workInfo.getOutputData().getLongArray("updatedObservationIds");
-                                updateObservationItemsByIds(ids);
+                                long[] observationIds = workInfo.getOutputData().getLongArray("updatedObservationIds");
+                                if (observationIds != null) {
+                                    for (long id : observationIds) observationsToUpdate.add(id);
+                                    Log.d(TAG, "Should update these observations downloaded by timestamp: "
+                                            + Arrays.toString(observationIds));
+                                }
+                                long[] timedCountIds = workInfo.getOutputData().getLongArray("updatedTimedCountIds");
+                                if (timedCountIds != null) {
+                                    for (long id : timedCountIds) timedCountsToUpdate.add(id);
+                                    Log.d(TAG, "Should update these observations downloaded by timestamp: "
+                                            + Arrays.toString(timedCountIds));
+                                }
+
                             } else if (state == WorkInfo.State.FAILED && !processedWorkerIds.contains(workInfo.getId())) {
                                 processedWorkerIds.add(workInfo.getId());
                                 Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
@@ -319,72 +344,101 @@ public class FragmentLanding extends Fragment {
                             }
                         }
 
+                        if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
+                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate, false);
+                        }
+
                         if (allFinished) {
-                            Log.d(TAG, "All observations sync workers finished. Updating UI.");
+                            Log.d(TAG, "All observations sync workers by timestamp finished. Updating UI.");
                             binding.swipeRefreshLayout.setRefreshing(false);
+                            LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
+                            if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
+                                Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
+                                binding.recycledViewEntries.post(() -> {
+                                    if (ObjectBoxHelper.getUnsyncedCount() > 0) {
+                                        ((ActivityLanding) requireActivity()).uploadRecords();
+                                    }
+                                    binding.recycledViewEntries.smoothScrollToPosition(0);
+                                });
+                            }
+
+                        }
+
+                    }
+                });
+
+        WorkManager.getInstance(requireContext())
+                .getWorkInfosByTagLiveData("UPDATED_BY_ID")
+                .observe(getViewLifecycleOwner(), workInfos -> {
+                    if (workInfos != null && !workInfos.isEmpty()) {
+
+                        boolean allFinished = true;
+                        List<Long> observationsToUpdate = new ArrayList<>();
+                        List<Long> timedCountsToUpdate = new ArrayList<>();
+
+                        for (WorkInfo workInfo : workInfos) {
+                            WorkInfo.State state = workInfo.getState();
+
+                            if (state == WorkInfo.State.SUCCEEDED && !processedWorkerIds.contains(workInfo.getId())) {
+                                processedWorkerIds.add(workInfo.getId());
+
+                                long[] observationIds = workInfo.getOutputData().getLongArray("updatedObservationIds");
+                                if (observationIds != null) {
+                                    for (long id : observationIds) observationsToUpdate.add(id);
+                                    Log.d(TAG, "Should update these observations downloaded by timestamp: "
+                                            + Arrays.toString(observationIds));
+                                }
+                                long[] timedCountIds = workInfo.getOutputData().getLongArray("updatedTimedCountIds");
+                                if (timedCountIds != null) {
+                                    for (long id : timedCountIds) timedCountsToUpdate.add(id);
+                                    Log.d(TAG, "Should update these observations downloaded by timestamp: "
+                                            + Arrays.toString(timedCountIds));
+                                }
+
+                            } else if (state == WorkInfo.State.FAILED && !processedWorkerIds.contains(workInfo.getId())) {
+                                processedWorkerIds.add(workInfo.getId());
+                                Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
+                            }
+
+                            if (!workInfo.getState().isFinished()) {
+                                allFinished = false;
+                                break;
+                            }
+                        }
+
+                        if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
+                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate, false);
+                        }
+
+                        if (allFinished) {
+                            Log.d(TAG, "All observations sync workers by id finished. Updating UI.");
                             // Auto-scroll if user is already near top
                             LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
                             if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
-                                binding.recycledViewEntries.smoothScrollToPosition(0);
-                            }
+                                binding.recycledViewEntries.post(() ->
+                                        binding.recycledViewEntries.smoothScrollToPosition(0));                            }
                         }
 
                     }
                 });
     }
 
-    private void updateObservationItemsByIds(long[] ids) {
-        if (ids != null) {
-            // Check for duplicated ids
-            Set<Long> uniqueIds = new HashSet<>();
-            for (long id : ids) {
-                uniqueIds.add(id);
-            }
-            // Update the item
-            for (long id : uniqueIds) {
-                updateSingleObservationItem(id);
-            }
-        }
-    }
+    private void updatePhotoForObservation(long[] observationIds) {
 
-    private void updateSingleObservationItem(long observationId) {
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
 
-        int index = getItemIndex(observationId, false);
-
-        EntryDb entry = ObjectBoxHelper.getObservationById(observationId);
-        if (entry != null) {
-            if (index != -1) {
-                Log.d(TAG, "Updating existing entry with ID " + observationId + " at index " + index);
-                items.set(index, getItemFromEntry(requireContext(), entry));
-                entriesAdapter.notifyItemChanged(index);
-            } else {
-                Log.e(TAG, "Cannot update observation with ID " + observationId +
-                        ". It was not found in the fragment list (index: " + index +
-                        ") or database entry is null. Reloading list.");
-                //loadItemsForRecyclerView();
+        for (long id : observationIds) {
+            int index = entriesAdapter.getItemIndexFromId(id, false);
+            if (index == -1) {
+                Log.e(TAG, "Photo update: item " + id + " not in list yet, skipping.");
+                continue;
             }
+            EntryDb entry = ObjectBoxHelper.getObservationById(id);
+            if (entry == null) continue;
+            currentList.set(index, getItemFromEntry(requireContext(), entry));
         }
 
-    }
-
-    private void updateSingleTimeCountItem(long timedCountId) {
-
-        int index = getItemIndex(timedCountId, true);
-
-        TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
-        if (timedCount != null) {
-            if (index != -1) {
-                Log.d(TAG, "Updating existing entry with ID " + timedCountId + " at index " + index);
-                items.set(index, getItemFromTimedCount(requireContext(), timedCount));
-                entriesAdapter.notifyItemChanged(index);
-            } else {
-                Log.e(TAG, "Cannot update timed count with ID " + timedCountId +
-                        ". It was not found in the fragment list (index: " + index +
-                        ") or database entry is null. Reloading list.");
-                //loadItemsForRecyclerView();
-            }
-        }
-
+        entriesAdapter.submitList(currentList);
     }
 
     private void setupFloatingActionButton() {
@@ -404,7 +458,7 @@ public class FragmentLanding extends Fragment {
     }
 
     private void setupRecyclerView() {
-        entriesAdapter = new LandingFragmentAdapter(items, false);
+        entriesAdapter = new LandingFragmentAdapter(false);
         binding.recycledViewEntries.setAdapter(entriesAdapter);
         binding.recycledViewEntries.setClickable(true);
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
@@ -434,12 +488,11 @@ public class FragmentLanding extends Fragment {
                         // Select the notifications
                         if (actionMode != null) {
                             selectDeselect(position);
-                            entriesAdapter.notifyItemChanged(position);
                         }
                         // Or open it in normal way...
                         else {
                             binding.recycledViewEntries.setClickable(false);
-                            LandingFragmentItems item = items.get(position);
+                            LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
                             if (item.isTimedCount()) {
                                 openTimedCount(item.getLocalId());
                             } else {
@@ -487,42 +540,41 @@ public class FragmentLanding extends Fragment {
         isLoading = true;
         progressBar(true);
 
-        // 1. Fetch observations and timed counts
         ArrayList<EntryDb> localObservationsBatch = ObjectBoxHelper.getPagedObservations(25, localObjectBoxObservationOffset);
         ArrayList<TimedCountDb> localTimedCountsBatch = ObjectBoxHelper.getPagedTimedCounts(25, localObjectBoxTimedCountsOffset);
 
         ArrayList<LandingFragmentItems> batchItems = new ArrayList<>();
 
-        // Process Observations
         if (!localObservationsBatch.isEmpty()) {
-            Log.d(TAG, "Observations found. Offset: " + localObjectBoxObservationOffset);
             for (EntryDb entry : localObservationsBatch) {
                 batchItems.add(getItemFromEntry(requireContext(), entry));
             }
             localObjectBoxObservationOffset += localObservationsBatch.size();
         }
 
-        // Process Timed Counts
         if (!localTimedCountsBatch.isEmpty()) {
-            Log.d(TAG, "Timed counts found. Offset: " + localObjectBoxTimedCountsOffset);
             for (TimedCountDb timedCount : localTimedCountsBatch) {
                 batchItems.add(getItemFromTimedCount(requireContext(), timedCount));
             }
             localObjectBoxTimedCountsOffset += localTimedCountsBatch.size();
         }
 
-        // 2. Decide: Update UI or Go to Server
         if (!batchItems.isEmpty()) {
-            Collections.sort(batchItems, (item1, item2) -> item2.getDate().compareTo(item1.getDate()));
-
+            // Sort only the new batch, then append — don't re-sort the whole list
+            Collections.sort(batchItems, compareUploadAndDate);
             appendItems(batchItems);
-
             progressBar(false);
             isLoading = false;
         } else {
             Log.d(TAG, "No more local data. Fetching older data from server...");
             downloadOlderData();
         }
+    }
+
+    private void appendItems(List<LandingFragmentItems> newItems) {
+        List<LandingFragmentItems> current = new ArrayList<>(entriesAdapter.getCurrentList());
+        current.addAll(newItems);
+        entriesAdapter.submitList(current, () -> isLoading = false);
     }
 
     private void downloadNewerData() {
@@ -538,11 +590,13 @@ public class FragmentLanding extends Fragment {
         OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
                 .setInputData(data)
                 .addTag("TIMED_COUNTS_DOWNLOAD_UPDATED_AT")
+                .addTag("UPDATED_AT_SYNC")
                 .build();
 
         OneTimeWorkRequest observationRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
                 .setInputData(data)
                 .addTag("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
+                .addTag("UPDATED_AT_SYNC")
                 .build();
 
         OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
@@ -568,14 +622,13 @@ public class FragmentLanding extends Fragment {
         long beforeObservationId = ObjectBoxHelper.getMinObservationServerId();
         long beforeTimedCountId = ObjectBoxHelper.getMinTimedCountsServerId();
 
-        Data inputData = new Data.Builder()
-                .putLong("beforeId", beforeObservationId)
-                .putBoolean("isSyncOnScroll", true)
-                .build();
-
         OneTimeWorkRequest observationsRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
-                .setInputData(inputData)
-                .addTag("DATA_SYNC")
+                .setInputData(new Data.Builder()
+                        .putLong("beforeId", beforeObservationId)
+                        .putBoolean("isSyncOnScroll", true)
+                        .build())
+                .addTag("OBSERVATIONS_DOWNLOAD_BY_ID")
+                .addTag("UPDATED_BY_ID")
                 .build();
 
         OneTimeWorkRequest timedCountsRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
@@ -583,7 +636,8 @@ public class FragmentLanding extends Fragment {
                         .putLong("beforeId", beforeTimedCountId)
                         .putBoolean("isSyncOnScroll", true)
                         .build())
-                .addTag("DATA_SYNC")
+                .addTag("TIMED_COUNTS_DOWNLOAD_BY_ID")
+                .addTag("UPDATED_BY_ID")
                 .build();
 
         OneTimeWorkRequest photoRequest = new OneTimeWorkRequest.Builder(PhotoDownloadWorker.class)
@@ -603,18 +657,34 @@ public class FragmentLanding extends Fragment {
     }
 
     private void selectDeselect(int position) {
-        items.get(position).setMarked(!items.get(position).isMarked());
-
-        int selected = getSelectedItemsCount();
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
+        LandingFragmentItems item = currentList.get(position);
+        currentList.set(position, item.withMarked(!item.isMarked()));
+        int selected = getSelectedItemsCount(currentList);
+        entriesAdapter.submitList(currentList);
 
         if (selected == 0) {
-            if (actionMode != null) {
-                actionMode.finish();
-            }
-        } else {
-            if (actionMode != null) {
-                actionMode.setTitle(String.valueOf(selected));
-                actionMode.invalidate();
+            if (actionMode != null) actionMode.finish();
+        } else if (actionMode != null) {
+            actionMode.setTitle(String.valueOf(selected));
+            updateActionModeMenu(actionMode, currentList, selected);
+        }
+    }
+
+    private void updateActionModeMenu(ActionMode mode, List<LandingFragmentItems> list, int selectedCount) {
+        Menu menu = mode.getMenu();
+        if (menu == null) return;
+        MenuItem duplicateItem = menu.findItem(R.id.duplicate);
+        if (duplicateItem != null) {
+            if (selectedCount == 1) {
+                for (LandingFragmentItems i : list) {
+                    if (i.isMarked()) {
+                        duplicateItem.setVisible(!i.isTimedCount());
+                        break;
+                    }
+                }
+            } else {
+                duplicateItem.setVisible(false);
             }
         }
     }
@@ -664,7 +734,8 @@ public class FragmentLanding extends Fragment {
     }
 
     // Launch new Entry Activity
-    private final ActivityResultLauncher<Intent> observationLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+    private final ActivityResultLauncher<Intent> observationLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 Log.d(TAG, "We got a result from the ActivityObservation!");
 
@@ -684,7 +755,7 @@ public class FragmentLanding extends Fragment {
                             old_data_id = result.getData().getLongExtra("ENTRY_ID", 0);
                         }
                         Log.d(TAG, "This was an existing entry edit with id: " + old_data_id);
-                        updateSingleObservationItem(old_data_id);
+                        reloadItemsForRecyclerView();
                     }
                 }
 
@@ -699,7 +770,8 @@ public class FragmentLanding extends Fragment {
                         Log.d(TAG, "We got a result from the Timed Count Activity!");
                         if (result.getResultCode() == Activity.RESULT_OK) {
                             if (result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false)) {
-                                addTimedCountItem(result.getData());
+                                long timeCountId = result.getData().getLongExtra("TIMED_COUNT_ID", 0);
+                                addTimedCountItem((int) timeCountId);
                             } else {
                                 Log.d(TAG, "This was an existing Timed Count. Should not change the UI.");
                             }
@@ -718,7 +790,7 @@ public class FragmentLanding extends Fragment {
         }
 
         // Display observation in the RecyclerView
-        Log.d(TAG, "Adding entry " + entryId + "to the list.");
+        Log.d(TAG, "Adding entry " + entryId + " to the list.");
         LandingFragmentItems newItem = getItemFromEntry(requireContext(), entryDb);
         addItemToRecyclerView(newItem);
 
@@ -726,84 +798,25 @@ public class FragmentLanding extends Fragment {
         ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
     }
 
-    private void addTimedCountItem(Intent data) {
-        int new_timed_count_id = data.getIntExtra("TIMED_COUNT_ID", 0);
-        String time = data.getStringExtra("TIMED_COUNT_START_TIME");
-        Integer day = data.getIntExtra("TIMED_COUNT_DAY", 0);
-        Integer month = data.getIntExtra("TIMED_COUNT_MONTH", 0);
-        Integer year = data.getIntExtra("TIMED_COUNT_YEAR", 0);
-        Log.d(TAG, "This was a new Timed Count with ID: " + new_timed_count_id);
-        Log.d(TAG, "Y-M-D" + year + "-" + month + "-" + day + " at " + time);
+    private void addTimedCountItem(int timedCountId) {
+        TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+        if (timedCount == null) {
+            Log.e(TAG, "New entry ID " + timedCountId + " not found in database.");
+            return;
+        }
 
-        String title = getString(R.string.timed_count);
-        String image = "timed_count";
-        String subtitle;
-        Calendar calendar = DateHelper.getCalendar(
-                year,
-                month,
-                day,
-                Objects.requireNonNull(time));
-        subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
-                getString(R.string.at_time) + " " +
-                DateHelper.getLocalizedCalendarTime(calendar);
-        LandingFragmentItems item = new LandingFragmentItems(
-                null,
-                null,
-                true,
-                false,
-                false,
-                title,
-                subtitle,
-                image,
-                calendar.getTime());
-        addItemToRecyclerView(item);
+        LandingFragmentItems newItem = getItemFromTimedCount(getContext(), timedCount);
+        addItemToRecyclerView(newItem);
+        ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
     }
 
     private void addItemToRecyclerView(LandingFragmentItems item) {
-        if (items == null) {
-            items = new ArrayList<>();
-            Log.e(TAG, "Items are null in the recycler view.");
-        }
-
-        items.add(0, item);
-        Log.d(TAG, "There are " + entriesAdapter.getItemCount() + " items in the adapter, " + items.size() + " in the list.");
-        if (entriesAdapter != null) {
-            entriesAdapter.insertItem(item, 0);
-            Log.d(TAG, "NotifyItemInserted. Items in the adapter now: " + entriesAdapter.getItemCount());
-            binding.recycledViewEntries.smoothScrollToPosition(0);
-        }
-
-    }
-
-    // Add new items to RecyclerView
-    private void appendItems(List<LandingFragmentItems> newItems) {
-        binding.recycledViewEntries.post(() -> {
-            if (items == null) {
-                items = new ArrayList<>();
-            }
-
-            int initialSize = items.size();
-            for (LandingFragmentItems newItem : newItems) {
-                boolean exists = false;
-                for (LandingFragmentItems existingItem : items) {
-                    if (Objects.equals(existingItem.getLocalId(), newItem.getLocalId()) &&
-                            existingItem.isTimedCount() == newItem.isTimedCount()) {
-                        exists = true;
-                        break;
-                    }
-                }
-                if (!exists) {
-                    items.add(newItem);
-                }
-            }
-
-            int insertedCount = items.size() - initialSize;
-            if (insertedCount > 0) {
-                entriesAdapter.notifyItemRangeInserted(initialSize, insertedCount);
-            }
-
-            isLoading = false;
-        });
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
+        currentList.add(0, item);
+        Log.d(TAG, "There are " + entriesAdapter.getItemCount() + " items in the adapter, " + currentList.size() + " in the list.");
+        entriesAdapter.submitList(currentList, () ->
+                binding.recycledViewEntries.post(() ->
+                        binding.recycledViewEntries.smoothScrollToPosition(0)));
     }
 
     // Method to show the context menu on + button long press
@@ -846,25 +859,8 @@ public class FragmentLanding extends Fragment {
         }
     }
 
-    // Find the entry’s index by ObservationId
-    private int getItemIndex(long id, boolean isTimedCount) {
-        for (int i = items.size() - 1; i >= 0; i--) {
-            LandingFragmentItems item = items.get(i);
-            Log.d(TAG, "Checking item at " + i + ": ItemID=" + item.getLocalId() + ", SearchID=" + id + ", ServerID=" + item.getServerId() + ", Match=" + (item.getLocalId() == id));
-
-            if (item.isTimedCount() == isTimedCount &&
-                    item.getLocalId() != null && item.getLocalId() == id) {
-
-                Log.d(TAG, (isTimedCount ? "Timed Count " : "Observation ") + id + " index is " + i);
-                return i;
-            }
-        }
-        Log.d(TAG, (isTimedCount ? "Timed Count " : "Observation ") + id + " not found in items.");
-        return -1;
-    }
-
     public void duplicateEntry(int position) {
-        LandingFragmentItems item = items.get(position);
+        LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
         if (item.isTimedCount()) {
             Log.d(TAG, "Timed counts cannot be duplicated.");
             actionMode.finish();
@@ -924,41 +920,58 @@ public class FragmentLanding extends Fragment {
     }
 
     private void deleteSelectedEntries() {
-        int count = 0;
-        for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).isMarked()) {
-                Log.d(TAG, "You will now delete entry index ID: " + i);
-                // Delete from server
-                if (items.get(i).isUploaded()) {
-                    sendDeleteRequestToServer(items.get(i));
-                } else {
-                    // Just delete local files
-                    deleteLocally(items.get(i));
-                }
-                count++;
+        List<LandingFragmentItems> snapshot = new ArrayList<>(entriesAdapter.getCurrentList());
+        List<LandingFragmentItems> toDelete = new ArrayList<>();
+
+        for (LandingFragmentItems item : snapshot) {
+            if (item.isMarked()) toDelete.add(item);
+        }
+
+        if (toDelete.isEmpty()) return;
+
+        int count = toDelete.size();
+
+        // Delete request
+        for (LandingFragmentItems item : toDelete) {
+            if (item.isUploaded()) {
+                sendDeleteRequestToServer(item);
+            } else {
+                deleteFromObjectBox(item, false);
             }
         }
 
+        // Get the deleted filed that require refresh
+        Set<Long> deletedIds = new HashSet<>();
+        for (LandingFragmentItems item : toDelete) {
+            if (!item.isUploaded()) { // remove non-uploaded from UI
+                deletedIds.add(item.getLocalId());
+            }
+        }
+
+        // Create new list for recycler view
+        List<LandingFragmentItems> newList = new ArrayList<>();
+        for (LandingFragmentItems item : snapshot) {
+            if (!deletedIds.contains(item.getLocalId())) {
+                // Keep item, but deselect it
+                newList.add(item.isMarked() ? item.withMarked(false) : item);
+            }
+        }
+
+        entriesAdapter.submitList(newList);
         updateUploadIconVisibility();
 
         String message = getResources().getQuantityString(
-                R.plurals.entries_deleted_count,
-                count,
-                count
-        );
+                R.plurals.entries_deleted_count, count, count);
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
 
-        actionMode.finish();
+        ActionMode mode = actionMode;
+        actionMode = null;
+        if (mode != null) mode.finish();
     }
 
-    private void deleteLocally(LandingFragmentItems item) {
-        int currentPosition = items.indexOf(item);
-        Log.d(TAG, "Deleting recycler view item index ID " + currentPosition);
-
-        if (currentPosition == -1) return; // Already deleted
-
+    private void deleteFromObjectBox(LandingFragmentItems item, boolean reload) {
         Long id = item.getLocalId();
-
+        if (id == null) return;
         if (item.isTimedCount()) {
             ObjectBoxHelper.removeObservationsForTimedCountId(id);
             ObjectBoxHelper.removeTimedCountById(id);
@@ -966,8 +979,9 @@ public class FragmentLanding extends Fragment {
             ObjectBoxHelper.removeObservationById(id);
         }
 
-        items.remove(currentPosition);
-        entriesAdapter.notifyItemRemoved(currentPosition);
+        if (reload) {
+            reloadItemsForRecyclerView();
+        }
     }
 
     private void sendDeleteRequestToServer(LandingFragmentItems item) {
@@ -997,10 +1011,10 @@ public class FragmentLanding extends Fragment {
                         } else {
                             Log.d(TAG, "Observation ID " + item.getLocalId() + " deleted from server.");
                         }
-                        deleteLocally(item);
+                        deleteFromObjectBox(item, true);
                     } else {
                         if (response.code() == 404 || response.code() == 403) {
-                            deleteLocally(item);
+                            deleteFromObjectBox(item, true);
                             Log.e(TAG, "File already deleted on the server: " + response.code());
                         } else {
                             Toast.makeText(getContext(), "Error deleting (server).", Toast.LENGTH_SHORT).show();
@@ -1021,6 +1035,63 @@ public class FragmentLanding extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private void applyBatchUpdates(List<Long> observationIds, List<Long> timedCountIds, boolean scrollToTop) {
+        // 1. Fetch the list ONCE
+        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
+        boolean hasChanges = false;
+
+        // 2. Process all Observation updates
+        if (observationIds != null && !observationIds.isEmpty()) {
+            for (long id : new HashSet<>(observationIds)) {
+                EntryDb entry = ObjectBoxHelper.getObservationById(id);
+                if (entry != null) {
+                    LandingFragmentItems newItem = getItemFromEntry(requireContext(), entry);
+                    int index = findItemIndex(currentList, id, false);
+                    if (index != -1) currentList.set(index, newItem);
+                    else currentList.add(newItem);
+                    hasChanges = true;
+                }
+            }
+        }
+
+        // 3. Process all Timed Count updates
+        if (timedCountIds != null && !timedCountIds.isEmpty()) {
+            for (long id : new HashSet<>(timedCountIds)) {
+                TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
+                if (timedCount != null) {
+                    LandingFragmentItems newItem = getItemFromTimedCount(requireContext(), timedCount);
+                    int index = findItemIndex(currentList, id, true);
+                    if (index != -1) currentList.set(index, newItem);
+                    else currentList.add(newItem);
+                    hasChanges = true;
+                }
+            }
+        }
+
+        // 4. Sort and submit ONCE
+        if (hasChanges) {
+            Collections.sort(currentList, LandingFragmentItems.compareUploadAndDate);
+            entriesAdapter.submitList(currentList, () -> {
+                if (scrollToTop) {
+                    binding.recycledViewEntries.post(() ->
+                            binding.recycledViewEntries.smoothScrollToPosition(0));
+                }
+            });
+            ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
+        }
+    }
+
+    private int findItemIndex(List<LandingFragmentItems> list, long id, boolean isTimedCount) {
+        for (int i = 0; i < list.size(); i++) {
+            LandingFragmentItems item = list.get(i);
+            long localId = item.getLocalId() != null ? item.getLocalId() : -1L;
+            if (item.isTimedCount() == isTimedCount && localId == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }

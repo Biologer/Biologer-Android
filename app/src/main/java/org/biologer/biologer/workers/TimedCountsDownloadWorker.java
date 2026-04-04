@@ -111,6 +111,7 @@ public class TimedCountsDownloadWorker extends Worker {
                     OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
                             .setInputData(nextInput)
                             .addTag("TIMED_COUNTS_DOWNLOAD_UPDATED_AT")
+                            .addTag("UPDATED_AT_SYNC")
                             .build();
 
                     WorkManager.getInstance(getApplicationContext())
@@ -347,6 +348,17 @@ public class TimedCountsDownloadWorker extends Worker {
                                     for (PhotoDb photoDb : objectBoxPhotos) {
                                         if (photoDb.getServerId() == photoData.getId()) {
                                             existsLocally = true;
+
+                                            // Update ObjectBox if already exists
+                                            if (photoData.getLicense() != null) {
+                                                int serverLicenseId = photoData.getLicense().getId();
+                                                if (photoDb.getLicenseId() != serverLicenseId) {
+                                                    Log.d(TAG, "Updating license for photo " + photoDb.getServerId() + " to " + serverLicenseId);
+                                                    photoDb.setLicenseId(serverLicenseId);
+                                                    App.get().getBoxStore().boxFor(PhotoDb.class).put(photoDb);
+                                                }
+                                            }
+
                                             break;
                                         }
                                     }

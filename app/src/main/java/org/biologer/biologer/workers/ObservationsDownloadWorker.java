@@ -18,10 +18,8 @@ import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.FieldObservationData;
 import org.biologer.biologer.network.json.FieldObservationDataActivity;
 import org.biologer.biologer.network.json.FieldObservationDataPhotos;
-import org.biologer.biologer.network.json.FieldObservationDataTypes;
 import org.biologer.biologer.network.json.FieldObservationResponse;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.ObservationActivityDb;
 import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.PhotoDb_;
@@ -110,6 +108,7 @@ public class ObservationsDownloadWorker extends Worker {
                     OneTimeWorkRequest nextRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
                             .setInputData(nextInput)
                             .addTag("OBSERVATIONS_DOWNLOAD_UPDATED_AT")
+                            .addTag("UPDATED_AT_SYNC")
                             .build();
 
                     WorkManager.getInstance(getApplicationContext())
@@ -156,7 +155,9 @@ public class ObservationsDownloadWorker extends Worker {
                 EntryDb entryToUse;
 
                 if (existing == null) {
+                    //
                     // Path 1: New observation. Not in ObjectBox.
+                    //
                     try {
                         // Part 1: Save the new observation
                         EntryDb newEntry = EntryDb.getEntryFieldsFromData(data);
@@ -221,7 +222,9 @@ public class ObservationsDownloadWorker extends Worker {
                         Log.e(TAG, "Error saving to ObjectBox: " + data.getId(), e);
                     }
                 } else {
+                    //
                     // Path 2: Existing observation already stored in ObjectBox.
+                    //
                     if (data.getActivity().size() > existing.observationActivity.size()) {
                         Log.d(TAG, "Server has " + data.getActivity().size() + " activities. Updating local entry " + data.getId());
 
@@ -282,6 +285,17 @@ public class ObservationsDownloadWorker extends Worker {
                             for (PhotoDb photoDb : objectBoxPhotos) {
                                 if (photoDb.getServerId() == photoData.getId()) {
                                     existsLocally = true;
+
+                                    // Update ObjectBox if already exists
+                                    if (photoData.getLicense() != null) {
+                                        int serverLicenseId = photoData.getLicense().getId();
+                                        if (photoDb.getLicenseId() != serverLicenseId) {
+                                            Log.d(TAG, "Updating license for photo " + photoDb.getServerId() + " to " + serverLicenseId);
+                                            photoDb.setLicenseId(serverLicenseId);
+                                            App.get().getBoxStore().boxFor(PhotoDb.class).put(photoDb);
+                                        }
+                                    }
+
                                     break;
                                 }
                             }
@@ -290,6 +304,10 @@ public class ObservationsDownloadWorker extends Worker {
                                 PhotoDb photo = PhotoDb.getPhotoFields(photoData);
                                 photo.entry.setTarget(existing);
                                 objectBoxPhotos.add(photo);
+                                Log.d(TAG, "Adding new photo " + photo.id
+                                        + ", ServerID=" + photo.getServerId()
+                                        + ", ServerURL=" + photo.getServerUrl()
+                                        + ", license=" + photo.getLicenseId());
                             }
                         }
 

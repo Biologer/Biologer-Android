@@ -23,6 +23,7 @@ import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,12 +63,18 @@ public class ObservationUploadWorker extends Worker {
                     APIEntryPhotos existingPhoto = new APIEntryPhotos();
                     existingPhoto.setId(photoDb.getServerId());
                     existingPhoto.setPath(null);
-                    existingPhoto.setLicense(entry.getImageLicence());
+                    int photoLicense = (photoDb.getLicenseId() == 0)
+                            ? ObjectBoxHelper.getImageLicense()
+                            : photoDb.getLicenseId();
+                    existingPhoto.setLicense(photoLicense);
                     photosForApi.add(existingPhoto);
+                    Log.d(TAG, "Image license. EntryDb=" + entry.getImageLicence()
+                            + ", UserDb=" + ObjectBoxHelper.getImageLicense()
+                            + ", PhotoDb=" + photoDb.getLicenseId());
                     Log.d(TAG, "Image already on server, sending ID: " + photoDb.getServerId());
                 } else {
                     // New image, should be uploaded first
-                    APIEntryPhotos newPhoto = uploadPhotoSync(entry, photoDb.getLocalPath());
+                    APIEntryPhotos newPhoto = uploadPhotoSync(photoDb);
                     if (newPhoto != null) {
                         photosForApi.add(newPhoto);
                     }
@@ -112,7 +119,9 @@ public class ObservationUploadWorker extends Worker {
                         .execute();
             }
 
-            if (response.code() == 429) {
+            int code = response.code();
+            Log.d(TAG, "Server returned response code: " + code);
+            if (code == 429 || (code >= 500 && code <= 599)) {
                 return Result.retry();
             }
 
@@ -125,7 +134,7 @@ public class ObservationUploadWorker extends Worker {
                 entry.setUploaded(true);
                 entry.setModified(false);
 
-                // Part 2: Update the photos with the ID and URL received from the server
+                // Part 2: Update the photos with the ID and URL 1received from the server
                 List<APIEntryResponse.PhotoResponseData> photosFromServer = responseData.getPhotos();
                 if (photosFromServer != null && !photosFromServer.isEmpty()) {
 
@@ -169,19 +178,37 @@ public class ObservationUploadWorker extends Worker {
 
                 Log.d(TAG, "Entry " + entryId + " successfully synced with server ID: " + serverId);
                 Data output = new Data.Builder()
-                        .putLong("updatedObservationId", entryId)
+                        .putLong("uploadedObservationId", entryId)
                         .build();
                 return Result.success(output);
+            } else {
+                String errorBody = !response.message().isEmpty()
+                        ? response.message()
+                        : "Unknown error!";
+                Log.e(TAG, "Error: " + errorBody);
+                Data errorData = new Data.Builder()
+                        .putInt("error_code", code)
+                        .putString("error_message", errorBody)
+                        .build();
+                return Result.failure(errorData);
             }
+        } catch (IOException e) {
+            // Connection lost (Retry)
+            Log.e(TAG, "Network connection lost during observation upload", e);
             return Result.retry();
         } catch (Exception e) {
+            // Other error
             Log.e(TAG, "Upload failed for entry " + entryId, e);
-            return Result.retry();
+            Data errorData = new Data.Builder()
+                    .putInt("error_code", 0)
+                    .putString("error_message", e.toString())
+                    .build();
+            return Result.failure(errorData);
         }
     }
 
-    private APIEntryPhotos uploadPhotoSync(EntryDb entry, String path) throws Exception {
-        File file = new File(getApplicationContext().getFilesDir(), new File(path).getName());
+    private APIEntryPhotos uploadPhotoSync(PhotoDb photo) throws Exception {
+        File file = new File(getApplicationContext().getFilesDir(), new File(photo.getLocalPath()).getName());
         if (!file.exists()) {
             Log.e(TAG, "There is no file at the path: " + file.getAbsolutePath());
             return null;
@@ -199,11 +226,13 @@ public class ObservationUploadWorker extends Worker {
         }
 
         if (response.isSuccessful() && response.body() != null) {
-            int license = (entry.getImageLicence() == 0) ? ObjectBoxHelper.getImageLicense(): entry.getImageLicence();
-            APIEntryPhotos photo = new APIEntryPhotos();
-            photo.setPath(response.body().getFile());
-            photo.setLicense(license);
-            return photo;
+            int license = (photo.getLicenseId() == null || photo.getLicenseId() == 0)
+                    ? ObjectBoxHelper.getImageLicense()
+                    : photo.getLicenseId();
+            APIEntryPhotos uploadedPhoto = new APIEntryPhotos();
+            uploadedPhoto.setPath(response.body().getFile());
+            uploadedPhoto.setLicense(license);
+            return uploadedPhoto;
         } else {
             throw new Exception("Error uploading photo: " + response.code());
         }

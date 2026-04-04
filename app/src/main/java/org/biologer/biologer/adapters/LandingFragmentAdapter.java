@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -18,25 +19,18 @@ import com.bumptech.glide.Glide;
 import org.biologer.biologer.R;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class LandingFragmentAdapter
-        extends RecyclerView.Adapter<LandingFragmentAdapter.ViewHolder> {
-    private final List<LandingFragmentItems> myEntries;
-    private int position;
-    private static final String TAG = "Biologer.EntryAdapter";
-    View view;
-    private final boolean isTimedCountObservation;
+        extends ListAdapter<LandingFragmentItems, LandingFragmentAdapter.ViewHolder> {
 
-    public List<LandingFragmentItems> getData() {
-        return myEntries;
-    }
-
-    public LandingFragmentAdapter(ArrayList<LandingFragmentItems> entries, boolean isTimedCountObservation) {
-        myEntries = entries;
+    public LandingFragmentAdapter(boolean isTimedCountObservation) {
+        super(new LandingDiffCallback());
         this.isTimedCountObservation = isTimedCountObservation;
     }
+    private int position;
+    View view;
+    private final boolean isTimedCountObservation;
 
     public static class ViewHolder
             extends RecyclerView.ViewHolder {
@@ -83,7 +77,7 @@ public class LandingFragmentAdapter
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int position) {
 
-        LandingFragmentItems item = myEntries.get(position);
+        LandingFragmentItems item = getItem(position);
         viewHolder.setIsTimedCount(item.getServerId() != null);
 
         // Get the title
@@ -159,11 +153,6 @@ public class LandingFragmentAdapter
         if (viewHolder.textSubtitle != null) viewHolder.textSubtitle.setAlpha(alpha);
     }
 
-    @Override
-    public int getItemCount() {
-        return myEntries.size();
-    }
-
     public int getPosition() {
         return position;
     }
@@ -178,60 +167,34 @@ public class LandingFragmentAdapter
         super.onViewRecycled(viewHolder);
     }
 
-    public static class LandingDiffCallback extends DiffUtil.Callback {
-        private final List<LandingFragmentItems> oldList;
-        private final List<LandingFragmentItems> newList;
-
-        public LandingDiffCallback(List<LandingFragmentItems> oldList, List<LandingFragmentItems> newList) {
-            this.oldList = oldList;
-            this.newList = newList;
-        }
-
+    public static class LandingDiffCallback extends DiffUtil.ItemCallback<LandingFragmentItems> {
         @Override
-        public int getOldListSize() {
-            return oldList.size();
-        }
-
-        @Override
-        public int getNewListSize() {
-            return newList.size();
-        }
-
-        @Override
-        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            LandingFragmentItems oldItem = oldList.get(oldItemPosition);
-            LandingFragmentItems newItem = newList.get(newItemPosition);
-
-            if (oldItem.isTimedCount() != newItem.isTimedCount()) {
-                return false;
-            }
-
+        public boolean areItemsTheSame(@NonNull LandingFragmentItems oldItem,
+                                       @NonNull LandingFragmentItems newItem) {
+            if (oldItem.isTimedCount() != newItem.isTimedCount()) return false;
             if (oldItem.getLocalId() != null && newItem.getLocalId() != null) {
                 return oldItem.getLocalId().equals(newItem.getLocalId());
             }
-
             return false;
         }
 
         @Override
-        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            return oldList.get(oldItemPosition).equals(newList.get(newItemPosition));
+        public boolean areContentsTheSame(@NonNull LandingFragmentItems oldItem,
+                                          @NonNull LandingFragmentItems newItem) {
+            return oldItem.equals(newItem);
         }
     }
 
-    public void updateData(List<LandingFragmentItems> newItems) {
-        LandingDiffCallback diffCallback = new LandingDiffCallback(this.myEntries, newItems);
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
-
-        this.myEntries.clear();
-        this.myEntries.addAll(newItems);
-
-        diffResult.dispatchUpdatesTo(this);
-    }
-
-    public void insertItem(LandingFragmentItems item, int position) {
-        this.myEntries.add(position, item);
-        notifyItemInserted(position);
+    public int getItemIndexFromId(long id, boolean isTimedCount) {
+        List<LandingFragmentItems> current = getCurrentList();
+        for (int i = current.size() - 1; i >= 0; i--) {
+            LandingFragmentItems item = current.get(i);
+            long localId = item.getLocalId() != null ? item.getLocalId() : -1L;
+            if (item.isTimedCount() == isTimedCount && localId == id) {
+                return i;
+            }
+        }
+        return -1;
     }
 
 }

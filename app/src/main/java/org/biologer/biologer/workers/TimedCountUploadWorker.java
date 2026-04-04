@@ -15,6 +15,8 @@ import org.biologer.biologer.network.json.APITimedCounts;
 import org.biologer.biologer.network.json.APITimedCountsResponse;
 import org.biologer.biologer.sql.TimedCountDb;
 
+import java.io.IOException;
+
 import retrofit2.Response;
 
 public class TimedCountUploadWorker extends Worker {
@@ -41,6 +43,7 @@ public class TimedCountUploadWorker extends Worker {
 
             APITimedCounts api = new APITimedCounts();
             api.getFromTimedCountDatabase(timedCount);
+            Log.d(TAG, "TIMEDCOUNTAPI start time: " + api.getStartTime());
 
             Response<APITimedCountsResponse> response;
             if (timedCount.getServerId() != null && timedCount.isUploaded()) {
@@ -55,7 +58,11 @@ public class TimedCountUploadWorker extends Worker {
                         .execute();
             }
 
-            if (response.code() == 429) return Result.retry();
+            int code = response.code();
+            Log.e(TAG, "Server returned error code: " + code);
+            if (code == 429 || (code >= 500 && code <= 599)) {
+                return Result.retry();
+            }
 
             if (response.isSuccessful() && response.body() != null) {
                 long serverId = response.body().getData().getId();
@@ -68,15 +75,32 @@ public class TimedCountUploadWorker extends Worker {
 
                 Log.d(TAG, "TimedCount " + timedCountId + " synchronised. Server ID: " + serverId);
                 Data output = new Data.Builder()
-                        .putLong("updatedTimedCountId", timedCountId)
+                        .putLong("uploadedTimeCountId", timedCountId)
                         .build();
                 return Result.success(output);
-            } else {
-                return Result.retry();
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error uploading TimedCount", e);
+            String errorBody = !response.message().isEmpty()
+                    ? response.message()
+                    : "Unknown error!";
+            Data errorData = new Data.Builder()
+                    .putInt("error_code", code)
+                    .putString("error_message", errorBody)
+                    .build();
+            Log.e(TAG, "Error: " + errorBody);
+            return Result.failure(errorData);
+
+        } catch (IOException e) {
+            // Connection lost (Retry)
+            Log.e(TAG, "Network connection lost during time count upload", e);
             return Result.retry();
+        } catch (Exception e) {
+            // Other error
+            Log.e(TAG, "Upload failed for entry " + timedCountId + ": " + e);
+            Data errorData = new Data.Builder()
+                    .putInt("error_code", 0)
+                    .putString("error_message", e.toString())
+                    .build();
+            return Result.failure(errorData);
         }
     }
 

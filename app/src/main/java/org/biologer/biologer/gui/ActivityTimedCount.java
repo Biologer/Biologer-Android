@@ -672,11 +672,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         );
 
         Box<TimedCountDb> timedCountDbBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        timedCountDbBox.put(timedCountDb);
+        long timeCountId = timedCountDbBox.put(timedCountDb);
 
         Intent intent = new Intent();
         intent.putExtra("IS_NEW_ENTRY", isNewEntry());
-        intent.putExtra("TIMED_COUNT_ID", viewModel.getServerId());
+        intent.putExtra("TIMED_COUNT_ID", timeCountId);
+        intent.putExtra("TIMED_COUNT_SERVER_ID", viewModel.getServerId());
         intent.putExtra("TIMED_COUNT_START_TIME", viewModel.getStartTimeString());
         intent.putExtra("TIMED_COUNT_DAY", DateHelper.getCurrentDay());
         intent.putExtra("TIMED_COUNT_MONTH", DateHelper.getCurrentMonth());
@@ -700,7 +701,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         }
     }
 
-    // Create AlertDialog to setup before starting the timed count.
+    // Create AlertDialog to run before starting the timed count.
     private void setupNewTimedCount() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.setup_your_timed_count);
@@ -954,6 +955,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         });
 
         viewModel.setStartTimeString(DateHelper.getCurrentTime());
+        Log.d(TAG, "This is the start time set initially: " +  viewModel.getStartTimeString());
     }
 
 

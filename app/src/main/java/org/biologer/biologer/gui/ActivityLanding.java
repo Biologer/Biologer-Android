@@ -634,8 +634,8 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         tx.commit();
     }
 
-    private void uploadRecords() {
-        if (!App.get().getBoxStore().boxFor(EntryDb.class).getAll().isEmpty()) {
+    public void uploadRecords() {
+        if (ObjectBoxHelper.getUnsyncedCount() > 0) {
             Log.d(TAG, "Uploading entries to the online database.");
             OneTimeWorkRequest request =
                     new OneTimeWorkRequest.Builder(UploadWorker.class)
