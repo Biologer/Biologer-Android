@@ -67,8 +67,8 @@ public class TimedCountUploadWorker extends Worker {
             }
 
             if (response.isSuccessful() && response.body() != null) {
-                long newServerId = response.body().getData().getId();
-                Long oldServerId = timedCount.getServerId();
+                long newServerId = response.body().getData().getId(); // Time Count ID received from the server
+                Long oldServerId = timedCount.getServerId(); // Local ObjectBox ID before upload
 
                 timedCount.setServerId(newServerId);
                 timedCount.setUploaded(true);
@@ -76,6 +76,7 @@ public class TimedCountUploadWorker extends Worker {
 
                 long localId = ObjectBoxHelper.setTimedCount(timedCount);
 
+                // Update children with time count ID received from the server
                 if (oldServerId != null) {
                     List<EntryDb> childObservations = ObjectBoxHelper.getTimedCountObservations(oldServerId);
                     if (!childObservations.isEmpty()) {

@@ -20,7 +20,6 @@ import org.biologer.biologer.network.json.UploadFileResponse;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.ObservationActivityDb;
 import org.biologer.biologer.sql.PhotoDb;
-import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +49,11 @@ public class ObservationUploadWorker extends Worker {
         EntryDb entry = ObjectBoxHelper.getObservationById(entryId);
 
         if (entry == null) {
+            return Result.success();
+        }
+
+        if (entry.isUploaded() || !entry.isModified()) {
+            Log.i(TAG, "Entry " + entryId + " already uploaded and not modified locally!");
             return Result.success();
         }
 
@@ -85,25 +89,6 @@ public class ObservationUploadWorker extends Worker {
             APIEntry api = new APIEntry();
             api.getFromEntryDb(entry);
             api.setPhotos(photosForApi);
-
-            // Link with parent Timed Count
-            if (entry.getTimeCoundId() != null) {
-                TimedCountDb parentTimeCount = ObjectBoxHelper.getTimedCountByServerId(entry.getTimeCoundId());
-
-                if (parentTimeCount != null && parentTimeCount.isUploaded() && parentTimeCount.getServerId() != null) {
-                    // Set the server ID now
-                    api.setTimeCountId(parentTimeCount.getServerId());
-                    Log.d(TAG, "Linking observation " + entryId + " to server TimedCount ID: " + parentTimeCount.getServerId());
-                } else {
-                    Log.w(TAG, "Parent TimedCount not yet uploaded. Retrying later...");
-                    return Result.retry();
-                }
-            } else if (entry.getTimeCoundId() != null && entry.getTimeCoundId() < 0) {
-                // TODO Not sure if this is how it works, should check!
-                // Parent has a temporary negative ID = hasn't uploaded yet
-                Log.w(TAG, "Parent TimedCount is still pending upload. Holding observation...");
-                return Result.retry();
-            }
 
             Response<APIEntryResponse> response;
             if (entry.getServerId() != null && entry.getServerId() != 0) {

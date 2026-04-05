@@ -3,6 +3,7 @@ package org.biologer.biologer.workers;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkContinuation;
@@ -18,6 +19,7 @@ import org.biologer.biologer.sql.TimedCountDb_;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.objectbox.query.Query;
 
@@ -66,13 +68,19 @@ public class UploadWorker extends Worker {
         // Upload Timed Counts first!
         if (!pendingTimedCounts.isEmpty()) {
             List<OneTimeWorkRequest> tcRequests = new ArrayList<>();
-            for (TimedCountDb tc : pendingTimedCounts) {
+            for (int i = 0; i < pendingTimedCounts.size(); i++) {
+                TimedCountDb timeCount = pendingTimedCounts.get(i);
                 Data data = new Data.Builder()
-                        .putLong("timed_count_id", tc.getId())
+                        .putLong("timed_count_id", timeCount.getId())
                         .build();
                 tcRequests.add(new OneTimeWorkRequest.Builder(TimedCountUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
+                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 0.5s
+                        .setBackoffCriteria(
+                                BackoffPolicy.EXPONENTIAL,
+                                30,
+                                TimeUnit.SECONDS)
                         .build());
             }
             continuation = wm.beginWith(tcRequests);
@@ -81,13 +89,19 @@ public class UploadWorker extends Worker {
         // After Timed Counts are uploaded add the Observations
         if (!pendingEntries.isEmpty()) {
             List<OneTimeWorkRequest> entryRequests = new ArrayList<>();
-            for (EntryDb entry : pendingEntries) {
+            for (int i = 0; i < pendingEntries.size(); i++) {
+                EntryDb entry = pendingEntries.get(i);
                 Data data = new Data.Builder()
                         .putLong("observation_id", entry.getId())
                         .build();
                 entryRequests.add(new OneTimeWorkRequest.Builder(ObservationUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
+                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 0.5s
+                        .setBackoffCriteria(
+                                BackoffPolicy.EXPONENTIAL,
+                                30,
+                                TimeUnit.SECONDS)
                         .build());
             }
 
