@@ -26,7 +26,7 @@ public class EntryDb {
     private long taxonId;
     // TODO timedCoundId should be deleted in the future
     private Integer timedCoundId;
-    private Long timeCoundId;
+    private Long timeCountId;
     private String taxonSuggestion;
     private String year;
     private String month;
@@ -59,7 +59,7 @@ public class EntryDb {
     public EntryDb() {
     }
 
-    public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Long timeCoundId,
+    public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Long timeCountId,
                    String taxonSuggestion, String year, String month, String day,
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
@@ -71,7 +71,7 @@ public class EntryDb {
         this.uploaded = uploaded;
         this.modified = modified;
         this.taxonId = taxonId;
-        this.timeCoundId = timeCoundId;
+        this.timeCountId = timeCountId;
         this.taxonSuggestion = taxonSuggestion;
         this.year = year;
         this.month = month;
@@ -347,7 +347,7 @@ public class EntryDb {
         existing.setServerId(serverData.getId());
         existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
         existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
-        existing.setTimeCoundId(serverData.getTimeCountId());
+        existing.setTimeCountId(serverData.getTimeCountId());
         existing.setYear(String.valueOf(serverData.getYear()));
         existing.setMonth(String.valueOf(serverData.getMonth() - 1));
         existing.setDay(String.valueOf(serverData.getDay()));
@@ -372,12 +372,12 @@ public class EntryDb {
         existing.setObservationTypeIds(getObservationTypeIds(serverData));
     }
 
-    public Long getTimeCoundId() {
-        return timeCoundId;
+    public Long getTimeCountId() {
+        return timeCountId;
     }
 
-    public void setTimeCoundId(Long timeCoundId) {
-        this.timeCoundId = timeCoundId;
+    public void setTimeCountId(Long timeCountId) {
+        this.timeCountId = timeCountId;
     }
 
     public Integer getTimedCoundId() {

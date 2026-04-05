@@ -20,13 +20,13 @@ import java.util.List;
  * observed in the RecyclerView of the Timed Count.
  */
 
-public class TimedCountAdapter
-        extends RecyclerView.Adapter<TimedCountAdapter.ViewHolder> {
+public class TimeCountAdapter
+        extends RecyclerView.Adapter<TimeCountAdapter.ViewHolder> {
     private final List<SpeciesCountItems> observedSpecies;
     private int position;
     private static final String TAG = "Biologer.TCEntryAdapter";
     View view;
-    public TimedCountAdapter(ArrayList<SpeciesCountItems> entries) {
+    public TimeCountAdapter(ArrayList<SpeciesCountItems> entries) {
         observedSpecies = entries;
     }
 

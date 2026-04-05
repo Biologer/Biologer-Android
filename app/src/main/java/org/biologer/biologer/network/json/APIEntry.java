@@ -295,7 +295,7 @@ public class APIEntry {
         if (entry.getTaxonId() != 0) setTaxonId( (int) entry.getTaxonId());
         else setTaxonId(null);
 
-        setTimeCountId(entry.getTimeCoundId());
+        setTimeCountId(entry.getTimeCountId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setYear(entry.getYear());
         // Add 1 to the month since months range from 0 to 11

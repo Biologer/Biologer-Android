@@ -21,10 +21,10 @@ import java.util.List;
 
 import retrofit2.Response;
 
-public class TimedCountUploadWorker extends Worker {
+public class TimeCountsUploadWorker extends Worker {
     private static final String TAG = "Biologer.UploadTC";
 
-    public TimedCountUploadWorker(
+    public TimeCountsUploadWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params
     ) {
@@ -40,7 +40,7 @@ public class TimedCountUploadWorker extends Worker {
         }
 
         try {
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(timedCountId);
             if (timedCount == null) return Result.success();
 
             APITimedCounts api = new APITimedCounts();
@@ -78,10 +78,10 @@ public class TimedCountUploadWorker extends Worker {
 
                 // Update children with time count ID received from the server
                 if (oldServerId != null) {
-                    List<EntryDb> childObservations = ObjectBoxHelper.getTimedCountObservations(oldServerId);
+                    List<EntryDb> childObservations = ObjectBoxHelper.getTimeCountObservations(oldServerId);
                     if (!childObservations.isEmpty()) {
                         for (EntryDb child : childObservations) {
-                            child.setTimeCoundId(newServerId);
+                            child.setTimeCountId(newServerId);
                         }
                         ObjectBoxHelper.setObservation(childObservations);
                         Log.d(TAG, "Successfully linked " + childObservations.size() + " observations to new Server ID: " + newServerId);

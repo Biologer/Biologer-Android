@@ -49,7 +49,7 @@ import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
 import org.biologer.biologer.workers.ObservationsDownloadWorker;
 import org.biologer.biologer.workers.PhotoDownloadWorker;
-import org.biologer.biologer.workers.TimedCountsDownloadWorker;
+import org.biologer.biologer.workers.TimeCountsDownloadWorker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -612,7 +612,7 @@ public class FragmentLanding extends Fragment {
         Log.d(TAG, "Loading new data from Retrofit, timestamps: "
                 + observationsUpdatedAt + ", " + timeCountsUpdatedAt);
 
-        OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
+        OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimeCountsDownloadWorker.class)
                 .setInputData(new Data.Builder()
                         .putBoolean("isSyncOnScroll", false)
                         .putLong("timeCountsUpdatedAt", timeCountsUpdatedAt)
@@ -650,7 +650,7 @@ public class FragmentLanding extends Fragment {
     private void downloadOlderData() {
         Log.d(TAG, "Loading more data from Retrofit.");
 
-        long beforeObservationId = ObjectBoxHelper.getMinObservationServerId();
+        long beforeObservationId = ObjectBoxHelper.getMinObservationServerId(false);
         long beforeTimedCountId = ObjectBoxHelper.getMinTimedCountsServerId();
 
         OneTimeWorkRequest observationsRequest = new OneTimeWorkRequest.Builder(ObservationsDownloadWorker.class)
@@ -662,7 +662,7 @@ public class FragmentLanding extends Fragment {
                 .addTag("UPDATED_BY_ID")
                 .build();
 
-        OneTimeWorkRequest timedCountsRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
+        OneTimeWorkRequest timedCountsRequest = new OneTimeWorkRequest.Builder(TimeCountsDownloadWorker.class)
                 .setInputData(new Data.Builder()
                         .putLong("beforeId", beforeTimedCountId)
                         .putBoolean("isSyncOnScroll", true)
@@ -830,7 +830,7 @@ public class FragmentLanding extends Fragment {
     }
 
     private void addTimedCountItem(int timedCountId) {
-        TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+        TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(timedCountId);
         if (timedCount == null) {
             Log.e(TAG, "New entry ID " + timedCountId + " not found in database.");
             return;
@@ -910,7 +910,7 @@ public class FragmentLanding extends Fragment {
                     false,
                     false,
                     entry_from.getTaxonId(),
-                    entry_from.getTimeCoundId(),
+                    entry_from.getTimeCountId(),
                     entry_from.getTaxonSuggestion(),
                     entry_from.getYear(),
                     entry_from.getMonth(),
@@ -1020,7 +1020,7 @@ public class FragmentLanding extends Fragment {
 
         Call<Void> call = null;
         if (item.isTimedCount()) {
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(item.getLocalId());
+            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(item.getLocalId());
             if (timedCount != null) {
                 call = RetrofitClient.getService(SettingsManager.getDatabaseName())
                         .deleteTimedCountObservation(timedCount.getServerId());
@@ -1091,7 +1091,7 @@ public class FragmentLanding extends Fragment {
         // 3. Process all Timed Count updates
         if (timedCountIds != null && !timedCountIds.isEmpty()) {
             for (long id : new HashSet<>(timedCountIds)) {
-                TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
+                TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(id);
                 if (timedCount != null) {
                     LandingFragmentItems newItem = getItemFromTimedCount(requireContext(), timedCount);
                     int index = findItemIndex(currentList, id, true);

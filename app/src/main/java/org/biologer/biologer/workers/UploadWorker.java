@@ -73,7 +73,7 @@ public class UploadWorker extends Worker {
                 Data data = new Data.Builder()
                         .putLong("timed_count_id", timeCount.getId())
                         .build();
-                tcRequests.add(new OneTimeWorkRequest.Builder(TimedCountUploadWorker.class)
+                tcRequests.add(new OneTimeWorkRequest.Builder(TimeCountsUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
                         .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 0.5s

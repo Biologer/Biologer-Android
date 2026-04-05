@@ -494,6 +494,11 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
                 getIntent().getLongExtra("ENTRY_ID", 0));
         if (observation != null) {
             viewModel.getFromObjectBox(observation);
+            Log.d(TAG,
+                    "TC ID: " + observation.getTimeCountId() + "; " +
+                            "TC oldID: " + observation.getTimedCoundId() + "; " +
+                            "ID: " + observation.getId() + "; " +
+                            "Server ID: " + observation.getServerId());
         }
     }
 

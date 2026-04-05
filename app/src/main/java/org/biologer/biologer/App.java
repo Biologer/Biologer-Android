@@ -131,7 +131,7 @@ public class App extends Application {
         for (EntryDb entry : allEntries) {
             Integer timeCountId = entry.getTimedCoundId();
             if (timeCountId != null) {
-                entry.setTimeCoundId(timeCountId.longValue());
+                entry.setTimeCountId(timeCountId.longValue());
                 entryBox.put(entry);
             }
 

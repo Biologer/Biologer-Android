@@ -38,12 +38,12 @@ import io.objectbox.Box;
 import io.objectbox.query.Query;
 import retrofit2.Response;
 
-public class TimedCountsDownloadWorker extends Worker {
+public class TimeCountsDownloadWorker extends Worker {
     private static final String TAG = "Biologer.TimedCountsWorker";
     boolean firstSync = false;
     Set<Long> addedTimedCountIds = new HashSet<>();
 
-    public TimedCountsDownloadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+    public TimeCountsDownloadWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
 
@@ -108,7 +108,7 @@ public class TimedCountsDownloadWorker extends Worker {
                             .putInt("page", page + 1)
                             .build();
 
-                    OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimedCountsDownloadWorker.class)
+                    OneTimeWorkRequest timedCountRequest = new OneTimeWorkRequest.Builder(TimeCountsDownloadWorker.class)
                             .setInputData(nextInput)
                             .addTag("TIMED_COUNTS_DOWNLOAD_UPDATED_AT")
                             .addTag("UPDATED_AT_SYNC")
@@ -197,7 +197,7 @@ public class TimedCountsDownloadWorker extends Worker {
                             if (existingEntry == null) {
                                 // New entry
                                 entryToUse = EntryDb.getEntryFieldsFromData(observation);
-                                entryToUse.setTimeCoundId(observation.getTimeCountId());
+                                entryToUse.setTimeCountId(observation.getTimeCountId());
                                 Log.d(TAG, "Creating new observation for server observation ID " + observation.getId());
                             } else {
                                 // Existing entry - Update fields
@@ -206,7 +206,7 @@ public class TimedCountsDownloadWorker extends Worker {
                                 Log.d(TAG, "Updating existing observation for server observation ID " + observation.getId());
                             }
 
-                            entryToUse.setTimeCoundId(timedCount.getServerId());
+                            entryToUse.setTimeCountId(timedCount.getServerId());
                             long localId = observationBox.put(entryToUse);
                             entryToUse.setId(localId);
 

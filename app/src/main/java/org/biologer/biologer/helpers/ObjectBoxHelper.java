@@ -32,6 +32,7 @@ import java.util.List;
 
 import io.objectbox.Box;
 import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 
 public class ObjectBoxHelper {
 
@@ -39,7 +40,7 @@ public class ObjectBoxHelper {
 
     public static ArrayList<EntryDb> getObservations() {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.isNull()).build()) {
+        try (Query<EntryDb> query = box.query(EntryDb_.timeCountId.isNull()).build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
             Log.i(TAG, "There are " + observations.size() + " observations in the database.");
             return observations;
@@ -52,7 +53,7 @@ public class ObjectBoxHelper {
     public static ArrayList<EntryDb> getObservationsForUpload() {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try (Query<EntryDb> query = box.query(
-                EntryDb_.timedCoundId.isNull()
+                EntryDb_.timeCountId.isNull()
                         .and(EntryDb_.serverId.isNull())
         ).build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
@@ -67,7 +68,7 @@ public class ObjectBoxHelper {
     public static ArrayList<EntryDb> getPagedObservations(int limit, int offset) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try(Query<EntryDb> query = box.query()
-                .isNull(EntryDb_.timedCoundId)
+                .isNull(EntryDb_.timeCountId)
                 .orderDesc(EntryDb_.serverId)
                 .build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find(offset, limit);
@@ -105,16 +106,36 @@ public class ObjectBoxHelper {
         }
     }
 
-    // Get the minimal server ID of the ObjectBox EntryDb items
-    public static long getMinObservationServerId() {
+    public static ArrayList<EntryDb> getObservationsByTimeCountAndTaxon(long timeCountId, long taxonId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+        try (Query<EntryDb> query = box.query(
+                EntryDb_.timeCountId.equal(timeCountId)
+                        .and(EntryDb_.taxonId.equal(taxonId)))
+                        .build()) {
+            return (ArrayList<EntryDb>) query.find();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in ObjectBox observation query for timeCount " + timeCountId, e);
+            return null;
+        }
+    }
+
+    // Get the minimal server ID of the ObjectBox EntryDb items
+    public static long getMinObservationServerId(boolean includeTimeCounts) {
+        Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
+
         if (box.isEmpty()) {
             return -1L;
         }
-        try (Query<EntryDb> query = box.query()
-                .isNull(EntryDb_.timedCoundId)
-                .build()) {
-            return query.property(EntryDb_.serverId).min();
+
+        QueryBuilder<EntryDb> builder = box.query();
+        if (!includeTimeCounts) {
+            builder.isNull(EntryDb_.timeCountId);
+        }
+
+        try (Query<EntryDb> query = builder.build()) {
+            long minId = query.property(EntryDb_.serverId).min();
+            return (minId == 0) ? -1L : minId;
+
         } catch (Exception e) {
             Log.e(TAG,"Error retrieving minimal Server ID of ObjectBox observations!" + e);
             return -1L;
@@ -174,7 +195,7 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static TimedCountDb getTimedCountById(long timedCountId) {
+    public static TimedCountDb getTimeCountById(long timedCountId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         try (Query<TimedCountDb> query = box.query(TimedCountDb_.id.equal(timedCountId)).build()) {
             TimedCountDb timedCount = query.findFirst();
@@ -286,14 +307,14 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static ArrayList<EntryDb> getTimedCountObservations(long timedCountId) {
+    public static ArrayList<EntryDb> getTimeCountObservations(long timeCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
-        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
+        try (Query<EntryDb> query = box.query(EntryDb_.timeCountId.equal(timeCountId)).build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find();
             Log.i(TAG, "There are " + observations.size() + " observations in the database.");
             return observations;
         } catch (Exception e) {
-            Log.e(TAG, "Error retrieving timed count observations by ID: " + timedCountId, e);
+            Log.e(TAG, "Error retrieving timed count observations by ID: " + timeCountId, e);
             return new ArrayList<>();
         }
     }
@@ -306,7 +327,7 @@ public class ObjectBoxHelper {
     }
 
     public static Location calculateCentroidLocation(Long timedCountId) {
-        List<EntryDb> observations = getTimedCountObservations(timedCountId);
+        List<EntryDb> observations = getTimeCountObservations(timedCountId);
 
         if (observations.isEmpty()) {
             return null;
@@ -531,7 +552,7 @@ public class ObjectBoxHelper {
     public static void removeObservationsForTimedCountId(long timedCountId) {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         long removedCount;
-        try (Query<EntryDb> query = box.query(EntryDb_.timedCoundId.equal(timedCountId)).build()) {
+        try (Query<EntryDb> query = box.query(EntryDb_.timeCountId.equal(timedCountId)).build()) {
             removedCount = query.remove();
         }
         Log.i(TAG, "Removed " + removedCount + " objects for time count ID " + timedCountId + ".");

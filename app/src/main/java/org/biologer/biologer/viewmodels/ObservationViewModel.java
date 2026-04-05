@@ -63,7 +63,7 @@ public class ObservationViewModel extends ViewModel {
         setUploaded(entry.isUploaded());
         setModified(entry.isModified());
         setTaxonId(entry.getTaxonId() != 0 ? entry.getTaxonId() : null);
-        setTimeCountId(entry.getTimeCoundId());
+        setTimeCountId(entry.getTimeCountId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setCalendar(DateHelper.getCalendar(
                 Integer.parseInt(entry.getYear()),

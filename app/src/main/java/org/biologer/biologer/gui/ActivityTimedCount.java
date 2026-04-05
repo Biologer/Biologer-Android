@@ -61,7 +61,7 @@ import org.biologer.biologer.BuildConfig;
 import org.biologer.biologer.R;
 import org.biologer.biologer.adapters.SpeciesCountItems;
 import org.biologer.biologer.adapters.TaxaListAdapter;
-import org.biologer.biologer.adapters.TimedCountAdapter;
+import org.biologer.biologer.adapters.TimeCountAdapter;
 import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.ActivityTimedCountBinding;
 import org.biologer.biologer.network.RetrofitWeatherClient;
@@ -99,7 +99,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     TaxonDb selectedTaxon = null;
     boolean taxonSelectedFromTheList = false;
     private FusedLocationProviderClient fusedLocationClient;
-    private TimedCountAdapter timedCountAdapter;
+    private TimeCountAdapter timeCountAdapter;
     private final ArrayList<SpeciesCountItems> speciesCountItems = new ArrayList<>();
     boolean save_enabled = false;
     private boolean is_fragment_visible = false;
@@ -131,32 +131,33 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void loadSpeciesData() {
-        Long localId = getTimedCountIdFromBundle(); // This is the local ObjectBox ID
+        Long localId = getTimeCountIdFromBundle(); // This is the local ObjectBox ID
         if (localId != null) {
             // Part 1. Get the Time Count object to check its status
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(localId);
+            TimedCountDb timeCount = ObjectBoxHelper.getTimeCountById(localId);
 
-            if (timedCount != null) {
-                // Part 2. Should query Server ID of local ObjectBox ID?
-                long id = (timedCount.getServerId() != null)
-                        ? timedCount.getServerId()
+            if (timeCount != null) {
+                // Part 2. Should query Server ID or local ObjectBox ID?
+                long id = (timeCount.getServerId() != null)
+                        ? timeCount.getServerId()
                         : localId;
 
-                Log.d(TAG, "Loading children for TC. Local ID: " + localId + ", Query ID: "
-                        + id + " (is uploaded = " + timedCount.isUploaded() + ")");
+                Log.d(TAG, "Loading children for TC. Local ID: " + localId +
+                        ", Server ID: " + timeCount.getServerId() + ", Query ID: "
+                        + id + " (is uploaded = " + timeCount.isUploaded() + ")");
 
                 // Part 3. Populate the list of observations
-                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimedCountObservations(id);
+                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimeCountObservations(id);
                 for (EntryDb entry : observations) {
-                    if (timedCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
-                        timedCountAdapter.addToSpeciesCount(entry.getTaxonId());
+                    if (timeCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
+                        timeCountAdapter.addToSpeciesCount(entry.getTaxonId());
                     } else {
                         SpeciesCountItems new_species = new SpeciesCountItems(
                                 entry.getTaxonSuggestion(),
                                 entry.getTaxonId(),
                                 1);
                         speciesCountItems.add(new_species);
-                        timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+                        timeCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
                     }
                 }
             }
@@ -180,13 +181,13 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             binding.autoCompleteTextViewSpecies.setText(taxonDb.getLatinName());
             selectedTaxon = taxonDb;
             taxonSelectedFromTheList = true;
-            if (timedCountAdapter.hasSpeciesWithID(selectedTaxon.getId())) {
-                timedCountAdapter.addToSpeciesCount(selectedTaxon.getId());
+            if (timeCountAdapter.hasSpeciesWithID(selectedTaxon.getId())) {
+                timeCountAdapter.addToSpeciesCount(selectedTaxon.getId());
             } else {
                 SpeciesCountItems new_species = new SpeciesCountItems(selectedTaxon.getLatinName(),
                         selectedTaxon.getId(), 1);
                 speciesCountItems.add(new_species);
-                timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+                timeCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
             }
             binding.autoCompleteTextViewSpecies.setText("");
 
@@ -251,8 +252,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void setupRecyclerView() {
         binding.recyclerViewTimedCounts.setLayoutManager(new LinearLayoutManager(this));
-        timedCountAdapter = new TimedCountAdapter(speciesCountItems);
-        timedCountAdapter.setOnItemClickListener(new TimedCountAdapter.OnItemClickListener() {
+        timeCountAdapter = new TimeCountAdapter(speciesCountItems);
+        timeCountAdapter.setOnItemClickListener(new TimeCountAdapter.OnItemClickListener() {
             @Override
             public void onPlusClick(SpeciesCountItems species) {
                 TaxonDb taxon;
@@ -288,7 +289,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             }
         });
 
-        binding.recyclerViewTimedCounts.setAdapter(timedCountAdapter);
+        binding.recyclerViewTimedCounts.setAdapter(timeCountAdapter);
     }
 
     private void addNewViewModel() {
@@ -323,10 +324,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     private void loadExistingViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
         viewModel.setNewEntry(false);
-        Long id = getTimedCountIdFromBundle();
+        Long id = getTimeCountIdFromBundle();
         if (id != null) {
             viewModel.setServerId(id);
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(id);
+            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(id);
             if (timedCount == null) {
                 Log.e(TAG, "There is no timed count with ID: " + id);
                 return;
@@ -433,7 +434,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 return;
             }
 
-            TimedCountDb timedCount = ObjectBoxHelper.getTimedCountById(timedCountId);
+            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(timedCountId);
             if (timedCount == null) {
                 Toast.makeText(this, R.string.error_original_count_data_missing, Toast.LENGTH_LONG).show();
                 return;
@@ -1091,12 +1092,12 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     @Override
     public void onTaxonChanged(Long old_id, Long new_id, String taxonNameSuggestion) {
         Log.d(TAG, "Taxon old ID: " + old_id + ", new ID: " + new_id + ", name: " + taxonNameSuggestion);
-        if (timedCountAdapter.hasSpeciesWithID(old_id)) {
+        if (timeCountAdapter.hasSpeciesWithID(old_id)) {
             // Delete the record if the species name is changed
-            timedCountAdapter.removeFromSpeciesCount(old_id);
-            if (timedCountAdapter.hasSpeciesWithID(new_id)) {
+            timeCountAdapter.removeFromSpeciesCount(old_id);
+            if (timeCountAdapter.hasSpeciesWithID(new_id)) {
                 // If the species is in the list, just add one individual to the count
-                timedCountAdapter.addToSpeciesCount(new_id);
+                timeCountAdapter.addToSpeciesCount(new_id);
             } else {
                 // If the species in not on the list we need to add new entry
                 String latin_name = TaxonSearchHelper.getLocalisedLatinName(new_id);
@@ -1109,7 +1110,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                             null, 1);
                 }
                 speciesCountItems.add(new_species);
-                timedCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+                timeCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
             }
         }
     }
@@ -1119,7 +1120,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     // Note: id is local ObjectBox ID, not the server ID
-    private Long getTimedCountIdFromBundle() {
+    private Long getTimeCountIdFromBundle() {
         long id = getIntent().getLongExtra("TIMED_COUNT_ID", 0);
         if (id != 0) {
             return id;

@@ -109,19 +109,17 @@ public class LandingFragmentItems {
     }
 
     public static ArrayList<LandingFragmentItems> loadTimeCountSpeciesEntries(Context context, long timeCountId, long taxonId) {
+        Log.d(TAG, "TC Server ID: " + timeCountId + ", Taxon ID: " + taxonId);
+
         // This list will hold all the items displayed
         ArrayList<LandingFragmentItems> items = new ArrayList<>();
 
         // Get the observation data for selected species
-        Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
-        Query<EntryDb> query = entriesBox
-                .query(EntryDb_.timedCoundId.equal(timeCountId)
-                        .and(EntryDb_.taxonId.equal(taxonId)))
-                .build();
-        ArrayList<EntryDb> entries = (ArrayList<EntryDb>) query.find();
-        query.close();
-        for (EntryDb entry : entries) {
-            items.add(getItemFromEntry(context, entry));
+        ArrayList<EntryDb> entries = ObjectBoxHelper.getObservationsByTimeCountAndTaxon(timeCountId, taxonId);
+        if (entries != null) {
+            for (EntryDb entry : entries) {
+                items.add(getItemFromEntry(context, entry));
+            }
         }
 
         // Sort by date descending (newest first)
