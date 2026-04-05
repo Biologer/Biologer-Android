@@ -89,6 +89,14 @@ public class FragmentLanding extends Fragment {
         setupFloatingActionButton();
         setupWorkerObservers(); // To track upload of data online
         addBackPressedCallback();
+
+        // If the user did not start the EntryActivity show a short help
+        // If there are more than 5 entries the message will disappear
+        if (!SettingsManager.isEntryCreated()) {
+            binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
+            binding.listEntriesInfoText.setVisibility(View.VISIBLE);
+            SettingsManager.setEntryCreated(true);
+        }
     }
 
     private void addBackPressedCallback() {
@@ -373,6 +381,10 @@ public class FragmentLanding extends Fragment {
                                     }
                                     binding.recycledViewEntries.smoothScrollToPosition(0);
                                 });
+                            }
+
+                            if (entriesAdapter.getItemCount() > 5) {
+                                binding.listEntriesInfoText.setVisibility(View.GONE);
                             }
 
                         }

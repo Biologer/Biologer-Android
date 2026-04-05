@@ -55,7 +55,6 @@ import org.biologer.biologer.workers.NotificationSyncWorker;
 import org.biologer.biologer.helpers.CsvExporter;
 import org.biologer.biologer.helpers.CsvTaxaLoader;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
-import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 import org.biologer.biologer.workers.UploadWorker;
 
@@ -134,13 +133,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                 } else {
                     Toast.makeText(this, R.string.database_url_empty, Toast.LENGTH_LONG).show();
                     fallbackToLoginScreen();
-                }
-
-                // If the user did not start the EntryActivity show a short help
-                if (!SettingsManager.getEntryOpen()) {
-                    binding.listEntriesInfoText.setText(R.string.entry_info_first_run);
-                    binding.listEntriesInfoText.setVisibility(View.VISIBLE);
-                    SettingsManager.setEntryOpen(true);
                 }
 
             } else {
@@ -589,14 +581,10 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         int id = item.getItemId();
 
         // Hide the info text if user moves away from landing fragment
-        binding.listEntriesInfoText.setVisibility(View.GONE);
         binding.listEntriesEmailNotConfirmed.setVisibility(View.GONE);
 
         if (id == R.id.nav_list) {
             // Show the info text once back to the list
-            if (!SettingsManager.getEntryOpen()) {
-                binding.listEntriesInfoText.setVisibility(View.VISIBLE);
-            }
             if (!SettingsManager.isMailConfirmed()) {
                 binding.listEntriesEmailNotConfirmed.setVisibility(View.VISIBLE);
             }

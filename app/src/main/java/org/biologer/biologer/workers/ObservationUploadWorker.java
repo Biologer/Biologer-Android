@@ -187,11 +187,15 @@ public class ObservationUploadWorker extends Worker {
             Log.e(TAG, "Network connection lost during observation upload", e);
             return Result.retry();
         } catch (Exception e) {
+            // Handle 429 error for photo upload and reschedule the upload worker
+            if (e.getMessage() != null && e.getMessage().equals("429")) {
+                return Result.retry();
+            }
             // Other error
             Log.e(TAG, "Upload failed for entry " + entryId, e);
             Data errorData = new Data.Builder()
                     .putInt("error_code", 0)
-                    .putString("error_message", e.toString())
+                    .putString("error_message", e.getMessage())
                     .build();
             return Result.failure(errorData);
         }

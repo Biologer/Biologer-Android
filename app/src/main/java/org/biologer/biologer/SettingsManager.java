@@ -78,11 +78,11 @@ public class SettingsManager {
         editor.apply();
     }
 
-    public static boolean getEntryOpen() {
+    public static boolean isEntryCreated() {
         return sharedPreferences.getBoolean(KEY.ENTRY_OPEN.toString(), false);
     }
 
-    public static void setEntryOpen(boolean entryOpen) {
+    public static void setEntryCreated(boolean entryOpen) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(KEY.ENTRY_OPEN.toString(), entryOpen);
         editor.apply();
