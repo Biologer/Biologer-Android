@@ -129,6 +129,12 @@ public class App extends Application {
         List<EntryDb> allEntries = entryBox.getAll();
 
         for (EntryDb entry : allEntries) {
+            Integer timeCountId = entry.getTimedCoundId();
+            if (timeCountId != null) {
+                entry.setTimeCoundId(timeCountId.longValue());
+                entryBox.put(entry);
+            }
+
             if (entry.photos.isEmpty()) {
                 boolean migrated = false;
 

@@ -16,7 +16,7 @@ public class APIEntry {
     @JsonProperty("taxon_id")
     private Integer taxonId;
     @JsonProperty("timed_count_id")
-    private Integer timedCountId;
+    private Long timeCountId;
     @JsonProperty("taxon_suggestion")
     private String taxonSuggestion;
     @JsonProperty("year")
@@ -295,7 +295,7 @@ public class APIEntry {
         if (entry.getTaxonId() != 0) setTaxonId( (int) entry.getTaxonId());
         else setTaxonId(null);
 
-        setTimedCountId(entry.getTimedCoundId());
+        setTimeCountId(entry.getTimeCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setYear(entry.getYear());
         // Add 1 to the month since months range from 0 to 11
@@ -337,8 +337,8 @@ public class APIEntry {
         this.photos = photos;
     }
 
-    public void setTimedCountId(Integer timedCountId) {
-        this.timedCountId = timedCountId;
+    public void setTimeCountId(Long timeCountId) {
+        this.timeCountId = timeCountId;
     }
 
     public void setReason(String reason) {

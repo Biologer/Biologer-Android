@@ -24,7 +24,9 @@ public class EntryDb {
     private boolean uploaded;
     private boolean modified;
     private long taxonId;
+    // TODO timedCoundId should be deleted in the future
     private Integer timedCoundId;
+    private Long timeCoundId;
     private String taxonSuggestion;
     private String year;
     private String month;
@@ -57,7 +59,7 @@ public class EntryDb {
     public EntryDb() {
     }
 
-    public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Integer timedCoundId,
+    public EntryDb(long id, Long serverId, boolean uploaded, boolean modified, long taxonId, Long timeCoundId,
                    String taxonSuggestion, String year, String month, String day,
                    String comment, Integer noSpecimens, String sex, Long stage, Long atlasCode, String deadOrAlive,
                    String causeOfDeath, double lattitude, double longitude, Double accuracy, double elevation,
@@ -69,7 +71,7 @@ public class EntryDb {
         this.uploaded = uploaded;
         this.modified = modified;
         this.taxonId = taxonId;
-        this.timedCoundId = timedCoundId;
+        this.timeCoundId = timeCoundId;
         this.taxonSuggestion = taxonSuggestion;
         this.year = year;
         this.month = month;
@@ -263,12 +265,6 @@ public class EntryDb {
     public void setImageLicence(int imageLicence) {
         this.imageLicence = imageLicence;
     }
-    public Integer getTimedCoundId() {
-        return timedCoundId;
-    }
-    public void setTimedCoundId(Integer timedCoundId) {
-        this.timedCoundId = timedCoundId;
-    }
 
     public Long getServerId() {
         return serverId;
@@ -351,7 +347,7 @@ public class EntryDb {
         existing.setServerId(serverData.getId());
         existing.setTaxonId(serverData.getTaxonId() != null ? serverData.getTaxonId() : 0);
         existing.setTaxonSuggestion(serverData.getTaxonSuggestion());
-        existing.setTimedCoundId(serverData.getTimedCountId().intValue());
+        existing.setTimeCoundId(serverData.getTimeCountId());
         existing.setYear(String.valueOf(serverData.getYear()));
         existing.setMonth(String.valueOf(serverData.getMonth() - 1));
         existing.setDay(String.valueOf(serverData.getDay()));
@@ -376,4 +372,15 @@ public class EntryDb {
         existing.setObservationTypeIds(getObservationTypeIds(serverData));
     }
 
+    public Long getTimeCoundId() {
+        return timeCoundId;
+    }
+
+    public void setTimeCoundId(Long timeCoundId) {
+        this.timeCoundId = timeCoundId;
+    }
+
+    public Integer getTimedCoundId() {
+        return timedCoundId;
+    }
 }

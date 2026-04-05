@@ -111,7 +111,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
             Log.d(TAG, "Opening existing entry.");
             loadExistingViewModel();
             fillExistingEntry(); // Update the UI from View Model
-            if (viewModel.getTimedCountId() != null) {
+            if (viewModel.getTimeCountId() != null) {
                 setupEntryAsTimedCount(); // Just hide unnecessary stuff from UI.
             }
         }
@@ -160,7 +160,7 @@ public class ActivityObservation extends AppCompatActivity implements View.OnCli
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         // Show advanced options for data entry if selected in preferences.
         // But ignore this option for Time Counts Entry.
-        if (viewModel.getTimedCountId() == null) {
+        if (viewModel.getTimeCountId() == null) {
             if (!preferences.getBoolean("advanced_interface", false)) {
                 binding.linearLayoutDateAndTime.setVisibility(View.GONE);
             } else {

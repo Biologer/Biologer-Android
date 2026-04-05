@@ -104,7 +104,7 @@
     },
     {
       "id": "11:1544941449612204904",
-      "lastPropertyId": "39:6770658024707945124",
+      "lastPropertyId": "40:8827659022838462366",
       "name": "EntryDb",
       "properties": [
         {
@@ -267,6 +267,11 @@
           "id": "36:2334442110110349570",
           "name": "modified",
           "type": 1
+        },
+        {
+          "id": "40:8827659022838462366",
+          "name": "timeCoundId",
+          "type": 6
         }
       ],
       "relations": [

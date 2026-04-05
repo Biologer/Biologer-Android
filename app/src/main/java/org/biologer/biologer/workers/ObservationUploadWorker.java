@@ -87,18 +87,19 @@ public class ObservationUploadWorker extends Worker {
             api.setPhotos(photosForApi);
 
             // Link with parent Timed Count
-            if (entry.getTimedCoundId() != null) {
-                TimedCountDb parentTimeCount = ObjectBoxHelper.getTimedCountByServerId(entry.getTimedCoundId());
+            if (entry.getTimeCoundId() != null) {
+                TimedCountDb parentTimeCount = ObjectBoxHelper.getTimedCountByServerId(entry.getTimeCoundId());
 
                 if (parentTimeCount != null && parentTimeCount.isUploaded() && parentTimeCount.getServerId() != null) {
                     // Set the server ID now
-                    api.setTimedCountId(parentTimeCount.getServerId().intValue());
+                    api.setTimeCountId(parentTimeCount.getServerId());
                     Log.d(TAG, "Linking observation " + entryId + " to server TimedCount ID: " + parentTimeCount.getServerId());
                 } else {
                     Log.w(TAG, "Parent TimedCount not yet uploaded. Retrying later...");
                     return Result.retry();
                 }
-            } else if (entry.getTimedCoundId() != null && entry.getTimedCoundId() < 0) {
+            } else if (entry.getTimeCoundId() != null && entry.getTimeCoundId() < 0) {
+                // TODO Not sure if this is how it works, should check!
                 // Parent has a temporary negative ID = hasn't uploaded yet
                 Log.w(TAG, "Parent TimedCount is still pending upload. Holding observation...");
                 return Result.retry();

@@ -898,7 +898,7 @@ public class FragmentLanding extends Fragment {
                     false,
                     false,
                     entry_from.getTaxonId(),
-                    entry_from.getTimedCoundId(),
+                    entry_from.getTimeCoundId(),
                     entry_from.getTaxonSuggestion(),
                     entry_from.getYear(),
                     entry_from.getMonth(),

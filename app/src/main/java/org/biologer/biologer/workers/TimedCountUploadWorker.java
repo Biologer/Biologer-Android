@@ -80,7 +80,7 @@ public class TimedCountUploadWorker extends Worker {
                     List<EntryDb> childObservations = ObjectBoxHelper.getTimedCountObservations(oldServerId);
                     if (!childObservations.isEmpty()) {
                         for (EntryDb child : childObservations) {
-                            child.setTimedCoundId((int) newServerId);
+                            child.setTimeCoundId(newServerId);
                         }
                         ObjectBoxHelper.setObservation(childObservations);
                         Log.d(TAG, "Successfully linked " + childObservations.size() + " observations to new Server ID: " + newServerId);

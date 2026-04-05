@@ -59,7 +59,7 @@ public class FieldObservationData {
     @JsonProperty("id")
     private long id;
     @JsonProperty("timed_count_id")
-    private Long timedCountId;
+    private Long timeCountId;
     @JsonProperty("transect_visit_id")
     private Long transectVisitId;
     @JsonProperty("taxon")
@@ -397,7 +397,7 @@ public class FieldObservationData {
         return activity;
     }
 
-    public Long getTimedCountId() {
-        return timedCountId;
+    public Long getTimeCountId() {
+        return timeCountId;
     }
 }

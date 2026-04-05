@@ -497,7 +497,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 false,
                 false,
                 taxon.getId(),
-                viewModel.getServerId().intValue(),
+                viewModel.getServerId(),
                 taxon.getLatinName(),
                 String.valueOf(year),
                 String.valueOf(month),

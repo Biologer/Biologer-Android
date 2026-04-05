@@ -29,7 +29,7 @@ public class ObservationViewModel extends ViewModel {
     private boolean uploaded;
     private boolean modified;
     private Long taxonId = null;
-    private Integer timedCountId = null;
+    private Long timeCountId = null;
     private String taxonSuggestion = null;
     private final MutableLiveData<Calendar> calendar = new MutableLiveData<>();
     private String comment = null;
@@ -63,7 +63,7 @@ public class ObservationViewModel extends ViewModel {
         setUploaded(entry.isUploaded());
         setModified(entry.isModified());
         setTaxonId(entry.getTaxonId() != 0 ? entry.getTaxonId() : null);
-        setTimedCountId(entry.getTimedCoundId());
+        setTimeCountId(entry.getTimeCoundId());
         setTaxonSuggestion(entry.getTaxonSuggestion());
         setCalendar(DateHelper.getCalendar(
                 Integer.parseInt(entry.getYear()),
@@ -105,7 +105,7 @@ public class ObservationViewModel extends ViewModel {
                     isUploaded(),
                     isModified(),
                     taxonId,
-                    getTimedCountId(),
+                    getTimeCountId(),
                     getTaxonSuggestion(),
                     DateHelper.getYearFromCalendar(calendar1),
                     DateHelper.getMonthFromCalendar(calendar1),
@@ -483,12 +483,12 @@ public class ObservationViewModel extends ViewModel {
         this.numberOfSpecimens = numberOfSpecimens;
     }
 
-    public Integer getTimedCountId() {
-        return timedCountId;
+    public Long getTimeCountId() {
+        return timeCountId;
     }
 
-    public void setTimedCountId(Integer timedCountId) {
-        this.timedCountId = timedCountId;
+    public void setTimeCountId(Long timeCountId) {
+        this.timeCountId = timeCountId;
     }
 
     public Long getServerId() {

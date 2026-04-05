@@ -197,7 +197,7 @@ public class TimedCountsDownloadWorker extends Worker {
                             if (existingEntry == null) {
                                 // New entry
                                 entryToUse = EntryDb.getEntryFieldsFromData(observation);
-                                entryToUse.setTimedCoundId(observation.getTimedCountId().intValue());
+                                entryToUse.setTimeCoundId(observation.getTimeCountId());
                                 Log.d(TAG, "Creating new observation for server observation ID " + observation.getId());
                             } else {
                                 // Existing entry - Update fields
@@ -206,7 +206,7 @@ public class TimedCountsDownloadWorker extends Worker {
                                 Log.d(TAG, "Updating existing observation for server observation ID " + observation.getId());
                             }
 
-                            entryToUse.setTimedCoundId(timedCount.getServerId().intValue());
+                            entryToUse.setTimeCoundId(timedCount.getServerId());
                             long localId = observationBox.put(entryToUse);
                             entryToUse.setId(localId);
 
