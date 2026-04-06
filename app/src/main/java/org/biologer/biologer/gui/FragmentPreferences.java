@@ -174,6 +174,14 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
 
         if (sortObservations != null) {
             getObservations(sortObservations);
+            sortObservations.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d(TAG, "Sort observations changed to: " + newValue);
+                if (getActivity() != null) {
+                    Intent intent = new Intent("SORT_OBSERVATIONS_CHANGED");
+                    LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
+                }
+                return true;
+            });
         }
 
         // Add button fot taxa sync process

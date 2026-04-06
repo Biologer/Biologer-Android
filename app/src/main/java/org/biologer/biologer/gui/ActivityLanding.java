@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -634,7 +635,11 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                                             .build()
                             )
                             .build();
-            WorkManager.getInstance(this).enqueue(request);
+            WorkManager.getInstance(this).enqueueUniqueWork(
+                    "MASTER_UPLOAD",
+                    ExistingWorkPolicy.KEEP,
+                    request
+            );
         } else {
             Log.d(TAG, "No entries to upload to the online database.");
         }

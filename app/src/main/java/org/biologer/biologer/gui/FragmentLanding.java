@@ -5,7 +5,10 @@ import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromEnt
 import static org.biologer.biologer.adapters.LandingFragmentItems.getItemFromTimedCount;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +28,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.Constraints;
@@ -98,6 +102,14 @@ public class FragmentLanding extends Fragment {
             SettingsManager.setEntryCreated(true);
         }
     }
+
+    private final BroadcastReceiver sortChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "Sort preference changed, reloading list.");
+            reloadItemsForRecyclerView();
+        }
+    };
 
     private void addBackPressedCallback() {
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
@@ -266,9 +278,7 @@ public class FragmentLanding extends Fragment {
                                         long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
                                         reloadItemsForRecyclerView();
                                         Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
-                                        binding.recycledViewEntries.post(() -> {
-                                            binding.recycledViewEntries.smoothScrollToPosition(0);
-                                        });
+                                        binding.recycledViewEntries.post(() -> binding.recycledViewEntries.smoothScrollToPosition(0));
                                     } else {
                                         reloadItemsForRecyclerView();
                                     }
@@ -1116,6 +1126,21 @@ public class FragmentLanding extends Fragment {
             }
         }
         return -1;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(requireContext())
+                .registerReceiver(sortChangedReceiver,
+                        new IntentFilter("SORT_OBSERVATIONS_CHANGED"));
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(requireContext())
+                .unregisterReceiver(sortChangedReceiver);
     }
 
 }

@@ -7,7 +7,6 @@ import android.widget.Toast;
 
 import com.opencsv.CSVWriter;
 
-import org.biologer.biologer.App;
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.EntryDb;
 
@@ -81,7 +80,8 @@ public class CsvExporter {
                     context.getString(R.string.atlas_code)
             });
 
-            ArrayList<EntryDb> entries = (ArrayList<EntryDb>) App.get().getBoxStore().boxFor(EntryDb.class).getAll();
+            // Query only new observations that are not uploaded
+            ArrayList<EntryDb> entries = ObjectBoxHelper.getObservationsForUpload();
             String observer = ObjectBoxHelper.getUserName();
 
             for (EntryDb e : entries) {
