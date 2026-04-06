@@ -12,7 +12,6 @@ import org.biologer.biologer.helpers.DateHelper;
 import org.biologer.biologer.helpers.Localisation;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
 import org.biologer.biologer.sql.StageDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
@@ -22,9 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
-
-import io.objectbox.Box;
-import io.objectbox.query.Query;
 
 public class LandingFragmentItems {
     private static final String TAG = "Biologer.LandingItems";

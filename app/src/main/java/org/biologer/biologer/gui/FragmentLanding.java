@@ -267,9 +267,6 @@ public class FragmentLanding extends Fragment {
                                         reloadItemsForRecyclerView();
                                         Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
                                         binding.recycledViewEntries.post(() -> {
-                                            if (ObjectBoxHelper.getUnsyncedCount() > 0) {
-                                                ((ActivityLanding) requireActivity()).uploadRecords();
-                                            }
                                             binding.recycledViewEntries.smoothScrollToPosition(0);
                                         });
                                     } else {

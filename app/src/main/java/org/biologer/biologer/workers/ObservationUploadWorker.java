@@ -52,7 +52,7 @@ public class ObservationUploadWorker extends Worker {
             return Result.success();
         }
 
-        if (entry.isUploaded() || !entry.isModified()) {
+        if (entry.isUploaded() && !entry.isModified()) {
             Log.i(TAG, "Entry " + entryId + " already uploaded and not modified locally!");
             return Result.success();
         }
