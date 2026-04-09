@@ -15,6 +15,7 @@ import org.biologer.biologer.sql.PhotoDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.List;
+import java.util.Objects;
 
 import io.objectbox.Box;
 import io.objectbox.BoxStore;
@@ -132,6 +133,12 @@ public class App extends Application {
             Integer timeCountId = entry.getTimedCoundId();
             if (timeCountId != null) {
                 entry.setTimeCountId(timeCountId.longValue());
+                entryBox.put(entry);
+            }
+
+            String dataLicense = entry.getDataLicence();
+            if (Objects.equals(dataLicense, "11")) {
+                entry.setDataLicence("35");
                 entryBox.put(entry);
             }
 

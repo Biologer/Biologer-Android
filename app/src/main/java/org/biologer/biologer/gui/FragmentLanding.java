@@ -378,6 +378,9 @@ public class FragmentLanding extends Fragment {
 
                         if (allFinished) {
                             Log.d(TAG, "All observations sync workers by timestamp finished. Updating UI.");
+
+                            if (getActivity() == null || binding == null) return;
+
                             binding.swipeRefreshLayout.setRefreshing(false);
                             LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
                             if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
@@ -457,6 +460,11 @@ public class FragmentLanding extends Fragment {
 
     private void updatePhotoForObservation(long[] observationIds) {
 
+        if (!isAdded() || getContext() == null || binding == null) {
+            Log.d(TAG, "Fragment not attached or binding is null, skipping photo update.");
+            return;
+        }
+
         List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
 
         for (long id : observationIds) {
@@ -467,7 +475,7 @@ public class FragmentLanding extends Fragment {
             }
             EntryDb entry = ObjectBoxHelper.getObservationById(id);
             if (entry == null) continue;
-            currentList.set(index, getItemFromEntry(requireContext(), entry));
+            currentList.set(index, getItemFromEntry(getContext(), entry));
         }
 
         entriesAdapter.submitList(currentList);

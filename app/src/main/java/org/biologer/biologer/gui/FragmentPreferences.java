@@ -277,7 +277,7 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
                 getString(R.string.license30),
                 getString(R.string.license_timed),
                 getString(R.string.license40)};
-        CharSequence[] entryValues = {"0", "10", "20", "30", "11", "40"};
+        CharSequence[] entryValues = {"0", "10", "20", "30", "35", "40"};
         listpreference.setEntries(entries);
         listpreference.setDefaultValue("0");
         listpreference.setEntryValues(entryValues);
