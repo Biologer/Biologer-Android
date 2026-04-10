@@ -521,6 +521,8 @@
     <string name="advanced_settings_desc">Here you can set up additional parameters that most users don\'t care about.</string>
     <string name="show_uploaded_items">Show uploaded items</string>
     <string name="show_uploaded_items_desc">Displays the list of observations and counts already uploaded online.</string>
+    <string name="update52_title">Important Update</string>
+    <string name="update52_text">Biologer now fully synchronizes your observations with the server.\n\nYou can now see and change data that has been uploaded online. Use caution: deleting an item here also removes it from the web! If you really hate this option (like Toni Koren does), feel free to disable it in the Biologer Preferences.</string>
     <plurals name="entries_deleted_count">
         <item quantity="one">%d entry deleted.</item>
         <item quantity="few">%d entries deleted.</item>

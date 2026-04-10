@@ -23,7 +23,6 @@
     <string name="habitat">Stanište</string>
     <string name="comment_hint">Bilješka</string>
     <string name="cancel">Otkaži</string>
-    <string name="save">Sačuvaj</string>
     <string name="upload">Pošalji</string>
     <string name="title_activity_map">Karta</string>
     <string name="entry_title">Terenski nalaz</string>
@@ -98,7 +97,7 @@
     <string name="gallery">Galerija</string>
     <string name="map">Karta</string>
     <string name="advanced_entry">Detaljniji unos nalaza</string>
-    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što datum, vrijeme, koordinate…</string>
+    <string name="advanced_entry_desc">Omogućava unos terenskih nalaza sa više detalja, kao što datum, vreme, koordinate…</string>
     <string name="stage_egg">Jaje</string>
     <string name="stage_larva">Larva</string>
     <string name="stage_pupa">Lutka</string>
@@ -279,5 +278,30 @@
     <string name="error_no_location_data">Nedostaju podaci o lokaciji vremenskog brojanja!</string>
     <string name="notification_id_id_not_present">Nije dostupan ID obaveštenja!</string>
     <string name="notification_not_found">Nije pronađeno obaveštenje!</string>
+    <string name="grouped_notifications_title">Nova Biologer obavještenja</string>
+    <string name="grouped_notifications_text">Dodirnite da biste vidjeli sažetak obavještenja</string>
+    <string name="empty_database_url">URL baze podataka je prazan!</string>
+    <string name="empty_coordinates">Koordinate su prazne!</string>
+    <string name="could_not_access_icon">Pristup ikoni za slanje nije moguć.</string>
     <string name="all_notifications">Sva obaveštenja</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">Ne mogu poslati %d stavku.</item>
+        <item quantity="few">Ne mogu poslati %d stavke.</item>
+        <item quantity="other">Ne mogu poslati %d stavki.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Svi podaci su uspješno poslati!</string>
+    <string name="upload_status">Status slanja</string>
+    <string name="no_image_to_view">Slika je kliknuta, ali je putanja (URI) prazna.</string>
+    <string name="delete_selected_entry">Obriši izabrani unos</string>
+    <string name="advanced_settings">Napredna podešavanja</string>
+    <string name="advanced_settings_desc">Ovdje možete podesiti dodatne parametre koji većini korisnika nisu toliko bitni.</string>
+    <string name="show_uploaded_items">Prikaži poslate stavke</string>
+    <string name="show_uploaded_items_desc">Prikazuje listu nalaza i brojanja koji su već poslati na server.</string>
+    <string name="update52_title">Važno ažuriranje</string>
+    <string name="update52_text">Biologer sada potpuno sinhronizuje vaše nalaze sa serverom.\n\nMoći ćete vidjeti i mijenjati podatke koji su već poslati na server. Budite oprezni: ako obrišete stavku ovdje, uklonićete je i sa Biologerove veb stranice. Ako vam se ova opcija baš nikako ne sviđa (kao Toniju Korenu), slobodno je isključite u podešavanjima Biologera.</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">Obrisan je %d unos.</item>
+        <item quantity="few">Obrisana su %d unosa.</item>
+        <item quantity="other">Obrisano je %d unosa.</item>
+    </plurals>
 </resources>

@@ -512,4 +512,27 @@
     <string name="notification_id_id_not_present">ИД на известувањето не е достапен!</string>
     <string name="notification_not_found">Известувањето не е пронајдено!</string>
     <string name="all_notifications">Сите известувања</string>
+    <string name="grouped_notifications_title">Нови Биологер известувања</string>
+    <string name="grouped_notifications_text">Допрете за да го видите прегледот на известувањата</string>
+    <string name="empty_database_url">УРЛ-адресата на базата е празна!</string>
+    <string name="empty_coordinates">Координатите се празни!</string>
+    <string name="could_not_access_icon">Не може да се пристапи до иконата за прикачување.</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">Прикачувањето не успеа за %d ставка.</item>
+        <item quantity="other">Прикачувањето не успеа за %d ставки.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Сите податоци се успешно прикачени!</string>
+    <string name="upload_status">Статус на прикачување</string>
+    <string name="no_image_to_view">Сликата е кликната, но URI-патеката е празна.</string>
+    <string name="delete_selected_entry">Избриши го избраниот внес</string>
+    <string name="advanced_settings">Напредни поставки</string>
+    <string name="advanced_settings_desc">Овде можете да поставите дополнителни параметри кои не им се важни на повеќето корисници.</string>
+    <string name="show_uploaded_items">Прикажи прикачени ставки</string>
+    <string name="show_uploaded_items_desc">Прикажува листа на набљудувања и пребројувања кои се веќе прикачени онлајн.</string>
+    <string name="update52_title">Важно ажурирање</string>
+    <string name="update52_text">Биологер сега целосно ги синхронизира Вашите набљудувања со серверот.\n\nСега можете да ги видите и менувате податоците што се веќе прикачени онлајн. Бидете внимателни: бришењето на ставка овде ќе ја отстрани и од веб-страницата на Биологер! Ако навистина не Ви се допаѓа оваа опција (како на Тони Корен), слободно исклучете ја во поставките на Биологер.</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">%d внес е избришан.</item>
+        <item quantity="other">%d внеса се избришани.</item>
+    </plurals>
 </resources>

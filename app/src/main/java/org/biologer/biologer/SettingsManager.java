@@ -16,7 +16,7 @@ public class SettingsManager {
         TAXA_LAST_PAGE_FETCHED, TAXA_UPDATED_AT, SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP, LAST_INTERNET_CHECK,
         OBSERVATION_TYPES_UPDATED_AT, OBSERVATIONS_UPDATED_AT, TIME_COUNTS_UPDATED_AT,
         FIRST_RUN, PREVIOUS_LOCATION_LONG, PREVIOUS_LOCATION_LAT,
-        DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN, NOTIFICATION_UPDATED_AT
+        DISPLAY_LOCATION_NAME_INFO, FCM_TOKEN, NOTIFICATION_UPDATED_AT, SHOW_UPDATE_INFO_5_2
     }
 
     public static void init(Context context) {
@@ -40,12 +40,6 @@ public class SettingsManager {
 
     public static String getAccessToken() {
         return sharedPreferences.getString(KEY.ACCESS_TOKEN.toString(),null);
-    }
-
-    public static void deleteRefreshToken() {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY.REFRESH_TOKEN.toString(), null);
-        editor.apply();
     }
 
     public static void setRefreshToken(String token) {
@@ -206,6 +200,16 @@ public class SettingsManager {
 
     public static Boolean isFirstRun() {
         return sharedPreferences.getBoolean(KEY.FIRST_RUN.toString(), true);
+    }
+
+    public static void setShowUpdateInfo52(boolean updateInfo) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(KEY.SHOW_UPDATE_INFO_5_2.toString(), updateInfo);
+        editor.apply();
+    }
+
+    public static Boolean isShowUpdateInfo52() {
+        return sharedPreferences.getBoolean(KEY.SHOW_UPDATE_INFO_5_2.toString(), true);
     }
 
     public static void setPreviousLocationLong(String previousLocationLong) {

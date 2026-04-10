@@ -521,4 +521,29 @@
     <string name="notification_id_id_not_present">ID obavijesti nije dostupan!</string>
     <string name="notification_not_found">Obavijest nije pronađena!</string>
     <string name="all_notifications">Sve obavijesti</string>
+    <string name="grouped_notifications_title">Nove Biologer obavijesti</string>
+    <string name="grouped_notifications_text">Dodirnite kako biste vidjeli sažetak obavijesti</string>
+    <string name="empty_database_url">URL baze podataka je prazan!</string>
+    <string name="empty_coordinates">Koordinate su prazne!</string>
+    <string name="could_not_access_icon">Pristup ikoni za slanje nije moguć.</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">Ne mogu poslati %d zapis.</item>
+        <item quantity="few">Ne mogu poslati %d zapisa.</item>
+        <item quantity="other">Ne mogu poslati %d zapisa.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Svi podaci su uspješno poslani!</string>
+    <string name="upload_status">Status slanja</string>
+    <string name="no_image_to_view">Slika je kliknuta, ali je putanja (URI) prazna.</string>
+    <string name="delete_selected_entry">Obriši odabrani unos</string>
+    <string name="advanced_settings">Napredne postavke</string>
+    <string name="advanced_settings_desc">Ovdje možete postaviti dodatne parametre koji većini korisnika nisu toliko bitni.</string>
+    <string name="show_uploaded_items">Prikaži poslane stavke</string>
+    <string name="show_uploaded_items_desc">Prikazuje popis nalaza i brojanja koji su već poslani na poslužitelj.</string>
+    <string name="update52_title">Važno ažuriranje</string>
+    <string name="update52_text">Biologer sada potpuno sinkronizira vaše nalaze s poslužiteljem.\n\nMoći ćete vidjeti i mijenjati podatke koji su već poslani na poslužitelj. Budite оprezni: ako obrišete stavku ovdje, uklonit ćete je i s Biologerove web stranice. Ako vam se ova opcija baš nikako ne sviđa (kao Toniju Korenu), slobodno je isključite u postavkama Biologera.</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">Obrisan je %d unos.</item>
+        <item quantity="few">Obrisana su %d unosa.</item>
+        <item quantity="other">Obrisano je %d unosa.</item>
+    </plurals>
 </resources>

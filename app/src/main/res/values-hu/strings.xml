@@ -511,4 +511,27 @@
     <string name="notification_id_id_not_present">Az értesítés azonosítója hiányzik!</string>
     <string name="notification_not_found">Az értesítés nem található!</string>
     <string name="all_notifications">Összes értesítés</string>
+    <string name="grouped_notifications_title">Új Biologer értesítések</string>
+    <string name="grouped_notifications_text">Koppints az értesítések összefoglalójának megtekintéséhez</string>
+    <string name="empty_database_url">Üres adatbázis URL!</string>
+    <string name="empty_coordinates">Hiányzó koordináták!</string>
+    <string name="could_not_access_icon">A feltöltés ikon nem érhető el.</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">%d elem feltöltése nem sikerült.</item>
+        <item quantity="other">%d elem feltöltése nem sikerült.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Minden adat sikeresen feltöltve!</string>
+    <string name="upload_status">Feltöltés állapota</string>
+    <string name="no_image_to_view">Kép megnyitása sikertelen (az URI üres).</string>
+    <string name="delete_selected_entry">Kijelölt bejegyzés törlése</string>
+    <string name="advanced_settings">Haladó beállítások</string>
+    <string name="advanced_settings_desc">Itt olyan további paramétereket állíthatsz be, amelyekre a legtöbb felhasználónak nincs szüksége.</string>
+    <string name="show_uploaded_items">Feltöltött elemek megjelenítése</string>
+    <string name="show_uploaded_items_desc">Megjeleníti a már online feltöltött megfigyeléseket és számlálásokat.</string>
+    <string name="update52_title">Fontos frissítés</string>
+    <string name="update52_text">A Biologer mostantól teljes mértékben szinkronizálja a megfigyeléseidet a szerverrel.\n\nEzentúl láthatod és módosíthatod a már online feltöltött adataidat is. De légy óvatos! Ha törölsz egy elemet ebből a listából, az a Biologer weboldaláról is törlődik. Ha ezt a funkciót ki nem állhatod (ahogy Toni Koren sem), bármikor kikapcsolhatod a Beállítások menüben.</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">%d bejegyzés törölve.</item>
+        <item quantity="other">%d bejegyzés törölve.</item>
+    </plurals>
 </resources>

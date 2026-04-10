@@ -126,6 +126,11 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             intent.putExtra("firstRun", true);
             startActivity(intent);
         } else {
+            if (SettingsManager.isShowUpdateInfo52()) {
+                showUpdateOn52();
+                SettingsManager.setShowUpdateInfo52(false);
+            }
+
             // If Landing activity is started for the first time in the session run all the online services
             if (savedInstanceState == null) {
                 Log.d(TAG, "LandingActivity started for the first time (savedInstanceState is null).");
@@ -151,6 +156,15 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             }
         }
 
+    }
+
+    private void showUpdateOn52() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.update52_title)
+                .setMessage(R.string.update52_text)
+                .setPositiveButton(android.R.string.ok, null)
+                .setCancelable(false)
+                .show();
     }
 
     @Override

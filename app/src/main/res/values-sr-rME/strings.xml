@@ -542,4 +542,24 @@
     <string name="notification_id_id_not_present">Није доступан ИД обавјештења!</string>
     <string name="notification_not_found">Није пронађено обавјештење!</string>
     <string name="all_notifications">Сва обавјештења</string>
+    <plurals name="upload_failed_items">
+        <item quantity="one">Не могу послати %d унос.</item>
+        <item quantity="few">Не могу послати %d уноса.</item>
+        <item quantity="other">Не могу послати %d уноса.</item>
+    </plurals>
+    <string name="all_data_uploaded_successfully">Сви подаци су успјешно послати!</string>
+    <string name="upload_status">Статус слања</string>
+    <string name="no_image_to_view">Слика је кликнута, али је путања (УРЛ) празна.</string>
+    <string name="delete_selected_entry">Обриши изабрани унос</string>
+    <string name="advanced_settings">Напредна подешавања</string>
+    <string name="advanced_settings_desc">Овђе можете подесити додатне параметре који већини корисника нијесу толико битни.</string>
+    <string name="show_uploaded_items">Прикажи послате ставке</string>
+    <string name="show_uploaded_items_desc">Приказује листу налаза и бројања који су већ послати на сервер.</string>
+    <string name="update52_title">Важно ажурирање</string>
+    <string name="update52_text">Биологер сада потпуно синхронизује ваше налазе са сервером.\n\nМоћи ћете да видите и мијењате податке који су већ послати на сервер. Будите опрезни: ако обришете ставку овђе, уклонићете је и са Биологерове веб странице. Уколико вам се ова опција баш никако не свиђа (као Тонију Корену), слободно је искључите у подешавањима Биологера.</string>
+    <plurals name="entries_deleted_count">
+        <item quantity="one">Обрисан је %d унос.</item>
+        <item quantity="few">Обрисана су %d уноса.</item>
+        <item quantity="other">Обрисано је %d уноса.</item>
+    </plurals>
 </resources>
