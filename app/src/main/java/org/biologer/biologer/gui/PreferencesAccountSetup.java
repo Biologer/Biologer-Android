@@ -40,12 +40,10 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
 public class PreferencesAccountSetup extends PreferenceFragmentCompat {
     private static final String TAG = "Biologer.PreferencesA";
     Handler handler = new Handler(Looper.getMainLooper());
     Runnable runnable;
-
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -566,7 +564,7 @@ public class PreferencesAccountSetup extends PreferenceFragmentCompat {
                             .setMessage(getString(R.string.your_user_account_has_been_deleted_from)
                                     + " " + SettingsManager.getDatabaseName() + ".")
                             .setPositiveButton(R.string.ok, (dialog, which) -> {
-                                // Go back to login activity and exit the dialog
+                                // Go back to log in activity and exit the dialog
                                 Intent intent = new Intent(getActivity(), ActivityLogin.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
                                         | Intent.FLAG_ACTIVITY_NEW_TASK);

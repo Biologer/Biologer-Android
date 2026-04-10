@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,8 +28,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.Constraints;
@@ -77,6 +80,7 @@ public class FragmentLanding extends Fragment {
     private int localObjectBoxObservationOffset = 0;
     private int localObjectBoxTimedCountsOffset = 0;
     private boolean isLoading = false;
+    private boolean isDownloadingById = false;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -103,7 +107,7 @@ public class FragmentLanding extends Fragment {
         }
     }
 
-    private final BroadcastReceiver sortChangedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Sort preference changed, reloading list.");
@@ -134,29 +138,35 @@ public class FragmentLanding extends Fragment {
         ArrayList<LandingFragmentItems> allItems =
                 LandingFragmentItems.loadAllLocalEntries(requireContext());
 
-        // Group 2. Load first batch of items already uploaded
-        ArrayList<EntryDb> syncedObservations = ObjectBoxHelper.getPagedObservations(25, 0);
-        for (EntryDb observation : syncedObservations) {
-            allItems.add(getItemFromEntry(requireContext(), observation));
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
+
+        if (showUploaded) {
+            // Group 2. Load first batch of items already uploaded
+            ArrayList<EntryDb> syncedObservations = ObjectBoxHelper.getPagedObservations(25, 0);
+            for (EntryDb observation : syncedObservations) {
+                allItems.add(getItemFromEntry(requireContext(), observation));
+            }
+            ArrayList<TimedCountDb> syncedTimedCounts = ObjectBoxHelper.getPagedTimedCounts(25, 0);
+            for (TimedCountDb timedCount : syncedTimedCounts) {
+                allItems.add(getItemFromTimedCount(requireContext(), timedCount));
+            }
+
+            Collections.sort(allItems, SORTER);
+
+            localObjectBoxObservationOffset = syncedObservations.size();
+            localObjectBoxTimedCountsOffset = syncedTimedCounts.size();
+
+            entriesAdapter.submitList(allItems);
+
+            // If the list is short get more data
+            if (allItems.size() < 10) {
+                loadNextBatch();
+            }
+
+            // Finally, download new data updated on the server if exist
+            downloadNewerData();
         }
-        ArrayList<TimedCountDb> syncedTimedCounts = ObjectBoxHelper.getPagedTimedCounts(25, 0);
-        for (TimedCountDb timedCount : syncedTimedCounts) {
-            allItems.add(getItemFromTimedCount(requireContext(), timedCount));
-        }
-        Collections.sort(allItems, SORTER);
-
-        localObjectBoxObservationOffset = syncedObservations.size();
-        localObjectBoxTimedCountsOffset = syncedTimedCounts.size();
-
-        entriesAdapter.submitList(allItems);
-
-        // If the list is short get more data
-        if (allItems.size() < 10) {
-            loadNextBatch();
-        }
-
-        // Finally, download new data updated on the server if exist
-        downloadNewerData();
     }
 
     private void reloadItemsForRecyclerView() {
@@ -164,17 +174,22 @@ public class FragmentLanding extends Fragment {
             ArrayList<LandingFragmentItems> allItems =
                     LandingFragmentItems.loadAllLocalEntries(requireContext());
 
-            ArrayList<EntryDb> syncedObservations =
-                    ObjectBoxHelper.getPagedObservations(localObjectBoxObservationOffset, 0);
-            for (EntryDb observation : syncedObservations) {
-                allItems.add(getItemFromEntry(requireContext(), observation));
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
+
+            if (showUploaded) {
+                ArrayList<EntryDb> syncedObservations =
+                        ObjectBoxHelper.getPagedObservations(localObjectBoxObservationOffset, 0);
+                for (EntryDb observation : syncedObservations) {
+                    allItems.add(getItemFromEntry(requireContext(), observation));
+                }
+                ArrayList<TimedCountDb> syncedTimedCounts =
+                        ObjectBoxHelper.getPagedTimedCounts(localObjectBoxTimedCountsOffset, 0);
+                for (TimedCountDb timedCount : syncedTimedCounts) {
+                    allItems.add(getItemFromTimedCount(requireContext(), timedCount));
+                }
+                Collections.sort(allItems, SORTER);
             }
-            ArrayList<TimedCountDb> syncedTimedCounts =
-                    ObjectBoxHelper.getPagedTimedCounts(localObjectBoxTimedCountsOffset, 0);
-            for (TimedCountDb timedCount : syncedTimedCounts) {
-                allItems.add(getItemFromTimedCount(requireContext(), timedCount));
-            }
-            Collections.sort(allItems, SORTER);
             entriesAdapter.submitList(allItems);
             ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
         });
@@ -374,7 +389,8 @@ public class FragmentLanding extends Fragment {
 
                         if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
                             Log.d(TAG, "Displaying new observations from the server.");
-                            addItems(observationsToUpdate, timedCountsToUpdate);
+                            //addItems(observationsToUpdate, timedCountsToUpdate);
+                            reloadItemsForRecyclerView();
                         }
 
                         if (allFinished) {
@@ -433,6 +449,7 @@ public class FragmentLanding extends Fragment {
 
                             } else if (state == WorkInfo.State.FAILED && !processedWorkerIds.contains(workInfo.getId())) {
                                 processedWorkerIds.add(workInfo.getId());
+                                isDownloadingById = false;
                                 isLoading = false;
                                 progressBar(false);
                                 Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
@@ -452,6 +469,7 @@ public class FragmentLanding extends Fragment {
                         if (allFinished) {
                             Log.d(TAG, "All observations sync workers by id finished. Updating UI.");
                             isLoading = false;
+                            isDownloadingById = false;
                             progressBar(false);
                             // Auto-scroll if user is already near top
                             LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
@@ -514,26 +532,35 @@ public class FragmentLanding extends Fragment {
         binding.recycledViewEntries.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                // Load more items on user scrolls down
-                if (dy > 0) {
-                    int totalItemCount = layoutManager.getItemCount();
-                    int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
 
-                    // Threshold: Load more when 5 items from the bottom
-                    if (!isLoading && totalItemCount <= (lastVisibleItem + 5)) {
-                        Log.d(TAG, "Scroll at the last 5 items. Starting loadNextBatch.");
-                        loadNextBatch();
+                if (showUploaded) {
+                    super.onScrolled(recyclerView, dx, dy);
+                    // Load more items on user scrolls down
+                    if (dy > 0) {
+                        int totalItemCount = layoutManager.getItemCount();
+                        int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+
+                        // Threshold: Load more when 5 items from the bottom
+                        if (!isLoading && totalItemCount <= (lastVisibleItem + 5)) {
+                            Log.d(TAG, "Scroll at the last 5 items. Starting loadNextBatch.");
+                            loadNextBatch();
+                        }
                     }
                 }
             }
 
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    if (!recyclerView.canScrollVertically(1) && !isLoading) {
-                        Log.d(TAG, "Reached bottom of list while idle. Starting loadNextBatch.");
-                        loadNextBatch();
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
+                if (showUploaded) {
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        if (!recyclerView.canScrollVertically(1) && !isLoading) {
+                            Log.d(TAG, "Reached bottom of list while idle. Starting loadNextBatch.");
+                            loadNextBatch();
+                        }
                     }
                 }
             }
@@ -577,7 +604,11 @@ public class FragmentLanding extends Fragment {
         registerForContextMenu(binding.recycledViewEntries);
         binding.swipeRefreshLayout.setOnRefreshListener(() -> {
             Log.d(TAG, "Swipe to refresh triggered.");
-            downloadNewerData();
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
+            if (showUploaded) {
+                FragmentLanding.this.downloadNewerData();
+            }
         });
     }
 
@@ -625,23 +656,42 @@ public class FragmentLanding extends Fragment {
 
         if (!batchItems.isEmpty()) {
             Log.d(TAG, "There are stored records. Loading data from ObjectBox...");
-            appendItems(batchItems);
+            reloadItemsForRecyclerView();
             progressBar(false);
             isLoading = false;
         } else {
             Log.d(TAG, "No more local data. Fetching older data from server...");
-            downloadOlderData();
+            WorkManager.getInstance(requireContext())
+                    .getWorkInfosByTag("UPDATED_AT_SYNC")
+                    .addListener(() -> {
+                        try {
+                            List<WorkInfo> infos = WorkManager.getInstance(requireContext())
+                                    .getWorkInfosByTag("UPDATED_AT_SYNC").get();
+                            boolean newerSyncRunning = false;
+                            for (WorkInfo i : infos) {
+                                if (!i.getState().isFinished()) {
+                                    newerSyncRunning = true;
+                                    break;
+                                }
+                            }
+                            if (!newerSyncRunning) {
+                                downloadOlderData();
+                            } else {
+                                Log.d(TAG, "Newer data sync still running, skipping downloadOlderData.");
+                                isLoading = false;
+                                progressBar(false);
+                            }
+                        } catch (Exception e) {
+                            isLoading = false;
+                            progressBar(false);
+                        }
+                    }, ContextCompat.getMainExecutor(requireContext()));
         }
     }
 
-    private void appendItems(List<LandingFragmentItems> newItems) {
-        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
-        currentList.addAll(newItems);
-        Collections.sort(currentList, SORTER);
-        entriesAdapter.submitList(currentList, () -> isLoading = false);
-    }
-
     private void downloadNewerData() {
+        if (isDownloadingById) return;
+        isDownloadingById = true;
 
         long observationsUpdatedAt = SettingsManager.getObservationsUpdatedAt();
         long timeCountsUpdatedAt = SettingsManager.getTimeCountsUpdatedAt();
@@ -676,7 +726,7 @@ public class FragmentLanding extends Fragment {
         WorkManager.getInstance(requireContext())
                 .beginUniqueWork(
                         "data_sync_chain",
-                        ExistingWorkPolicy.KEEP,
+                        ExistingWorkPolicy.REPLACE,
                         timedCountRequest)
                 .then(observationRequest)
                 .then(photoRequest)
@@ -1161,7 +1211,7 @@ public class FragmentLanding extends Fragment {
     public void onResume() {
         super.onResume();
         LocalBroadcastManager.getInstance(requireContext())
-                .registerReceiver(sortChangedReceiver,
+                .registerReceiver(broadcastReceiver,
                         new IntentFilter("SORT_OBSERVATIONS_CHANGED"));
     }
 
@@ -1169,7 +1219,7 @@ public class FragmentLanding extends Fragment {
     public void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(requireContext())
-                .unregisterReceiver(sortChangedReceiver);
+                .unregisterReceiver(broadcastReceiver);
     }
 
     private boolean isUploadInProgress() {

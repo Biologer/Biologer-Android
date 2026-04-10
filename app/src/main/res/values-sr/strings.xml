@@ -398,7 +398,7 @@
     <string name="delete_account_error1">Не могу да обришем кориснички налог. Сервер је вратио код грешке</string>
     <string name="account_settings">Подешавања налога</string>
     <string name="account_setup_desc">Омогућава вам да измените адресу е-поште, лозинку или да обришете ваш кориснички налог.</string>
-    <string name="change_email">Промени адресу е-поште</string>
+    <string name="change_email">Промена е-поште</string>
     <string name="change_email_desc">Омогућава да промените адресу е-поште која је везана за ваш налог.</string>
     <string name="type_email">Унесите нову адреса е-поште</string>
     <string name="retype_email">Поновите адресу е-поште</string>

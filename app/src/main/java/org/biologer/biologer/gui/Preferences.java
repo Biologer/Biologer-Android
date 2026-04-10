@@ -1,10 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,66 +12,25 @@ import androidx.core.os.LocaleListCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.network.UpdateLicenses;
-import org.biologer.biologer.network.UpdateTaxa;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-public class FragmentPreferences extends PreferenceFragmentCompat {
+public class Preferences extends PreferenceFragmentCompat {
 
     private static final String TAG = "Biologer.Preferences";
-    private Preference preferenceButton;
     Fragment fragment;
-
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent != null) {
-                // This code is used to listen if download is successfully completed.
-                if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_COMPLETED)) {
-                    String message = intent.getStringExtra(UpdateTaxa.EXTRA_TASK_COMPLETED);
-                    if (message != null) {
-                        Log.d(TAG, "Fetching taxonomic data returned the code: " + message);
-                        if (message.equals("success")) {
-                            Log.d(TAG, "Re-enabling preferences entry for fetching taxa.");
-                            preferenceButton.setEnabled(true);
-                            preferenceButton.setSummary(getString(R.string.update_taxa_desc));
-                        } else if (message.equals("failed")) {
-                            preferenceButton.setEnabled(true);
-                            preferenceButton.setSummary(getString(R.string.update_taxa_error));
-                        }
-                    }
-                }
-
-                // This code is used to listen how much data is downloaded (in %)
-                else if (Objects.equals(intent.getAction(), UpdateTaxa.TASK_PERCENT)) {
-                    int percent = intent.getIntExtra(UpdateTaxa.EXTRA_TASK_PERCENT, 0);
-                    if (percent == 0) {
-                        preferenceButton.setEnabled(true);
-                        preferenceButton.setSummary(getString(R.string.update_taxa_desc));
-                    } else {
-                        preferenceButton.setEnabled(false);
-                        preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient) +
-                                " " + getString(R.string.currently_downloaded) + " " + percent + "%.");
-                    }
-                }
-            }
-        }
-    };
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
@@ -151,59 +107,8 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
         setPreferenceScreen(preferenceScreen);
 
         ListPreference dataLicense = findPreference("data_license");
-        ListPreference imageLicense = findPreference("image_license");
-        ListPreference autoDownload = findPreference("auto_download");
-        ListPreference languageSettings = findPreference("language_settings");
-        ListPreference sortObservations = findPreference("sort_observations");
-
         if (dataLicense != null) {
             getDataLicences(dataLicense);
-        }
-
-        if (imageLicense != null) {
-            getImageLicences(imageLicense);
-        }
-
-        if (autoDownload != null) {
-            getAutoDownload(autoDownload);
-        }
-
-        if (languageSettings != null) {
-            getLanguages(languageSettings);
-        }
-
-        if (sortObservations != null) {
-            getObservations(sortObservations);
-            sortObservations.setOnPreferenceChangeListener((preference, newValue) -> {
-                Log.d(TAG, "Sort observations changed to: " + newValue);
-                if (getActivity() != null) {
-                    Intent intent = new Intent("SORT_OBSERVATIONS_CHANGED");
-                    LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
-                }
-                return true;
-            });
-        }
-
-        // Add button fot taxa sync process
-        preferenceButton = findPreference("taxa_button");
-
-        toggleFetchTaxaButton(preferenceButton);
-
-        preferenceButton.setOnPreferenceClickListener(preference -> {
-            // Disable the button first
-            preferenceButton.setEnabled(false);
-            preferenceButton.setSummary(getString(R.string.updating_taxa_be_patient));
-            // Start the service for fetching taxa
-            Activity activity_fetch = getActivity();
-            final Intent fetchTaxa = new Intent(activity_fetch, UpdateTaxa.class);
-            fetchTaxa.setAction(UpdateTaxa.ACTION_DOWNLOAD_FROM_FIRST);
-            if (activity_fetch != null) {
-                activity_fetch.startService(fetchTaxa);
-            }
-            return true;
-        });
-
-        if (dataLicense != null) {
             dataLicense.setOnPreferenceChangeListener((preference, newValue) -> {
                 Log.d(TAG, "Data license changed to: " + newValue);
                 updateLicense();
@@ -211,7 +116,9 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
             });
         }
 
+        ListPreference imageLicense = findPreference("image_license");
         if (imageLicense != null) {
+            getImageLicences(imageLicense);
             imageLicense.setOnPreferenceChangeListener((preference, newValue) -> {
                 Log.d(TAG, "Data license changed to: " + newValue);
                 updateLicense();
@@ -219,15 +126,31 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
             });
         }
 
-        if (autoDownload != null) {
-            autoDownload.setOnPreferenceChangeListener((preference, newValue) -> {
-                Log.d(TAG, "Data license changed to: " + newValue);
-                updateLicense();
+        PreferenceScreen advancedSettings = findPreference("advanced_setup");
+        if (advancedSettings != null) {
+            advancedSettings.setOnPreferenceClickListener(preference -> {
+                Log.d(TAG, "Preferences for advanced setup clicked.");
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        fragment = new PreferencesAdvancedSettings();
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                        fragmentTransaction.add(R.id.content_frame, fragment);
+                        fragmentTransaction.addToBackStack("advanced preferences");
+                        fragmentTransaction.commit();
+                    });
+                } else {
+                    Log.e(TAG, "Activity is null in OnPreferenceClickListener!");
+                }
+
                 return true;
             });
         }
 
+        ListPreference languageSettings = findPreference("language_settings");
         if (languageSettings != null) {
+            getLanguages(languageSettings);
             languageSettings.setOnPreferenceChangeListener((preference, newValue) -> {
                 Log.d(TAG, "Language changed to: " + newValue);
                 LocaleListCompat appLocale = LocaleListCompat.getEmptyLocaleList();
@@ -239,35 +162,6 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
             });
         }
 
-    }
-
-    private void getObservations(ListPreference sortObservations) {
-        CharSequence[] entries = {getString(R.string.sort_by_observation_time), getString(R.string.sort_by_species_name)};
-        CharSequence[] entryValues = {"time", "name"};
-        sortObservations.setEntries(entries);
-        sortObservations.setDefaultValue("0");
-        sortObservations.setEntryValues(entryValues);
-    }
-
-    private void toggleFetchTaxaButton(Preference preference) {
-        // If already fetching taxa disable the fetch taxa button
-        if (preference != null) {
-            if (UpdateTaxa.isInstanceCreated()) {
-                preference.setEnabled(false);
-                preference.setSummary(getString(R.string.updating_taxa_be_patient));
-            } else {
-                preference.setEnabled(true);
-                preference.setSummary(getString(R.string.update_taxa_desc));
-            }
-        }
-    }
-
-    private void getAutoDownload(ListPreference listPreference) {
-        CharSequence[] entries = {getString(R.string.only_wifi), getString(R.string.any_network), getString(R.string.always_ask)};
-        CharSequence[] entryValues = {"wifi", "all", "ask"};
-        listPreference.setEntries(entries);
-        listPreference.setDefaultValue("0");
-        listPreference.setEntryValues(entryValues);
     }
 
     private void getDataLicences(ListPreference listpreference) {
@@ -293,14 +187,6 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
         listpreference.setEntries(entries);
         listpreference.setDefaultValue("0");
         listpreference.setEntryValues(entryValues);
-    }
-
-    private void updateLicense() {
-        Activity activity = getActivity();
-        if (activity != null) {
-            Intent update_licences = new Intent(activity, UpdateLicenses.class);
-            activity.startService(update_licences);
-        }
     }
 
     private void getLanguages(ListPreference listPreference) {
@@ -346,26 +232,12 @@ public class FragmentPreferences extends PreferenceFragmentCompat {
         listPreference.setEntryValues(finalEntryValues.toArray(new CharSequence[0]));
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (getActivity() != null) {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(UpdateTaxa.TASK_COMPLETED);
-            filter.addAction(UpdateTaxa.TASK_PERCENT);
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, filter);
+    private void updateLicense() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            Intent update_licences = new Intent(activity, UpdateLicenses.class);
+            activity.startService(update_licences);
         }
-        Log.d(TAG, "Resuming Preferences Fragment.");
-        toggleFetchTaxaButton(preferenceButton);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (getActivity() != null) {
-            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
-        }
-        Log.d(TAG, "Pausing Preferences Fragment.");
     }
 
 }

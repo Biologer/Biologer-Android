@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:iconSpaceReserved="false">
+
+    <PreferenceCategory
+        android:title="@string/advanced_settings"
+        app:iconSpaceReserved="false">
+
+        <CheckBoxPreference
+            android:key="english_names"
+            android:title="@string/allow_english_names"
+            android:summary="@string/allow_english_names_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="false"/>
+
+        <ListPreference
+            android:key="sort_observations"
+            android:title="@string/sort_observations"
+            android:summary="@string/sort_observations_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="time"/>
+
+        <Preference
+            android:key="taxa_button"
+            android:title="@string/update_taxa"
+            android:summary="@string/update_taxa_desc"
+            app:iconSpaceReserved="false"/>
+
+        <ListPreference
+            android:key="auto_download"
+            android:title="@string/auto_download"
+            android:summary="@string/auto_download_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="wifi"/>
+
+        <CheckBoxPreference
+            android:key="show_uploaded"
+            android:title="@string/show_uploaded_items"
+            android:summary="@string/show_uploaded_items_desc"
+            app:iconSpaceReserved="false"
+            android:defaultValue="true"/>
+
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

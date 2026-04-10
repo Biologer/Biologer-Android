@@ -595,7 +595,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             startActivity(new Intent(ActivityLanding.this, ActivityIntro.class));
         }
         if (id == R.id.nav_setup) {
-            showFragment("PREFERENCES_FRAGMENT", FragmentPreferences::new);
+            showFragment("PREFERENCES_FRAGMENT", Preferences::new);
         }
         if (id == R.id.nav_logout) {
             showFragment("LOGOUT_FRAGMENT", FragmentLogout::new);

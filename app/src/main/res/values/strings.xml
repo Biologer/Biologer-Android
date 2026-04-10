@@ -517,6 +517,10 @@
     <string name="upload_status">Upload status</string>
     <string name="no_image_to_view">Image clicked, but URI is null.</string>
     <string name="delete_selected_entry">Delete selected entry</string>
+    <string name="advanced_settings">Advanced settings</string>
+    <string name="advanced_settings_desc">Here you can set up additional parameters that most users don\'t care about.</string>
+    <string name="show_uploaded_items">Show uploaded items</string>
+    <string name="show_uploaded_items_desc">Displays the list of observations and counts already uploaded online.</string>
     <plurals name="entries_deleted_count">
         <item quantity="one">%d entry deleted.</item>
         <item quantity="few">%d entries deleted.</item>
