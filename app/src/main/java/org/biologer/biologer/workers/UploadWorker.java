@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkContinuation;
 import androidx.work.WorkManager;
@@ -35,7 +36,7 @@ public class UploadWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        WorkManager wm = WorkManager.getInstance(getApplicationContext());
+        WorkManager workManager = WorkManager.getInstance(getApplicationContext());
 
         // 1. Get the timed counts first
         List<TimedCountDb> pendingTimedCounts;
@@ -76,14 +77,18 @@ public class UploadWorker extends Worker {
                 tcRequests.add(new OneTimeWorkRequest.Builder(TimeCountsUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
-                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 0.5s
+                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 1s
                         .setBackoffCriteria(
                                 BackoffPolicy.EXPONENTIAL,
                                 30,
                                 TimeUnit.SECONDS)
                         .build());
             }
-            continuation = wm.beginWith(tcRequests);
+            continuation = workManager.beginUniqueWork(
+                    "master_upload_chain",
+                    ExistingWorkPolicy.KEEP,
+                    tcRequests
+            );
         }
 
         // After Timed Counts are uploaded add the Observations
@@ -106,7 +111,11 @@ public class UploadWorker extends Worker {
             }
 
             if (continuation == null) {
-                continuation = wm.beginWith(entryRequests);
+                continuation = workManager.beginUniqueWork(
+                        "master_upload_chain",
+                        ExistingWorkPolicy.KEEP,
+                        entryRequests
+                );
             } else {
                 continuation = continuation.then(entryRequests);
             }

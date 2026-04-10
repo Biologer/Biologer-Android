@@ -143,7 +143,7 @@ public class LandingFragmentItems {
         String image = null;
         if (entry.photos != null && !entry.photos.isEmpty()) {
             image = entry.photos.get(0).getLocalPath();
-            Log.d(TAG, "Entry " + entry.getId() + " has image path: " + image);
+            //Log.d(TAG, "Entry " + entry.getId() + " has image path: " + image);
         }
 
         Calendar calendar = DateHelper.getCalendar(

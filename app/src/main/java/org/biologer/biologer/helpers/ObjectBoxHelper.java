@@ -69,6 +69,7 @@ public class ObjectBoxHelper {
         Box<EntryDb> box = App.get().getBoxStore().boxFor(EntryDb.class);
         try(Query<EntryDb> query = box.query()
                 .isNull(EntryDb_.timeCountId)
+                .notNull(EntryDb_.serverId)
                 .orderDesc(EntryDb_.serverId)
                 .build()) {
             ArrayList<EntryDb> observations = (ArrayList<EntryDb>) query.find(offset, limit);
@@ -157,7 +158,10 @@ public class ObjectBoxHelper {
 
     public static ArrayList<TimedCountDb> getPagedTimedCounts(int limit, int offset) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        try(Query<TimedCountDb> query = box.query().orderDesc(TimedCountDb_.serverId).build()) {
+        try(Query<TimedCountDb> query = box.query()
+                .notNull(TimedCountDb_.serverId)
+                .orderDesc(TimedCountDb_.serverId)
+                .build()) {
             ArrayList<TimedCountDb> timedCounts = (ArrayList<TimedCountDb>) query.find(offset, limit);
             Log.i(TAG, "There are " + timedCounts.size() + " timed counts with served ID in the ObjectBox query.");
             return timedCounts;
@@ -371,9 +375,7 @@ public class ObjectBoxHelper {
         Box<StageDb> box = App.get().getBoxStore().boxFor(StageDb.class);
         try (Query<StageDb> query = box.query(StageDb_.id.equal(stageId)).build()) {
             StageDb stage = query.findFirst();
-            if (stage != null) {
-                Log.i(TAG, "Stage with ID " + stageId + " found in the database");
-            } else {
+            if (stage == null) {
                 Log.i(TAG, "There is no stage with ID " + stageId + " in the database");
             }
             return stage;

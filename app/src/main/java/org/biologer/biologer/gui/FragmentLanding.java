@@ -134,7 +134,7 @@ public class FragmentLanding extends Fragment {
         ArrayList<LandingFragmentItems> allItems =
                 LandingFragmentItems.loadAllLocalEntries(requireContext());
 
-        // Group 2. If the list is short ask for more items
+        // Group 2. Load first batch of items already uploaded
         ArrayList<EntryDb> syncedObservations = ObjectBoxHelper.getPagedObservations(25, 0);
         for (EntryDb observation : syncedObservations) {
             allItems.add(getItemFromEntry(requireContext(), observation));
@@ -373,7 +373,8 @@ public class FragmentLanding extends Fragment {
                         }
 
                         if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
-                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate);
+                            Log.d(TAG, "Displaying new observations from the server.");
+                            addItems(observationsToUpdate, timedCountsToUpdate);
                         }
 
                         if (allFinished) {
@@ -386,7 +387,7 @@ public class FragmentLanding extends Fragment {
                             if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
                                 Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
                                 binding.recycledViewEntries.post(() -> {
-                                    if (ObjectBoxHelper.getUnsyncedCount() > 0) {
+                                    if (!isUploadInProgress() && ObjectBoxHelper.getUnsyncedCount() > 0) {
                                         ((ActivityLanding) requireActivity()).uploadRecords();
                                     }
                                     binding.recycledViewEntries.smoothScrollToPosition(0);
@@ -432,6 +433,8 @@ public class FragmentLanding extends Fragment {
 
                             } else if (state == WorkInfo.State.FAILED && !processedWorkerIds.contains(workInfo.getId())) {
                                 processedWorkerIds.add(workInfo.getId());
+                                isLoading = false;
+                                progressBar(false);
                                 Toast.makeText(getContext(), "Sync failed. Check connection.", Toast.LENGTH_SHORT).show();
                             }
 
@@ -442,16 +445,20 @@ public class FragmentLanding extends Fragment {
                         }
 
                         if (!observationsToUpdate.isEmpty() || !timedCountsToUpdate.isEmpty()) {
-                            applyBatchUpdates(observationsToUpdate, timedCountsToUpdate);
+                            Log.d(TAG, "Displaying next batch of observations from the server.");
+                            addItems(observationsToUpdate, timedCountsToUpdate);
                         }
 
                         if (allFinished) {
                             Log.d(TAG, "All observations sync workers by id finished. Updating UI.");
+                            isLoading = false;
+                            progressBar(false);
                             // Auto-scroll if user is already near top
                             LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
                             if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
                                 binding.recycledViewEntries.post(() ->
-                                        binding.recycledViewEntries.smoothScrollToPosition(0));                            }
+                                        binding.recycledViewEntries.smoothScrollToPosition(0));
+                            }
                         }
 
                     }
@@ -520,6 +527,17 @@ public class FragmentLanding extends Fragment {
                     }
                 }
             }
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (!recyclerView.canScrollVertically(1) && !isLoading) {
+                        Log.d(TAG, "Reached bottom of list while idle. Starting loadNextBatch.");
+                        loadNextBatch();
+                    }
+                }
+            }
+
         });
         binding.recycledViewEntries.addOnItemTouchListener(
                 new RecyclerOnClickListener(requireContext(), binding.recycledViewEntries, new RecyclerOnClickListener.OnItemClickListener() {
@@ -584,6 +602,8 @@ public class FragmentLanding extends Fragment {
         isLoading = true;
         progressBar(true);
 
+        Log.d(TAG, "Loading next page of data.");
+
         ArrayList<EntryDb> localObservationsBatch = ObjectBoxHelper.getPagedObservations(25, localObjectBoxObservationOffset);
         ArrayList<TimedCountDb> localTimedCountsBatch = ObjectBoxHelper.getPagedTimedCounts(25, localObjectBoxTimedCountsOffset);
 
@@ -604,6 +624,7 @@ public class FragmentLanding extends Fragment {
         }
 
         if (!batchItems.isEmpty()) {
+            Log.d(TAG, "There are stored records. Loading data from ObjectBox...");
             appendItems(batchItems);
             progressBar(false);
             isLoading = false;
@@ -1084,7 +1105,7 @@ public class FragmentLanding extends Fragment {
         binding = null;
     }
 
-    private void applyBatchUpdates(List<Long> observationIds, List<Long> timedCountIds) {
+    private void addItems(List<Long> observationIds, List<Long> timedCountIds) {
         // 1. Fetch the list ONCE
         List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
         boolean hasChanges = false;
@@ -1149,6 +1170,22 @@ public class FragmentLanding extends Fragment {
         super.onPause();
         LocalBroadcastManager.getInstance(requireContext())
                 .unregisterReceiver(sortChangedReceiver);
+    }
+
+    private boolean isUploadInProgress() {
+        try {
+            List<WorkInfo> workInfos = WorkManager.getInstance(requireContext())
+                    .getWorkInfosByTag("UPLOAD_WORK").get();
+            for (WorkInfo info : workInfos) {
+                if (info.getState() == WorkInfo.State.RUNNING ||
+                        info.getState() == WorkInfo.State.ENQUEUED) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Could not check WorkManager status", e);
+        }
+        return false;
     }
 
 }
