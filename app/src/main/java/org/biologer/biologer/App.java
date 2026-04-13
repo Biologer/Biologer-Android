@@ -135,6 +135,11 @@ public class App extends Application {
                 entryBox.put(entry);
             }
 
+            if (entry.getServerId() == null) {
+                entry.setUploaded(false);
+                entryBox.put(entry);
+            }
+
             if (entry.photos.isEmpty()) {
                 boolean migrated = false;
 

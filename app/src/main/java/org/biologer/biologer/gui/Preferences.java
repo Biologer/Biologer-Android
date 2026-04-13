@@ -195,16 +195,16 @@ public class Preferences extends PreferenceFragmentCompat {
         Map<String, String> localeMap = new HashMap<>();
 
         // Add all user-defined locales
-        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_latin), "bs");
-        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_cyrillic), "sr-BA");
+        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_latin), "bs-Latin-BA");
+        localeMap.put(getString(R.string.locale_bosnia_and_herzegovina_cyrillic), "sr-Cyrl-BA");
         localeMap.put(getString(R.string.locale_croatia), "hr");
         localeMap.put(getString(R.string.locale_english), "en");
         localeMap.put(getString(R.string.locale_hungarian), "hu");
         localeMap.put(getString(R.string.locale_macedonia), "mk");
         localeMap.put(getString(R.string.locale_montenegro_latin), "sr-Latn-ME");
-        localeMap.put(getString(R.string.locale_montenegro_cyrillic), "sr-ME");
-        localeMap.put(getString(R.string.locale_serbia_cyrilic), "sr");
-        localeMap.put(getString(R.string.locale_serbia_latin), "sr-Latn");
+        localeMap.put(getString(R.string.locale_montenegro_cyrillic), "sr-Cyrl-ME");
+        localeMap.put(getString(R.string.locale_serbia_cyrilic), "sr-Cyrl-RS");
+        localeMap.put(getString(R.string.locale_serbia_latin), "sr-Latn-RS");
 
         // Prepare and Sort the Display Names (Entries)
         List<String> sortedEntriesList = new ArrayList<>(localeMap.keySet());

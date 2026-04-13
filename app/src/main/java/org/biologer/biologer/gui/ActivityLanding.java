@@ -50,6 +50,7 @@ import org.biologer.biologer.network.UpdateAnnouncements;
 import org.biologer.biologer.network.UpdateLicenses;
 import org.biologer.biologer.network.UpdateObservationTypes;
 import org.biologer.biologer.network.UpdateTaxa;
+import org.biologer.biologer.network.json.TaxaData;
 import org.biologer.biologer.network.json.TaxaResponse;
 import org.biologer.biologer.network.json.UserDataResponse;
 import org.biologer.biologer.workers.NotificationSyncWorker;
@@ -179,8 +180,10 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                 // Check mail should not be called if the user is not logged in.
                 // The user is not logged in if the SQL UserData is empty.
                 List<UserDb> userData = App.get().getBoxStore().boxFor(UserDb.class).getAll();
-                if (!userData.isEmpty()) {
-                    checkMailConfirmed(database);
+                if (userData != null) {
+                    if (!userData.isEmpty()) {
+                        checkMailConfirmed(database);
+                    }
                 }
             }
             // It seems that the user is logged out, thus we need to go to the login screen
@@ -536,11 +539,14 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                         // Check if version of taxa from Server and Preferences match. If server version is newer ask for update
                         TaxaResponse taxaResponse = response.body();
                         if (taxaResponse != null) {
-                            if (taxaResponse.getData().isEmpty()) {
-                                Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
-                            } else {
-                                Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
-                                updateTaxa2(finalTimestamp);
+                            List <TaxaData> data = taxaResponse.getData();
+                            if (data != null) {
+                                if (taxaResponse.getData().isEmpty()) {
+                                    Log.i(TAG, "It looks like this taxonomic database is already up to date. Nothing to do here!");
+                                } else {
+                                    Log.i(TAG, "Taxa database on the server seems to be newer than your version timestamp: " + updated_at);
+                                    updateTaxa2(finalTimestamp);
+                                }
                             }
                         }
                     }
@@ -584,7 +590,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
             Toast.makeText(ActivityLanding.this, getString(R.string.missing_user_data), Toast.LENGTH_LONG).show();
             fallbackToLoginScreen();
         } else {
-            // Check if the licence has changed on the server and update if needed
+            // Check if the license has changed on the server and update if needed
             final Intent update_licenses = new Intent(this, UpdateLicenses.class);
             update_licenses.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startService(update_licenses);
