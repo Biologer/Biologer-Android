@@ -1,5 +1,6 @@
 package org.biologer.biologer.network.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -124,7 +125,8 @@ public class APITimedCountsResponse {
         @JsonProperty("causer_type")
         private String causerType;
 
-        private List<Object> properties;
+        @JsonIgnore
+        private Object properties;
 
         @JsonProperty("created_at")
         private String createdAt;
@@ -146,8 +148,6 @@ public class APITimedCountsResponse {
         public void setCauserId(Long causerId) { this.causerId = causerId; }
         public String getCauserType() { return causerType; }
         public void setCauserType(String causerType) { this.causerType = causerType; }
-        public List<Object> getProperties() { return properties; }
-        public void setProperties(List<Object> properties) { this.properties = properties; }
         public String getCreatedAt() { return createdAt; }
         public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
         public String getUpdatedAt() { return updatedAt; }

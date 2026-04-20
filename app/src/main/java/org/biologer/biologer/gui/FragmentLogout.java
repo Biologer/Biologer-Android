@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
@@ -24,7 +23,6 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.FragmentLogoutBinding;
 import org.biologer.biologer.network.UpdateTaxa;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
-import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.UserDb;
 
 public class FragmentLogout extends Fragment {
@@ -111,7 +109,7 @@ public class FragmentLogout extends Fragment {
             case "https://biologer.ba" -> "Bosnia and Herzegovina Biologer Community";
             case "https://biologer.rs" -> "Serbian Biologer Community";
             case "https://biologer.me" -> "Montenegrin Biologer Community";
-            case "https://dev.biologer.org" -> "Biologer Community for developers";
+            case "https://dev.biologer.rs" -> "Biologer Community for developers";
             case "https://biologer.hr" -> "Croatian Biologer Community";
             default -> "";
         };

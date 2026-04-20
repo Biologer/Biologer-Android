@@ -142,7 +142,7 @@ public class FragmentRegister1 extends Fragment {
             binding.imageViewFlag.setImageResource(R.drawable.flag_montenegro);
             binding.textViewDatabaseDesc.setText(R.string.community_montenegro);
         }
-        if (database.equals("https://dev.biologer.org")) {
+        if (database.equals("https://dev.biologer.rs")) {
             binding.imageViewFlag.setImageResource(R.drawable.flag_dev);
             binding.textViewDatabaseDesc.setText(R.string.community_developers);
         }

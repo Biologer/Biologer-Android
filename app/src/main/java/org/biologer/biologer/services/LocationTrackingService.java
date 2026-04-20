@@ -232,7 +232,7 @@ public class LocationTrackingService extends Service {
         // Use JTS to create a polygon and calculate its area.
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 0);
 
-        // Convert your UTMPoints to JTS Coordinates
+        // Convert your UTM Points to JTS Coordinates
         Coordinate[] coordinates = new Coordinate[routeUtmPoints.size() + 1];
         for (int i = 0; i < routeUtmPoints.size(); i++) {
             UTMPoint utmPoint = routeUtmPoints.get(i);
@@ -325,7 +325,7 @@ public class LocationTrackingService extends Service {
         return centroidLocation;
     }
 
-    // The values is returned in WGS-84 coordinates
+    // The values are returned in WGS-84 coordinates
     private Location calculateCentroid() {
         int numPoints = routeUtmPoints.size();
         if (numPoints == 0) {

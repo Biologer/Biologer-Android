@@ -13,11 +13,9 @@ import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.json.APITimedCounts;
 import org.biologer.biologer.network.json.APITimedCountsResponse;
-import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
 
 import java.io.IOException;
-import java.util.List;
 
 import retrofit2.Response;
 
@@ -61,32 +59,18 @@ public class TimeCountsUploadWorker extends Worker {
             }
 
             int code = response.code();
-            Log.e(TAG, "Server returned error code: " + code);
             if (code == 429 || (code >= 500 && code <= 599)) {
                 return Result.retry();
             }
 
             if (response.isSuccessful() && response.body() != null) {
-                long newServerId = response.body().getData().getId(); // Time Count ID received from the server
-                Long oldServerId = timedCount.getServerId(); // Local ObjectBox ID before upload
+                long newServerId = response.body().getData().getId();
 
                 timedCount.setServerId(newServerId);
                 timedCount.setUploaded(true);
                 timedCount.setModified(false);
 
                 long localId = ObjectBoxHelper.setTimedCount(timedCount);
-
-                // Update children with time count ID received from the server
-                if (oldServerId != null) {
-                    List<EntryDb> childObservations = ObjectBoxHelper.getTimeCountObservations(oldServerId);
-                    if (!childObservations.isEmpty()) {
-                        for (EntryDb child : childObservations) {
-                            child.setTimeCountId(newServerId);
-                        }
-                        ObjectBoxHelper.setObservation(childObservations);
-                        Log.d(TAG, "Successfully linked " + childObservations.size() + " observations to new Server ID: " + newServerId);
-                    }
-                }
 
                 Log.d(TAG, "TimedCount " + timedCountId
                         + " (returned local ID " + localId +

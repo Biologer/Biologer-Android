@@ -147,7 +147,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                         + id + " (is uploaded = " + timeCount.isUploaded() + ")");
 
                 // Part 3. Populate the list of observations
-                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimeCountObservations(id);
+                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimeCountObservations(localId);
                 for (EntryDb entry : observations) {
                     if (timeCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
                         timeCountAdapter.addToSpeciesCount(entry.getTaxonId());
@@ -294,9 +294,21 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void addNewViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        viewModel.setServerId((long) ObjectBoxHelper.getUniqueTimedCountID());
         viewModel.setNewEntry(true);
         addWeatherObserverToViewModel();
+
+        TimedCountDb tempTimedCount = new TimedCountDb();
+        tempTimedCount.setId(ObjectBoxHelper.getUniqueTimedCountID());
+        tempTimedCount.setStartTime(DateHelper.getCurrentTime());
+        tempTimedCount.setNewDay(DateHelper.getCurrentDay());
+        tempTimedCount.setNewMonth(DateHelper.getCurrentMonthRealValue());
+        tempTimedCount.setNewYear(DateHelper.getCurrentYear());
+        tempTimedCount.setServerId(null);
+        long objectBoxId = ObjectBoxHelper.setTimedCount(tempTimedCount);
+        viewModel.setObjectBoxId(objectBoxId);
+        viewModel.setDay(DateHelper.getCurrentDay());
+        viewModel.setMonth(DateHelper.getCurrentMonthRealValue());
+        viewModel.setYear(DateHelper.getCurrentYear());
 
         viewModel.getElapsedTime().observe(this, elapsed -> {
             binding.textViewElapsedTime.setText(formatTime(elapsed));
@@ -323,21 +335,16 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
     private void loadExistingViewModel() {
         viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
-        viewModel.setNewEntry(false);
         Long id = getTimeCountIdFromBundle();
         if (id != null) {
-            viewModel.setServerId(id);
             TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(id);
             if (timedCount == null) {
                 Log.e(TAG, "There is no timed count with ID: " + id);
                 return;
             }
-
-            // Load existing data into the View Model
             viewModel.getFromObjectBox(timedCount);
-
+            viewModel.setModified(false);
             addWeatherObserverToViewModel();
-
             binding.linearLayoutTimer.setEnabled(false);
             binding.linearLayoutTimer.setVisibility(View.GONE);
             binding.linearLayoutAdditionalData.setPadding(16, 24, 16, 8);
@@ -427,7 +434,8 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
 
         // Case 2: EXISTING ENTRY - Timed Count is reopened. Use stored data.
         } else {
-            Long timedCountId = viewModel.getServerId();
+            Long timedCountId = viewModel.getObjectBoxId();
+            Log.d(TAG, "Using Time Count ID " + timedCountId + " for new observation.");
             if (timedCountId == null) {
                 Log.e(TAG, "Cannot add entry, Timed Count ID is missing for existing entry.");
                 Toast.makeText(this, R.string.error_loading_timed_count_id, Toast.LENGTH_LONG).show();
@@ -440,8 +448,16 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 return;
             }
 
-            // Get the average location (centroid) of all observations in this count
-            Location centralLocation = ObjectBoxHelper.calculateCentroidLocation(timedCountId);
+            // Use the stored centroid of the Timed Count for this observation
+            Location centralLocation = new Location("TimedCountCentroid");
+            if (timedCount.getLatitude() != 0 && timedCount.getLongitude() != 0) {
+                centralLocation.setLatitude(timedCount.getLatitude());
+                centralLocation.setLongitude(timedCount.getLongitude());
+            } else {
+                // Fallback to calculating from existing observations
+                centralLocation = ObjectBoxHelper.calculateCentroidLocation(timedCountId);
+            }
+
             if (centralLocation == null) {
                 Toast.makeText(this, R.string.error_no_location_data, Toast.LENGTH_LONG).show();
                 return;
@@ -454,13 +470,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             );
 
             // Derive Accuracy as half of the walked distance
-            double accuracy = (double) viewModel.getDistance() / 2.0;
+            Integer dist = viewModel.getDistance();
+            double accuracy = (dist != null) ? (double) dist / 2.0 : 0.0;
             centralLocation.setAccuracy((float) accuracy);
             createAndSaveNewEntry(
                     taxon,
                     centralLocation,
                     timedCount.getNewYear(),
-                    timedCount.getNewMonth(),
+                    timedCount.getNewMonth() - 1,
                     timedCount.getNewDay(),
                     averageTime
             );
@@ -498,7 +515,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 false,
                 false,
                 taxon.getId(),
-                viewModel.getServerId(),
+                viewModel.getObjectBoxId(),
                 taxon.getLatinName(),
                 String.valueOf(year),
                 String.valueOf(month),
@@ -527,7 +544,11 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
                 observed_id
         );
         long newEntryId = ObjectBoxHelper.setObservation(entryDb);
+        Log.d(TAG, "Saving new time count entry ID " +
+                newEntryId + " to Time Count with ID " +
+                entryDb.getTimeCountId() + ".");
         viewModel.addNewEntryId(newEntryId);
+        viewModel.setModified(true);
     }
 
     private void displayAdditionalDetailsFragment() {
@@ -601,6 +622,9 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         for (Long entryId : new_entries) {
             ObjectBoxHelper.removeObservationById(entryId);
         }
+        if (viewModel.isNewEntry()) {
+            ObjectBoxHelper.removeTimedCountById(viewModel.getObjectBoxId());
+        }
     }
 
     @Override
@@ -661,61 +685,31 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void saveTimedCount() {
-        TimedCountDb timedCountDb = new TimedCountDb(
-                getObjectBoxID(),
-                viewModel.getServerId(),
-                viewModel.isUploaded(),
-                viewModel.isModified(),
-                viewModel.getStartTimeString(),
-                viewModel.getEndTimeString(),
-                viewModel.getCountDuration(),
-                viewModel.getArea(),
-                viewModel.getDistance(),
-                viewModel.getCloudinessData().getValue(),
-                viewModel.getPressureData(),
-                viewModel.getHumidityData(),
-                viewModel.getTemperatureData().getValue(),
-                viewModel.getWindDirectionData(),
-                viewModel.getWindSpeedData(),
-                viewModel.getHabitatData(),
-                viewModel.getCommentData(),
-                viewModel.getTaxonGroupId(),
-                DateHelper.getCurrentDay(),
-                DateHelper.getCurrentMonth(),
-                DateHelper.getCurrentYear(),
-                viewModel.getCentroidLongitude(),
-                viewModel.getCentroidLatitude(),
-                viewModel.getGeometry()
-        );
+        Long localId = viewModel.getObjectBoxId();
+        TimedCountDb timedCountDb = (localId != null)
+                ? ObjectBoxHelper.getTimeCountById(localId)
+                : null;
 
-        Box<TimedCountDb> timedCountDbBox = App.get().getBoxStore().boxFor(TimedCountDb.class);
-        long timeCountId = timedCountDbBox.put(timedCountDb);
+        if (timedCountDb == null) {
+            timedCountDb = new TimedCountDb();
+            if (localId != null) timedCountDb.setId(localId);
+        }
+
+        timedCountDb.getFromViewModel(viewModel);
+        timedCountDb.setModified(true);
+        long timeCountId = ObjectBoxHelper.setTimedCount(timedCountDb);
 
         Intent intent = new Intent();
         intent.putExtra("IS_NEW_ENTRY", isNewEntry());
         intent.putExtra("TIMED_COUNT_ID", timeCountId);
         intent.putExtra("TIMED_COUNT_SERVER_ID", viewModel.getServerId());
         intent.putExtra("TIMED_COUNT_START_TIME", viewModel.getStartTimeString());
-        intent.putExtra("TIMED_COUNT_DAY", DateHelper.getCurrentDay());
-        intent.putExtra("TIMED_COUNT_MONTH", DateHelper.getCurrentMonth());
-        intent.putExtra("TIMED_COUNT_YEAR", DateHelper.getCurrentYear());
+        intent.putExtra("TIMED_COUNT_DAY", viewModel.getDay());
+        intent.putExtra("TIMED_COUNT_MONTH", viewModel.getMonth());
+        intent.putExtra("TIMED_COUNT_YEAR", viewModel.getYear());
 
         setResult(Activity.RESULT_OK, intent);
-
         finish();
-    }
-
-    private long getObjectBoxID() {
-        if (isNewEntry()) {
-            return 0;
-        } else {
-            Long id = viewModel.getServerId();
-            if (id != null) {
-                return ObjectBoxHelper.getIdFromServerId(id);
-            } else {
-                return 0;
-            }
-        }
     }
 
     // Create AlertDialog to run before starting the timed count.

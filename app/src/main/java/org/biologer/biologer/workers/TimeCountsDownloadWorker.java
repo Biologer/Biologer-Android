@@ -197,7 +197,7 @@ public class TimeCountsDownloadWorker extends Worker {
                             if (existingEntry == null) {
                                 // New entry
                                 entryToUse = EntryDb.getEntryFieldsFromData(observation);
-                                entryToUse.setTimeCountId(observation.getTimeCountId());
+                                entryToUse.setTimeCountId(localTimeCountId);
                                 Log.d(TAG, "Creating new observation for server observation ID " + observation.getId());
                             } else {
                                 // Existing entry - Update fields
@@ -206,7 +206,7 @@ public class TimeCountsDownloadWorker extends Worker {
                                 Log.d(TAG, "Updating existing observation for server observation ID " + observation.getId());
                             }
 
-                            entryToUse.setTimeCountId(timedCount.getServerId());
+                            entryToUse.setTimeCountId(localTimeCountId);
                             long localId = observationBox.put(entryToUse);
                             entryToUse.setId(localId);
 

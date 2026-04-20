@@ -35,7 +35,7 @@ public class AuthHelper {
 
     /**
      * Refreshes access and refresh tokens.
-     * @param databaseUrl Current database URL (e.g. biologer.rs, .hr, .ba, .me, or dev.biologer.org)
+     * @param databaseUrl Current database URL (e.g. biologer.rs, .hr, .ba, .me, or dev.biologer.rs)
      * @param warnUser Whether to notify the user on failure
      * @param cb Tri-state callbacks
      */
@@ -66,7 +66,7 @@ public class AuthHelper {
                 apiKey = BuildConfig.BiologerME_Key;
                 clientId = "2";
                 break;
-            case "https://dev.biologer.org":
+            case "https://dev.biologer.rs":
                 apiKey = BuildConfig.BiologerDEV_Key;
                 clientId = "6";
                 break;

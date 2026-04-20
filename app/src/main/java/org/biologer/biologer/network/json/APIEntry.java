@@ -3,7 +3,9 @@ package org.biologer.biologer.network.json;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.biologer.biologer.helpers.ArrayHelper;
+import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.TimedCountDb;
 
 import java.util.List;
 
@@ -20,11 +22,11 @@ public class APIEntry {
     @JsonProperty("taxon_suggestion")
     private String taxonSuggestion;
     @JsonProperty("year")
-    private String year;
+    private Integer year;
     @JsonProperty("month")
-    private String month;
+    private Integer month;
     @JsonProperty("day")
-    private String day;
+    private Integer day;
     @JsonProperty("latitude")
     private Double latitude;
     @JsonProperty("longitude")
@@ -88,36 +90,6 @@ public class APIEntry {
     @JsonProperty("taxon_suggestion")
     public void setTaxonSuggestion(String taxonSuggestion) {
         this.taxonSuggestion = taxonSuggestion;
-    }
-
-    @JsonProperty("year")
-    public String getYear() {
-        return year;
-    }
-
-    @JsonProperty("year")
-    public void setYear(String year) {
-        this.year = year;
-    }
-
-    @JsonProperty("month")
-    public String getMonth() {
-        return month;
-    }
-
-    @JsonProperty("month")
-    public void setMonth(String month) {
-        this.month = month;
-    }
-
-    @JsonProperty("day")
-    public String getDay() {
-        return day;
-    }
-
-    @JsonProperty("day")
-    public void setDay(String day) {
-        this.day = day;
     }
 
     @JsonProperty("latitude")
@@ -295,13 +267,22 @@ public class APIEntry {
         if (entry.getTaxonId() != 0) setTaxonId( (int) entry.getTaxonId());
         else setTaxonId(null);
 
-        setTimeCountId(entry.getTimeCountId());
+        // Set the time count ID value
+        setTimeCountId(null);
+        Long timeCountIdValue = entry.getTimeCountId();
+        if (timeCountIdValue != null) {
+            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(timeCountIdValue);
+            if (timedCount != null) {
+                setTimeCountId(timedCount.getServerId());
+            }
+        }
+
         setTaxonSuggestion(entry.getTaxonSuggestion());
-        setYear(entry.getYear());
+        setYear(Integer.parseInt(entry.getYear()));
         // Add 1 to the month since months range from 0 to 11
         int month = Integer.parseInt(entry.getMonth()) + 1;
-        setMonth(String.valueOf(month));
-        setDay(entry.getDay());
+        setMonth(month);
+        setDay(Integer.parseInt(entry.getDay()));
         setLatitude(entry.getLattitude());
         setLongitude(entry.getLongitude());
         setAccuracy(entry.getAccuracy() == 0.0 ? null : (int) entry.getAccuracy());
@@ -351,5 +332,29 @@ public class APIEntry {
 
     public void setIdentifiedById(Integer identifiedById) {
         this.identifiedById = identifiedById;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getDay() {
+        return day;
+    }
+
+    public void setDay(Integer day) {
+        this.day = day;
     }
 }

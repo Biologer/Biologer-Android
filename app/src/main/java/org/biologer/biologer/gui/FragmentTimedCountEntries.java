@@ -119,7 +119,7 @@ public class FragmentTimedCountEntries extends Fragment {
 
         ArrayList<LandingFragmentItems> items = LandingFragmentItems.loadTimeCountSpeciesEntries(
                 requireContext(),
-                timedCountViewModel.getServerId() != null ? timedCountViewModel.getServerId() : -1L,
+                timedCountViewModel.getObjectBoxId() != null ? timedCountViewModel.getObjectBoxId() : -1L,
                 timedCountViewModel.getTaxonId() != null ? timedCountViewModel.getTaxonId() : -1L
                 );
 

@@ -25,6 +25,7 @@ public class TimedCountViewModel extends ViewModel {
     private String commentData = null;
     private Long taxonId = null;
     private Long serverId = null;
+    private Long objectBoxId = null;
     private boolean uploaded;
     private Long taxonGroupId = null;
     private final MutableLiveData<Long> elapsedTime = new MutableLiveData<>(0L);
@@ -32,8 +33,8 @@ public class TimedCountViewModel extends ViewModel {
     private Boolean isModified = false;
     private String startTimeString = null;
     private String endTimeString = null;
-    private Integer area = null;
-    private Integer distance = null;
+    private Integer area = 0;
+    private Integer distance = 0;
     private final List<Long> newEntryIds = new ArrayList<>();
     private long startTime = 0L;
     private long pausedTime = 0L;
@@ -43,6 +44,9 @@ public class TimedCountViewModel extends ViewModel {
     private double centroidLongitude;
     private double centroidLatitude;
     private String geometry;
+    private Integer day = null;
+    private Integer month = null;
+    private Integer year = null;
 
     private final Runnable ticker = new Runnable() {
         @Override
@@ -122,6 +126,10 @@ public class TimedCountViewModel extends ViewModel {
         setModified(timedCount.isModified());
         setUploaded(timedCount.isUploaded());
         setServerId(timedCount.getServerId());
+        setObjectBoxId(timedCount.getId());
+        setDay(timedCount.getNewDay());
+        setMonth(timedCount.getNewMonth());
+        setYear(timedCount.getNewYear());
     }
 
     @Override
@@ -324,5 +332,37 @@ public class TimedCountViewModel extends ViewModel {
 
     public void setUploaded(boolean uploaded) {
         this.uploaded = uploaded;
+    }
+
+    public Long getObjectBoxId() {
+        return objectBoxId;
+    }
+
+    public void setObjectBoxId(Long objectBoxId) {
+        this.objectBoxId = objectBoxId;
+    }
+
+    public Integer getDay() {
+        return day;
+    }
+
+    public void setDay(Integer day) {
+        this.day = day;
+    }
+
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
     }
 }

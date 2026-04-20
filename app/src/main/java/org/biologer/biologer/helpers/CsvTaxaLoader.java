@@ -75,7 +75,7 @@ public class CsvTaxaLoader {
                 groupsCsv = readCsv("taxa/me_groups.csv");
                 stagesCsv = readCsv("taxa/me_stages.csv");
             }
-            case "https://dev.biologer.org" -> {
+            case "https://dev.biologer.rs" -> {
                 taxaCsv = readCsv("taxa/dev_taxa.csv");
                 groupsCsv = readCsv("taxa/dev_groups.csv");
                 stagesCsv = readCsv("taxa/dev_stages.csv");

@@ -1,6 +1,7 @@
 package org.biologer.biologer.sql;
 
 import org.biologer.biologer.network.json.TimedCountData;
+import org.biologer.biologer.viewmodels.TimedCountViewModel;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
@@ -107,6 +108,40 @@ public class TimedCountDb {
                 data.getLatitude() != null ? data.getLatitude(): 0,
                 data.getGeometry()
         );
+    }
+
+    public void getFromViewModel(TimedCountViewModel viewModel) {
+        setServerId(viewModel.getServerId());
+        setUploaded(viewModel.isUploaded());
+        setModified(true);
+        setStartTime(viewModel.getStartTimeString());
+        setEndTime(viewModel.getEndTimeString());
+        setCountDurationMinutes(viewModel.getCountDuration());
+        setWalkedArea(viewModel.getArea());
+        setWalkedDistance(viewModel.getDistance());
+        if (viewModel.getCloudinessData() != null && viewModel.getCloudinessData().getValue() != null) {
+            setCloudCoverPercentage(viewModel.getCloudinessData().getValue());
+        }
+        if (viewModel.getPressureData() != null) {
+            setAtmosphericPressureHPa(viewModel.getPressureData());
+        }
+        if (viewModel.getHumidityData() != null) {
+            setHumidityPercentage(viewModel.getHumidityData());
+        }
+        if (viewModel.getTemperatureData() != null && viewModel.getTemperatureData().getValue() != null) {
+            setTemperatureCelsius(viewModel.getTemperatureData().getValue());
+        }
+        setWindDirection(viewModel.getWindDirectionData());
+        setWindSpeed(viewModel.getWindSpeedData());
+        setHabitat(viewModel.getHabitatData());
+        setComment(viewModel.getCommentData());
+        setNewTaxonGroup(viewModel.getTaxonGroupId());
+        setNewDay(viewModel.getDay());
+        setNewMonth(viewModel.getMonth());
+        setNewYear(viewModel.getYear());
+        setLongitude(viewModel.getCentroidLongitude());
+        setLatitude(viewModel.getCentroidLatitude());
+        setGeometry(viewModel.getGeometry());
     }
 
     public long getId() {

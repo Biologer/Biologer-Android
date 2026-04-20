@@ -74,7 +74,7 @@ public class ActivityLogin extends AppCompatActivity {
             "https://biologer.hr",
             "https://biologer.ba",
             "https://biologer.me",
-            "https://dev.biologer.org"};
+            "https://dev.biologer.rs"};
     Call <LoginResponse> login;
     Spinner spinner;
 
@@ -392,7 +392,7 @@ public class ActivityLogin extends AppCompatActivity {
 
             String hint_text = getString(R.string.URL_address) + " " + database_name;
             binding.textViewDatabase.setText(hint_text);
-            if (database_name.equals("https://dev.biologer.org")) {
+            if (database_name.equals("https://dev.biologer.rs")) {
                 binding.textViewDatabase.setTextColor(
                         ContextCompat.getColor(ActivityLogin.this, R.color.warningRed));
             } else {
@@ -695,7 +695,7 @@ public class ActivityLogin extends AppCompatActivity {
             case "https://biologer.ba" -> BuildConfig.BiologerBA_Key;
             case "https://biologer.rs" -> BuildConfig.BiologerRS_Key;
             case "https://biologer.me" -> BuildConfig.BiologerME_Key;
-            case "https://dev.biologer.org" -> BuildConfig.BiologerDEV_Key;
+            case "https://dev.biologer.rs" -> BuildConfig.BiologerDEV_Key;
             case "https://biologer.hr" -> BuildConfig.BiologerHR_Key;
             default -> null;
         };
@@ -705,7 +705,7 @@ public class ActivityLogin extends AppCompatActivity {
         return switch (database) {
             case "https://biologer.ba", "https://biologer.rs", "https://biologer.me",
                  "https://biologer.hr" -> "2";
-            case "https://dev.biologer.org" -> "6";
+            case "https://dev.biologer.rs" -> "6";
             default -> null;
         };
     }

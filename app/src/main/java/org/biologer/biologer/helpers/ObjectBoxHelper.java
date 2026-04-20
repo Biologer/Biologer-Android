@@ -273,7 +273,7 @@ public class ObjectBoxHelper {
         }
     }
 
-    public static long getIdFromServerId(long serverId) {
+    public static long getTimeCountIdFromServerId(long serverId) {
         Box<TimedCountDb> box = App.get().getBoxStore().boxFor(TimedCountDb.class);
         try (Query<TimedCountDb> query = box.query(TimedCountDb_.serverId.equal(serverId)).build()) {
             TimedCountDb timedCount = query.findFirst();

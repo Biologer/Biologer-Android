@@ -14,7 +14,7 @@ public class APITimedCounts {
     private Integer countDurationMinutes;
     @JsonProperty("area")
     private Integer walkedArea;
-    @JsonProperty("distance")
+    @JsonProperty("route_length")
     private Integer walkedDistance;
     @JsonProperty("longitude")
     private double longitude;
@@ -151,8 +151,7 @@ public class APITimedCounts {
         setTaxonGroup(db.getNewTaxonGroup());
         setComment(db.getComment());
         setDay(db.getNewDay());
-        int real_month = db.getNewMonth() + 1; // Add 1 since months range from 0 to 11
-        setMonth(real_month);
+        setMonth(db.getNewMonth());
         setYear(db.getNewYear());
         setLongitude(db.getLongitude());
         setLatitude(db.getLatitude());
@@ -185,5 +184,49 @@ public class APITimedCounts {
 
     public String getStartTime() {
         return startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public Integer getCountDurationMinutes() {
+        return countDurationMinutes;
+    }
+
+    public Integer getWalkedArea() {
+        return walkedArea;
+    }
+
+    public Integer getWalkedDistance() {
+        return walkedDistance;
+    }
+
+    public Integer getCloudCoverPercentage() {
+        return cloudCoverPercentage;
+    }
+
+    public Integer getAtmosphericPressureHPa() {
+        return atmosphericPressureHPa;
+    }
+
+    public Integer getHumidityPercentage() {
+        return humidityPercentage;
+    }
+
+    public Double getTemperatureCelsius() {
+        return temperatureCelsius;
+    }
+
+    public String getWindDirection() {
+        return windDirection;
+    }
+
+    public Integer getWindSpeed() {
+        return windSpeed;
+    }
+
+    public Long getTaxonGroup() {
+        return taxonGroup;
     }
 }

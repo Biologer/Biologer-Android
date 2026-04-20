@@ -178,6 +178,11 @@ public class DateHelper {
         return calendar.get(Calendar.MONTH);
     }
 
+    public static Integer getCurrentMonthRealValue() {
+        Calendar calendar = Calendar.getInstance();
+        return calendar.get(Calendar.MONTH) + 1;
+    }
+
     public static Integer getCurrentDay() {
         Calendar calendar = Calendar.getInstance();
         return calendar.get(Calendar.DAY_OF_MONTH);
