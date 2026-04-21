@@ -131,12 +131,23 @@ public class LandingFragmentItems {
             Log.e(TAG, "Building UI item for Entry with ID 0! This observation will be un-clickable.");
         }
 
-        String subtitle = "";
+        String subtitle;
+        Calendar calendar = DateHelper.getCalendar(
+                Integer.parseInt(entry.getYear()),
+                Integer.parseInt(entry.getMonth()),
+                Integer.parseInt(entry.getDay()),
+                entry.getTime());
+        subtitle = DateHelper.getLocalizedCalendarDate(calendar) + " " +
+                context.getString(R.string.at_time) + " " +
+                DateHelper.getLocalizedCalendarTime(calendar);
         Long stage_id = entry.getStage();
         if (stage_id != null) {
             StageDb stage = ObjectBoxHelper.getStageById(stage_id);
             if (stage != null) {
-                subtitle = Localisation.getStageLocale(context, stage.getName());
+                String stage_name = Localisation.getStageLocale(context, stage.getName());
+                if (stage_name != null) {
+                    subtitle = subtitle + " (" + stage_name.toLowerCase() + ")";
+                }
             }
         }
 
@@ -145,12 +156,6 @@ public class LandingFragmentItems {
             image = entry.photos.get(0).getLocalPath();
             //Log.d(TAG, "Entry " + entry.getId() + " has image path: " + image);
         }
-
-        Calendar calendar = DateHelper.getCalendar(
-                Integer.parseInt(entry.getYear()),
-                Integer.parseInt(entry.getMonth()),
-                Integer.parseInt(entry.getDay()),
-                entry.getTime());
 
         return new LandingFragmentItems(
                 entry.getId(),
