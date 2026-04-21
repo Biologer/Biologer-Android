@@ -134,7 +134,7 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     @SuppressLint("NotifyDataSetChanged")
     private void setupEntryChangeObserver() {
         viewModel.getSpeciesDataChanged().observe(this, changed -> {
-            Log.d(TAG, "Observer received value: " + changed);
+            Log.d(TAG, "Species changed observer received value: " + changed);
             if (changed) {
                 speciesCountItems.clear();
                 timeCountAdapter.notifyDataSetChanged();

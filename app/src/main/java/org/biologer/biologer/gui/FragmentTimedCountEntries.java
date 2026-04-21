@@ -193,8 +193,27 @@ public class FragmentTimedCountEntries extends BaseObservationListFragment {
 
     @Override
     protected void deleteFromObjectBox(LandingFragmentItems item, boolean reload) {
+        EntryDb entry = ObjectBoxHelper.getObservationById(item.getLocalId());
         super.deleteFromObjectBox(item, reload);
         timedCountViewModel.setSpeciesChanged(true);
+
+        if (entry != null) {
+            ArrayList<EntryDb> entries = ObjectBoxHelper
+                    .getObservationsByTimeCountAndTaxon(
+                            timedCountViewModel.getObjectBoxId(),
+                            entry.getTaxonId()
+                    );
+            if (entries != null) {
+                Log.d(TAG, "There are " + entries.size() + " entries for species " + entry.getTaxonSuggestion());
+                if (entries.isEmpty()) {
+                    if (getView() != null) {
+                        getView().post(() ->
+                                requireActivity().getOnBackPressedDispatcher().onBackPressed()
+                        );
+                    }
+                }
+            }
+        }
     }
 
     @Override

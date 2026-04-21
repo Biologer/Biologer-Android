@@ -2,7 +2,6 @@ package org.biologer.biologer.viewmodels;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -112,33 +111,32 @@ public class TimedCountViewModel extends ViewModel {
     }
 
     public void getFromObjectBox(TimedCountDb timedCount) {
-        setStartTimeString(timedCount.getStartTime());
-        Log.d("TIME COUNT VIEWMODEL", "Start time: " + timedCount.getStartTime());
-        setEndTimeString(timedCount.getEndTime());
-        setCountDuration(timedCount.getCountDurationMinutes());
-        setArea(timedCount.getWalkedArea());
-        setDistance(timedCount.getWalkedDistance());
-        setCentroidLongitude(timedCount.getLongitude());
-        setCentroidLatitude(timedCount.getLatitude());
-        setGeometry(timedCount.getGeometry());
-        setTaxonGroupId(timedCount.getNewTaxonGroup());
-        setTemperatureData(timedCount.getTemperatureCelsius());
-        setCloudinessData(timedCount.getCloudCoverPercentage());
-        setWindSpeedData(timedCount.getWindSpeed());
-        setWindDirectionData(timedCount.getWindDirection());
-        setPressureData(timedCount.getAtmosphericPressureHPa());
-        setHumidityData(timedCount.getHumidityPercentage());
-        setHabitatData(timedCount.getHabitat());
-        setCommentData(timedCount.getComment());
-        setIsRunning(false);
-        setNewEntry(false);
-        setModified(timedCount.isModified());
-        setUploaded(timedCount.isUploaded());
-        setServerId(timedCount.getServerId());
-        setObjectBoxId(timedCount.getId());
-        setDay(timedCount.getNewDay());
-        setMonth(timedCount.getNewMonth());
-        setYear(timedCount.getNewYear());
+        startTimeString = timedCount.getStartTime();
+        endTimeString = timedCount.getEndTime();
+        countDuration = timedCount.getCountDurationMinutes() != null ? timedCount.getCountDurationMinutes() : 0;
+        area = timedCount.getWalkedArea();
+        distance = timedCount.getWalkedDistance();
+        centroidLongitude = timedCount.getLongitude();
+        centroidLatitude = timedCount.getLatitude();
+        geometry = timedCount.getGeometry();
+        taxonGroupId = timedCount.getNewTaxonGroup();
+        temperatureData.setValue(timedCount.getTemperatureCelsius());
+        cloudinessData.setValue(timedCount.getCloudCoverPercentage());
+        windSpeedData = timedCount.getWindSpeed();
+        windDirectionData = timedCount.getWindDirection();
+        pressureData = timedCount.getAtmosphericPressureHPa();
+        humidityData = timedCount.getHumidityPercentage();
+        habitatData = timedCount.getHabitat();
+        commentData = timedCount.getComment();
+        isRunning = false;
+        newEntry = false;
+        serverId = timedCount.getServerId();
+        objectBoxId = timedCount.getId();
+        day = timedCount.getNewDay();
+        month = timedCount.getNewMonth();
+        year = timedCount.getNewYear();
+        uploaded = timedCount.isUploaded();
+        isModified = timedCount.isModified();
     }
 
     @Override
@@ -152,7 +150,6 @@ public class TimedCountViewModel extends ViewModel {
     }
 
     public void addNewEntryId(long newId) {
-        setModified(true);
         newEntryIds.add(newId);
     }
 
@@ -174,10 +171,6 @@ public class TimedCountViewModel extends ViewModel {
 
     public boolean isRunning() {
         return Boolean.TRUE.equals(getIsRunning());
-    }
-
-    public void setIsRunning(Boolean isRunning) {
-        this.isRunning = isRunning;
     }
 
     public Integer getWindSpeedData() {
@@ -239,7 +232,6 @@ public class TimedCountViewModel extends ViewModel {
     }
 
     public void setTaxonId(Long taxonId) {
-        setModified(true);
         this.taxonId = taxonId;
     }
 
