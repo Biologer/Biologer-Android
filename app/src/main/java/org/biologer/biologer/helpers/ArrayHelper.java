@@ -11,11 +11,11 @@ public class ArrayHelper {
     private static final String TAG = "Biologer.ArrayHelper";
 
     public static int[] getArrayFromText(String string) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (string == null || string.trim().isEmpty()) {
-                return new int[0];
-            }
+        if (string == null || string.trim().isEmpty() || string.equals("[]")) {
+            return new int[0];
+        }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             // Split the string and map each part to an integer
             try {
                 return Arrays.stream(string.replaceAll("[\\[\\]\\s]", "").split(","))

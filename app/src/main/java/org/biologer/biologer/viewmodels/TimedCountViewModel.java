@@ -17,6 +17,7 @@ public class TimedCountViewModel extends ViewModel {
 
     private final MutableLiveData<Double> temperatureData = new MutableLiveData<>();
     private final MutableLiveData<Integer> cloudinessData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> speciesDataChanged = new MutableLiveData<>(false);
     private Integer windSpeedData = null;
     private String windDirectionData = null;
     private Integer pressureData = null;
@@ -78,6 +79,14 @@ public class TimedCountViewModel extends ViewModel {
     }
     public LiveData<Integer> getCloudinessData() {
         return cloudinessData;
+    }
+
+    public LiveData<Boolean> getSpeciesDataChanged() {
+        return speciesDataChanged;
+    }
+
+    public void setSpeciesChanged(boolean changed) {
+        speciesDataChanged.postValue(changed);
     }
 
     public void startTimer() {

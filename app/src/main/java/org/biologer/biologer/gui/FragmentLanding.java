@@ -13,9 +13,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
@@ -27,9 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ActionMode;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -50,7 +46,6 @@ import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
-import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
 import org.biologer.biologer.sql.TimedCountDb;
@@ -66,17 +61,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class FragmentLanding extends Fragment {
+public class FragmentLanding extends BaseObservationListFragment {
 
     String TAG = "Biologer.FragmentLanding";
     private FragmentLandingBinding binding;
-    LandingFragmentAdapter entriesAdapter;
     private final Set<UUID> processedWorkerIds = new HashSet<>();
-    private ActionMode actionMode;
     private int localObjectBoxObservationOffset = 0;
     private int localObjectBoxTimedCountsOffset = 0;
     private boolean isLoading = false;
@@ -130,7 +119,13 @@ public class FragmentLanding extends Fragment {
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
     }
 
-    private void loadItemsForRecyclerView() {
+    @Override
+    protected RecyclerView getRecyclerView() {
+        return binding.recycledViewEntries;
+    }
+
+    @Override
+    public void loadItemsForRecyclerView() {
         localObjectBoxObservationOffset = 0;
         localObjectBoxTimedCountsOffset = 0;
 
@@ -193,65 +188,6 @@ public class FragmentLanding extends Fragment {
             entriesAdapter.submitList(allItems);
             ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
         });
-    }
-
-    private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            mode.getMenuInflater().inflate(R.menu.menu_entry_items_selected, menu);
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return true;
-        }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            if (item.getItemId() == R.id.delete) {
-                deleteSelectedEntries();
-                return true;
-            } else if (item.getItemId() == R.id.duplicate) {
-                for (int i = 0; i < entriesAdapter.getCurrentList().size(); i++) {
-                    if (entriesAdapter.getCurrentList().get(i).isMarked()) {
-                        duplicateEntry(i);
-                        break;
-                    }
-                }
-                mode.finish();
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            if (actionMode != null) {
-                deselectAllItems();
-            }
-            actionMode = null;
-        }
-    };
-
-    private int getSelectedItemsCount(List<LandingFragmentItems> list) {
-        int count = 0;
-        for (LandingFragmentItems item : list) {
-            if (item.isMarked()) count++;
-        }
-        return count;
-    }
-
-    private void deselectAllItems() {
-        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
-        boolean changed = false;
-        for (int i = 0; i < currentList.size(); i++) {
-            if (currentList.get(i).isMarked()) {
-                currentList.set(i, currentList.get(i).withMarked(false));
-                changed = true;
-            }
-        }
-        if (changed) entriesAdapter.submitList(currentList);
     }
 
     private void setupWorkerObservers() {
@@ -773,39 +709,6 @@ public class FragmentLanding extends Fragment {
                 .enqueue();
     }
 
-    private void selectDeselect(int position) {
-        List<LandingFragmentItems> currentList = new ArrayList<>(entriesAdapter.getCurrentList());
-        LandingFragmentItems item = currentList.get(position);
-        currentList.set(position, item.withMarked(!item.isMarked()));
-        int selected = getSelectedItemsCount(currentList);
-        entriesAdapter.submitList(currentList);
-
-        if (selected == 0) {
-            if (actionMode != null) actionMode.finish();
-        } else if (actionMode != null) {
-            actionMode.setTitle(String.valueOf(selected));
-            updateActionModeMenu(actionMode, currentList, selected);
-        }
-    }
-
-    private void updateActionModeMenu(ActionMode mode, List<LandingFragmentItems> list, int selectedCount) {
-        Menu menu = mode.getMenu();
-        if (menu == null) return;
-        MenuItem duplicateItem = menu.findItem(R.id.duplicate);
-        if (duplicateItem != null) {
-            if (selectedCount == 1) {
-                for (LandingFragmentItems i : list) {
-                    if (i.isMarked()) {
-                        duplicateItem.setVisible(!i.isTimedCount());
-                        break;
-                    }
-                }
-            } else {
-                duplicateItem.setVisible(false);
-            }
-        }
-    }
-
     // Opens ActivityEntry to add new species observation
     private void newObservation() {
         Intent intent = new Intent(getActivity(), ActivityObservation.class);
@@ -831,14 +734,6 @@ public class FragmentLanding extends Fragment {
         timedCountLauncher.launch(intent);
     }
 
-    private void newDuplicateObservation(long new_entry_id) {
-        Intent intent = new Intent(getActivity(), ActivityObservation.class);
-        intent.putExtra("IS_NEW_ENTRY", false);
-        intent.putExtra("ENTRY_ID", new_entry_id);
-        intent.putExtra("IS_DUPLICATED_ENTRY", true);
-        observationLauncher.launch(intent);
-    }
-
     // Opens ActivityTimedCount to update existing timed count
     private void openTimedCount(long timedCountId) {
         Activity activity = getActivity();
@@ -849,36 +744,6 @@ public class FragmentLanding extends Fragment {
             timedCountLauncher.launch(intent);
         }
     }
-
-    // Launch new Entry Activity
-    private final ActivityResultLauncher<Intent> observationLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                Log.d(TAG, "We got a result from the ActivityObservation!");
-
-                if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.d(TAG, "We got RESULT_OK code from the ActivityObservation.");
-
-                    boolean isNewEntry = result.getData() != null && result.getData().getBooleanExtra("IS_NEW_ENTRY", false);
-                    boolean isDuplicatedEntry = result.getData() != null && result.getData().getBooleanExtra("IS_DUPLICATED_ENTRY", false);
-
-                    if (isNewEntry || isDuplicatedEntry) {
-                        long entry_id = result.getData().getLongExtra("ENTRY_ID", 0);
-                        Log.d(TAG, "This is a new/duplicated entry with id: " + entry_id);
-                        addObservationItem(entry_id);
-                    } else {
-                        long old_data_id = 0;
-                        if (result.getData() != null) {
-                            old_data_id = result.getData().getLongExtra("ENTRY_ID", 0);
-                        }
-                        Log.d(TAG, "This was an existing entry edit with id: " + old_data_id);
-                        reloadItemsForRecyclerView();
-                    }
-                }
-
-                updateUploadIconVisibility();
-
-            });
 
     // Launch new Timed Count Activity
     private final ActivityResultLauncher<Intent> timedCountLauncher =
@@ -897,23 +762,6 @@ public class FragmentLanding extends Fragment {
 
                         }
                     });
-
-    private void addObservationItem(long entryId) {
-        // Load observation entry
-        EntryDb entryDb = ObjectBoxHelper.getObservationById(entryId);
-        if (entryDb == null) {
-            Log.e(TAG, "New entry ID " + entryId + " not found in database.");
-            return;
-        }
-
-        // Display observation in the RecyclerView
-        Log.d(TAG, "Adding entry " + entryId + " to the list.");
-        LandingFragmentItems newItem = getItemFromEntry(requireContext(), entryDb);
-        addItemToRecyclerView(newItem);
-
-        // Update UI element
-        ((ActivityLanding) requireActivity()).updateMenuIconVisibility();
-    }
 
     private void addTimedCountItem(int timedCountId) {
         TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(timedCountId);
@@ -974,178 +822,6 @@ public class FragmentLanding extends Fragment {
             binding.uploadProgressBar.setProgress(percentage);
         } else {
             binding.uploadProgressBar.setVisibility(View.GONE);
-        }
-    }
-
-    public void duplicateEntry(int position) {
-        LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
-        if (item.isTimedCount()) {
-            Log.d(TAG, "Timed counts cannot be duplicated.");
-            actionMode.finish();
-            return;
-        }
-
-        Log.d(TAG, "You will now duplicate entry at position " + position);
-        EntryDb entry_from = ObjectBoxHelper.getObservationById(item.getLocalId());
-
-        // Create new entry based on current one
-        if (entry_from != null) {
-            EntryDb entry = new EntryDb(
-                    0,
-                    null,
-                    false,
-                    false,
-                    entry_from.getTaxonId(),
-                    entry_from.getTimeCountId(),
-                    entry_from.getTaxonSuggestion(),
-                    entry_from.getYear(),
-                    entry_from.getMonth(),
-                    entry_from.getDay(),
-                    entry_from.getComment(),
-                    null,
-                    "",
-                    null,
-                    null,
-                    "true",
-                    "",
-                    entry_from.getLattitude(),
-                    entry_from.getLongitude(),
-                    entry_from.getAccuracy(),
-                    entry_from.getElevation(),
-                    entry_from.getLocation(),
-                    null,
-                    null,
-                    null,
-                    entry_from.getProjectId(),
-                    entry_from.getFoundOn(),
-                    entry_from.getDataLicence(),
-                    entry_from.getImageLicence(),
-                    entry_from.getTime(),
-                    entry_from.getHabitat(),
-                    ""
-            );
-
-            // Update ObjectBox
-            long new_entry_id = ObjectBoxHelper.setObservation(entry);
-
-            // Open EntryActivity to edit the new record
-            newDuplicateObservation(new_entry_id);
-        }
-
-        if (actionMode != null) {
-            actionMode.finish();
-        }
-    }
-
-    private void deleteSelectedEntries() {
-        List<LandingFragmentItems> snapshot = new ArrayList<>(entriesAdapter.getCurrentList());
-        List<LandingFragmentItems> toDelete = new ArrayList<>();
-
-        for (LandingFragmentItems item : snapshot) {
-            if (item.isMarked()) toDelete.add(item);
-        }
-
-        if (toDelete.isEmpty()) return;
-
-        int count = toDelete.size();
-
-        // Delete request
-        for (LandingFragmentItems item : toDelete) {
-            if (item.isUploaded()) {
-                sendDeleteRequestToServer(item);
-            } else {
-                deleteFromObjectBox(item, false);
-            }
-        }
-
-        // Get the deleted filed that require refresh
-        Set<Long> deletedIds = new HashSet<>();
-        for (LandingFragmentItems item : toDelete) {
-            if (!item.isUploaded()) { // remove non-uploaded from UI
-                deletedIds.add(item.getLocalId());
-            }
-        }
-
-        // Create new list for recycler view
-        List<LandingFragmentItems> newList = new ArrayList<>();
-        for (LandingFragmentItems item : snapshot) {
-            if (!deletedIds.contains(item.getLocalId())) {
-                // Keep item, but deselect it
-                newList.add(item.isMarked() ? item.withMarked(false) : item);
-            }
-        }
-
-        entriesAdapter.submitList(newList);
-        updateUploadIconVisibility();
-
-        String message = getResources().getQuantityString(
-                R.plurals.entries_deleted_count, count, count);
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-
-        ActionMode mode = actionMode;
-        actionMode = null;
-        if (mode != null) mode.finish();
-    }
-
-    private void deleteFromObjectBox(LandingFragmentItems item, boolean reload) {
-        Long id = item.getLocalId();
-        if (id == null) return;
-        if (item.isTimedCount()) {
-            ObjectBoxHelper.removeObservationsForTimedCountId(id);
-            ObjectBoxHelper.removeTimedCountById(id);
-        } else {
-            ObjectBoxHelper.removeObservationById(id);
-        }
-
-        if (reload) {
-            reloadItemsForRecyclerView();
-        }
-    }
-
-    private void sendDeleteRequestToServer(LandingFragmentItems item) {
-
-        Call<Void> call = null;
-        if (item.isTimedCount()) {
-            TimedCountDb timedCount = ObjectBoxHelper.getTimeCountById(item.getLocalId());
-            if (timedCount != null) {
-                call = RetrofitClient.getService(SettingsManager.getDatabaseName())
-                        .deleteTimedCountObservation(timedCount.getServerId());
-            }
-        } else {
-            EntryDb entry = ObjectBoxHelper.getObservationById(item.getLocalId());
-            if (entry != null) {
-                call = RetrofitClient.getService(SettingsManager.getDatabaseName())
-                        .deleteFieldObservation(entry.getServerId());
-            }
-        }
-
-        if (call != null) {
-            call.enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                    if (response.isSuccessful()) {
-                        if (item.isTimedCount()) {
-                            Log.d(TAG, "Timed Count ID " + item.getLocalId() + " deleted from server.");
-                        } else {
-                            Log.d(TAG, "Observation ID " + item.getLocalId() + " deleted from server.");
-                        }
-                        deleteFromObjectBox(item, true);
-                    } else {
-                        if (response.code() == 404 || response.code() == 403) {
-                            deleteFromObjectBox(item, true);
-                            Log.e(TAG, "File already deleted on the server: " + response.code());
-                        } else {
-                            Toast.makeText(getContext(), "Error deleting (server).", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Error deleting file from server: " + response.code());
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Network error deleting the file: " + t.getMessage());
-                }
-            });
         }
     }
 

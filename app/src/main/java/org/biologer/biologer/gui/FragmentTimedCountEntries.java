@@ -9,15 +9,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import org.biologer.biologer.App;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
@@ -25,18 +26,13 @@ import org.biologer.biologer.viewmodels.TimedCountViewModel;
 import org.biologer.biologer.databinding.FragmentTimedCountEntriesBinding;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
-import org.biologer.biologer.sql.EntryDb_;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.objectbox.Box;
-import io.objectbox.query.Query;
-
-public class FragmentTimedCountEntries extends Fragment {
+public class FragmentTimedCountEntries extends BaseObservationListFragment {
     String TAG = "Biologer.TCEntries";
     private FragmentTimedCountEntriesBinding binding;
-    LandingFragmentAdapter entriesAdapter;
     TimedCountViewModel timedCountViewModel;
     long taxonId;
 
@@ -70,7 +66,23 @@ public class FragmentTimedCountEntries extends Fragment {
 
         setupRecyclerView();
         loadItemsForRecyclerView();
+        addBackPressedCallback();
 
+    }
+
+    private void addBackPressedCallback() {
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (actionMode != null) {
+                    actionMode.finish();
+                } else {
+                    setEnabled(false);
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), callback);
     }
 
     private void setupRecyclerView() {
@@ -82,31 +94,36 @@ public class FragmentTimedCountEntries extends Fragment {
                 new RecyclerOnClickListener(getActivity(), binding.recyclerViewTimedCounts, new RecyclerOnClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        binding.recyclerViewTimedCounts.setClickable(false);
-                        LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
-                        long entry_id = item.getLocalId();
-                        Box<EntryDb> entriesBox = App.get().getBoxStore().boxFor(EntryDb.class);
-                        Query<EntryDb> query = entriesBox
-                                .query(EntryDb_.id.equal(entry_id))
-                                .build();
-                        EntryDb taxon = query.findFirst();
-                        query.close();
-                        if (taxon != null) {
-                            taxonId = taxon.getTaxonId();
-                        }
-                        Activity activity = getActivity();
-                        if (activity != null) {
-                            Log.d(TAG, "Species entry at position " + position + " clicked.");
-                            Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
-                            intent.putExtra("IS_NEW_ENTRY", false);
-                            intent.putExtra("ENTRY_ID", entry_id);
-                            openEntry.launch(intent);
+                        if (actionMode != null) {
+                            selectDeselect(position);
+                        } else {
+                            binding.recyclerViewTimedCounts.setClickable(false);
+                            LandingFragmentItems item = entriesAdapter.getCurrentList().get(position);
+                            long entry_id = item.getLocalId();
+                            EntryDb entry = ObjectBoxHelper.getObservationById(entry_id);
+                            if (entry != null) {
+                                taxonId = entry.getTaxonId();
+                            }
+                            Activity activity = getActivity();
+                            if (activity != null) {
+                                Log.d(TAG, "Species entry at position " + position + " clicked.");
+                                Intent intent = new Intent(activity.getApplicationContext(), ActivityObservation.class);
+                                intent.putExtra("IS_NEW_ENTRY", false);
+                                intent.putExtra("ENTRY_ID", entry_id);
+                                openEntry.launch(intent);
+                            }
                         }
                     }
 
                     @Override
                     public void onLongItemClick(View view, int position) {
                         Log.d(TAG, "Item " + position + " long pressed.");
+                        if (actionMode == null) {
+                            actionMode = ((AppCompatActivity) requireActivity())
+                                    .startSupportActionMode(actionModeCallback);
+                        }
+                        selectDeselect(position);
+                        entriesAdapter.notifyItemChanged(position);
                         entriesAdapter.setPosition(position);
                     }
                 }
@@ -115,7 +132,13 @@ public class FragmentTimedCountEntries extends Fragment {
         registerForContextMenu(binding.recyclerViewTimedCounts);
     }
 
-    private void loadItemsForRecyclerView() {
+    @Override
+    protected RecyclerView getRecyclerView() {
+        return binding.recyclerViewTimedCounts;
+    }
+
+    @Override
+    public void loadItemsForRecyclerView() {
 
         ArrayList<LandingFragmentItems> items = LandingFragmentItems.loadTimeCountSpeciesEntries(
                 requireContext(),
@@ -168,4 +191,16 @@ public class FragmentTimedCountEntries extends Fragment {
         }
     }
 
+    @Override
+    protected void deleteFromObjectBox(LandingFragmentItems item, boolean reload) {
+        super.deleteFromObjectBox(item, reload);
+        timedCountViewModel.setSpeciesChanged(true);
+    }
+
+    @Override
+    public void duplicateEntry(int position) {
+        super.duplicateEntry(position);
+        loadItemsForRecyclerView();
+        timedCountViewModel.setSpeciesChanged(true);
+    }
 }

@@ -1,6 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -124,10 +125,23 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
             loadExistingViewModel();
             loadSpeciesData();
         }
+        setupEntryChangeObserver();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         setupSpeciesAutocompleteEntry();
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void setupEntryChangeObserver() {
+        viewModel.getSpeciesDataChanged().observe(this, changed -> {
+            Log.d(TAG, "Observer received value: " + changed);
+            if (changed) {
+                speciesCountItems.clear();
+                timeCountAdapter.notifyDataSetChanged();
+                loadSpeciesData();
+                viewModel.setSpeciesChanged(false);
+            }
+        });
     }
 
     private void loadSpeciesData() {

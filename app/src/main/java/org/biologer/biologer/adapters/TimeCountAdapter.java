@@ -57,20 +57,8 @@ public class TimeCountAdapter
             plusImage = view.findViewById(R.id.species_count_plus);
             speciesName = view.findViewById(R.id.species_count_name);
 
-            // Add the entry items menu
-//            view.setOnCreateContextMenuListener(this);
         }
 
-//        @Override
-//        public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-//            Log.d(TAG, "On create context menu from EntryRecycleView fragment.");
-//            menu.add(Menu.NONE, R.id.duplicate,
-//                    Menu.NONE, R.string.duplicate_entry);
-//            menu.add(Menu.NONE, R.id.delete,
-//                    Menu.NONE, R.string.delete_entry);
-//            menu.add(Menu.NONE, R.id.delete_all,
-//                    Menu.NONE, R.string.delete_all_entries);
- //       }
     }
 
     @NonNull
@@ -136,10 +124,6 @@ public class TimeCountAdapter
 
         });
 
-//        viewHolder.itemView.setOnLongClickListener(v -> {
-//            Log.d(TAG, "Long click on " + viewHolder.getLayoutPosition());
-//            return false;
-//        });
     }
 
     @Override
@@ -205,11 +189,5 @@ public class TimeCountAdapter
             }
         }
     }
-
-//    @Override
-//    public void onViewRecycled(ViewHolder viewHolder) {
-//        viewHolder.itemView.setOnLongClickListener(null);
-//        super.onViewRecycled(viewHolder);
-//    }
 
 }
