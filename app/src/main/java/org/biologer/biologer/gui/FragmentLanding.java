@@ -45,6 +45,7 @@ import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.adapters.LandingFragmentAdapter;
 import org.biologer.biologer.adapters.LandingFragmentItems;
 import org.biologer.biologer.databinding.FragmentLandingBinding;
+import org.biologer.biologer.helpers.NetworkServicesHelper;
 import org.biologer.biologer.helpers.ObjectBoxHelper;
 import org.biologer.biologer.services.RecyclerOnClickListener;
 import org.biologer.biologer.sql.EntryDb;
@@ -160,7 +161,9 @@ public class FragmentLanding extends BaseObservationListFragment {
             }
 
             // Finally, download new data updated on the server if exist
-            downloadNewerData();
+            if (NetworkServicesHelper.shouldDownload(getContext())) {
+                downloadNewerData();
+            }
         }
     }
 
@@ -331,6 +334,10 @@ public class FragmentLanding extends BaseObservationListFragment {
 
                         if (allFinished) {
                             Log.d(TAG, "All observations sync workers by timestamp finished. Updating UI.");
+
+                            isDownloadingById = false;
+                            isLoading = false;
+                            progressBar(false);
 
                             if (getActivity() == null || binding == null) return;
 
@@ -596,6 +603,13 @@ public class FragmentLanding extends BaseObservationListFragment {
             progressBar(false);
             isLoading = false;
         } else {
+            // Skip if user selected not to download data form the server
+            if (!NetworkServicesHelper.shouldDownload(getContext())) {
+                progressBar(false);
+                isLoading = false;
+                return;
+            }
+
             Log.d(TAG, "No more local data. Fetching older data from server...");
             WorkManager.getInstance(requireContext())
                     .getWorkInfosByTag("UPDATED_AT_SYNC")

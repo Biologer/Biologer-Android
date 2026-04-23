@@ -1,9 +1,7 @@
 package org.biologer.biologer.gui;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -29,7 +27,6 @@ import androidx.core.util.Supplier;
 import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
@@ -44,6 +41,7 @@ import org.biologer.biologer.R;
 import org.biologer.biologer.SettingsManager;
 import org.biologer.biologer.databinding.ActivityLandingBinding;
 import org.biologer.biologer.helpers.AuthHelper;
+import org.biologer.biologer.helpers.NetworkServicesHelper;
 import org.biologer.biologer.network.InternetConnection;
 import org.biologer.biologer.network.RetrofitClient;
 import org.biologer.biologer.network.UpdateAnnouncements;
@@ -71,7 +69,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
     private static final String TAG = "Biologer.Landing";
     private ActivityLandingBinding binding;
-    static String how_to_use_network;
 
     // Define upload menu so that we can hide it if required
     static Menu uploadMenu;
@@ -291,8 +288,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
     }
 
     private void startNetworkServices(String databaseUrl) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        how_to_use_network = prefs.getString("auto_download", "wifi");
 
         String networkType = InternetConnection.networkType(this);
         if (networkType == null) {
@@ -309,7 +304,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         }
 
         Log.d(TAG, "Notifications are enabled.");
-        if (!shouldDownload(this)) return;
+        if (!NetworkServicesHelper.shouldDownload(this)) return;
 
         uploadRecords();
         updateAnnouncements();
@@ -496,21 +491,6 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
                     }
             );
 
-    public static boolean shouldDownload(Context context) {
-        String network_type = InternetConnection.networkType(context);
-
-        if (network_type == null || how_to_use_network == null) {
-            return true;
-        }
-
-        if ("all".equals(how_to_use_network) || ("wifi".equals(how_to_use_network) && "wifi".equals(network_type))) {
-            return true;
-        } else {
-            Log.d(TAG, "Should ask user whether to download new taxonomic database (if there is one).");
-            return false;
-        }
-    }
-
     // Send a short request to the server that will return if the taxonomic tree is up to date.
     private void updateTaxa() {
         Log.d(TAG, "Current timestamp: " + System.currentTimeMillis() / 1000);
@@ -564,7 +544,7 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
 
     private void updateTaxa2 (int timestamp) {
         // If user choose to update data on any network, just do it!
-        if (shouldDownload(this)) {
+        if (NetworkServicesHelper.shouldDownload(this)) {
             Log.d(TAG, "The user chooses to update taxa without asking. Fetching automatically.");
             startFetchingTaxa();
         } else {
