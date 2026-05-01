@@ -141,7 +141,7 @@ public class FragmentLogout extends Fragment {
         // Delete data and logout from a new thread
         new Thread(() -> {
             ObjectBoxHelper.removeAllData(activity.getApplicationContext());
-            SettingsManager.deleteSettings();
+            SettingsManager.deleteAccountSettings();
 
             // FIX: Explicitly close all ObjectBox resources for this thread
             App.get().getBoxStore().closeThreadResources();

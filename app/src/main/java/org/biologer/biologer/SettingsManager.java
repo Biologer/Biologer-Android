@@ -274,4 +274,30 @@ public class SettingsManager {
         editor.apply();
     }
 
+    public static void deleteAccountSettings() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.remove(KEY.DATABASE_NAME.toString());
+        editor.remove(KEY.FCM_TOKEN.toString());
+        editor.remove(KEY.ACCESS_TOKEN.toString());
+        editor.remove(KEY.REFRESH_TOKEN.toString());
+        editor.remove(KEY.TOKEN_EXPIRE_TIMESTAMP.toString());
+
+        editor.putBoolean(KEY.MAIL_CONFIRMED.toString(), false);
+        editor.putBoolean(KEY.ENTRY_OPEN.toString(), false);
+
+        editor.remove(KEY.TAXA_UPDATED_AT.toString());
+        editor.remove(KEY.TAXA_LAST_PAGE_FETCHED.toString());
+        editor.remove(KEY.SKIP_TAXA_UPDATE_FOR_THIS_TIMESTAMP.toString());
+        editor.remove(KEY.NOTIFICATION_UPDATED_AT.toString());
+
+        editor.putLong(KEY.OBSERVATIONS_UPDATED_AT.toString(), 0L);
+        editor.putLong(KEY.TIME_COUNTS_UPDATED_AT.toString(), 0L);
+
+        editor.remove(KEY.OBSERVATION_TYPES_UPDATED_AT.toString());
+        editor.remove(KEY.LAST_INTERNET_CHECK.toString());
+
+        editor.apply();
+    }
+
 }
