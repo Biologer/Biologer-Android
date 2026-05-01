@@ -346,7 +346,9 @@ public class FragmentLanding extends BaseObservationListFragment {
                             if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
                                 Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
                                 binding.recycledViewEntries.post(() -> {
-                                    if (!isUploadInProgress() && ObjectBoxHelper.getUnsyncedCount() > 0) {
+                                    if (!isUploadInProgress() &&
+                                            ObjectBoxHelper.getUnsyncedCount() > 0 &&
+                                            NetworkServicesHelper.shouldDownload(getContext())) {
                                         ((ActivityLanding) requireActivity()).uploadRecords();
                                     }
                                     binding.recycledViewEntries.smoothScrollToPosition(0);
@@ -926,6 +928,12 @@ public class FragmentLanding extends BaseObservationListFragment {
             Log.e(TAG, "Could not check WorkManager status", e);
         }
         return false;
+    }
+
+    @Override
+    protected void addObservationItem(long entryId) {
+        super.addObservationItem(entryId);
+        updateUploadIconVisibility();
     }
 
 }

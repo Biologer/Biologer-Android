@@ -304,11 +304,11 @@ public class ActivityLanding extends AppCompatActivity implements NavigationView
         }
 
         Log.d(TAG, "Notifications are enabled.");
-        if (!NetworkServicesHelper.shouldDownload(this)) return;
-
-        uploadRecords();
-        updateAnnouncements();
-        updateNotifications();
+        if (NetworkServicesHelper.shouldDownload(this)) {
+            uploadRecords();
+            updateAnnouncements();
+            updateNotifications();
+        }
     }
 
     private void updateNotifications() {
