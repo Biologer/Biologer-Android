@@ -6,6 +6,8 @@ import android.app.NotificationManager;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.work.WorkManager;
+
 import com.google.firebase.FirebaseApp;
 
 import org.biologer.biologer.firebase.BiologerFirebaseMessagingService;
@@ -54,6 +56,9 @@ public class App extends Application {
         if (SettingsManager.getAccessToken() != null) {
             initializeFCM();
         }
+
+        // Kill the upload workers
+        WorkManager.getInstance(this).cancelAllWorkByTag("UPLOAD_WORK");
     }
 
     private void initializeFCM() {

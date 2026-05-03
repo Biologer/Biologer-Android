@@ -205,39 +205,46 @@ public class FragmentLanding extends BaseObservationListFragment {
                     boolean shouldShowToast = false;
 
                     for (WorkInfo workInfo : workInfos) {
-                            total++;
-                            if (workInfo.getState().isFinished()) {
-                                finished++;
-                                if (workInfo.getState() == WorkInfo.State.FAILED) {
-                                    long code = workInfo.getOutputData().getLong("error_code", 0);
-                                    String message = workInfo.getOutputData().getString("error_message");
-                                    Toast.makeText(getContext(), "Error " + code + ": " + message, Toast.LENGTH_SHORT).show();
-                                    Log.e(TAG, "Error " + code + ": " + message);
-                                    failed++;
+                        total++;
+
+                        if (workInfo.getState() == WorkInfo.State.ENQUEUED && workInfo.getRunAttemptCount() > 0) {
+                            Log.w(TAG, "Worker " + workInfo.getId() + " is retrying. Attempt: " + workInfo.getRunAttemptCount());
+                            Toast.makeText(getContext(), "Retrying worker " + workInfo.getId() + " (" + workInfo.getRunAttemptCount() + ")", Toast.LENGTH_SHORT).show();
+                        }
+
+                        if (workInfo.getState() == WorkInfo.State.FAILED) {
+                            long code = workInfo.getOutputData().getLong("error_code", 0);
+                            String message = workInfo.getOutputData().getString("error_message");
+                            Toast.makeText(getContext(), "Error " + code + ": " + message, Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Error " + code + ": " + message);
+                            failed++;
+                        }
+
+                        if (workInfo.getState().isFinished()) {
+                            finished++;
+
+                            // Check if we've already handled this worker – be more efficient :)
+                            if (!processedWorkerIds.contains(workInfo.getId())) {
+                                processedWorkerIds.add(workInfo.getId());
+                                if (workInfos.size() > 1 && finished == total) {
+                                    Log.d(TAG, "Skipping historical worker toast: " + workInfo.getId());
+                                } else {
+                                    shouldShowToast = true;
                                 }
 
-                                // Check if we've already handled this worker – be more efficient :)
-                                if (!processedWorkerIds.contains(workInfo.getId())) {
-                                    processedWorkerIds.add(workInfo.getId());
-                                    if (workInfos.size() > 1 && finished == total) {
-                                        Log.d(TAG, "Skipping historical worker toast: " + workInfo.getId());
-                                    } else {
-                                        shouldShowToast = true;
-                                    }
-
-                                    LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
-                                    if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
-                                        Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
-                                        long observationId = workInfo.getOutputData().getLong("uploadedObservationId", 0);
-                                        long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
-                                        reloadItemsForRecyclerView();
-                                        Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
-                                        binding.recycledViewEntries.post(() -> binding.recycledViewEntries.smoothScrollToPosition(0));
-                                    } else {
-                                        reloadItemsForRecyclerView();
-                                    }
+                                LinearLayoutManager lm = (LinearLayoutManager) binding.recycledViewEntries.getLayoutManager();
+                                if (lm != null && lm.findFirstVisibleItemPosition() < 5) {
+                                    Log.d(TAG, "Scrolling to the top of the list (less than 5 items at the top).");
+                                    long observationId = workInfo.getOutputData().getLong("uploadedObservationId", 0);
+                                    long timedCountId = workInfo.getOutputData().getLong("uploadedTimeCountId", 0);
+                                    reloadItemsForRecyclerView();
+                                    Log.d(TAG, "Worker received Observation ID " + observationId + "; Timed Count ID " + timedCountId);
+                                    binding.recycledViewEntries.post(() -> binding.recycledViewEntries.smoothScrollToPosition(0));
+                                } else {
+                                    reloadItemsForRecyclerView();
                                 }
                             }
+                        }
                     }
 
                     if (total == 0) return;
@@ -552,7 +559,23 @@ public class FragmentLanding extends BaseObservationListFragment {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
             boolean showUploaded = sharedPreferences.getBoolean("show_uploaded", true);
             if (showUploaded) {
-                FragmentLanding.this.downloadNewerData();
+                if (NetworkServicesHelper.shouldDownload(getContext())) {
+                    FragmentLanding.this.downloadNewerData();
+                } else {
+                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.download_data_title)
+                            .setMessage(R.string.download_data_message)
+                            .setPositiveButton(R.string.yes, (dialog, which) -> {
+                                Log.d(TAG, "User manually accepted a one-time data download.");
+                                FragmentLanding.this.downloadNewerData();
+                            })
+                            .setNegativeButton(R.string.no, (dialog, which) -> {
+                                binding.swipeRefreshLayout.setRefreshing(false);
+                                dialog.dismiss();
+                            })
+                            .setOnCancelListener(dialog -> binding.swipeRefreshLayout.setRefreshing(false))
+                            .show();
+                }
             }
         });
     }

@@ -77,10 +77,10 @@ public class UploadWorker extends Worker {
                 tcRequests.add(new OneTimeWorkRequest.Builder(TimeCountsUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
-                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 1s
+                        .setInitialDelay(i * 800L, TimeUnit.MILLISECONDS) // Delay next worker for 0.8s
                         .setBackoffCriteria(
                                 BackoffPolicy.EXPONENTIAL,
-                                30,
+                                60,
                                 TimeUnit.SECONDS)
                         .build());
             }
@@ -102,10 +102,10 @@ public class UploadWorker extends Worker {
                 entryRequests.add(new OneTimeWorkRequest.Builder(ObservationUploadWorker.class)
                         .setInputData(data)
                         .addTag("UPLOAD_WORK")
-                        .setInitialDelay(i * 500L, TimeUnit.MILLISECONDS) // Delay next worker for 0.5s
+                        .setInitialDelay(i * 800L, TimeUnit.MILLISECONDS) // Delay next worker for 0.8s
                         .setBackoffCriteria(
                                 BackoffPolicy.EXPONENTIAL,
-                                30,
+                                60,
                                 TimeUnit.SECONDS)
                         .build());
             }
