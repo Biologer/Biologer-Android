@@ -79,9 +79,7 @@ public class ObservationUploadWorker extends Worker {
                 } else {
                     // New image, should be uploaded first
                     APIEntryPhotos newPhoto = uploadPhotoSync(photoDb);
-                    if (newPhoto != null) {
-                        photosForApi.add(newPhoto);
-                    }
+                    photosForApi.add(newPhoto);
                 }
             }
 
@@ -185,11 +183,26 @@ public class ObservationUploadWorker extends Worker {
         } catch (IOException e) {
             // Connection lost (Retry)
             Log.e(TAG, "Network connection lost during observation upload", e);
-            return Result.retry();
+            if (getRunAttemptCount() < 3) {
+                return Result.retry();
+            } else {
+                String error_message = e.getMessage();
+                return Result.failure(new Data.Builder()
+                        .putString("error_message", error_message)
+                        .build());
+            }
         } catch (Exception e) {
             // Handle 429 error for photo upload and reschedule the upload worker
             if (e.getMessage() != null && e.getMessage().equals("429")) {
                 return Result.retry();
+            }
+            // Handle missing photo
+            if (e.getMessage() != null && e.getMessage().contains("Photo file missing")) {
+                Data errorData = new Data.Builder()
+                        .putInt("error_code", 404) // Use 404 for missing file
+                        .putString("error_message", e.getMessage())
+                        .build();
+                return Result.failure(errorData); // This stops the chain and shows the Toast
             }
             // Other error
             Log.e(TAG, "Upload failed for entry " + entryId, e);
@@ -205,7 +218,7 @@ public class ObservationUploadWorker extends Worker {
         File file = new File(getApplicationContext().getFilesDir(), new File(photo.getLocalPath()).getName());
         if (!file.exists()) {
             Log.e(TAG, "There is no file at the path: " + file.getAbsolutePath());
-            return null;
+            throw new Exception("Photo file missing: " + file.getName());
         }
 
         RequestBody reqFile = RequestBody.create(file, MediaType.parse("image/*"));

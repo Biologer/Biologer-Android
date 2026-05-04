@@ -115,7 +115,7 @@
     <string name="cannot_connect_token">Nije moguće dohvatiti odgovor (token) s poslužitelja. Provjerite internetsku vezu.</string>
     <string name="database">Baza podataka</string>
     <string name="User">Korisnik</string>
-    <string name="stage_juvenile">Mlada jedinka</string>
+    <string name="stage_juvenile">Juvenilna jedinka</string>
     <string name="no_photo_selected">Nije odabrana nijedna fotografija iz Galerije.</string>
     <string name="limit_photo1">Odabrali ste</string>
     <string name="limit_photo2">fotografija, ali samo</string>

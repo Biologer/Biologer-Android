@@ -9,6 +9,7 @@ import com.opencsv.CSVWriter;
 
 import org.biologer.biologer.R;
 import org.biologer.biologer.sql.EntryDb;
+import org.biologer.biologer.sql.TaxonDb;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -85,10 +86,23 @@ public class CsvExporter {
             String observer = ObjectBoxHelper.getUserName();
 
             for (EntryDb e : entries) {
+
+                int month = Integer.parseInt(e.getMonth()) + 1;
+                String taxonName = "";
+                if (e.getTaxonId() != 0L && e.getTaxonId() != 0) {
+                    TaxonDb taxon = ObjectBoxHelper.getTaxonById(e.getTaxonId());
+                    if (taxon != null) {
+                        taxonName = taxon.getLatinName();
+                    }
+                } else {
+                    taxonName = e.getTaxonSuggestion();
+                }
+
+
                 String[] row = {
-                        e.getTaxonSuggestion(),
+                        taxonName,
                         e.getYear(),
-                        e.getMonth() + 1,
+                        Integer.toString(month),
                         e.getDay(),
                         formatDouble(e.getLattitude(), 6),
                         formatDouble(e.getLongitude(), 6),
