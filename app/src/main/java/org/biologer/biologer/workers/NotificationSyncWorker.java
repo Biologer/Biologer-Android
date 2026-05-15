@@ -89,6 +89,7 @@ public class NotificationSyncWorker extends ListenableWorker {
             Log.i(TAG, "Worker skipped — timestamp " + timestampNotification
                     + " <= than already updated timestamp " + timestamp + ".");
             completeWorker(Result.success());
+            return;
         }
         String databaseName = SettingsManager.getDatabaseName();
 
@@ -146,7 +147,7 @@ public class NotificationSyncWorker extends ListenableWorker {
         int totalEntries = response.getMeta().getTotal();
         int lastPage = (int) Math.ceil((double) totalEntries / perPage);
 
-        boolean noMoreData = (notifications.isEmpty());
+        boolean noMoreData = (response.getData() == null || response.getData().isEmpty());
         boolean lastPageReached = (page >= lastPage && lastPage > 0);
 
         if (noMoreData || lastPageReached) {
