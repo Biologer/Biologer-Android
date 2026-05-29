@@ -12,7 +12,7 @@ android {
         minSdk 23
         targetSdk 36
         versionCode 256
-        versionName '5.2.6'
+        versionName '5.2.7'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
@@ -83,7 +83,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'com.google.android.gms:play-services-maps:20.0.0'
-    implementation 'com.google.maps.android:android-maps-utils:4.3.0'
+    implementation 'com.google.maps.android:android-maps-utils:4.4.0'
     implementation 'com.google.firebase:firebase-crashlytics:20.0.6'
     implementation 'com.google.firebase:firebase-analytics:23.2.0'
     implementation 'com.google.firebase:firebase-messaging:25.0.2'
@@ -93,8 +93,8 @@ dependencies {
     // Non Google
     // GIS
     implementation 'org.locationtech.jts:jts-core:1.20.0'
-    implementation 'org.locationtech.proj4j:proj4j:1.4.1'
-    implementation "org.locationtech.proj4j:proj4j-epsg:1.4.1"
+    implementation 'org.locationtech.proj4j:proj4j:1.4.2'
+    implementation "org.locationtech.proj4j:proj4j-epsg:1.4.2"
     // Other
     implementation 'com.github.AppIntro:AppIntro:6.1.0'
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
