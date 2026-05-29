@@ -238,10 +238,10 @@ public class UpdateTaxa extends Service {
         Box<SynonymsDb> synonymBox = App.get().getBoxStore().boxFor(SynonymsDb.class);
 
         for (TaxaData taxon : taxaData) {
+            StringBuilder stageString = new StringBuilder();
             List<TaxaStages> stages = taxon.getStages();
             if (stages != null && !stages.isEmpty()) {
                 StageDb[] stageArray = new StageDb[stages.size()];
-                StringBuilder stageString = new StringBuilder();
                 for (int i = 0; i < stages.size(); i++) {
                     TaxaStages stage = stages.get(i);
                     stageArray[i] = new StageDb(stage.getId(), stage.getName());
@@ -250,7 +250,7 @@ public class UpdateTaxa extends Service {
                 stageBox.put(stageArray);
             }
 
-            TaxonDb taxonDb = getTaxonDb(taxon);
+            TaxonDb taxonDb = getTaxonDb(taxon, stageString.toString());
             taxonBox.put(taxonDb);
 
             List<TaxaTranslations> translations = taxon.getTaxaTranslations();
@@ -299,7 +299,7 @@ public class UpdateTaxa extends Service {
     }
 
     @NonNull
-    private static TaxonDb getTaxonDb(TaxaData taxon) {
+    private static TaxonDb getTaxonDb(TaxaData taxon, String stageString) {
         StringBuilder groupString = new StringBuilder();
         for (String group : taxon.getGroups()) {
             groupString.append(group).append(";");
@@ -316,7 +316,7 @@ public class UpdateTaxa extends Service {
                 taxon.isUses_atlas_codes(),
                 taxon.getAncestors_names(),
                 groupString.toString(),
-                ""
+                stageString
         );
     }
 
