@@ -118,14 +118,26 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         addToolbar();
         setupBackPressedHandler();
         setupRecyclerView();
-        if (isNewEntry()) {
-            addNewViewModel();
-            checkLocationPermission(); // Also starts setupNewTimedCount()
+
+        viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
+        if (viewModel.getObjectBoxId() != null) {
+            // On screen rotation
+            Log.d(TAG, "TimedCount ViewModel populated, getting the data from the model.");
+            addWeatherObserverToViewModel();
+            setupEntryChangeObserver();
+            loadSpeciesDataFromId(viewModel.getObjectBoxId());
+            observeElapsedTime();
+            restoreTimerUiState();
         } else {
-            loadExistingViewModel();
-            loadSpeciesData();
+            if (isNewEntry()) {
+                addNewViewModel();
+                checkLocationPermission(); // Also starts setupNewTimedCount()
+            } else {
+                loadExistingViewModel();
+                loadSpeciesData();
+            }
+            setupEntryChangeObserver();
         }
-        setupEntryChangeObserver();
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         setupSpeciesAutocompleteEntry();
@@ -145,37 +157,69 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void loadSpeciesData() {
-        Long localId = getTimeCountIdFromBundle(); // This is the local ObjectBox ID
+        Long localId = getTimeCountIdFromBundle();
         if (localId != null) {
-            // Part 1. Get the Time Count object to check its status
-            TimedCountDb timeCount = ObjectBoxHelper.getTimeCountById(localId);
+            loadSpeciesDataFromId(localId);
+        }
+    }
 
-            if (timeCount != null) {
-                // Part 2. Should query Server ID or local ObjectBox ID?
-                long id = (timeCount.getServerId() != null)
-                        ? timeCount.getServerId()
-                        : localId;
+    private void loadSpeciesDataFromId(Long localId) {
+        if (localId == null || localId == 0) {
+            Log.e(TAG, "Cannot load species data: provided Local ObjectBox ID is" + localId);
+            return;
+        }
 
-                Log.d(TAG, "Loading children for TC. Local ID: " + localId +
-                        ", Server ID: " + timeCount.getServerId() + ", Query ID: "
-                        + id + " (is uploaded = " + timeCount.isUploaded() + ")");
+        TimedCountDb timeCount = ObjectBoxHelper.getTimeCountById(localId);
+        if (timeCount != null) {
+            ArrayList<EntryDb> observations = ObjectBoxHelper.getTimeCountObservations(localId);
 
-                // Part 3. Populate the list of observations
-                ArrayList<EntryDb> observations = ObjectBoxHelper.getTimeCountObservations(localId);
-                for (EntryDb entry : observations) {
-                    if (timeCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
-                        timeCountAdapter.addToSpeciesCount(entry.getTaxonId());
-                    } else {
-                        SpeciesCountItems new_species = new SpeciesCountItems(
-                                entry.getTaxonSuggestion(),
-                                entry.getTaxonId(),
-                                1);
-                        speciesCountItems.add(new_species);
-                        timeCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
-                    }
+            speciesCountItems.clear();
+
+            for (EntryDb entry : observations) {
+                if (timeCountAdapter.hasSpeciesWithID(entry.getTaxonId())) {
+                    timeCountAdapter.addToSpeciesCount(entry.getTaxonId());
+                } else {
+                    SpeciesCountItems new_species = new SpeciesCountItems(
+                            entry.getTaxonSuggestion(),
+                            entry.getTaxonId(),
+                            1);
+                    speciesCountItems.add(new_species);
+                    timeCountAdapter.notifyItemInserted(speciesCountItems.size() - 1);
+
                 }
             }
         }
+    }
+
+    private void restoreTimerUiState() {
+        if (viewModel.isRunning()) {
+            binding.imageViewPauseTimer.setImageResource(R.drawable.ic_pause);
+        } else {
+            binding.imageViewPauseTimer.setImageResource(R.drawable.ic_play);
+            binding.textViewElapsedTime.setText(R.string.paused);
+        }
+        addPauseButtonOnClickListener();
+    }
+
+    private void addPauseButtonOnClickListener() {
+        binding.linearLayoutTimer.setOnClickListener(view -> {
+            if (viewModel.isRunning()) {
+                viewModel.pauseTimer();
+                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_play);
+                binding.textViewElapsedTime.setText(R.string.paused);
+
+                Intent pauseIntent = new Intent(this, LocationTrackingService.class);
+                pauseIntent.setAction(LocationTrackingService.ACTION_PAUSE);
+                startService(pauseIntent);
+            } else {
+                viewModel.startTimer(); // resumes from pausedTime
+                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_pause);
+
+                Intent resumeIntent = new Intent(this, LocationTrackingService.class);
+                resumeIntent.setAction(LocationTrackingService.ACTION_RESUME);
+                startService(resumeIntent);
+            }
+        });
     }
 
     private void setupSpeciesAutocompleteEntry() {
@@ -307,7 +351,6 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
     }
 
     private void addNewViewModel() {
-        viewModel = new ViewModelProvider(this).get(TimedCountViewModel.class);
         viewModel.setNewEntry(true);
         addWeatherObserverToViewModel();
 
@@ -324,6 +367,10 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         viewModel.setMonth(DateHelper.getCurrentMonthRealValue());
         viewModel.setYear(DateHelper.getCurrentYear());
 
+        observeElapsedTime();
+    }
+
+    private void observeElapsedTime() {
         viewModel.getElapsedTime().observe(this, elapsed -> {
             binding.textViewElapsedTime.setText(formatTime(elapsed));
 
@@ -957,27 +1004,14 @@ public class ActivityTimedCount extends AppCompatActivity implements FragmentTim
         ContextCompat.startForegroundService(this, serviceIntent);
 
         // Start the timer in ViewModel
-        viewModel.resetTimer();
-        viewModel.startTimer();
+        long time = viewModel.getElapsedTime().getValue() == null ?
+                0L: viewModel.getElapsedTime().getValue();
+        if (!viewModel.isRunning() && time == 0L) {
+            viewModel.resetTimer();
+            viewModel.startTimer();
+        }
 
-        binding.linearLayoutTimer.setOnClickListener(view -> {
-            if (viewModel.isRunning()) {
-                viewModel.pauseTimer();
-                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_play);
-                binding.textViewElapsedTime.setText(R.string.paused);
-
-                Intent pauseIntent = new Intent(this, LocationTrackingService.class);
-                pauseIntent.setAction(LocationTrackingService.ACTION_PAUSE);
-                startService(pauseIntent);
-            } else {
-                viewModel.startTimer(); // resumes from pausedTime
-                binding.imageViewPauseTimer.setImageResource(R.drawable.ic_pause);
-
-                Intent resumeIntent = new Intent(this, LocationTrackingService.class);
-                resumeIntent.setAction(LocationTrackingService.ACTION_RESUME);
-                startService(resumeIntent);
-            }
-        });
+        addPauseButtonOnClickListener();
 
         viewModel.setStartTimeString(DateHelper.getCurrentTime());
         Log.d(TAG, "This is the start time set initially: " +  viewModel.getStartTimeString());
