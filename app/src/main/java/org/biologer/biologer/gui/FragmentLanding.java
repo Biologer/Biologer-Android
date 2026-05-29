@@ -153,8 +153,6 @@ public class FragmentLanding extends BaseObservationListFragment {
             localObjectBoxObservationOffset = syncedObservations.size();
             localObjectBoxTimedCountsOffset = syncedTimedCounts.size();
 
-            entriesAdapter.submitList(allItems);
-
             // If the list is short get more data
             if (allItems.size() < 10) {
                 loadNextBatch();
@@ -165,6 +163,7 @@ public class FragmentLanding extends BaseObservationListFragment {
                 downloadNewerData();
             }
         }
+        entriesAdapter.submitList(allItems);
     }
 
     private void reloadItemsForRecyclerView() {
@@ -925,9 +924,10 @@ public class FragmentLanding extends BaseObservationListFragment {
     @Override
     public void onResume() {
         super.onResume();
+        IntentFilter filter = new IntentFilter("SORT_OBSERVATIONS_CHANGED");
+        filter.addAction("SHOW_UPLOADED_CHANGED");
         LocalBroadcastManager.getInstance(requireContext())
-                .registerReceiver(broadcastReceiver,
-                        new IntentFilter("SORT_OBSERVATIONS_CHANGED"));
+                .registerReceiver(broadcastReceiver, filter);
     }
 
     @Override
